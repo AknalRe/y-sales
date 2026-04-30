@@ -3,7 +3,7 @@ import { users } from './auth.js';
 import { companies } from './companies.js';
 import { outlets } from './outlets.js';
 import { visitSessions } from './visits.js';
-import { products } from './products.js';
+import { products, warehouses } from './products.js';
 import { mediaFiles } from './media.js';
 
 export const transactionCustomerTypeEnum = pgEnum('transaction_customer_type', ['store', 'agent', 'end_user']);
@@ -19,6 +19,7 @@ export const salesTransactions = pgTable('sales_transactions', {
   salesUserId: uuid('sales_user_id').notNull().references(() => users.id),
   outletId: uuid('outlet_id').references(() => outlets.id),
   visitSessionId: uuid('visit_session_id').references(() => visitSessions.id),
+  sourceWarehouseId: uuid('source_warehouse_id').references(() => warehouses.id),
   customerType: transactionCustomerTypeEnum('customer_type').notNull(),
   endUserName: varchar('end_user_name', { length: 160 }),
   endUserPhone: varchar('end_user_phone', { length: 40 }),

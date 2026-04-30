@@ -194,6 +194,18 @@ await db.insert(warehouses).values({
   set: { name: 'Gudang Utama YukSales', address: 'Gudang pusat operasional YukSales', type: 'main', status: 'active' },
 });
 
+await db.insert(warehouses).values({
+  companyId: defaultCompany.id,
+  code: 'WH-SALES-001',
+  name: 'Gudang Sales 001',
+  address: 'Stok canvas sales default',
+  type: 'sales_van',
+  status: 'active',
+}).onConflictDoUpdate({
+  target: [warehouses.companyId, warehouses.code],
+  set: { name: 'Gudang Sales 001', address: 'Stok canvas sales default', type: 'sales_van', status: 'active' },
+});
+
 const [mainWarehouse] = await db.select().from(warehouses).where(and(eq(warehouses.companyId, defaultCompany.id), eq(warehouses.code, 'WH-MAIN')));
 const seededProducts = await db.select().from(products).where(eq(products.companyId, defaultCompany.id));
 

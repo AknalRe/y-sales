@@ -1,0 +1,2 @@
+ALTER TABLE "sales_transactions" ADD COLUMN "source_warehouse_id" uuid;--> statement-breakpoint
+ALTER TABLE "sales_transactions" ADD CONSTRAINT "sales_transactions_source_warehouse_id_warehouses_id_fk" FOREIGN KEY ("source_warehouse_id") REFERENCES "public"."warehouses"("id") ON DELETE no action ON UPDATE no action;

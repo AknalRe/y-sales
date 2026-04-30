@@ -22,7 +22,13 @@
       "when": 1777548115685,
       "tag": "0002_wide_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777554343590,
+      "tag": "0003_mean_the_stranger",
+      "breakpoints": true
     }
   ]
 }
-

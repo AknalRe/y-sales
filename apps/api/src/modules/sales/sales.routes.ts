@@ -17,6 +17,7 @@ const orderSchema = z.object({
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
   paymentMethod: z.enum(['cash', 'qris', 'consignment']).default('cash'),
   clientRequestId: z.string().uuid(),
+  sourceWarehouseId: z.string().uuid().optional(),
   items: z.array(itemSchema).min(1),
 });
 
@@ -41,6 +42,7 @@ export async function salesRoutes(app: FastifyInstance) {
         transactionNo: `SO-${Date.now()}`,
         salesUserId: request.user!.id,
         outletId: body.outletId,
+        sourceWarehouseId: body.sourceWarehouseId,
         customerType: body.customerType,
         paymentMethod: body.paymentMethod,
         subtotalAmount: total,
@@ -73,17 +75,19 @@ export async function salesRoutes(app: FastifyInstance) {
   app.post('/sales/orders/:id/approve', { preHandler: requirePermission('sales.order.review') }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
-    const [mainWarehouse] = await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.code, 'WH-MAIN')));
-    if (!mainWarehouse) throw new Error('Gudang utama belum tersedia');
-
     const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
     if (!order) return { message: 'Order tidak ditemukan' };
+
+    const [stockWarehouse] = order.sourceWarehouseId
+      ? await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.id, order.sourceWarehouseId)))
+      : await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.code, 'WH-MAIN')));
+    if (!stockWarehouse) throw new Error('Gudang sumber stok belum tersedia');
 
     const items = await db.select().from(salesTransactionItems).where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));
 
     await db.transaction(async (tx) => {
       for (const item of items) {
-        const [balance] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, mainWarehouse.id), eq(inventoryBalances.productId, item.productId)));
+        const [balance] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, stockWarehouse.id), eq(inventoryBalances.productId, item.productId)));
         if (!balance || Number(balance.quantity) < Number(item.quantity)) {
           const [product] = await tx.select().from(products).where(and(eq(products.companyId, companyId), eq(products.id, item.productId)));
           throw new Error(`Stok tidak cukup untuk ${product?.name ?? item.productId}`);
@@ -95,7 +99,7 @@ export async function salesRoutes(app: FastifyInstance) {
         await tx.update(salesTransactionItems).set({ releasedQuantity: item.quantity }).where(eq(salesTransactionItems.id, item.id));
         await tx.insert(inventoryMovements).values({
           companyId,
-          warehouseId: mainWarehouse.id,
+          warehouseId: stockWarehouse.id,
           productId: item.productId,
           movementType: 'sale',
           quantityDelta: `-${item.quantity}`,

@@ -1,0 +1,23 @@
+export function calculateDistanceMeters(
+  from: { latitude: number; longitude: number },
+  to: { latitude: number; longitude: number },
+) {
+  const earthRadiusMeters = 6_371_000;
+  const toRadians = (degree: number) => (degree * Math.PI) / 180;
+  const deltaLatitude = toRadians(to.latitude - from.latitude);
+  const deltaLongitude = toRadians(to.longitude - from.longitude);
+  const fromLatitude = toRadians(from.latitude);
+  const toLatitude = toRadians(to.latitude);
+
+  const a =
+    Math.sin(deltaLatitude / 2) ** 2 +
+    Math.cos(fromLatitude) * Math.cos(toLatitude) * Math.sin(deltaLongitude / 2) ** 2;
+
+  return 2 * earthRadiusMeters * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function isWithinGeofence(distanceMeters: number, radiusMeters: number) {
+  return distanceMeters <= radiusMeters;
+}
+
+

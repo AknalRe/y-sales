@@ -1,0 +1,12 @@
+export const ROLE_CODES = {
+  ADMINISTRATOR: 'ADMINISTRATOR',
+  OWNER: 'OWNER',
+  OPERATIONAL_MANAGER: 'OPERATIONAL_MANAGER',
+  SUPERVISOR: 'SUPERVISOR',
+  ADMIN: 'ADMIN',
+  SALES_AGENT: 'SALES_AGENT',
+} as const;
+
+export type RoleCode = (typeof ROLE_CODES)[keyof typeof ROLE_CODES];
+
+

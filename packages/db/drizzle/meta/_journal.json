@@ -1,0 +1,28 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1777543668288,
+      "tag": "0000_special_mac_gargan",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777546907532,
+      "tag": "0001_wild_kree",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777548115685,
+      "tag": "0002_wide_ultimates",
+      "breakpoints": true
+    }
+  ]
+}
+

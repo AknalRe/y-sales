@@ -1,0 +1,25 @@
+{
+  "name": "yuksales",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @yuksales/web --filter @yuksales/api dev",
+    "dev:web": "pnpm --filter @yuksales/web dev",
+    "dev:api": "pnpm --filter @yuksales/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "db:generate": "pnpm --filter @yuksales/db db:generate",
+    "db:migrate": "pnpm --filter @yuksales/db db:migrate",
+    "db:studio": "pnpm --filter @yuksales/db db:studio",
+    "db:seed": "pnpm --filter @yuksales/db db:seed",
+    "db:debug": "pnpm --filter @yuksales/db db:debug"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "typescript": "latest"
+  },
+  "packageManager": "pnpm@10.0.0"
+}
+

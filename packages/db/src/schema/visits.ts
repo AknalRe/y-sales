@@ -1,16 +1,41 @@
-import { integer, numeric, pgEnum, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { date, integer, numeric, pgEnum, pgTable, text, time, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
 import { attendanceSessions, faceCaptures, validationStatusEnum } from './attendance.js';
 import { companies } from './companies.js';
 import { outlets } from './outlets.js';
 
 export const visitStatusEnum = pgEnum('visit_status', ['open', 'completed', 'invalid_location', 'synced']);
+export const visitScheduleStatusEnum = pgEnum('visit_schedule_status', ['draft', 'assigned', 'approved', 'in_progress', 'completed', 'missed', 'cancelled']);
+export const visitOutcomeEnum = pgEnum('visit_outcome', ['closed_order', 'no_order', 'follow_up', 'outlet_closed', 'rejected', 'invalid_location']);
+
+export const visitSchedules = pgTable('visit_schedules', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  salesUserId: uuid('sales_user_id').notNull().references(() => users.id),
+  outletId: uuid('outlet_id').references(() => outlets.id, { onDelete: 'cascade' }),
+  scheduledDate: date('scheduled_date').notNull(),
+  plannedStartTime: time('planned_start_time'),
+  plannedEndTime: time('planned_end_time'),
+  targetOutletCount: integer('target_outlet_count').default(1).notNull(),
+  targetDurationMinutes: integer('target_duration_minutes'),
+  targetClosingCount: integer('target_closing_count').default(0).notNull(),
+  targetRevenueAmount: numeric('target_revenue_amount', { precision: 14, scale: 2 }).default('0').notNull(),
+  priority: integer('priority').default(3).notNull(),
+  assignedByUserId: uuid('assigned_by_user_id').references(() => users.id),
+  approvedByUserId: uuid('approved_by_user_id').references(() => users.id),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  status: visitScheduleStatusEnum('status').default('assigned').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
 
 export const visitSessions = pgTable('visit_sessions', {
   id: uuid('id').defaultRandom().primaryKey(),
   companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
   salesUserId: uuid('sales_user_id').notNull().references(() => users.id),
   outletId: uuid('outlet_id').notNull().references(() => outlets.id),
+  scheduleId: uuid('schedule_id').references(() => visitSchedules.id),
   attendanceSessionId: uuid('attendance_session_id').references(() => attendanceSessions.id),
   checkInAt: timestamp('check_in_at', { withTimezone: true }),
   checkInLatitude: numeric('check_in_latitude', { precision: 10, scale: 7 }),
@@ -25,11 +50,11 @@ export const visitSessions = pgTable('visit_sessions', {
   checkOutFaceCaptureId: uuid('check_out_face_capture_id').references(() => faceCaptures.id),
   geofenceRadiusMUsed: integer('geofence_radius_m_used'),
   durationSeconds: integer('duration_seconds'),
+  outcome: visitOutcomeEnum('outcome'),
+  closingNotes: text('closing_notes'),
   status: visitStatusEnum('status').default('open').notNull(),
   validationStatus: validationStatusEnum('validation_status').default('manual_review').notNull(),
   clientRequestId: uuid('client_request_id').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
-
-

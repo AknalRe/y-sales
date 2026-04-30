@@ -7,7 +7,7 @@ import { products, warehouses } from './products.js';
 import { mediaFiles } from './media.js';
 
 export const transactionCustomerTypeEnum = pgEnum('transaction_customer_type', ['store', 'agent', 'end_user']);
-export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'qris', 'consignment']);
+export const paymentMethodEnum = pgEnum('payment_method', ['cash', 'qris', 'credit', 'consignment']);
 export const transactionStatusEnum = pgEnum('transaction_status', ['draft', 'submitted', 'pending_approval', 'approved', 'validated', 'rejected', 'cancelled', 'closed']);
 export const paymentStatusEnum = pgEnum('sales_payment_status', ['unpaid', 'partial', 'paid']);
 export const verificationStatusEnum = pgEnum('verification_status', ['pending', 'verified', 'rejected']);

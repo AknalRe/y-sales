@@ -1,7 +1,18 @@
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { inventoryBalances, inventoryMovements, products, salesTransactionItems, salesTransactions, warehouses } from '@yuksales/db/schema';
+import {
+  consignments,
+  consignmentItems,
+  inventoryBalances,
+  inventoryMovements,
+  products,
+  receivables,
+  salesTransactionItems,
+  salesTransactions,
+  visitSessions,
+  warehouses,
+} from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
@@ -14,12 +25,20 @@ const itemSchema = z.object({
 
 const orderSchema = z.object({
   outletId: z.string().uuid().optional(),
+  visitSessionId: z.string().uuid().optional(),
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
-  paymentMethod: z.enum(['cash', 'qris', 'consignment']).default('cash'),
+  paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
   clientRequestId: z.string().uuid(),
   sourceWarehouseId: z.string().uuid().optional(),
+  dueDate: z.string().date().optional(),
   items: z.array(itemSchema).min(1),
 });
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next.toISOString().slice(0, 10);
+}
 
 export async function salesRoutes(app: FastifyInstance) {
   app.get('/sales/orders', { preHandler: requirePermission('sales.view') }, async (request) => {
@@ -36,12 +55,21 @@ export async function salesRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.clientRequestId, body.clientRequestId)));
     if (existing) return { order: existing, idempotent: true };
 
+    let visit: typeof visitSessions.$inferSelect | undefined;
+    if (body.visitSessionId) {
+      [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
+      if (!visit) throw Object.assign(new Error('Visit session tidak ditemukan untuk sales ini.'), { statusCode: 404 });
+      if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada visit yang masih open.'), { statusCode: 400 });
+      if (body.outletId && visit.outletId !== body.outletId) throw Object.assign(new Error('Outlet order harus sama dengan outlet visit.'), { statusCode: 400 });
+    }
+
     const order = await db.transaction(async (tx) => {
       const [created] = await tx.insert(salesTransactions).values({
         companyId,
         transactionNo: `SO-${Date.now()}`,
         salesUserId: request.user!.id,
-        outletId: body.outletId,
+        outletId: body.outletId ?? visit?.outletId,
+        visitSessionId: body.visitSessionId,
         sourceWarehouseId: body.sourceWarehouseId,
         customerType: body.customerType,
         paymentMethod: body.paymentMethod,
@@ -110,6 +138,38 @@ export async function salesRoutes(app: FastifyInstance) {
         });
       }
 
+      if (order.paymentMethod === 'credit') {
+        await tx.insert(receivables).values({
+          transactionId: order.id,
+          outletId: order.outletId,
+          customerType: order.customerType,
+          principalAmount: order.totalAmount,
+          outstandingAmount: order.totalAmount,
+          dueDate: addDays(new Date(), 14),
+          status: 'open',
+        });
+      }
+
+      if (order.paymentMethod === 'consignment' && order.outletId) {
+        const [consignment] = await tx.insert(consignments).values({
+          transactionId: order.id,
+          outletId: order.outletId,
+          salesUserId: order.salesUserId,
+          startDate: new Date().toISOString().slice(0, 10),
+          dueDate: addDays(new Date(), 14),
+          authorizedByUserId: request.user!.id,
+          status: 'active',
+        }).returning();
+        for (const item of items) {
+          await tx.insert(consignmentItems).values({
+            consignmentId: consignment.id,
+            productId: item.productId,
+            quantity: item.quantity,
+            remainingQuantity: item.quantity,
+          });
+        }
+      }
+
       await tx.update(salesTransactions).set({
         status: 'closed',
         approvedByUserId: request.user!.id,
@@ -124,5 +184,3 @@ export async function salesRoutes(app: FastifyInstance) {
     return { success: true };
   });
 }
-
-

@@ -1,82 +1,234 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, Boxes, CreditCard, LayoutDashboard, LogOut, Map, Menu, ReceiptText, ShieldCheck } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  Boxes,
+  ClipboardCheck,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Map,
+  Menu,
+  PackageCheck,
+  ReceiptText,
+  Search,
+  ShieldCheck,
+  ShoppingCart,
+  Truck,
+  Warehouse,
+  Zap,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../auth/auth-provider';
 
-const navItems = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, permission: 'attendance.review' },
-  { name: 'Tracking Penjualan', href: '/admin/tracking', icon: Map, permission: 'visits.review' },
-  { name: 'Laporan Penjualan', href: '/admin/reports', icon: BarChart3, permission: 'reports.view' },
-  { name: 'Manajemen Stok', href: '/admin/stock', icon: Boxes, permission: 'products.manage' },
-  { name: 'Piutang Usaha', href: '/admin/receivables', icon: CreditCard, permission: 'receivables.view' },
-  { name: 'Verifikasi Nota', href: '/admin/invoice-review', icon: ReceiptText, permission: 'invoice.review' },
-  { name: 'Review Absensi', href: '/attendance/review', icon: ShieldCheck, permission: 'attendance.review' },
+const navSections = [
+  {
+    title: 'Command Center',
+    items: [
+      { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, permission: 'attendance.review', badge: 'Live' },
+      { name: 'Tracking Penjualan', href: '/admin/tracking', icon: Map, permission: 'visits.review', badge: 'GPS' },
+    ],
+  },
+  {
+    title: 'Sales Ops',
+    items: [
+      { name: 'Laporan Penjualan', href: '/admin/reports', icon: BarChart3, permission: 'reports.view', badge: 'KPI' },
+      { name: 'Verifikasi Nota', href: '/admin/invoice-review', icon: ReceiptText, permission: 'invoice.review', badge: 'Review' },
+    ],
+  },
+  {
+    title: 'Inventory & POS',
+    items: [
+      { name: 'Manajemen Stok', href: '/admin/stock', icon: Boxes, permission: 'products.manage', badge: 'Stock' },
+      { name: 'Piutang Usaha', href: '/admin/receivables', icon: CreditCard, permission: 'receivables.view', badge: 'AR' },
+    ],
+  },
+  {
+    title: 'Compliance',
+    items: [
+      { name: 'Review Absensi', href: '/attendance/review', icon: ShieldCheck, permission: 'attendance.review', badge: 'HR' },
+    ],
+  },
+];
+
+const railItems = [
+  { icon: LayoutDashboard, label: 'Command' },
+  { icon: ShoppingCart, label: 'POS' },
+  { icon: Warehouse, label: 'Warehouse' },
+  { icon: Truck, label: 'Route' },
+  { icon: ClipboardCheck, label: 'Approval' },
 ];
 
 export function AdminShell() {
   const location = useLocation();
   const { user, permissions, signOut } = useAuth();
   const [open, setOpen] = useState(true);
-  const visibleItems = navItems.filter((item) => permissions.includes(item.permission) || user?.roleCode === 'ADMINISTRATOR');
+  const canSee = (permission: string) => permissions.includes(permission) || user?.roleCode === 'ADMINISTRATOR';
+  const currentTitle = navSections.flatMap((section) => section.items).find((item) => item.href === location.pathname)?.name ?? 'Admin Command Center';
 
   return (
-    <div className="min-h-screen bg-[#f6f2ef] text-slate-900">
-      <aside className={`${open ? 'w-72' : 'w-24'} fixed inset-y-0 left-0 z-30 flex flex-col bg-[#4a2922] text-white shadow-2xl transition-all duration-300`}>
-        <div className="flex h-20 items-center justify-between border-b border-white/10 px-5">
-          <div className={`${open ? 'opacity-100' : 'hidden opacity-0'} transition-opacity`}>
-            <p className="text-xl font-black tracking-wider">YukSales</p>
-            <p className="text-xs text-[#d8b6aa]">Admin Portal</p>
+    <div className="admin-command-shell">
+      <aside className="admin-rail" aria-label="Administrator quick rail">
+        <div className="admin-rail-logo">
+          <PackageCheck size={24} />
+        </div>
+        <div className="admin-rail-stack">
+          {railItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button key={item.label} id={`admin-rail-${item.label.toLowerCase()}`} className="admin-rail-button" title={item.label} type="button">
+                <Icon size={19} />
+              </button>
+            );
+          })}
+        </div>
+        <button id="admin-rail-signout" onClick={signOut} className="admin-rail-button admin-rail-danger" title="Keluar" type="button">
+          <LogOut size={19} />
+        </button>
+      </aside>
+
+      <aside className={`${open ? 'admin-workspace-open' : 'admin-workspace-closed'} admin-workspace`}>
+        <div className="admin-company-card">
+          <div>
+            <p className="admin-kicker">Currently controlling</p>
+            <h2>YukSales HQ</h2>
+            <span>Sales Tracking · POS Inventory</span>
           </div>
-          <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="rounded-xl p-2 transition hover:bg-white/10">
-            <Menu />
+          <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="admin-icon-button" type="button">
+            <Menu size={18} />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-5">
-          <ul className="space-y-1.5">
-            {visibleItems.map((item) => {
-              const Icon = item.icon;
-              const active = location.pathname === item.href;
-              return (
-                <li key={item.href}>
-                  <Link id={`admin-nav-${item.name.toLowerCase().replaceAll(' ', '-')}`} to={item.href} className={`flex items-center rounded-2xl px-4 py-3 transition ${active ? 'bg-[#b55925] text-white shadow-lg shadow-black/20' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}>
-                    <Icon size={21} />
-                    <span className={`${open ? 'ml-3 block' : 'hidden'} font-semibold`}>{item.name}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <div className="admin-search-mini">
+          <Search size={16} />
+          <span>Search stock, invoice, route...</span>
+        </div>
+
+        <nav className="admin-nav" aria-label="Administrator navigation">
+          {navSections.map((section) => {
+            const visibleItems = section.items.filter((item) => canSee(item.permission));
+            if (!visibleItems.length) return null;
+            return (
+              <section key={section.title} className="admin-nav-section">
+                <p>{section.title}</p>
+                <ul>
+                  {visibleItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = location.pathname === item.href;
+                    return (
+                      <li key={item.href}>
+                        <Link id={`admin-nav-${item.name.toLowerCase().replaceAll(' ', '-')}`} to={item.href} className={`admin-nav-link ${active ? 'admin-nav-active' : ''}`}>
+                          <span className="admin-nav-icon"><Icon size={19} /></span>
+                          <span className="admin-nav-text">{item.name}</span>
+                          <span className="admin-nav-badge">{item.badge}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
         </nav>
 
-        <div className="border-t border-white/10 p-4">
-          <button id="admin-signout-button" onClick={signOut} className="flex w-full items-center rounded-2xl px-4 py-3 text-white/70 transition hover:bg-white/10 hover:text-white">
-            <LogOut size={21} />
-            <span className={`${open ? 'ml-3 block' : 'hidden'} font-semibold`}>Keluar</span>
-          </button>
+        <div className="admin-sync-card">
+          <div className="admin-sync-orb"><Activity size={18} /></div>
+          <div>
+            <strong>Field sync healthy</strong>
+            <span>GPS, invoice, stock ledger online</span>
+          </div>
         </div>
       </aside>
 
-      <main className={`${open ? 'pl-72' : 'pl-24'} min-h-screen transition-all duration-300`}>
-        <header className="sticky top-0 z-20 flex h-20 items-center justify-between border-b border-[#4a2922]/10 bg-white/85 px-8 shadow-sm backdrop-blur-xl">
+      <main className={`admin-main ${open ? 'admin-main-open' : 'admin-main-closed'}`}>
+        <header className="admin-topbar">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#b55925]">YukSales</p>
-            <h1 className="text-xl font-black text-[#40231e]">Admin Portal</h1>
+            <p className="admin-kicker">Administrator Console</p>
+            <h1>{currentTitle}</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-[#b55925] font-black text-white shadow-lg">{user?.name?.slice(0, 2).toUpperCase() ?? 'AD'}</div>
-            <div className="hidden text-right md:block">
-              <p className="text-sm font-bold text-slate-900">{user?.name ?? 'Admin Utama'}</p>
-              <p className="text-xs text-slate-500">{user?.email ?? 'admin@yuksales.local'}</p>
+          <div className="admin-command-search">
+            <Search size={18} />
+            <input id="admin-command-search" placeholder="Search SKU, gudang, sales, outlet, invoice..." aria-label="Search admin command center" />
+            <kbd>Ctrl K</kbd>
+          </div>
+          <div className="admin-user-zone">
+            <button id="admin-notification-button" className="admin-icon-button admin-notification" type="button">
+              <Bell size={18} />
+              <span />
+            </button>
+            <div className="admin-avatar">{user?.name?.slice(0, 2).toUpperCase() ?? 'AD'}</div>
+            <div className="admin-user-copy">
+              <strong>{user?.name ?? 'Admin Utama'}</strong>
+              <span>{user?.email ?? 'admin@yuksales.local'}</span>
             </div>
           </div>
         </header>
-        <div className="p-8">
-          <Outlet />
+
+        <div className="admin-content-grid">
+          <section className="admin-outlet-surface">
+            <div className="admin-surface-header">
+              <div>
+                <p className="admin-kicker">Operational Workspace</p>
+                <h2>Sales, POS & Inventory Control</h2>
+              </div>
+              <div className="admin-live-pill"><span /> Live Stock Ledger</div>
+            </div>
+            <Outlet />
+          </section>
+
+          <aside className="admin-ops-panel" aria-label="Inventory operations panel">
+            <div className="admin-panel-profile">
+              <div className="admin-panel-avatar"><Warehouse size={28} /></div>
+              <h3>Warehouse Ops</h3>
+              <p>POS inventory, canvas stock, transfer approval</p>
+              <div className="admin-panel-score">98.4%</div>
+              <span>Stock accuracy today</span>
+            </div>
+
+            <div className="admin-panel-block">
+              <div className="admin-panel-title">
+                <h4>Inventory Health</h4>
+                <Zap size={16} />
+              </div>
+              <div className="admin-metric-row">
+                <span>WH-MAIN</span>
+                <strong>Ready</strong>
+              </div>
+              <div className="admin-progress"><span style={{ width: '82%' }} /></div>
+              <div className="admin-metric-row">
+                <span>Sales Van Stock</span>
+                <strong>72%</strong>
+              </div>
+              <div className="admin-progress admin-progress-amber"><span style={{ width: '72%' }} /></div>
+            </div>
+
+            <div className="admin-panel-block">
+              <div className="admin-panel-title">
+                <h4>Transfer Queue</h4>
+                <Truck size={16} />
+              </div>
+              <div className="admin-queue-item">
+                <span className="admin-dot admin-dot-blue" />
+                <div><strong>WH-MAIN → SALES-001</strong><small>12 SKU waiting picklist</small></div>
+              </div>
+              <div className="admin-queue-item">
+                <span className="admin-dot admin-dot-orange" />
+                <div><strong>POS Outlet Restock</strong><small>3 outlet below min stock</small></div>
+              </div>
+            </div>
+
+            <div className="admin-alert-card">
+              <AlertTriangle size={18} />
+              <div>
+                <strong>Stock Guard Active</strong>
+                <span>Gudang tidak bisa dinonaktifkan jika masih ada stok.</span>
+              </div>
+            </div>
+          </aside>
         </div>
       </main>
     </div>
   );
 }
-
-

@@ -29,6 +29,27 @@
       "when": 1777554343590,
       "tag": "0003_mean_the_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777557234192,
+      "tag": "0004_fine_goblin_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777557564701,
+      "tag": "0005_first_weapon_omega",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777558742977,
+      "tag": "0006_gifted_swarm",
+      "breakpoints": true
     }
   ]
 }

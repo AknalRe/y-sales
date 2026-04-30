@@ -1,0 +1,2 @@
+ALTER TABLE "visit_schedules" ADD COLUMN "target_closing_count" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "visit_schedules" ADD COLUMN "target_revenue_amount" numeric(14, 2) DEFAULT '0' NOT NULL;

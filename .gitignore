@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.out/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Vite / PWA caches
+.vite/
+.cache/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test / tooling
+playwright-report/
+test-results/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+
+# Reference project only, not part of YukSales source
+sistem-mahasura/

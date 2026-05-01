@@ -1,11 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { outlets, salesTransactions, visitSchedules, visitSessions } from '@yuksales/db/schema';
+import { attendanceSessions, faceCaptures, mediaFiles, outlets, salesTransactions, visitSchedules, visitSessions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { writeAuditLog } from '../audit/audit.service.js';
+import { verifyFaceIdentity } from '../face/face-verification.service.js';
 import { requireTenantId } from '../tenant.js';
+import { getGeneralSettings } from '../../utils/settings.js';
 
 const scheduleSchema = z.object({
   salesUserId: z.string().uuid(),
@@ -22,6 +24,15 @@ const scheduleSchema = z.object({
   notes: z.string().optional(),
 });
 
+const faceCaptureSchema = z.object({
+  dataUrl: z.string().min(20),
+  mimeType: z.string().default('image/jpeg'),
+  sizeBytes: z.number().int().nonnegative().default(0),
+  faceDetected: z.boolean().default(true),
+  faceConfidence: z.number().min(0).max(1).optional(),
+  capturedAt: z.string().datetime().optional(),
+});
+
 const schedulePatchSchema = scheduleSchema.partial();
 
 const checkInSchema = z.object({
@@ -31,6 +42,7 @@ const checkInSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   accuracyM: z.number().optional(),
+  faceCapture: faceCaptureSchema,
 });
 
 const checkOutSchema = z.object({
@@ -40,6 +52,7 @@ const checkOutSchema = z.object({
   accuracyM: z.number().optional(),
   outcome: z.enum(['closed_order', 'no_order', 'follow_up', 'outlet_closed', 'rejected', 'invalid_location']),
   closingNotes: z.string().optional(),
+  faceCapture: faceCaptureSchema,
 });
 
 function todayDate() {
@@ -55,6 +68,43 @@ function distanceMeters(aLat: number, aLng: number, bLat: number, bLng: number) 
   const lat2 = toRad(bLat);
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return earth * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function createVisitFaceCapture({
+  userId,
+  context,
+  location,
+  faceCapture,
+}: {
+  userId: string;
+  context: 'visit_check_in' | 'visit_check_out';
+  location: { latitude: number; longitude: number };
+  faceCapture: z.infer<typeof faceCaptureSchema>;
+}) {
+  const capturedAt = new Date(faceCapture.capturedAt ?? new Date().toISOString());
+  const [media] = await db.insert(mediaFiles).values({
+    ownerType: 'visit',
+    fileUrl: faceCapture.dataUrl,
+    mimeType: faceCapture.mimeType,
+    sizeBytes: faceCapture.sizeBytes,
+    capturedAt,
+    uploadedByUserId: userId,
+  }).returning();
+
+  const [face] = await db.insert(faceCaptures).values({
+    userId,
+    mediaFileId: media.id,
+    captureContext: context,
+    capturedAt,
+    latitude: String(location.latitude),
+    longitude: String(location.longitude),
+    faceDetected: faceCapture.faceDetected,
+    faceConfidence: faceCapture.faceConfidence?.toString(),
+    identityMatchStatus: 'not_checked',
+    livenessStatus: 'not_checked',
+  }).returning();
+
+  return face;
 }
 
 export async function visitRoutes(app: FastifyInstance) {
@@ -169,9 +219,30 @@ export async function visitRoutes(app: FastifyInstance) {
       if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Schedule tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
     }
 
+    const settings = await getGeneralSettings(companyId);
     const distance = distanceMeters(body.latitude, body.longitude, Number(outlet.latitude), Number(outlet.longitude));
-    const radius = outlet.geofenceRadiusM ?? 100;
-    const valid = distance <= radius;
+    const radius = outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
+    const validLocation = distance <= radius;
+    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-in kunjungan.'), { statusCode: 400 });
+    const face = await createVisitFaceCapture({
+      userId: request.user!.id,
+      context: 'visit_check_in',
+      location: { latitude: body.latitude, longitude: body.longitude },
+      faceCapture: body.faceCapture,
+    });
+    const hasValidFace = body.faceCapture.faceDetected;
+    const identity = settings.requireFaceIdentityMatchForVisit
+      ? await verifyFaceIdentity({
+        companyId,
+        userId: request.user!.id,
+        faceCaptureId: face.id,
+        faceDetected: hasValidFace,
+        faceConfidence: body.faceCapture.faceConfidence,
+        settings,
+      })
+      : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
+    if (settings.rejectVisitOnFaceMismatch && identity.status === 'not_matched') throw Object.assign(new Error('Identitas wajah tidak cocok dengan user login.'), { statusCode: 403 });
+    const validationStatus = !hasValidFace ? 'face_not_detected' : validLocation && identity.status === 'matched' ? 'valid' : 'manual_review';
 
     const [existing] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.clientRequestId, body.clientRequestId)));
     if (existing) return { visit: existing, idempotent: true };
@@ -186,16 +257,17 @@ export async function visitRoutes(app: FastifyInstance) {
       checkInLongitude: String(body.longitude),
       checkInAccuracyM: body.accuracyM ? String(body.accuracyM) : undefined,
       checkInDistanceM: distance.toFixed(2),
+      checkInFaceCaptureId: face.id,
       geofenceRadiusMUsed: radius,
-      status: valid ? 'open' : 'invalid_location',
-      validationStatus: valid ? 'valid' : 'manual_review',
+      status: validLocation && hasValidFace && (!settings.requireFaceIdentityMatchForVisit || identity.status === 'matched') ? 'open' : 'invalid_location',
+      validationStatus,
       clientRequestId: body.clientRequestId,
     }).returning();
 
     if (body.scheduleId) await db.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, body.scheduleId));
-    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid, distanceM: distance, radiusM: radius } } });
+    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: validLocation, distanceM: distance, radiusM: radius }, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
 
-    return { visit, geofence: { valid, distanceM: distance, radiusM: radius } };
+    return { visit, geofence: { valid: validLocation, distanceM: distance, radiusM: radius }, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
   });
 
   app.post('/visits/check-out', { preHandler: requirePermission('visits.execute') }, async (request) => {
@@ -205,6 +277,19 @@ export async function visitRoutes(app: FastifyInstance) {
     if (!visit) throw Object.assign(new Error('Visit session tidak ditemukan.'), { statusCode: 404 });
     if (visit.status !== 'open' || !visit.checkInAt) throw Object.assign(new Error('Visit session tidak dalam status open.'), { statusCode: 400 });
 
+    const face = await createVisitFaceCapture({
+      userId: request.user!.id,
+      context: 'visit_check_out',
+      location: { latitude: body.latitude, longitude: body.longitude },
+      faceCapture: body.faceCapture,
+    });
+    const settings = await getGeneralSettings(companyId);
+    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-out kunjungan.'), { statusCode: 400 });
+    const identity = settings.requireFaceIdentityMatchForVisit
+      ? await verifyFaceIdentity({ companyId, userId: request.user!.id, faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence, settings })
+      : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
+    if (settings.rejectVisitOnFaceMismatch && identity.status === 'not_matched') throw Object.assign(new Error('Identitas wajah check-out tidak cocok dengan user login.'), { statusCode: 403 });
+
     const now = new Date();
     const durationSeconds = Math.max(0, Math.round((now.getTime() - new Date(visit.checkInAt).getTime()) / 1000));
     const [updated] = await db.update(visitSessions).set({
@@ -212,6 +297,7 @@ export async function visitRoutes(app: FastifyInstance) {
       checkOutLatitude: String(body.latitude),
       checkOutLongitude: String(body.longitude),
       checkOutAccuracyM: body.accuracyM ? String(body.accuracyM) : undefined,
+      checkOutFaceCaptureId: face.id,
       durationSeconds,
       outcome: body.outcome,
       closingNotes: body.closingNotes,
@@ -221,8 +307,8 @@ export async function visitRoutes(app: FastifyInstance) {
 
     if (visit.scheduleId) await db.update(visitSchedules).set({ status: 'completed', updatedAt: now }).where(eq(visitSchedules.id, visit.scheduleId));
     const [orderCount] = await db.select({ count: sql<number>`count(*)::int` }).from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.visitSessionId, visit.id)));
-    await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: updated });
-    return { visit: updated, result: { durationSeconds, durationMinutes: Math.round(durationSeconds / 60), hasClosingOrder: Number(orderCount?.count ?? 0) > 0 } };
+    await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: { ...updated, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    return { visit: updated, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity }, result: { durationSeconds, durationMinutes: Math.round(durationSeconds / 60), hasClosingOrder: Number(orderCount?.count ?? 0) > 0 } };
   });
 
   app.get('/visits/performance', { preHandler: requirePermission('visits.review') }, async (request) => {

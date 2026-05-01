@@ -9,6 +9,7 @@ export * from './products.js';
 export * from './transactions.js';
 export * from './receivables.js';
 export * from './deposits.js';
+export * from './face-templates.js';
 export * from './sync.js';
 
 

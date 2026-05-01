@@ -57,6 +57,13 @@
       "when": 1777603837794,
       "tag": "0007_lumpy_praxagora",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777615916087,
+      "tag": "0008_mean_falcon",
+      "breakpoints": true
     }
   ]
 }

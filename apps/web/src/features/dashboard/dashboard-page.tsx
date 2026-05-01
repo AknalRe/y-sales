@@ -26,9 +26,8 @@ export function DashboardPage() {
     <div className="space-y-7">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.32em] text-[#b55925]">Dashboard Utama</p>
-          <h1 className="mt-2 text-3xl font-black text-[#40231e]">Selamat datang, {user?.name}</h1>
-          <p className="mt-1 text-slate-500">Ringkasan performa sales, visit, stok, dan approval operasional.</p>
+          <h1 className="text-3xl font-black text-[#40231e]">Dashboard Utama</h1>
+          <p className="mt-1 text-slate-500">Ringkasan performa penjualan dan aktivitas hari ini.</p>
         </div>
         <Link to="/admin/reports" className="rounded-xl border border-[#4a2922]/10 bg-white px-4 py-2 text-sm font-bold text-[#40231e] shadow-sm transition hover:bg-orange-50">
           Unduh Laporan

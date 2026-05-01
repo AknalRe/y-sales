@@ -6,6 +6,7 @@ import { attendanceReviewRoutes } from './modules/attendance/attendance-review.r
 import { companyRoutes } from './modules/company/company.routes.js';
 import { financeRoutes } from './modules/finance/finance.routes.js';
 import { inventoryRoutes } from './modules/inventory/inventory.routes.js';
+import { integrationRoutes } from './modules/integrations/integrations.routes.js';
 import { mediaRoutes } from './modules/media/media.routes.js';
 import { outletRoutes } from './modules/outlets/outlets.routes.js';
 import { productRoutes } from './modules/products/products.routes.js';
@@ -28,6 +29,7 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(companyRoutes);
   await app.register(financeRoutes);
   await app.register(inventoryRoutes);
+  await app.register(integrationRoutes);
   await app.register(mediaRoutes);
   await app.register(outletRoutes);
   await app.register(productRoutes);

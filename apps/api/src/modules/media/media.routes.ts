@@ -6,7 +6,7 @@ import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
-import { createObjectKey, createUploadUrl, deleteObject, getPublicUrl } from './storage.service.js';
+import { createObjectKey, createUploadUrl, deleteObject, getPublicUrl, getStorageConfig } from './storage.service.js';
 
 const ownerTypeSchema = z.enum(['user', 'outlet', 'transaction', 'attendance', 'visit', 'deposit', 'face_template']);
 
@@ -40,16 +40,16 @@ export async function mediaRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const body = uploadUrlSchema.parse(request.body);
     const objectKey = createObjectKey({ companyId, ownerType: body.ownerType, ownerId: body.ownerId, fileName: body.fileName, mimeType: body.mimeType });
-    return await createUploadUrl({ objectKey, mimeType: body.mimeType });
+    return await createUploadUrl({ companyId, objectKey, mimeType: body.mimeType });
   });
 
   app.post('/media/complete', { preHandler: requirePermission('media.manage') }, async (request, reply) => {
-    requireTenantId(request);
+    const companyId = requireTenantId(request);
     const body = completeSchema.parse(request.body);
     const [media] = await db.insert(mediaFiles).values({
       ownerType: body.ownerType,
       ownerId: body.ownerId,
-      fileUrl: body.fileUrl ?? getPublicUrl(body.objectKey),
+      fileUrl: body.fileUrl ?? getPublicUrl(body.objectKey, await getStorageConfig(companyId)),
       mimeType: body.mimeType,
       sizeBytes: body.sizeBytes,
       fileHash: body.fileHash,
@@ -69,11 +69,11 @@ export async function mediaRoutes(app: FastifyInstance) {
   });
 
   app.delete('/media/:id', { preHandler: requirePermission('media.manage') }, async (request) => {
-    requireTenantId(request);
+    const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [media] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, params.id));
     if (!media) throw Object.assign(new Error('Media tidak ditemukan.'), { statusCode: 404 });
-    await deleteObject(extractObjectKey(media.fileUrl));
+    await deleteObject(extractObjectKey(media.fileUrl), companyId);
     await db.delete(mediaFiles).where(and(eq(mediaFiles.id, params.id)));
     await writeAuditLog({ request, action: 'media.deleted', entityType: 'media_file', entityId: media.id, oldValues: media });
     return { success: true };

@@ -20,38 +20,31 @@ import {
   Warehouse,
   Zap,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../auth/auth-provider';
 
-const navSections = [
-  {
-    title: 'Command Center',
-    items: [
-      { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, permission: 'attendance.review', badge: 'Live' },
-      { name: 'Tracking Penjualan', href: '/admin/tracking', icon: Map, permission: 'visits.review', badge: 'GPS' },
-    ],
-  },
-  {
-    title: 'Sales Ops',
-    items: [
-      { name: 'Laporan Penjualan', href: '/admin/reports', icon: BarChart3, permission: 'reports.view', badge: 'KPI' },
-      { name: 'Verifikasi Nota', href: '/admin/invoice-review', icon: ReceiptText, permission: 'invoice.review', badge: 'Review' },
-    ],
-  },
-  {
-    title: 'Inventory & POS',
-    items: [
-      { name: 'Manajemen Stok', href: '/admin/stock', icon: Boxes, permission: 'products.manage', badge: 'Stock' },
-      { name: 'Piutang Usaha', href: '/admin/receivables', icon: CreditCard, permission: 'receivables.view', badge: 'AR' },
-    ],
-  },
-  {
-    title: 'Compliance',
-    items: [
-      { name: 'Review Absensi', href: '/attendance/review', icon: ShieldCheck, permission: 'attendance.review', badge: 'HR' },
-    ],
-  },
-];
+import { mainRoutes, playgroundRoutes } from '@/router/index';
+
+// Helper to group routes by section
+const getNavSections = (permissions: string[], user: any) => {
+  const allRoutes = [...mainRoutes, ...playgroundRoutes.filter(r => !r.handle.mobile && !r.handle.hidden)];
+  
+  const canSee = (permission?: string) => {
+    if (!permission) return true;
+    return permissions.includes(permission) || user?.roleCode === 'ADMINISTRATOR';
+  };
+
+  const visibleRoutes = allRoutes.filter(r => canSee(r.handle.permission));
+  
+  const sections: Record<string, any[]> = {};
+  visibleRoutes.forEach(route => {
+    const sectionName = route.handle.section || 'General';
+    if (!sections[sectionName]) sections[sectionName] = [];
+    sections[sectionName].push(route);
+  });
+
+  return Object.entries(sections).map(([title, items]) => ({ title, items }));
+};
 
 const railItems = [
   { icon: LayoutDashboard, label: 'Command' },
@@ -65,8 +58,18 @@ export function AdminShell() {
   const location = useLocation();
   const { user, permissions, signOut } = useAuth();
   const [open, setOpen] = useState(true);
-  const canSee = (permission: string) => permissions.includes(permission) || user?.roleCode === 'ADMINISTRATOR';
-  const currentTitle = navSections.flatMap((section) => section.items).find((item) => item.href === location.pathname)?.name ?? 'Admin Command Center';
+  
+  const navSections = useMemo(() => getNavSections(permissions, user), [permissions, user]);
+  
+  const currentTitle = useMemo(() => {
+    const allRoutes = [...mainRoutes, ...playgroundRoutes];
+    const path = location.pathname === '/admin' ? '/admin' : location.pathname;
+    // Special check for index route
+    if (location.pathname === '/admin') {
+       return mainRoutes.find(r => r.index)?.handle.label || 'Admin Dashboard';
+    }
+    return allRoutes.find(r => `/admin/${r.path}` === location.pathname || r.path === location.pathname)?.handle.label ?? 'Admin Command Center';
+  }, [location.pathname]);
 
   return (
     <div className="admin-command-shell">
@@ -107,30 +110,27 @@ export function AdminShell() {
         </div>
 
         <nav className="admin-nav" aria-label="Administrator navigation">
-          {navSections.map((section) => {
-            const visibleItems = section.items.filter((item) => canSee(item.permission));
-            if (!visibleItems.length) return null;
-            return (
-              <section key={section.title} className="admin-nav-section">
-                <p>{section.title}</p>
-                <ul>
-                  {visibleItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = location.pathname === item.href;
-                    return (
-                      <li key={item.href}>
-                        <Link id={`admin-nav-${item.name.toLowerCase().replaceAll(' ', '-')}`} to={item.href} className={`admin-nav-link ${active ? 'admin-nav-active' : ''}`}>
-                          <span className="admin-nav-icon"><Icon size={19} /></span>
-                          <span className="admin-nav-text">{item.name}</span>
-                          <span className="admin-nav-badge">{item.badge}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            );
-          })}
+          {navSections.map((section) => (
+            <section key={section.title} className="admin-nav-section">
+              <p>{section.title}</p>
+              <ul>
+                {section.items.map((item) => {
+                  const Icon = item.handle.icon;
+                  const href = item.index ? '/admin' : (item.path?.startsWith('/') ? item.path : `/admin/${item.path}`);
+                  const active = location.pathname === href;
+                  return (
+                    <li key={href}>
+                      <Link id={`admin-nav-${item.handle.label.toLowerCase().replaceAll(' ', '-')}`} to={href} className={`admin-nav-link ${active ? 'admin-nav-active' : ''}`}>
+                        <span className="admin-nav-icon"><Icon size={19} /></span>
+                        <span className="admin-nav-text">{item.handle.label}</span>
+                        {item.handle.badge && <span className="admin-nav-badge">{item.handle.badge}</span>}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
         </nav>
 
         <div className="admin-sync-card">

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#eff6ff"/><stop offset="1" stop-color="#f8fafc"/></linearGradient>
+    <linearGradient id="blue" x1="0" x2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#06b6d4"/></linearGradient>
+    <style>
+      .title{font:700 30px Inter,Arial,sans-serif;fill:#0f172a}.sub{font:500 15px Inter,Arial,sans-serif;fill:#475569}
+      .box{fill:white;stroke:#cbd5e1;stroke-width:2;rx:18}.main{fill:url(#blue);stroke:none;rx:22}.mainText{font:700 22px Inter,Arial,sans-serif;fill:white}
+      .txt{font:700 17px Inter,Arial,sans-serif;fill:#0f172a}.small{font:500 13px Inter,Arial,sans-serif;fill:#64748b}
+      .line{stroke:#64748b;stroke-width:2.2;fill:none;marker-end:url(#arrow)}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+  <rect width="1200" height="760" rx="28" fill="url(#bg)"/>
+  <text x="60" y="62" class="title">Peta Data Utama YukSales</text>
+  <text x="60" y="90" class="sub">Company menjadi pusat semua data: user, outlet, kunjungan, order, stok, media, dan laporan.</text>
+
+  <rect x="485" y="135" width="230" height="90" class="main"/>
+  <text x="600" y="172" text-anchor="middle" class="mainText">Company</text>
+  <text x="600" y="198" text-anchor="middle" style="font:500 14px Inter,Arial;fill:#dbeafe">Perusahaan / Tenant</text>
+
+  <rect x="80" y="300" width="190" height="82" class="box"/><text x="175" y="334" text-anchor="middle" class="txt">User &amp; Role</text><text x="175" y="358" text-anchor="middle" class="small">hak akses fitur</text>
+  <rect x="310" y="300" width="190" height="82" class="box"/><text x="405" y="334" text-anchor="middle" class="txt">Outlet</text><text x="405" y="358" text-anchor="middle" class="small">customer &amp; GPS</text>
+  <rect x="540" y="300" width="190" height="82" class="box"/><text x="635" y="334" text-anchor="middle" class="txt">Kunjungan</text><text x="635" y="358" text-anchor="middle" class="small">check-in/out</text>
+  <rect x="770" y="300" width="190" height="82" class="box"/><text x="865" y="334" text-anchor="middle" class="txt">Order</text><text x="865" y="358" text-anchor="middle" class="small">penjualan</text>
+  <rect x="1000" y="300" width="150" height="82" class="box"/><text x="1075" y="334" text-anchor="middle" class="txt">Stok</text><text x="1075" y="358" text-anchor="middle" class="small">gudang</text>
+
+  <rect x="170" y="520" width="190" height="82" class="box"/><text x="265" y="554" text-anchor="middle" class="txt">Media</text><text x="265" y="578" text-anchor="middle" class="small">Cloudflare R2</text>
+  <rect x="410" y="520" width="190" height="82" class="box"/><text x="505" y="554" text-anchor="middle" class="txt">Face Verify</text><text x="505" y="578" text-anchor="middle" class="small">wajah sales</text>
+  <rect x="650" y="520" width="190" height="82" class="box"/><text x="745" y="554" text-anchor="middle" class="txt">Piutang</text><text x="745" y="578" text-anchor="middle" class="small">kredit</text>
+  <rect x="890" y="520" width="190" height="82" class="box"/><text x="985" y="554" text-anchor="middle" class="txt">Laporan</text><text x="985" y="578" text-anchor="middle" class="small">performa</text>
+
+  <path d="M560 225 C470 260 270 270 175 300" class="line"/><path d="M585 225 C520 260 440 270 405 300" class="line"/><path d="M620 225 C630 260 635 275 635 300" class="line"/>
+  <path d="M660 225 C735 260 825 270 865 300" class="line"/><path d="M700 225 C820 255 1030 260 1075 300" class="line"/>
+  <path d="M405 382 C365 430 310 470 265 520" class="line"/><path d="M635 382 C595 430 550 470 505 520" class="line"/>
+  <path d="M865 382 C830 430 780 470 745 520" class="line"/><path d="M865 382 C910 430 955 470 985 520" class="line"/>
+  <path d="M960 341 L1000 341" class="line"/>
+</svg>

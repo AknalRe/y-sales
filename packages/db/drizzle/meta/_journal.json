@@ -50,6 +50,13 @@
       "when": 1777558742977,
       "tag": "0006_gifted_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777603837794,
+      "tag": "0007_lumpy_praxagora",
+      "breakpoints": true
     }
   ]
 }

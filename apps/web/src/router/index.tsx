@@ -35,28 +35,33 @@ export function AppRouter() {
   }, [permissions, user]);
 
   // Transform RouteConfig to React Router format
-  const transform = (routes: RouteConfig[]) => {
-    return routes.map(r => ({
-      index: r.index,
-      path: r.path,
-      element: r.element,
-      children: r.children ? transform(r.children) : undefined
-    }));
+  const transform = (routes: RouteConfig[], isChild = false) => {
+    return routes
+      .filter(r => !isChild || !r.path?.startsWith('/')) // Skip absolute paths if we are in children
+      .map(r => ({
+        index: r.index,
+        path: r.path,
+        element: r.element,
+        children: r.children ? transform(r.children, true) : undefined
+      }));
   };
+
+  const standaloneFromAdmin = mainRoutes.filter(r => r.path?.startsWith('/') && canSee(r.handle.permission));
 
   return useRoutes([
     { path: '/login', element: <LoginPage /> },
     {
       path: '/admin',
       element: <RequireAuth><AdminShell /></RequireAuth>,
-      children: transform(filteredAdminRoutes)
+      children: transform(filteredAdminRoutes, true)
     },
     {
       path: '/sales',
       element: <RequireAuth><SalesShell /></RequireAuth>,
-      children: transform(filteredSalesRoutes)
+      children: transform(filteredSalesRoutes, true)
     },
     ...transform(filteredStandaloneRoutes),
+    ...transform(standaloneFromAdmin),
     { path: '*', element: <Navigate to="/admin" replace /> }
   ]);
 }

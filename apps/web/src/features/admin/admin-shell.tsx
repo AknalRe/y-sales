@@ -1,24 +1,10 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import {
-  Activity,
-  AlertTriangle,
-  BarChart3,
   Bell,
-  Boxes,
-  ClipboardCheck,
-  CreditCard,
-  LayoutDashboard,
   LogOut,
-  Map,
   Menu,
-  PackageCheck,
-  ReceiptText,
   Search,
-  ShieldCheck,
-  ShoppingCart,
-  Truck,
-  Warehouse,
-  Zap,
+  UserCircle,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../auth/auth-provider';
@@ -52,6 +38,7 @@ export function AdminShell() {
   const location = useLocation();
   const { user, permissions, signOut } = useAuth();
   const [open, setOpen] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
   
   const navSections = useMemo(() => getNavSections(permissions, user), [permissions, user]);
   
@@ -71,21 +58,17 @@ export function AdminShell() {
 
       <aside className={`${open ? 'admin-workspace-open' : 'admin-workspace-closed'} admin-workspace`}>
         <div className="admin-sidebar-brand">
-          <h2>YukSales HQ</h2>
+          <h2>Yuk Tracking Sales</h2>
           <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="admin-icon-button" type="button">
             <Menu size={18} />
           </button>
         </div>
 
-        <div className="admin-search-mini">
-          <Search size={16} />
-          <span>Search stock, invoice, route...</span>
-        </div>
 
         <nav className="admin-nav" aria-label="Administrator navigation">
           {navSections.map((section) => (
             <section key={section.title} className="admin-nav-section">
-              <p>{section.title}</p>
+              {section.title === 'Development' && <p>{section.title}</p>}
               <ul>
                 {section.items.map((item) => {
                   const Icon = item.handle.icon;
@@ -106,20 +89,7 @@ export function AdminShell() {
           ))}
         </nav>
 
-        <div className="admin-sync-card">
-          <div className="admin-sync-orb"><Activity size={18} /></div>
-          <div>
-            <strong>Field sync healthy</strong>
-            <span>GPS, invoice, stock ledger online</span>
-          </div>
-        </div>
 
-        <div className="admin-nav-footer">
-          <button id="admin-signout-main" onClick={signOut} className="admin-nav-link admin-nav-danger" type="button">
-            <span className="admin-nav-icon"><LogOut size={19} /></span>
-            <span className="admin-nav-text">Keluar dari Sesi</span>
-          </button>
-        </div>
       </aside>
 
       <main className={`admin-main ${open ? 'admin-main-open' : 'admin-main-closed'}`}>
@@ -132,19 +102,31 @@ export function AdminShell() {
               <Bell size={18} />
               <span />
             </button>
-            <div className="admin-avatar">{user?.name?.slice(0, 2).toUpperCase() ?? 'AD'}</div>
-            <div className="admin-user-copy">
-              <strong>{user?.name ?? 'Admin Utama'}</strong>
-              <span>{user?.email ?? 'admin@yuksales.local'}</span>
+            <div className="admin-profile-trigger" onClick={() => setProfileOpen(!profileOpen)}>
+              <div className="admin-avatar">AU</div>
+              <div className="admin-user-copy">
+                <strong>Admin Utama</strong>
+                <span>admin@mahasura.com</span>
+              </div>
+              
+              {profileOpen && (
+                <div className="admin-profile-dropdown animate-float-in">
+                  <button className="admin-dropdown-item">
+                    <UserCircle size={16} />
+                    <span>Pengaturan Akun</span>
+                  </button>
+                  <button onClick={signOut} className="admin-dropdown-item admin-text-danger">
+                    <LogOut size={16} />
+                    <span>Keluar dari Sesi</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
 
         <div className="admin-content-grid">
-          <section className="admin-outlet-surface">
-            <Outlet />
-          </section>
-
+          <Outlet />
         </div>
       </main>
     </div>

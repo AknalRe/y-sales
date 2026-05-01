@@ -6,53 +6,43 @@ Base URL lokal:
 http://localhost:4000
 ```
 
-Semua endpoint protected memakai header:
+Header umum untuk endpoint protected:
 
 ```http
 Authorization: Bearer <accessToken>
-X-Company-Id: <companyId>   # bila user/role mendukung konteks tenant eksplisit
+X-Company-Id: <companyId>
 Content-Type: application/json
 ```
 
 > [!IMPORTANT]
-> Dokumentasi ini mengikuti kontrak backend yang tersedia saat ini. Endpoint `GET /outlets` dan `GET /transactions` masih placeholder/planned.
+> Konfigurasi tenant teknis seperti GPS radius dan face policy ada di `app_settings`.
+> Konfigurasi integrasi eksternal seperti Cloudflare R2/S3/Face provider kini ada di tabel `company_integrations`.
 
 ---
 
-## Common Types
+## Status Implementasi Saat Ini
 
-### Face Capture Payload
-
-```json
-{
-  "dataUrl": "data:image/jpeg;base64,...",
-  "mimeType": "image/jpeg",
-  "sizeBytes": 123456,
-  "faceDetected": true,
-  "faceConfidence": 0.97,
-  "capturedAt": "2026-05-01T05:00:00.000Z"
-}
-```
-
-### Geo Location Payload
-
-```json
-{
-  "latitude": -7.250445,
-  "longitude": 112.768845,
-  "accuracyM": 8
-}
-```
+| Area | Status |
+|---|---:|
+| Auth login/refresh/logout/me | Ada |
+| Company profile | Ada |
+| General settings per company | Ada |
+| Company integrations table/API | Ada |
+| Cloudflare R2/S3-compatible media upload | Ada |
+| Face template enrollment | Ada |
+| Visit schedule/check-in/check-out/performance | Ada |
+| CRUD outlet + foto + verify/reject | Ada |
+| Inventory/warehouse | Ada |
+| Sales order/approval | Ada |
+| Receivable/consignment | Ada |
+| Offline sync manifest/pull/push/status | Ada |
+| `/transactions` route | Placeholder |
 
 ---
 
 # 1. Authentication
 
 ## POST `/auth/login`
-
-Login user.
-
-Permission: public.
 
 Body:
 
@@ -64,26 +54,7 @@ Body:
 }
 ```
 
-Response:
-
-```json
-{
-  "accessToken": "jwt",
-  "refreshToken": "jwt-or-token",
-  "user": {
-    "id": "uuid",
-    "companyId": "uuid",
-    "roleId": "uuid",
-    "name": "Admin"
-  }
-}
-```
-
 ## POST `/auth/refresh`
-
-Refresh access token.
-
-Body:
 
 ```json
 {
@@ -93,10 +64,6 @@ Body:
 
 ## POST `/auth/logout`
 
-Logout session.
-
-Body:
-
 ```json
 {
   "refreshToken": "refresh-token"
@@ -105,52 +72,89 @@ Body:
 
 ## GET `/auth/me`
 
-Ambil profil user login.
+Protected. Mengembalikan user login.
 
 ---
 
-# 2. General Settings & Integration
+# 2. Company Profile
 
-## GET `/settings/general`
+Company profile tersimpan di tabel `companies`.
 
-Ambil konfigurasi umum company.
+Field tersedia:
+
+```txt
+name
+slug
+status
+logoUrl
+coverPhotoUrl
+legalName
+email
+phone
+address
+city
+province
+postalCode
+country
+latitude
+longitude
+taxNumber
+websiteUrl
+timezone
+```
+
+## GET `/company/profile`
 
 Permission: `settings.manage`.
 
-Response API key dimasking.
+## PUT `/company/profile`
 
-Response contoh:
+Permission: `settings.manage`.
+
+Body:
 
 ```json
 {
-  "settings": {
-    "defaultGeofenceRadiusM": 100,
-    "maxGpsAccuracyM": 100,
-    "requireFaceForAttendance": true,
-    "requireFaceForVisit": true,
-    "requireFaceIdentityMatchForVisit": true,
-    "faceMatchThreshold": 0.85,
-    "requireLivenessForVisit": false,
-    "rejectVisitOnFaceMismatch": false,
-    "faceIntegration": {
-      "enabled": true,
-      "provider": "custom_http",
-      "baseUrl": "https://face-service.example.com/verify",
-      "apiKey": "abcd...wxyz",
-      "projectId": "",
-      "region": "",
-      "model": "default",
-      "mode": "detect_and_verify",
-      "timeoutMs": 5000
-    }
-  },
-  "scope": { "companyId": "uuid" }
+  "name": "PT Contoh Sales Indonesia",
+  "legalName": "PT Contoh Sales Indonesia",
+  "email": "admin@contoh.co.id",
+  "phone": "08123456789",
+  "address": "Jl. Raya Contoh No. 1",
+  "city": "Surabaya",
+  "province": "Jawa Timur",
+  "postalCode": "60111",
+  "country": "Indonesia",
+  "latitude": -7.250445,
+  "longitude": 112.768845,
+  "logoUrl": "https://cdn.example.com/logo.png",
+  "coverPhotoUrl": "https://cdn.example.com/cover.png",
+  "taxNumber": "01.234.567.8-999.000",
+  "websiteUrl": "https://contoh.co.id",
+  "timezone": "Asia/Jakarta"
 }
 ```
 
-## PUT `/settings/general`
+Audit action:
 
-Update konfigurasi umum company.
+```txt
+company.profile.updated
+```
+
+---
+
+# 3. General Settings Per Company
+
+Tersimpan di `app_settings` dengan key:
+
+```txt
+general_settings:<companyId>
+```
+
+## GET `/settings/general`
+
+Permission: `settings.manage`.
+
+## PUT `/settings/general`
 
 Permission: `settings.manage`.
 
@@ -180,47 +184,365 @@ Body:
 }
 ```
 
-Provider supported:
+> [!NOTE]
+> Face integration masih tersedia di general settings untuk kompatibilitas flow saat ini.
+> Untuk integrasi eksternal jangka panjang, tabel `company_integrations` sudah disiapkan.
+
+---
+
+# 4. Company Integrations
+
+Tabel:
 
 ```txt
-mock
+company_integrations
+```
+
+Digunakan untuk menyimpan konfigurasi integrasi eksternal per company agar tidak bercampur dengan general settings.
+
+Enum `type`:
+
+```txt
+storage
+face_recognition
+payment
+notification
+```
+
+Enum `provider`:
+
+```txt
+cloudflare_r2
+s3
 custom_http
 aws_rekognition
 azure_face
 google_vertex
+mock
 ```
 
-### Face Integration Behavior
+Enum `status`:
 
 ```txt
-foto/check-in
-→ cek faceDetected
-→ jika requireFaceIdentityMatchForVisit = true
-  → baca general_settings:<companyId>
-  → pilih provider faceIntegration.provider
-  → panggil adapter provider jika enabled
-  → update face_captures.identityMatchStatus
-→ jika face recognition tidak aktif
-  → cukup pakai faceDetected dan faceConfidence policy/mock
+active
+inactive
+```
+
+## GET `/integrations`
+
+Permission: `settings.manage`.
+
+Query:
+
+```txt
+type=storage
+```
+
+Secret dimasking di response.
+
+## GET `/integrations/:id`
+
+Permission: `settings.manage`.
+
+## POST `/integrations`
+
+Permission: `settings.manage`.
+
+Body Cloudflare R2:
+
+```json
+{
+  "type": "storage",
+  "provider": "cloudflare_r2",
+  "name": "Cloudflare R2 - Main Bucket",
+  "status": "active",
+  "config": {
+    "bucket": "yuksales-assets",
+    "region": "auto",
+    "endpoint": "https://aea4e2f5c52c669d23de0cc66dfefd9d.r2.cloudflarestorage.com",
+    "publicBaseUrl": "",
+    "signedUrlExpiresSeconds": 900
+  },
+  "secretConfig": {
+    "accessKeyId": "r2-access-key-id",
+    "secretAccessKey": "r2-secret-access-key"
+  },
+  "description": "Storage asset company di Cloudflare R2"
+}
+```
+
+## PATCH `/integrations/:id`
+
+Permission: `settings.manage`.
+
+Body partial dari POST.
+
+## DELETE `/integrations/:id`
+
+Permission: `settings.manage`.
+
+Behavior: integrasi dinonaktifkan (`status = inactive`), bukan hard delete.
+
+---
+
+# 5. Media Storage / Cloudflare R2
+
+Storage service membaca konfigurasi dengan urutan:
+
+```txt
+1. company_integrations type=storage status=active
+2. fallback ke .env global
+```
+
+Env fallback:
+
+```env
+STORAGE_DRIVER=r2
+STORAGE_BUCKET=yuksales-assets
+STORAGE_REGION=auto
+STORAGE_ENDPOINT=https://aea4e2f5c52c669d23de0cc66dfefd9d.r2.cloudflarestorage.com
+STORAGE_ACCESS_KEY_ID=
+STORAGE_SECRET_ACCESS_KEY=
+STORAGE_PUBLIC_BASE_URL=
+STORAGE_SIGNED_URL_EXPIRES_SECONDS=900
+```
+
+Object key pattern:
+
+```txt
+companies/{companyId}/{ownerType}/{ownerId}/{yyyy}/{mm}/{fileName}-{uuid}.ext
+```
+
+Supported owner type:
+
+```txt
+user
+outlet
+transaction
+attendance
+visit
+deposit
+face_template
+```
+
+## POST `/media/upload-url`
+
+Permission: `media.manage`.
+
+Body:
+
+```json
+{
+  "ownerType": "outlet",
+  "ownerId": "uuid-outlet",
+  "fileName": "foto-depan-outlet.jpg",
+  "mimeType": "image/jpeg",
+  "sizeBytes": 123456
+}
+```
+
+Response:
+
+```json
+{
+  "uploadUrl": "https://signed-r2-url",
+  "objectKey": "companies/companyId/outlet/outletId/2026/05/foto-depan-outlet-uuid.jpg",
+  "publicUrl": "https://.../yuksales-assets/companies/...",
+  "expiresIn": 900,
+  "provider": "cloudflare_r2"
+}
+```
+
+Client upload langsung ke R2:
+
+```http
+PUT <uploadUrl>
+Content-Type: image/jpeg
+
+<binary-file>
+```
+
+## POST `/media/complete`
+
+Permission: `media.manage`.
+
+Body:
+
+```json
+{
+  "ownerType": "outlet",
+  "ownerId": "uuid-outlet",
+  "objectKey": "companies/companyId/outlet/outletId/2026/05/foto.jpg",
+  "mimeType": "image/jpeg",
+  "sizeBytes": 123456,
+  "fileHash": "optional-sha256",
+  "capturedAt": "2026-05-01T06:00:00.000Z"
+}
+```
+
+Response:
+
+```json
+{
+  "media": {
+    "id": "uuid",
+    "ownerType": "outlet",
+    "ownerId": "uuid-outlet",
+    "fileUrl": "https://...",
+    "mimeType": "image/jpeg",
+    "sizeBytes": 123456
+  }
+}
+```
+
+## GET `/media/:id`
+
+Permission: `media.manage`.
+
+## DELETE `/media/:id`
+
+Permission: `media.manage`.
+
+Behavior:
+
+```txt
+hapus object dari R2/S3
+hapus row media_files
+buat audit log media.deleted
 ```
 
 ---
 
-# 3. Face Template Enrollment
+# 6. Outlet Management
+
+Tabel utama:
+
+```txt
+outlets
+outlet_photos
+media_files
+```
+
+Field outlet:
+
+```txt
+code
+name
+customerType
+ownerName
+phone
+address
+latitude
+longitude
+geofenceRadiusM
+status
+registeredByUserId
+verifiedByUserId
+verifiedAt
+rejectionReason
+deletedAt
+```
+
+## GET `/outlets`
+
+Permission: `outlets.manage`.
+
+Query:
+
+```txt
+status=active
+q=toko
+```
+
+## POST `/outlets`
+
+Permission: `outlets.manage`.
+
+Body:
+
+```json
+{
+  "code": "OUT-001",
+  "name": "Toko Sumber Rejeki",
+  "customerType": "store",
+  "ownerName": "Budi",
+  "phone": "08123456789",
+  "address": "Jl. Mawar No. 10",
+  "latitude": -7.250445,
+  "longitude": 112.768845,
+  "geofenceRadiusM": 100,
+  "status": "pending_verification"
+}
+```
+
+## GET `/outlets/:id`
+
+Permission: `outlets.manage`.
+
+Response berisi outlet dan photos.
+
+## PATCH `/outlets/:id`
+
+Permission: `outlets.manage`.
+
+Body partial dari create outlet.
+
+## DELETE `/outlets/:id`
+
+Permission: `outlets.manage`.
+
+Behavior: soft delete, status menjadi `inactive`.
+
+## POST `/outlets/:id/photos`
+
+Permission: `outlets.manage`.
+
+Body legacy/base64:
+
+```json
+{
+  "dataUrl": "data:image/jpeg;base64,...",
+  "mimeType": "image/jpeg",
+  "sizeBytes": 123456,
+  "capturedAt": "2026-05-01T06:00:00.000Z",
+  "latitude": -7.250445,
+  "longitude": 112.768845,
+  "source": "camera"
+}
+```
+
+> [!TIP]
+> Untuk produksi, gunakan flow `/media/upload-url` + `/media/complete` agar file disimpan di Cloudflare R2.
+
+## POST `/outlets/:id/verify`
+
+Permission: `outlets.manage`.
+
+## POST `/outlets/:id/reject`
+
+Permission: `outlets.manage`.
+
+Body:
+
+```json
+{
+  "reason": "Data alamat tidak sesuai"
+}
+```
+
+---
+
+# 7. Face Template & Verification
 
 ## GET `/settings/face-templates`
-
-Ambil daftar template wajah company.
 
 Permission: `settings.manage`.
 
 ## POST `/settings/face-templates`
 
-Enroll template wajah user.
-
 Permission: `settings.manage`.
 
-Body:
+Body legacy/base64:
 
 ```json
 {
@@ -228,7 +550,7 @@ Body:
   "dataUrl": "data:image/jpeg;base64,...",
   "mimeType": "image/jpeg",
   "sizeBytes": 123456,
-  "embeddingRef": "optional-face-engine-template-ref"
+  "embeddingRef": "optional-provider-template-ref"
 }
 ```
 
@@ -237,95 +559,42 @@ Behavior:
 ```txt
 validasi user company sama
 simpan media face_template
-nonaktifkan template aktif lama milik user
-buat template baru active dengan companyId/userId/roleId
+nonaktifkan template aktif lama
+buat template baru active companyId/userId/roleId
 buat audit log
 ```
 
----
+Face verification check-in/out:
 
-# 4. Attendance
-
-## GET `/attendance/today`
-
-Ambil attendance session hari ini.
-
-Permission: `attendance.execute`.
-
-## POST `/attendance/check-in`
-
-Absensi kerja harian.
-
-Permission: `attendance.execute`.
-
-Body:
-
-```json
-{
-  "clientRequestId": "uuid",
-  "outletId": "uuid-optional",
-  "capturedAt": "2026-05-01T05:00:00.000Z",
-  "location": {
-    "latitude": -7.250445,
-    "longitude": 112.768845,
-    "accuracyM": 8
-  },
-  "faceCapture": {
-    "dataUrl": "data:image/jpeg;base64,...",
-    "mimeType": "image/jpeg",
-    "sizeBytes": 123456,
-    "faceDetected": true,
-    "faceConfidence": 0.95
-  }
-}
+```txt
+foto masuk
+cek faceDetected
+jika requireFaceIdentityMatchForVisit=true
+  ambil template user aktif
+  jika faceIntegration.enabled=true → panggil provider
+  jika tidak → fallback policy/mock faceConfidence >= threshold
+update face_captures identity status/confidence/liveness
 ```
 
-## POST `/attendance/check-out`
+Provider adapter yang tersedia:
 
-Checkout attendance harian.
-
-Permission: `attendance.execute`.
-
-Body:
-
-```json
-{
-  "attendanceSessionId": "uuid",
-  "clientRequestId": "uuid",
-  "outletId": "uuid-optional",
-  "capturedAt": "2026-05-01T10:00:00.000Z",
-  "location": {
-    "latitude": -7.250445,
-    "longitude": 112.768845,
-    "accuracyM": 8
-  },
-  "faceCapture": {
-    "dataUrl": "data:image/jpeg;base64,...",
-    "mimeType": "image/jpeg",
-    "sizeBytes": 123456,
-    "faceDetected": true,
-    "faceConfidence": 0.95
-  }
-}
+```txt
+mock
+custom_http
+azure_face
+google_vertex
+aws_rekognition compatible/proxy
 ```
-
-## GET `/attendance/review`
-
-Review attendance.
-
-Permission: `attendance.review`.
 
 ---
 
-# 5. Visit Scheduling & Outlet Visit
+# 8. Visit Scheduling & Execution
 
 ## GET `/visits/schedules`
 
-Ambil jadwal kunjungan.
-
 Permission: `visits.review`.
 
-Query params:
+Query:
 
 ```txt
 date=YYYY-MM-DD
@@ -334,8 +603,6 @@ salesUserId=uuid
 
 ## POST `/visits/schedules`
 
-Buat jadwal kunjungan sales.
-
 Permission: `visits.review`.
 
 Body:
@@ -343,11 +610,11 @@ Body:
 ```json
 {
   "salesUserId": "uuid-sales",
-  "outletIds": ["uuid-outlet-1", "uuid-outlet-2"],
+  "outletIds": ["uuid-outlet-1"],
   "scheduledDate": "2026-05-01",
   "plannedStartTime": "09:00",
   "plannedEndTime": "17:00",
-  "targetOutletCount": 2,
+  "targetOutletCount": 1,
   "targetDurationMinutes": 30,
   "targetClosingCount": 1,
   "targetRevenueAmount": "1000000",
@@ -356,37 +623,23 @@ Body:
 }
 ```
 
-Response berisi `schedules` dan `simulation` target.
-
 ## PATCH `/visits/schedules/:id`
-
-Update jadwal.
 
 Permission: `visits.review`.
 
-Body: partial dari body create schedule.
-
 ## POST `/visits/schedules/:id/approve`
-
-Approve jadwal.
 
 Permission: `visits.review`.
 
 ## POST `/visits/schedules/:id/cancel`
 
-Cancel jadwal.
-
 Permission: `visits.review`.
 
 ## GET `/visits/today`
 
-Ambil jadwal sales hari ini.
-
 Permission: `visits.execute`.
 
 ## POST `/visits/check-in`
-
-Check-in outlet. Durasi kunjungan mulai dihitung dari endpoint ini.
 
 Permission: `visits.execute`.
 
@@ -415,40 +668,14 @@ Validasi:
 
 ```txt
 outlet company sama
-schedule milik sales jika scheduleId dikirim
-GPS dihitung terhadap outlet geofence radius
-faceDetected wajib jika requireFaceForVisit = true
-face identity match jika requireFaceIdentityMatchForVisit = true
-```
-
-Response:
-
-```json
-{
-  "visit": {},
-  "geofence": {
-    "valid": true,
-    "distanceM": 12.34,
-    "radiusM": 100
-  },
-  "face": {
-    "faceCaptureId": "uuid",
-    "faceDetected": true,
-    "faceConfidence": 0.97,
-    "identity": {
-      "status": "matched",
-      "confidence": 0.92,
-      "livenessStatus": "passed",
-      "provider": "custom_http",
-      "templateId": "uuid"
-    }
-  }
-}
+schedule company/sales sesuai
+geofence radius outlet/general settings
+GPS accuracy <= maxGpsAccuracyM
+faceDetected wajib jika requireFaceForVisit=true
+identity match jika requireFaceIdentityMatchForVisit=true
 ```
 
 ## POST `/visits/check-out`
-
-Check-out outlet dan hitung durasi kunjungan.
 
 Permission: `visits.execute`.
 
@@ -473,7 +700,7 @@ Body:
 }
 ```
 
-`outcome`:
+Outcome:
 
 ```txt
 closed_order
@@ -484,27 +711,13 @@ rejected
 invalid_location
 ```
 
-Response:
-
-```json
-{
-  "visit": {},
-  "face": {},
-  "result": {
-    "durationSeconds": 1800,
-    "durationMinutes": 30,
-    "hasClosingOrder": true
-  }
-}
-```
+Durasi kunjungan dihitung dari check-in sampai check-out.
 
 ## GET `/visits/performance`
 
-Laporan performa kunjungan dan closing.
-
 Permission: `visits.review`.
 
-Query params:
+Query:
 
 ```txt
 from=YYYY-MM-DD
@@ -512,35 +725,19 @@ to=YYYY-MM-DD
 salesUserId=uuid
 ```
 
-Metrik:
-
-```txt
-visitAchievementPercent
-closingAchievementPercent
-revenueAchievementPercent
-effectiveCallRate
-averageOrderValue
-```
-
 ## GET `/visits/review`
-
-Review visit sessions.
 
 Permission: `visits.review`.
 
 ---
 
-# 6. Sales Orders
+# 9. Sales Orders
 
 ## GET `/sales/orders`
-
-Ambil daftar sales order.
 
 Permission: `sales.view`.
 
 ## POST `/sales/orders`
-
-Buat order/POS.
 
 Permission: `sales.order.create`.
 
@@ -567,127 +764,36 @@ Body:
 }
 ```
 
-Enum penting:
-
-```txt
-transactionType: order | return | consignment
-paymentMethod: cash | qris | credit | consignment
-paymentStatus: unpaid | partial | paid
-```
-
 ## POST `/sales/orders/:id/approve`
-
-Approve order.
 
 Permission: `sales.order.review`.
 
 Behavior:
 
 ```txt
-status order menjadi approved
-stock keluar dari warehouse
-jika paymentMethod credit → buat receivable
-jika paymentMethod consignment / transactionType consignment → buat consignment
+approve order
+kurangi stok
+buat receivable jika credit
+buat consignment jika consignment
 ```
 
 ---
 
-# 7. Receivables & Consignments
-
-## GET `/receivables`
-
-Ambil daftar piutang.
-
-Permission: `receivables.view`.
-
-## POST `/receivables/:id/payments`
-
-Input pembayaran piutang.
-
-Permission: `receivables.view`.
-
-Body:
-
-```json
-{
-  "amount": "100000",
-  "paymentMethod": "cash",
-  "paidAt": "2026-05-01T05:00:00.000Z",
-  "notes": "Pembayaran sebagian"
-}
-```
-
-## GET `/consignments`
-
-Ambil daftar konsinyasi.
-
-Permission: `receivables.view`.
-
-## POST `/consignments/:id/actions`
-
-Aksi konsinyasi.
-
-Permission: `receivables.view`.
-
-Body:
-
-```json
-{
-  "actionType": "notify_withdrawal",
-  "notes": "Barang perlu ditarik"
-}
-```
-
-`actionType`:
-
-```txt
-notify_withdrawal
-extend
-withdraw
-reset_stock_zero
-```
-
----
-
-# 8. Inventory & Warehouse
+# 10. Inventory
 
 ## GET `/inventory/settings`
-
-Ambil label konfigurasi inventory company.
 
 Permission: `inventory.manage`.
 
 ## PUT `/inventory/settings`
 
-Update label konfigurasi inventory.
-
 Permission: `inventory.manage`.
 
-Body contoh:
-
-```json
-{
-  "warehouseLabel": "Gudang",
-  "warehouseTypeLabels": {
-    "main": "Gudang Utama",
-    "sales": "Gudang Sales",
-    "display": "Display Outlet",
-    "return": "Retur"
-  }
-}
-```
-
 ## GET `/inventory/warehouses`
-
-Ambil gudang.
 
 Permission: `inventory.manage`.
 
 ## POST `/inventory/warehouses`
-
-Buat gudang.
-
-Permission: `inventory.manage`.
 
 Body:
 
@@ -704,23 +810,11 @@ Body:
 
 ## PATCH `/inventory/warehouses/:id`
 
-Update gudang.
-
-Permission: `inventory.manage`.
-
 ## DELETE `/inventory/warehouses/:id`
-
-Nonaktifkan gudang jika tidak ada stock.
-
-Permission: `inventory.manage`.
 
 ## GET `/inventory/balances`
 
-Ambil saldo stok.
-
-Permission: `inventory.manage`.
-
-Query params:
+Query:
 
 ```txt
 warehouseId=uuid
@@ -729,11 +823,7 @@ productId=uuid
 
 ## GET `/inventory/movements`
 
-Ambil movement stok.
-
-Permission: `inventory.manage`.
-
-Query params:
+Query:
 
 ```txt
 warehouseId=uuid
@@ -742,12 +832,6 @@ movementType=in|out|adjustment|transfer|reset|reversal
 ```
 
 ## POST `/inventory/adjustments`
-
-Adjustment stok.
-
-Permission: `inventory.manage`.
-
-Body:
 
 ```json
 {
@@ -760,12 +844,6 @@ Body:
 
 ## POST `/inventory/resets`
 
-Reset stok produk di gudang.
-
-Permission: `inventory.manage`.
-
-Body:
-
 ```json
 {
   "warehouseId": "uuid-warehouse",
@@ -777,12 +855,6 @@ Body:
 
 ## POST `/inventory/movements/:id/reverse`
 
-Reverse movement stok.
-
-Permission: `inventory.manage`.
-
-Body:
-
 ```json
 {
   "reason": "Kesalahan input"
@@ -790,12 +862,6 @@ Body:
 ```
 
 ## POST `/inventory/transfers`
-
-Transfer stok antar gudang.
-
-Permission: `inventory.manage`.
-
-Body:
 
 ```json
 {
@@ -809,17 +875,13 @@ Body:
 
 ---
 
-# 9. Products
+# 11. Products
 
 ## GET `/products`
-
-Ambil produk aktif.
 
 Permission: `sales.view`.
 
 ## POST `/products`
-
-Buat produk.
 
 Permission: `products.manage`.
 
@@ -838,13 +900,52 @@ Body:
 
 ---
 
-# 10. Offline Sync
+# 12. Receivables & Consignments
+
+## GET `/receivables`
+
+Permission: `receivables.view`.
+
+## POST `/receivables/:id/payments`
+
+```json
+{
+  "amount": "100000",
+  "paymentMethod": "cash",
+  "paidAt": "2026-05-01T05:00:00.000Z",
+  "notes": "Pembayaran sebagian"
+}
+```
+
+## GET `/consignments`
+
+Permission: `receivables.view`.
+
+## POST `/consignments/:id/actions`
+
+```json
+{
+  "actionType": "notify_withdrawal",
+  "notes": "Barang perlu ditarik"
+}
+```
+
+Action type:
+
+```txt
+notify_withdrawal
+extend
+withdraw
+reset_stock_zero
+```
+
+---
+
+# 13. Offline Sync
 
 ## GET `/sync/manifest`
 
-Ambil metadata sync.
-
-Permission: authenticated.
+Protected.
 
 Response memuat:
 
@@ -860,11 +961,9 @@ maxBatchSize
 
 ## GET `/sync/pull`
 
-Download kebutuhan offline.
+Protected.
 
-Permission: authenticated.
-
-Query params:
+Query:
 
 ```txt
 scope=sales-mobile
@@ -884,11 +983,7 @@ inventoryBalances
 
 ## POST `/sync/push`
 
-Push event offline.
-
-Permission: authenticated.
-
-Body:
+Protected.
 
 ```json
 {
@@ -910,11 +1005,7 @@ Body:
 
 ## GET `/sync/status`
 
-Ambil status sync events.
-
-Permission: authenticated.
-
-Query params:
+Query:
 
 ```txt
 deviceId=device-001
@@ -923,27 +1014,17 @@ limit=50
 
 ---
 
-# 11. Access Control
+# 14. Access Control
 
 ## GET `/roles`
-
-Ambil roles.
 
 Permission: `roles.manage`.
 
 ## GET `/permissions`
 
-Ambil permissions.
-
 Permission: `permissions.manage`.
 
 ## POST `/permissions`
-
-Buat permission.
-
-Permission: `permissions.manage`.
-
-Body:
 
 ```json
 {
@@ -956,17 +1037,9 @@ Body:
 
 ## GET `/roles/:roleId/permissions`
 
-Ambil permission role.
-
 Permission: `roles.manage`.
 
 ## POST `/roles/:roleId/permissions`
-
-Assign permission ke role.
-
-Permission: `roles.manage`.
-
-Body:
 
 ```json
 {
@@ -976,64 +1049,63 @@ Body:
 
 ---
 
-# 12. Reports
+# 15. Reports
 
 ## GET `/reports/summary`
 
-Dashboard summary.
-
 Permission: `reports.view`.
-
-Query params optional tergantung implementasi laporan.
 
 ---
 
-# 13. Planned Placeholder
-
-## GET `/outlets`
-
-Status: planned placeholder.
+# 16. Placeholder
 
 ## GET `/transactions`
 
-Status: planned placeholder.
+Status: placeholder/planned.
 
 ---
 
-# Business Flow Utama
+# Business Flow Ringkas
 
-## Sales Visit Flow
+## Asset Upload Flow
 
 ```txt
-Admin/SPV membuat jadwal
-→ sales melihat /visits/today
-→ sales check-in outlet dengan GPS + face capture
-→ sistem validasi geofence + face detection/recognition
-→ sales membuat order bila ada closing
-→ sales check-out
-→ sistem hitung durasi
-→ performance menghitung target outlet/closing/revenue
+Admin/mobile request /media/upload-url
+→ backend baca storage integration per company
+→ backend generate signed PUT URL R2/S3
+→ client upload binary langsung ke R2/S3
+→ client call /media/complete
+→ backend simpan metadata ke media_files
 ```
 
-## Face Recognition Flow
+## Outlet Flow
 
 ```txt
-Admin enroll wajah user
-→ company mengaktifkan face integration di /settings/general
-→ sales check-in dengan foto
-→ backend ambil template wajah user login
-→ backend panggil provider per company
-→ hasil disimpan ke face_captures
-→ visit valid/manual_review/reject sesuai setting
+Admin/sales create outlet
+→ upload foto via media R2 atau legacy endpoint
+→ verify/reject outlet
+→ outlet dipakai pada jadwal visit dan geofence
+```
+
+## Visit Flow
+
+```txt
+SPV/Admin buat jadwal
+→ sales GET /visits/today
+→ check-in dengan GPS + face
+→ backend validasi GPS radius + face detection/recognition
+→ sales order jika closing
+→ check-out
+→ performance report menghitung target outlet/closing/revenue
 ```
 
 ## Offline Sync Flow
 
 ```txt
-mobile login
-→ GET /sync/manifest
-→ GET /sync/pull untuk download data offline
-→ user transaksi/check-in offline di local queue
-→ saat online POST /sync/push
-→ GET /sync/status untuk status event
+mobile pull manifest + master data
+→ simpan offline lokal
+→ saat offline buat event queue
+→ saat online upload media dulu ke R2
+→ push event domain ke /sync/push
+→ cek status via /sync/status
 ```

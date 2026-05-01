@@ -9,6 +9,31 @@ import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
+const faceIntegrationSchema = z.object({
+  enabled: z.boolean().optional(),
+  provider: z.enum(['mock', 'custom_http', 'aws_rekognition', 'azure_face', 'google_vertex']).optional(),
+  baseUrl: z.string().url().or(z.literal('')).optional(),
+  apiKey: z.string().optional(),
+  projectId: z.string().optional(),
+  region: z.string().optional(),
+  model: z.string().optional(),
+  mode: z.enum(['verify', 'detect_and_verify']).optional(),
+  timeoutMs: z.number().int().positive().max(60000).optional(),
+});
+
+function maskSecret(value?: string) {
+  if (!value) return '';
+  if (value.length <= 8) return '********';
+  return `${value.slice(0, 4)}...${value.slice(-4)}`;
+}
+
+function publicSettings<T extends { faceIntegration?: { apiKey?: string } }>(settings: T) {
+  return {
+    ...settings,
+    faceIntegration: settings.faceIntegration ? { ...settings.faceIntegration, apiKey: maskSecret(settings.faceIntegration.apiKey) } : settings.faceIntegration,
+  };
+}
+
 const generalSettingsSchema = z.object({
   defaultGeofenceRadiusM: z.number().positive().optional(),
   maxGpsAccuracyM: z.number().positive().optional(),
@@ -18,6 +43,7 @@ const generalSettingsSchema = z.object({
   faceMatchThreshold: z.number().min(0).max(1).optional(),
   requireLivenessForVisit: z.boolean().optional(),
   rejectVisitOnFaceMismatch: z.boolean().optional(),
+  faceIntegration: faceIntegrationSchema.optional(),
 });
 
 const enrollFaceSchema = z.object({
@@ -31,7 +57,8 @@ const enrollFaceSchema = z.object({
 export async function settingsRoutes(app: FastifyInstance) {
   app.get('/settings/general', { preHandler: requirePermission('settings.manage') }, async (request) => {
     const companyId = requireTenantId(request);
-    return { settings: await getGeneralSettings(companyId), defaults: generalSettingsDefaults, scope: { companyId } };
+    const settings = await getGeneralSettings(companyId);
+    return { settings: publicSettings(settings), defaults: publicSettings(generalSettingsDefaults), scope: { companyId } };
   });
 
   app.put('/settings/general', { preHandler: requirePermission('settings.manage') }, async (request) => {
@@ -49,7 +76,7 @@ export async function settingsRoutes(app: FastifyInstance) {
       set: { value: settings, updatedByUserId: request.user?.id, updatedAt: new Date() },
     }).returning();
     await writeAuditLog({ request, action: 'settings.general.updated', entityType: 'app_settings', entityId: setting.id, oldValues: oldSettings, newValues: settings });
-    return { settings, scope: { companyId } };
+    return { settings: publicSettings(settings), scope: { companyId } };
   });
 
   app.get('/settings/face-templates', { preHandler: requirePermission('settings.manage') }, async (request) => {

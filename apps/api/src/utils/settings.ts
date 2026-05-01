@@ -11,6 +11,17 @@ export const generalSettingsDefaults = {
   faceMatchThreshold: 0.8,
   requireLivenessForVisit: false,
   rejectVisitOnFaceMismatch: false,
+  faceIntegration: {
+    enabled: false,
+    provider: 'mock' as 'mock' | 'custom_http' | 'aws_rekognition' | 'azure_face' | 'google_vertex',
+    baseUrl: '',
+    apiKey: '',
+    projectId: '',
+    region: '',
+    model: '',
+    mode: 'verify' as 'verify' | 'detect_and_verify',
+    timeoutMs: 5000,
+  },
 };
 
 const legacyNumericDefaults = {

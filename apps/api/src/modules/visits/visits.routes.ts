@@ -223,6 +223,7 @@ export async function visitRoutes(app: FastifyInstance) {
     const distance = distanceMeters(body.latitude, body.longitude, Number(outlet.latitude), Number(outlet.longitude));
     const radius = outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
     const validLocation = distance <= radius;
+    const gpsAccuracyValid = body.accuracyM === undefined || body.accuracyM <= settings.maxGpsAccuracyM;
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-in kunjungan.'), { statusCode: 400 });
     const face = await createVisitFaceCapture({
       userId: request.user!.id,
@@ -242,7 +243,7 @@ export async function visitRoutes(app: FastifyInstance) {
       })
       : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
     if (settings.rejectVisitOnFaceMismatch && identity.status === 'not_matched') throw Object.assign(new Error('Identitas wajah tidak cocok dengan user login.'), { statusCode: 403 });
-    const validationStatus = !hasValidFace ? 'face_not_detected' : validLocation && identity.status === 'matched' ? 'valid' : 'manual_review';
+    const validationStatus = !hasValidFace ? 'face_not_detected' : validLocation && gpsAccuracyValid && identity.status === 'matched' ? 'valid' : 'manual_review';
 
     const [existing] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.clientRequestId, body.clientRequestId)));
     if (existing) return { visit: existing, idempotent: true };
@@ -259,15 +260,16 @@ export async function visitRoutes(app: FastifyInstance) {
       checkInDistanceM: distance.toFixed(2),
       checkInFaceCaptureId: face.id,
       geofenceRadiusMUsed: radius,
-      status: validLocation && hasValidFace && (!settings.requireFaceIdentityMatchForVisit || identity.status === 'matched') ? 'open' : 'invalid_location',
+      status: validLocation && gpsAccuracyValid && hasValidFace && (!settings.requireFaceIdentityMatchForVisit || identity.status === 'matched') ? 'open' : 'invalid_location',
       validationStatus,
       clientRequestId: body.clientRequestId,
     }).returning();
 
+    const gpsAccuracy = { valid: gpsAccuracyValid, accuracyM: body.accuracyM ?? null, maxAccuracyM: settings.maxGpsAccuracyM };
     if (body.scheduleId) await db.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, body.scheduleId));
-    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: validLocation, distanceM: distance, radiusM: radius }, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: validLocation, distanceM: distance, radiusM: radius }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
 
-    return { visit, geofence: { valid: validLocation, distanceM: distance, radiusM: radius }, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
+    return { visit, geofence: { valid: validLocation, distanceM: distance, radiusM: radius }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
   });
 
   app.post('/visits/check-out', { preHandler: requirePermission('visits.execute') }, async (request) => {

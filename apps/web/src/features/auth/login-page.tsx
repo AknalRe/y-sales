@@ -18,8 +18,8 @@ export function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await signIn(identifier, password);
-      navigate('/dashboard');
+      const signedInUser = await signIn(identifier, password);
+      navigate(signedInUser.isSuperAdmin ? '/platform' : '/admin');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login gagal');
     } finally {

@@ -8,13 +8,27 @@ import {
   ReceiptText,
   ShoppingCart,
   Inbox,
-  UserCircle
+  UserCircle,
+  Users,
+  Shield,
 } from 'lucide-react';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { AttendancePage } from '@/features/attendance/attendance-page';
 import { AttendanceReviewPage } from '@/features/attendance/attendance-review-page';
 import { SalesHomePage } from '@/features/sales/sales-home-page';
-import { Placeholder, type RouteConfig } from './types';
+import { TrackingPage } from '@/features/sales/tracking-page';
+import { ReportsPage } from '@/features/sales/reports-page';
+import { InvoiceReviewPage } from '@/features/sales/invoice-review-page';
+import { StockPage } from '@/features/sales/stock-page';
+import { ReceivablesPage } from '@/features/sales/receivables-page';
+import { SubscriptionPage } from '@/features/sales/subscription-page';
+import { SalesProfilePage } from '@/features/sales/sales-profile-page';
+import { VisitPage } from '@/features/sales/visit-page';
+import { TransactionsPage } from '@/features/sales/transactions-page';
+import { InvoicesPage } from '@/features/sales/invoices-page';
+import { UsersPage } from '@/features/users/users-page';
+import { RolesPage } from '@/features/users/roles-page';
+import { type RouteConfig } from './types';
 
 // --- ADMIN ROUTES ---
 export const mainRoutes: RouteConfig[] = [
@@ -31,7 +45,7 @@ export const mainRoutes: RouteConfig[] = [
   },
   {
     path: 'tracking',
-    element: <Placeholder title="Tracking Penjualan" description="Monitoring visit outlet, lokasi sales, dan aktivitas lapangan." />,
+    element: <TrackingPage />,
     handle: {
       label: 'Tracking Penjualan',
       icon: Map,
@@ -42,7 +56,7 @@ export const mainRoutes: RouteConfig[] = [
   },
   {
     path: 'reports',
-    element: <Placeholder title="Laporan Penjualan" description="Ringkasan omset, produk terjual, visit, dan performa sales." />,
+    element: <ReportsPage />,
     handle: {
       label: 'Laporan Penjualan',
       icon: BarChart3,
@@ -53,7 +67,7 @@ export const mainRoutes: RouteConfig[] = [
   },
   {
     path: 'stock',
-    element: <Placeholder title="Manajemen Stok" description="Input stok utama dari admin dan kontrol mutasi stok." />,
+    element: <StockPage />,
     handle: {
       label: 'Manajemen Stok',
       icon: Boxes,
@@ -64,7 +78,7 @@ export const mainRoutes: RouteConfig[] = [
   },
   {
     path: 'receivables',
-    element: <Placeholder title="Piutang Usaha" description="Daftar order unpaid/partial dan jadwal penagihan." />,
+    element: <ReceivablesPage />,
     handle: {
       label: 'Piutang Usaha',
       icon: CreditCard,
@@ -75,7 +89,7 @@ export const mainRoutes: RouteConfig[] = [
   },
   {
     path: 'invoice-review',
-    element: <Placeholder title="Verifikasi Nota" description="Review nota/foto invoice dan closing transaksi sales." />,
+    element: <InvoiceReviewPage />,
     handle: {
       label: 'Verifikasi Nota',
       icon: ReceiptText,
@@ -93,6 +107,36 @@ export const mainRoutes: RouteConfig[] = [
       permission: 'attendance.review',
       section: 'Compliance',
       badge: 'HR'
+    }
+  },
+  {
+    path: 'users',
+    element: <UsersPage />,
+    handle: {
+      label: 'Manajemen User',
+      icon: Users,
+      permission: 'users.manage',
+      section: 'Pengaturan',
+    }
+  },
+  {
+    path: 'roles',
+    element: <RolesPage />,
+    handle: {
+      label: 'Manajemen Role',
+      icon: Shield,
+      permission: 'roles.manage',
+      section: 'Pengaturan',
+    }
+  },
+  {
+    path: 'subscription',
+    element: <SubscriptionPage />,
+    handle: {
+      label: 'Subscription',
+      icon: CreditCard,
+      permission: 'settings.manage',
+      section: 'Pengaturan',
     }
   }
 ];
@@ -122,7 +166,7 @@ export const salesRoutes: RouteConfig[] = [
   },
   {
     path: 'visit',
-    element: <Placeholder title="Check-In Kunjungan" description="Pilih outlet, validasi GPS/geofence, dan kirim visit log." mobile />,
+    element: <VisitPage />,
     handle: {
       label: 'Check-In Kunjungan',
       icon: Map,
@@ -131,7 +175,7 @@ export const salesRoutes: RouteConfig[] = [
   },
   {
     path: 'transactions',
-    element: <Placeholder title="Buat Transaksi" description="Pilih outlet, pilih produk, tambah keranjang, lalu kirim untuk verifikasi admin." mobile />,
+    element: <TransactionsPage />,
     handle: {
       label: 'Buat Transaksi',
       icon: ShoppingCart,
@@ -140,7 +184,7 @@ export const salesRoutes: RouteConfig[] = [
   },
   {
     path: 'invoices',
-    element: <Placeholder title="Foto Nota" description="Upload nota atau bukti transaksi untuk proses approval closing." mobile />,
+    element: <InvoicesPage />,
     handle: {
       label: 'Foto Nota',
       icon: Inbox,
@@ -149,7 +193,7 @@ export const salesRoutes: RouteConfig[] = [
   },
   {
     path: 'profile',
-    element: <Placeholder title="Profil Sales" description="Informasi sales, area, perangkat, dan status sinkronisasi." mobile />,
+    element: <SalesProfilePage />,
     handle: {
       label: 'Profil Sales',
       icon: UserCircle,

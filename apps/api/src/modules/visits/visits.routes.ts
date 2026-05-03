@@ -6,7 +6,7 @@ import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 import { verifyFaceIdentity } from '../face/face-verification.service.js';
-import { requireTenantId } from '../tenant.js';
+import { requireTenantId, requireFeature } from '../tenant.js';
 import { getGeneralSettings } from '../../utils/settings.js';
 
 const scheduleSchema = z.object({
@@ -208,6 +208,8 @@ export async function visitRoutes(app: FastifyInstance) {
 
   app.post('/visits/check-in', { preHandler: requirePermission('visits.execute') }, async (request) => {
     const companyId = requireTenantId(request);
+    // Feature gate: only plans with 'visits' feature can use visit check-in
+    await requireFeature(request, 'visits');
     const body = checkInSchema.parse(request.body);
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, body.outletId)));
     if (!outlet) return { message: 'Outlet tidak ditemukan' };

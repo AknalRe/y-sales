@@ -3,20 +3,21 @@ import {
   Bell,
   LogOut,
   Menu,
-  Search,
   UserCircle,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
+import { PlatformCompanyViewBanner } from '@/features/platform/company-view-banner';
 
 // Helper to group routes by section
-const getNavSections = (permissions: string[], user: any) => {
+const getNavSections = (permissions: string[], user: any, isSuperAdmin: boolean) => {
   const allRoutes = [...mainRoutes, ...playgroundRoutes.filter(r => !r.handle.mobile && !r.handle.hidden)];
   
   const canSee = (permission?: string) => {
     if (!permission) return true;
+    if (isSuperAdmin) return true;
     return permissions.includes(permission) || user?.roleCode === 'ADMINISTRATOR';
   };
 
@@ -36,15 +37,14 @@ const getNavSections = (permissions: string[], user: any) => {
 
 export function AdminShell() {
   const location = useLocation();
-  const { user, permissions, signOut } = useAuth();
+  const { user, permissions, isSuperAdmin, signOut } = useAuth();
   const [open, setOpen] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
   
-  const navSections = useMemo(() => getNavSections(permissions, user), [permissions, user]);
+  const navSections = useMemo(() => getNavSections(permissions, user, isSuperAdmin), [permissions, user, isSuperAdmin]);
   
   const currentTitle = useMemo(() => {
     const allRoutes = [...mainRoutes, ...playgroundRoutes];
-    const path = location.pathname === '/admin' ? '/admin' : location.pathname;
     // Special check for index route
     if (location.pathname === '/admin') {
        return mainRoutes.find(r => r.index)?.handle.label || 'Admin Dashboard';
@@ -103,10 +103,12 @@ export function AdminShell() {
               <span />
             </button>
             <div className="admin-profile-trigger" onClick={() => setProfileOpen(!profileOpen)}>
-              <div className="admin-avatar">AU</div>
+              <div className="admin-avatar">
+                {(user?.name ?? 'AU').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+              </div>
               <div className="admin-user-copy">
-                <strong>Admin Utama</strong>
-                <span>admin@mahasura.com</span>
+                <strong>{user?.name ?? 'Administrator'}</strong>
+                <span>{user?.company?.name ?? user?.email ?? user?.roleCode}</span>
               </div>
               
               {profileOpen && (
@@ -126,6 +128,7 @@ export function AdminShell() {
         </header>
 
         <div className="admin-content-grid">
+          <PlatformCompanyViewBanner />
           <Outlet />
         </div>
       </main>

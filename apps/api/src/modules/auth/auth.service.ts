@@ -8,15 +8,17 @@ import { db } from '../../plugins/db.js';
 
 export type AuthUser = {
   id: string;
-  companyId: string;
+  companyId: string | null;
   roleCode: string;
+  isSuperAdmin: boolean;
   permissions: string[];
 };
 
 export type AuthTokenPayload = {
   sub: string;
-  companyId: string;
+  companyId: string | null;
   roleCode: string;
+  isSuperAdmin: boolean;
 };
 
 export function hashPassword(password: string) {
@@ -52,6 +54,8 @@ export async function getUserPermissions(userId: string) {
 
   if (!user) return null;
 
+  const isSuperAdmin = user.roleCode === 'SUPER_ADMIN';
+
   const rows = await db
     .select({ code: permissions.code })
     .from(rolePermissions)
@@ -61,6 +65,7 @@ export async function getUserPermissions(userId: string) {
   return {
     companyId: user.companyId,
     roleCode: user.roleCode,
+    isSuperAdmin,
     permissions: rows.map((row) => row.code),
   };
 }
@@ -85,6 +90,7 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
       id: payload.sub,
       companyId: payload.companyId,
       roleCode: permissionData.roleCode,
+      isSuperAdmin: permissionData.isSuperAdmin,
       permissions: permissionData.permissions,
     };
   } catch {
@@ -99,7 +105,8 @@ export function requirePermission(permissionCode: string) {
     if (reply.sent) return;
 
     const user = request.user as AuthUser | undefined;
-    const allowed = user?.roleCode === 'ADMINISTRATOR' || user?.permissions.includes(permissionCode);
+    // Super Admin bypasses all permission checks
+    const allowed = user?.isSuperAdmin || user?.roleCode === 'ADMINISTRATOR' || user?.permissions.includes(permissionCode);
 
     if (!allowed) {
       return reply.status(403).send({ message: 'Permission denied', permission: permissionCode });
@@ -107,8 +114,9 @@ export function requirePermission(permissionCode: string) {
   };
 }
 
-export async function createSession(userId: string, companyId: string, roleCode: string, deviceId?: string) {
-  const refreshToken = signRefreshToken({ sub: userId, companyId, roleCode });
+export async function createSession(userId: string, companyId: string | null, roleCode: string, deviceId?: string) {
+  const isSuperAdmin = roleCode === 'SUPER_ADMIN';
+  const refreshToken = signRefreshToken({ sub: userId, companyId, roleCode, isSuperAdmin });
   const refreshTokenHash = await bcrypt.hash(refreshToken, 12);
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
@@ -118,14 +126,22 @@ export async function createSession(userId: string, companyId: string, roleCode:
 }
 
 export async function revokeRefreshToken(refreshToken: string) {
-  const rows = await db.select().from(sessions);
+  try {
+    // Decode payload first to get userId — avoids full table scan
+    const payload = verifyRefreshToken(refreshToken);
+    const rows = await db.select().from(sessions).where(eq(sessions.userId, payload.sub));
 
-  for (const session of rows) {
-    const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
-    if (match) {
-      await db.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.id, session.id));
-      return true;
+    for (const session of rows) {
+      if (session.revokedAt) continue;
+      const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
+      if (match) {
+        await db.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.id, session.id));
+        return true;
+      }
     }
+  } catch {
+    // Token already invalid — treat as already revoked
+    return false;
   }
 
   return false;

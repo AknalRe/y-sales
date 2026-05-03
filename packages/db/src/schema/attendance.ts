@@ -1,5 +1,6 @@
 import { boolean, numeric, pgEnum, pgTable, timestamp, uuid, varchar, date } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
+import { companies } from './companies.js';
 import { mediaFiles } from './media.js';
 
 export const attendanceStatusEnum = pgEnum('attendance_status', ['open', 'closed', 'flagged']);
@@ -26,6 +27,7 @@ export const faceCaptures = pgTable('face_captures', {
 
 export const attendanceSessions = pgTable('attendance_sessions', {
   id: uuid('id').defaultRandom().primaryKey(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').notNull().references(() => users.id),
   workDate: date('work_date').notNull(),
   checkInAt: timestamp('check_in_at', { withTimezone: true }),
@@ -49,6 +51,7 @@ export const attendanceSessions = pgTable('attendance_sessions', {
 
 export const gpsTrackLogs = pgTable('gps_track_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').notNull().references(() => users.id),
   attendanceSessionId: uuid('attendance_session_id').references(() => attendanceSessions.id),
   latitude: numeric('latitude', { precision: 10, scale: 7 }).notNull(),

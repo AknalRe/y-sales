@@ -1,5 +1,6 @@
 import { date, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
+import { companies } from './companies.js';
 import { attendanceSessions } from './attendance.js';
 import { products } from './products.js';
 
@@ -8,6 +9,7 @@ export const approvalActionEnum = pgEnum('approval_action', ['approved', 'reject
 
 export const cashDeposits = pgTable('cash_deposits', {
   id: uuid('id').defaultRandom().primaryKey(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
   salesUserId: uuid('sales_user_id').notNull().references(() => users.id),
   workDate: date('work_date').notNull(),
   attendanceSessionId: uuid('attendance_session_id').references(() => attendanceSessions.id),

@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getMe, login } from '../../lib/api/client';
 
 type SessionUser = {
@@ -6,7 +6,10 @@ type SessionUser = {
   name: string;
   email?: string;
   phone?: string;
+  employeeCode?: string;
   roleCode: string;
+  isSuperAdmin: boolean;
+  company: { id: string; name: string; slug: string } | null;
 };
 
 type AuthContextValue = {
@@ -14,7 +17,8 @@ type AuthContextValue = {
   refreshToken?: string;
   user?: SessionUser;
   permissions: string[];
-  signIn: (identifier: string, password: string) => Promise<void>;
+  isSuperAdmin: boolean;
+  signIn: (identifier: string, password: string) => Promise<SessionUser>;
   signOut: () => void;
 };
 
@@ -33,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshToken,
     user,
     permissions,
+    isSuperAdmin: user?.isSuperAdmin ?? false,
     async signIn(identifier, password) {
       const deviceId = getDeviceId();
       const result = await login({ identifier, password, deviceId });
@@ -40,7 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const session = {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-        user: me.user,
+        user: {
+          ...me.user,
+          isSuperAdmin: result.user.isSuperAdmin ?? false,
+          company: result.user.company ?? null,
+        },
         permissions: me.permissions,
       };
       localStorage.setItem(storageKey, JSON.stringify(session));
@@ -48,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRefreshToken(session.refreshToken);
       setUser(session.user);
       setPermissions(session.permissions);
+      return session.user;
     },
     signOut() {
       localStorage.removeItem(storageKey);
@@ -57,6 +67,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPermissions([]);
     },
   }), [accessToken, refreshToken, user, permissions]);
+
+  // Global 401 handler — listen for auth:unauthorized event dispatched by apiRequest
+  const handleUnauthorized = useCallback(() => {
+    localStorage.removeItem(storageKey);
+    setAccessToken(undefined);
+    setRefreshToken(undefined);
+    setUser(undefined);
+    setPermissions([]);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [handleUnauthorized]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

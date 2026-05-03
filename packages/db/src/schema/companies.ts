@@ -27,6 +27,11 @@ export const companies = pgTable('companies', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+/**
+ * @deprecated Use `tenantSubscriptions` from platform.ts instead.
+ * This table is kept for backward compatibility and data migration only.
+ * Do NOT use this in new code — all subscription logic should reference tenant_subscriptions.
+ */
 export const companySubscriptions = pgTable('company_subscriptions', {
   id: uuid('id').defaultRandom().primaryKey(),
   companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),

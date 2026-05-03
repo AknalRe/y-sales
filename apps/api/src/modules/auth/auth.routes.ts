@@ -47,7 +47,7 @@ export async function authRoutes(app: FastifyInstance) {
       })
       .from(users)
       .innerJoin(roles, eq(users.roleId, roles.id))
-      .innerJoin(companies, eq(users.companyId, companies.id))
+      .leftJoin(companies, eq(users.companyId, companies.id))
       .where(or(...identifierConditions));
 
     if (!user || !user.passwordHash || user.status !== 'active') {
@@ -60,7 +60,7 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.status(401).send({ message: 'Invalid credentials' });
     }
 
-    const accessToken = signAccessToken({ sub: user.id, companyId: user.companyId, roleCode: user.roleCode });
+    const accessToken = signAccessToken({ sub: user.id, companyId: user.companyId, roleCode: user.roleCode, isSuperAdmin: user.roleCode === 'SUPER_ADMIN' });
     const refreshToken = await createSession(user.id, user.companyId, user.roleCode, body.deviceId);
 
     return {
@@ -72,11 +72,12 @@ export async function authRoutes(app: FastifyInstance) {
         email: user.email,
         phone: user.phone,
         roleCode: user.roleCode,
-        company: {
+        isSuperAdmin: user.roleCode === 'SUPER_ADMIN',
+        company: user.companyId ? {
           id: user.companyId,
           name: user.companyName,
           slug: user.companySlug,
-        },
+        } : null,
       },
     };
   });

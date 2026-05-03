@@ -1,0 +1,3 @@
+CREATE TYPE "public"."tenant_sub_status" AS ENUM('trialing', 'active', 'past_due', 'suspended', 'cancelled', 'expired');--> statement-breakpoint
+ALTER TABLE "tenant_subscriptions" ALTER COLUMN "status" SET DEFAULT 'trialing'::"public"."tenant_sub_status";--> statement-breakpoint
+ALTER TABLE "tenant_subscriptions" ALTER COLUMN "status" SET DATA TYPE "public"."tenant_sub_status" USING "status"::"public"."tenant_sub_status";

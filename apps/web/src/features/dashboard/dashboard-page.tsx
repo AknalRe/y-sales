@@ -1,87 +1,256 @@
-import { Camera, MapPin, ShieldCheck, SlidersHorizontal, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Camera, MapPin, ShieldCheck, SlidersHorizontal, Users,
+  TrendingUp, ShoppingCart, Package, Clock, RefreshCw,
+  AlertCircle, ArrowUpRight, Activity
+} from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
+
+type ReportSummary = {
+  totalSalesAmount: string;
+  totalOrders: number;
+  totalVisits: number;
+  totalProducts: number;
+  pendingApprovals: number;
+  activeUsers: number;
+  todaySalesAmount: string;
+  todayOrders: number;
+  todayVisits: number;
+};
 
 const roleMenus = [
   { permission: 'attendance.execute', title: 'Absensi Wajah', icon: Camera, text: 'Check-in kamera depan dan validasi GPS.', href: '/attendance' },
   { permission: 'visits.execute', title: 'Visit Outlet', icon: MapPin, text: 'Geofence outlet dan durasi kunjungan.', href: '/sales/visit' },
   { permission: 'attendance.review', title: 'Review Absensi', icon: ShieldCheck, text: 'Validasi foto wajah dan lokasi sales.', href: '/attendance/review' },
-  { permission: 'roles.manage', title: 'Role & Permission', icon: Users, text: 'Atur akses fitur per role secara fleksibel.', href: '/admin' },
-  { permission: 'settings.manage', title: 'Pengaturan Radius', icon: SlidersHorizontal, text: 'Custom radius geofence dan aturan GPS.', href: '/admin' },
+  { permission: 'invoice.review', title: 'Verifikasi Nota', icon: ShoppingCart, text: 'Approve / reject nota transaksi sales.', href: '/admin/invoice-review' },
+  { permission: 'reports.view', title: 'Laporan Penjualan', icon: TrendingUp, text: 'KPI omset, leaderboard, dan export CSV.', href: '/admin/reports' },
+  { permission: 'products.manage', title: 'Manajemen Stok', icon: Package, text: 'Monitor stok dan riwayat mutasi gudang.', href: '/admin/stock' },
+  { permission: 'receivables.view', title: 'Piutang Usaha', icon: Clock, text: 'Pantau kredit dan jadwal penagihan.', href: '/admin/receivables' },
+  { permission: 'roles.manage', title: 'Role & Permission', icon: Users, text: 'Atur akses fitur per role secara fleksibel.', href: '/admin/roles' },
+  { permission: 'settings.manage', title: 'Pengaturan', icon: SlidersHorizontal, text: 'Custom radius geofence dan aturan GPS.', href: '/admin/users' },
 ];
 
-const stats = [
-  { name: 'Total Transaksi', value: '1,284', change: '+12.5%', positive: true },
-  { name: 'Omset Penjualan', value: 'Rp 45.2M', change: '+8.2%', positive: true },
-  { name: 'Visit Hari Ini', value: '156', change: '-2.4%', positive: false },
-  { name: 'Barang Terjual', value: '14,230', change: '+18.1%', positive: true },
-];
+function formatRp(v: string | number, compact = false) {
+  const n = Number(v || 0);
+  if (compact) {
+    if (n >= 1_000_000_000) return `Rp ${(n / 1_000_000_000).toFixed(1)}M`;
+    if (n >= 1_000_000) return `Rp ${(n / 1_000_000).toFixed(1)}Jt`;
+    if (n >= 1_000) return `Rp ${(n / 1_000).toFixed(0)}rb`;
+    return `Rp ${n.toLocaleString('id-ID')}`;
+  }
+  return `Rp ${n.toLocaleString('id-ID')}`;
+}
+
+function apiReq<T>(path: string, token: string): Promise<T> {
+  const base = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
+  return fetch(`${base}${path}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  }).then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
+}
 
 export function DashboardPage() {
-  const { user, permissions } = useAuth();
+  const { user, permissions, accessToken } = useAuth();
   const isAdministrator = user?.roleCode === 'ADMINISTRATOR';
-  const visibleMenus = roleMenus.filter((menu) => isAdministrator || permissions.includes(menu.permission));
+  const visibleMenus = roleMenus.filter(m => isAdministrator || permissions.includes(m.permission));
+
+  const [summary, setSummary] = useState<ReportSummary | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  async function loadSummary() {
+    if (!accessToken || !permissions.includes('reports.view')) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await apiReq<{ summary: ReportSummary }>('/reports/summary', accessToken);
+      setSummary(res.summary);
+      setLastUpdated(new Date());
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal memuat data');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadSummary(); }, [accessToken]);
+
+  const statCards = summary ? [
+    {
+      label: 'Omset Hari Ini',
+      value: formatRp(summary.todaySalesAmount, true),
+      sub: `${summary.todayOrders} transaksi`,
+      icon: TrendingUp,
+      color: '#34d399',
+      href: '/admin/reports',
+    },
+    {
+      label: 'Visit Hari Ini',
+      value: String(summary.todayVisits),
+      sub: `${summary.totalVisits} total`,
+      icon: MapPin,
+      color: '#60a5fa',
+      href: '/admin/tracking',
+    },
+    {
+      label: 'Pending Approval',
+      value: String(summary.pendingApprovals),
+      sub: 'nota menunggu review',
+      icon: Clock,
+      color: summary.pendingApprovals > 0 ? '#f97316' : '#94a3b8',
+      href: '/admin/invoice-review',
+    },
+    {
+      label: 'Total Produk',
+      value: String(summary.totalProducts),
+      sub: `${summary.activeUsers} user aktif`,
+      icon: Package,
+      color: '#a78bfa',
+      href: '/admin/stock',
+    },
+  ] : [];
 
   return (
-    <div className="space-y-7">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div style={{ maxWidth: 1200, margin: '0 auto', color: '#e2e8f0', padding: '0 .5rem' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '.75rem' }}>
         <div>
-          <h1 className="text-3xl font-black text-[#40231e]">Dashboard Utama</h1>
-          <p className="mt-1 text-slate-500">Ringkasan performa penjualan dan aktivitas hari ini.</p>
+          <h1 style={{ margin: 0, fontSize: 'clamp(1.5rem,3vw,2rem)', fontWeight: 800, color: '#fff', letterSpacing: '-.03em' }}>
+            Dashboard Utama
+          </h1>
+          <p style={{ margin: '.3rem 0 0', color: '#64748b', fontSize: '.875rem' }}>
+            Selamat datang, <strong style={{ color: '#a78bfa' }}>{user?.name}</strong>
+            {lastUpdated && <span style={{ marginLeft: '.5rem', color: '#475569' }}>· Update: {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>}
+          </p>
         </div>
-        <Link to="/admin/reports" className="rounded-xl border border-[#4a2922]/10 bg-white px-4 py-2 text-sm font-bold text-[#40231e] shadow-sm transition hover:bg-orange-50">
-          Unduh Laporan
-        </Link>
+        <div style={{ display: 'flex', gap: '.5rem' }}>
+          {permissions.includes('invoice.review') && summary && summary.pendingApprovals > 0 && (
+            <Link to="/admin/invoice-review" style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: 'rgba(249,115,22,.15)', border: '1px solid rgba(249,115,22,.3)', color: '#fb923c', borderRadius: 10, padding: '.5rem .85rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none' }}>
+              <AlertCircle size={14} /> {summary.pendingApprovals} Nota Pending
+            </Link>
+          )}
+          <button onClick={loadSummary} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', color: '#e2e8f0', borderRadius: 10, padding: '.5rem .85rem', fontSize: '.82rem', fontWeight: 600, cursor: 'pointer' }}>
+            <RefreshCw size={14} style={{ animation: loading ? 'spin 1s linear infinite' : undefined }} /> Refresh
+          </button>
+        </div>
       </div>
 
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <article key={stat.name} className="brand-card group relative overflow-hidden rounded-3xl p-6 transition hover:-translate-y-1 hover:shadow-2xl">
-            <div className="absolute right-[-1rem] top-[-1rem] h-24 w-24 rounded-bl-full bg-[#b55925]/10 transition group-hover:scale-110" />
-            <p className="text-sm font-semibold text-slate-500">{stat.name}</p>
-            <h2 className="mt-2 text-3xl font-black text-[#40231e]">{stat.value}</h2>
-            <span className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${stat.positive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {stat.positive ? '?' : '?'} {stat.change} dari bulan lalu
-            </span>
-          </article>
-        ))}
-      </section>
+      {error && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.25)', color: '#fca5a5', borderRadius: 12, padding: '.75rem 1rem', marginBottom: '1rem', fontSize: '.875rem' }}>
+          <AlertCircle size={15} /> {error}
+        </div>
+      )}
 
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="brand-card rounded-3xl p-6 lg:col-span-2">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-900">Akses Cepat</h2>
-            <span className="rounded-full bg-[#b55925]/10 px-3 py-1 text-xs font-bold text-[#b55925]">{user?.roleCode}</span>
+      {/* KPI Cards */}
+      {statCards.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '.75rem', marginBottom: '1.5rem' }}>
+          {statCards.map(s => (
+            <Link key={s.label} to={s.href} style={{ textDecoration: 'none' }}>
+              <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 20, padding: '1.25rem', transition: 'all .2s', cursor: 'pointer' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.borderColor = `${s.color}40`; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,.08)'; }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem' }}>
+                  <div style={{ background: `${s.color}18`, border: `1px solid ${s.color}30`, borderRadius: 12, padding: '.5rem', display: 'flex' }}>
+                    <s.icon size={18} style={{ color: s.color }} />
+                  </div>
+                  <ArrowUpRight size={14} style={{ color: '#475569' }} />
+                </div>
+                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#fff', lineHeight: 1, marginBottom: '.3rem' }}>{s.value}</div>
+                <div style={{ fontSize: '.78rem', color: '#64748b', fontWeight: 500 }}>{s.label}</div>
+                <div style={{ fontSize: '.73rem', color: '#475569', marginTop: '.2rem' }}>{s.sub}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Loading skeleton when no data yet */}
+      {loading && !summary && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '.75rem', marginBottom: '1.5rem' }}>
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 20, padding: '1.25rem', minHeight: 120 }}>
+              <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: 8, height: 36, width: 36, marginBottom: '.85rem' }} />
+              <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: 6, height: 28, width: '60%', marginBottom: '.4rem' }} />
+              <div style={{ background: 'rgba(255,255,255,.04)', borderRadius: 6, height: 14, width: '80%' }} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Main Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1rem' }}>
+        {/* Quick Access */}
+        <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 24, padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#e2e8f0' }}>Akses Cepat</h2>
+            <span style={{ background: 'rgba(167,139,250,.15)', color: '#a78bfa', borderRadius: 999, padding: '.2rem .65rem', fontSize: '.73rem', fontWeight: 700 }}>
+              {user?.roleCode}
+            </span>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {visibleMenus.map((menu) => (
-              <Link to={menu.href} key={menu.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-[#b55925]/30 hover:bg-orange-50">
-                <menu.icon className="mb-4 text-[#b55925]" size={28} />
-                <h3 className="font-black text-slate-900">{menu.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">{menu.text}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '.65rem' }}>
+            {visibleMenus.map(menu => (
+              <Link key={menu.title} to={menu.href} style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 16, padding: '1rem', transition: 'all .2s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(167,139,250,.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(167,139,250,.25)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,.07)'; (e.currentTarget as HTMLElement).style.transform = ''; }}
+                >
+                  <menu.icon size={22} style={{ color: '#a78bfa', marginBottom: '.65rem' }} />
+                  <h3 style={{ margin: '0 0 .3rem', fontSize: '.88rem', fontWeight: 700, color: '#e2e8f0' }}>{menu.title}</h3>
+                  <p style={{ margin: 0, fontSize: '.75rem', color: '#64748b', lineHeight: 1.5 }}>{menu.text}</p>
+                </div>
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="brand-card rounded-3xl p-6">
-          <h2 className="mb-6 text-lg font-black text-slate-900">Aktivitas Sales Terbaru</h2>
-          <div className="space-y-5">
-            {['Budi Santoso visit Toko Jaya Abadi', 'Sari membuat order Rp 2.500.000', 'Admin memverifikasi nota INV-2401', 'Stok Kopi Robusta ditambah'].map((item, index) => (
-              <div key={item} className="relative flex gap-4">
-                {index !== 3 ? <div className="absolute left-4 top-9 h-8 w-px bg-slate-200" /> : null}
-                <div className="z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#966556]/15 text-[#966556] ring-4 ring-white">??</div>
-                <div>
-                  <p className="text-sm font-bold text-slate-800">{item}</p>
-                  <p className="mt-1 text-xs text-slate-400">{10 + index * 8} menit yang lalu</p>
+        {/* Activity Feed */}
+        <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 24, padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1.25rem' }}>
+            <Activity size={16} style={{ color: '#a78bfa' }} />
+            <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#e2e8f0' }}>Ringkasan Platform</h2>
+          </div>
+
+          {summary ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+              {[
+                { label: 'Total Omset All-Time', value: formatRp(summary.totalSalesAmount, true), color: '#34d399' },
+                { label: 'Total Order', value: String(summary.totalOrders), color: '#60a5fa' },
+                { label: 'Total Visit', value: String(summary.totalVisits), color: '#a78bfa' },
+                { label: 'Produk Terdaftar', value: String(summary.totalProducts), color: '#fbbf24' },
+                { label: 'User Aktif', value: String(summary.activeUsers), color: '#fb7185' },
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '.65rem .85rem', background: 'rgba(255,255,255,.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,.06)' }}>
+                  <span style={{ fontSize: '.82rem', color: '#64748b' }}>{item.label}</span>
+                  <strong style={{ fontSize: '.95rem', color: item.color }}>{item.value}</strong>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} style={{ background: 'rgba(255,255,255,.03)', borderRadius: 12, height: 44 }} />
+              ))}
+            </div>
+          )}
+
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,.06)' }}>
+            <Link to="/admin/reports" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem', background: 'rgba(167,139,250,.12)', border: '1px solid rgba(167,139,250,.25)', color: '#a78bfa', borderRadius: 12, padding: '.65rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none', transition: 'all .2s' }}>
+              <BarChart3 size={15} /> Lihat Laporan Lengkap
+            </Link>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
 
-
+// Icon missing in imports — add here
+function BarChart3({ size, ...props }: { size?: number; style?: React.CSSProperties }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  );
+}

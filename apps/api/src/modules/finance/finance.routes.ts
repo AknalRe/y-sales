@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { consignmentActions, consignments, receivablePayments, receivables } from '@yuksales/db/schema';
+import { consignmentActions, consignments, receivablePayments, receivables, salesTransactions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
@@ -19,8 +19,28 @@ const consignmentActionSchema = z.object({
 });
 
 export async function financeRoutes(app: FastifyInstance) {
-  app.get('/receivables', { preHandler: requirePermission('receivables.view') }, async () => {
-    const rows = await db.select().from(receivables).orderBy(desc(receivables.createdAt)).limit(100);
+  // List receivables — filtered by companyId via salesTransactions join
+  app.get('/receivables', { preHandler: requirePermission('receivables.view') }, async (request) => {
+    const companyId = requireTenantId(request);
+    const rows = await db
+      .select({
+        id: receivables.id,
+        transactionId: receivables.transactionId,
+        outletId: receivables.outletId,
+        customerType: receivables.customerType,
+        principalAmount: receivables.principalAmount,
+        paidAmount: receivables.paidAmount,
+        outstandingAmount: receivables.outstandingAmount,
+        dueDate: receivables.dueDate,
+        status: receivables.status,
+        createdAt: receivables.createdAt,
+        updatedAt: receivables.updatedAt,
+      })
+      .from(receivables)
+      .innerJoin(salesTransactions, eq(receivables.transactionId, salesTransactions.id))
+      .where(eq(salesTransactions.companyId, companyId))
+      .orderBy(desc(receivables.createdAt))
+      .limit(200);
     return { receivables: rows };
   });
 
@@ -42,9 +62,17 @@ export async function financeRoutes(app: FastifyInstance) {
     return result;
   });
 
-  app.get('/consignments', { preHandler: requirePermission('receivables.view') }, async () => {
-    const rows = await db.select().from(consignments).orderBy(desc(consignments.createdAt)).limit(100);
-    return { consignments: rows };
+  // List consignments — filtered by companyId via salesTransactions join
+  app.get('/consignments', { preHandler: requirePermission('receivables.view') }, async (request) => {
+    const companyId = requireTenantId(request);
+    const rows = await db
+      .select()
+      .from(consignments)
+      .innerJoin(salesTransactions, eq(consignments.transactionId, salesTransactions.id))
+      .where(eq(salesTransactions.companyId, companyId))
+      .orderBy(desc(consignments.createdAt))
+      .limit(200);
+    return { consignments: rows.map(r => r.consignments) };
   });
 
   app.post('/consignments/:id/actions', { preHandler: requirePermission('receivables.view') }, async (request) => {

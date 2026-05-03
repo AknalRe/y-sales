@@ -1,14 +1,15 @@
-import { pgEnum, pgTable, text, timestamp, uuid, varchar, uniqueIndex } from 'drizzle-orm/pg-core';
+import { boolean, pgEnum, pgTable, text, timestamp, uuid, varchar, uniqueIndex } from 'drizzle-orm/pg-core';
 import { companies } from './companies.js';
 
 export const userStatusEnum = pgEnum('user_status', ['active', 'inactive', 'suspended']);
 
 export const roles = pgTable('roles', {
   id: uuid('id').defaultRandom().primaryKey(),
-  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }), // null = platform-level role
   code: varchar('code', { length: 64 }).notNull(),
   name: varchar('name', { length: 120 }).notNull(),
   description: text('description'),
+  isSystemRole: boolean('is_system_role').default(false).notNull(), // cannot be deleted by tenants
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
@@ -36,7 +37,7 @@ export const rolePermissions = pgTable('role_permissions', {
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
-  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }), // null = Super Admin platform
   roleId: uuid('role_id').notNull().references(() => roles.id),
   supervisorId: uuid('supervisor_id'),
   name: varchar('name', { length: 160 }).notNull(),
@@ -54,7 +55,7 @@ export const users = pgTable('users', {
 
 export const sessions = pgTable('sessions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }), // null = Super Admin session
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   refreshTokenHash: varchar('refresh_token_hash', { length: 255 }).notNull(),
   deviceId: varchar('device_id', { length: 160 }),

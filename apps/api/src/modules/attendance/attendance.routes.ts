@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { attendanceSessions, faceCaptures, mediaFiles, outlets } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
+import { requireTenantId, requireFeature } from '../tenant.js';
 import { getNumericSetting } from '../../utils/settings.js';
 import { validateGeofence } from '../../utils/geofence.js';
 
@@ -50,6 +51,9 @@ export async function attendanceRoutes(app: FastifyInstance) {
 
   app.post('/attendance/check-in', { preHandler: requirePermission('attendance.execute') }, async (request, reply) => {
     const authUser = request.user!;
+    const companyId = requireTenantId(request);
+    // Feature gate: only plans with 'attendance' feature can use check-in
+    await requireFeature(request, 'attendance');
     const body = checkInSchema.parse(request.body);
     const radius = await getNumericSetting('default_geofence_radius_m');
     const maxAccuracy = await getNumericSetting('max_gps_accuracy_m');
@@ -95,6 +99,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
         : 'invalid_location';
 
     const [session] = await db.insert(attendanceSessions).values({
+      companyId,
       userId: authUser.id,
       workDate: todayDateString(),
       checkInAt: new Date(body.capturedAt),

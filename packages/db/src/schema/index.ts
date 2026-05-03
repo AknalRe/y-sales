@@ -12,5 +12,6 @@ export * from './deposits.js';
 export * from './face-templates.js';
 export * from './integrations.js';
 export * from './sync.js';
+export * from './platform.js';
 
 

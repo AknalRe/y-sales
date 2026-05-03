@@ -1,6 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { accessRoutes } from './modules/users/access.routes.js';
+import { usersRoutes } from './modules/users/users.routes.js';
+import { platformRoutes } from './modules/platform/platform.routes.js';
 import { attendanceRoutes } from './modules/attendance/attendance.routes.js';
 import { attendanceReviewRoutes } from './modules/attendance/attendance-review.routes.js';
 import { companyRoutes } from './modules/company/company.routes.js';
@@ -23,7 +25,9 @@ const notImplemented = (moduleName: string) => async () => ({
 
 export async function registerRoutes(app: FastifyInstance) {
   await app.register(authRoutes);
+  await app.register(platformRoutes);
   await app.register(accessRoutes);
+  await app.register(usersRoutes);
   await app.register(attendanceRoutes);
   await app.register(attendanceReviewRoutes);
   await app.register(companyRoutes);

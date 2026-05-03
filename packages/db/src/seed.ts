@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { and, eq } from 'drizzle-orm';
 import { createDb } from './client.js';
 import { resolveDatabaseUrl } from './database-url.js';
-import { appSettings, companies, companySubscriptions, inventoryBalances, outlets, permissions, products, rolePermissions, roles, users, warehouses } from './schema/index.js';
+import { appSettings, companies, inventoryBalances, outlets, permissions, products, rolePermissions, roles, subscriptionFeatures, subscriptionPlans, tenantSubscriptions, users, warehouses } from './schema/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
@@ -28,14 +28,15 @@ if (!defaultCompany) {
   throw new Error('Default company YukSales gagal dibuat.');
 }
 
-await db.insert(companySubscriptions).values({
+// Use tenantSubscriptions (canonical) instead of deprecated companySubscriptions
+await db.insert(tenantSubscriptions).values({
   companyId: defaultCompany.id,
   planCode: 'starter',
+  billingCycle: 'monthly',
   status: 'active',
-  limits: { users: 25, outlets: 500, products: 1000 },
 }).onConflictDoUpdate({
-  target: [companySubscriptions.companyId, companySubscriptions.planCode],
-  set: { status: 'active', limits: { users: 25, outlets: 500, products: 1000 }, updatedAt: new Date() },
+  target: tenantSubscriptions.companyId,
+  set: { planCode: 'starter', status: 'active', updatedAt: new Date() },
 });
 
 const roleSeeds = [
@@ -82,11 +83,20 @@ const settingSeeds: Array<{ key: string; value: unknown; description: string }> 
 ];
 
 for (const role of roleSeeds) {
-  await db.insert(roles).values({ ...role, companyId: defaultCompany.id }).onConflictDoUpdate({
+  await db.insert(roles).values({ ...role, companyId: defaultCompany.id, isSystemRole: true }).onConflictDoUpdate({
     target: [roles.companyId, roles.code],
-    set: { name: role.name, description: role.description, updatedAt: new Date() },
+    set: { name: role.name, description: role.description, isSystemRole: true, updatedAt: new Date() },
   });
 }
+
+// ─── Platform Super Admin Role (global, no company) ────────────────────────
+await db.insert(roles).values({
+  companyId: null,
+  code: 'SUPER_ADMIN',
+  name: 'Super Admin Platform',
+  description: 'Platform-level administrator. Has full access to all companies and system settings.',
+  isSystemRole: true,
+}).onConflictDoNothing();
 
 for (const [code, name, module] of permissionSeeds) {
   await db.insert(permissions).values({ code, name, module }).onConflictDoUpdate({
@@ -222,6 +232,113 @@ if (mainWarehouse) {
       set: { quantity: '100.00', reservedQuantity: '0.00', updatedAt: new Date() },
     });
   }
+}
+
+// ─── Subscription Feature Catalog ───────────────────────────────────────────
+const featureSeeds = [
+  { key: 'attendance', label: 'Attendance', description: 'Absensi user tenant.', category: 'Operasional', status: 'active' },
+  { key: 'visits', label: 'Customer Visits', description: 'Pencatatan kunjungan outlet/customer.', category: 'Sales', status: 'active' },
+  { key: 'basic_reports', label: 'Basic Reports', description: 'Laporan dasar operasional dan aktivitas sales.', category: 'Reporting', status: 'active' },
+  { key: 'route_tracking', label: 'Route Tracking', description: 'Tracking rute dan aktivitas sales lapangan.', category: 'Sales', status: 'active' },
+  { key: 'face_recognition', label: 'Face Recognition', description: 'Validasi wajah untuk absensi/kunjungan.', category: 'Operasional', status: 'active' },
+  { key: 'offline_sync', label: 'Offline Sync', description: 'Sinkronisasi data saat koneksi kembali online.', category: 'Operasional', status: 'active' },
+  { key: 'order_taking', label: 'Order Taking', description: 'Pembuatan order penjualan dari aplikasi.', category: 'Sales', status: 'active' },
+  { key: 'stock_management', label: 'Stock Management', description: 'Manajemen stok, gudang, dan produk.', category: 'Operasional', status: 'active' },
+  { key: 'advanced_reports', label: 'Advanced Reports', description: 'Laporan lanjutan dan insight performa.', category: 'Reporting', status: 'active' },
+  { key: 'export_excel', label: 'Export Excel', description: 'Export data operasional ke Excel.', category: 'Reporting', status: 'active' },
+  { key: 'r2_storage', label: 'Cloud Storage', description: 'Penyimpanan file/foto berbasis object storage.', category: 'Integrasi', status: 'active' },
+  { key: 'api_access', label: 'API Access', description: 'Akses integrasi API untuk sistem eksternal.', category: 'Integrasi', status: 'active' },
+  { key: 'priority_support', label: 'Priority Support', description: 'Prioritas support untuk tenant enterprise.', category: 'Support', status: 'active' },
+] as const;
+
+for (const feature of featureSeeds) {
+  await db.insert(subscriptionFeatures).values(feature).onConflictDoUpdate({
+    target: subscriptionFeatures.key,
+    set: {
+      label: feature.label,
+      description: feature.description,
+      category: feature.category,
+      status: feature.status,
+      updatedAt: new Date(),
+    },
+  });
+}
+
+// ─── Subscription Plans ────────────────────────────────────────────────────
+const planSeeds = [
+  {
+    code: 'starter',
+    name: 'Starter',
+    description: 'Untuk bisnis kecil yang baru memulai.',
+    level: 1,
+    priceMonthly: '0',
+    priceYearly: '0',
+    limits: { users: 10, outlets: 50, products: 200, storage_gb: 1 },
+    features: ['visits', 'attendance', 'basic_reports'],
+    isPublic: true,
+    status: 'active',
+  },
+  {
+    code: 'pro',
+    name: 'Pro',
+    description: 'Untuk tim sales yang lebih besar dengan fitur lengkap.',
+    level: 2,
+    priceMonthly: '299000',
+    priceYearly: '2990000',
+    limits: { users: 50, outlets: 500, products: 2000, storage_gb: 10 },
+    features: ['visits', 'attendance', 'face_recognition', 'advanced_reports', 'offline_sync', 'r2_storage'],
+    isPublic: true,
+    status: 'active',
+  },
+  {
+    code: 'enterprise',
+    name: 'Enterprise',
+    description: 'Untuk perusahaan besar dengan kebutuhan kustom.',
+    level: 3,
+    priceMonthly: '999000',
+    priceYearly: '9990000',
+    limits: { users: 500, outlets: 5000, products: 20000, storage_gb: 100 },
+    features: ['visits', 'attendance', 'face_recognition', 'advanced_reports', 'offline_sync', 'r2_storage', 'api_access', 'priority_support'],
+    isPublic: true,
+    status: 'active',
+  },
+];
+
+for (const plan of planSeeds) {
+  await db.insert(subscriptionPlans).values(plan).onConflictDoUpdate({
+    target: subscriptionPlans.code,
+    set: { name: plan.name, description: plan.description, level: plan.level, priceMonthly: plan.priceMonthly, priceYearly: plan.priceYearly, limits: plan.limits, features: plan.features, updatedAt: new Date() },
+  });
+}
+
+// Create default tenant subscription for demo company
+await db.insert(tenantSubscriptions).values({
+  companyId: defaultCompany.id,
+  planCode: 'starter',
+  billingCycle: 'monthly',
+  status: 'active',
+}).onConflictDoNothing();
+
+// ─── Super Admin User ──────────────────────────────────────────────────────
+const [superAdminRole] = await db.select().from(roles).where(and(eq(roles.code, 'SUPER_ADMIN')));
+if (superAdminRole && process.env.SUPER_ADMIN_PASSWORD) {
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL ?? 'superadmin@yuksales.id';
+  const superAdminName = process.env.SUPER_ADMIN_NAME ?? 'Super Admin YukSales';
+  const passwordHash = await bcrypt.hash(process.env.SUPER_ADMIN_PASSWORD, 12);
+
+  await db.insert(users).values({
+    companyId: null,
+    roleId: superAdminRole.id,
+    name: superAdminName,
+    email: superAdminEmail,
+    passwordHash,
+    status: 'active',
+  }).onConflictDoUpdate({
+    target: users.email,
+    set: { name: superAdminName, roleId: superAdminRole.id, passwordHash, status: 'active', updatedAt: new Date() },
+  });
+
+  console.log(`Super Admin created: ${superAdminEmail}`);
 }
 
 console.log('Seed completed');

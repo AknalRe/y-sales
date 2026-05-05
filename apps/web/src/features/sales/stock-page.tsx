@@ -106,32 +106,45 @@ export function StockPage() {
           <h1 className="admin-page-title"><Boxes size={22} /> Manajemen Stok</h1>
           <p className="admin-page-subtitle">Monitor stok produk di semua gudang, transfer, dan riwayat pergerakan stok.</p>
         </div>
-        <button onClick={load} className="admin-btn admin-btn-ghost" type="button"><RefreshCw size={15} /> Refresh</button>
+        <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+
       </div>
 
       {error && <div className="admin-alert admin-alert-error"><AlertTriangle size={15} /> {error}</div>}
 
-      {/* Stats */}
-      <div className="admin-stats-row">
+      {/* Stats */}      <div className="admin-stats-row">
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ color: '#60a5fa' }}><WarehouseIcon size={18} /></div>
-          <div><span>Gudang Aktif</span><strong>{stats.totalWH}</strong></div>
+          <div>
+            <span>Gudang Aktif</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 30, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{stats.totalWH}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ color: '#a78bfa' }}><Package size={18} /></div>
-          <div><span>Total Produk</span><strong>{stats.totalProducts}</strong></div>
+          <div>
+            <span>Total Produk</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 30, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{stats.totalProducts}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ color: '#fbbf24' }}><AlertTriangle size={18} /></div>
-          <div><span>Stok Rendah</span><strong>{stats.lowStock}</strong></div>
+          <div>
+            <span>Stok Rendah</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 30, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{stats.lowStock}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ color: '#f87171' }}><Boxes size={18} /></div>
-          <div><span>Habis</span><strong>{stats.outOfStock}</strong></div>
+          <div>
+            <span>Habis</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 30, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{stats.outOfStock}</strong>}
+          </div>
         </div>
       </div>
 
       {/* Filters */}
+
       <div className="admin-filter-row">
         <div className="admin-filter-group">
           <WarehouseIcon size={14} />
@@ -163,13 +176,12 @@ export function StockPage() {
 
       <div className="admin-card">
         {loading ? (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead><tr><th>Produk</th><th>SKU</th><th>Gudang</th><th>Tipe</th><th>Qty</th><th>Reserved</th><th>Tersedia</th><th>Update</th></tr></thead>
-              <tbody><TableSkeleton rows={6} cols={8} /></tbody>
-            </table>
+          <div className="admin-loading">
+            <RefreshCw size={18} className="spin" />
+            <span>Memuat data stok...</span>
           </div>
         ) : tab === 'stock' ? (
+
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -197,9 +209,10 @@ export function StockPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
                           {isEmpty && <span title="Stok habis" style={{ color: '#f87171', fontSize: '.75rem' }}>●</span>}
                           {isLow && !isEmpty && <span title="Stok rendah" style={{ color: '#fbbf24', fontSize: '.75rem' }}>●</span>}
-                          <strong style={{ color: isEmpty ? '#f87171' : isLow ? '#fbbf24' : '#e2e8f0' }}>
+                          <strong style={{ color: isEmpty ? '#ef4444' : isLow ? '#f59e0b' : '#0f172a' }}>
                             {b.productName}
                           </strong>
+
                         </div>
                       </td>
                       <td><code style={{ fontSize: '.78rem', color: '#94a3b8' }}>{b.productSku}</code></td>
@@ -210,12 +223,14 @@ export function StockPage() {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <strong style={{ color: isEmpty ? '#f87171' : '#e2e8f0' }}>{formatQty(b.quantity)}</strong>
+                        <strong style={{ color: isEmpty ? '#ef4444' : '#0f172a' }}>{formatQty(b.quantity)}</strong>
                       </td>
+
                       <td style={{ textAlign: 'right', color: '#94a3b8' }}>{formatQty(b.reservedQuantity)}</td>
                       <td style={{ textAlign: 'right' }}>
-                        <strong style={{ color: available <= 0 ? '#f87171' : '#4ade80' }}>{formatQty(available)}</strong>
+                        <strong style={{ color: available <= 0 ? '#ef4444' : '#10b981' }}>{formatQty(available)}</strong>
                       </td>
+
                       <td style={{ color: '#64748b', fontSize: '.8rem' }}>
                         {new Date(b.updatedAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </td>
@@ -292,7 +307,8 @@ export function StockPage() {
               <div key={w.id} className="admin-card" style={{ margin: 0, padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.5rem' }}>
                   <div>
-                    <strong style={{ color: '#e2e8f0', fontSize: '.95rem' }}>{w.name}</strong>
+                    <strong style={{ color: '#0f172a', fontSize: '.95rem' }}>{w.name}</strong>
+
                     <small style={{ display: 'block', color: '#64748b', fontSize: '.73rem' }}>{w.code} · {w.type}</small>
                   </div>
                   <WarehouseIcon size={20} style={{ color: '#60a5fa', opacity: .7 }} />
@@ -300,12 +316,13 @@ export function StockPage() {
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div>
                     <div style={{ color: '#64748b', fontSize: '.72rem', textTransform: 'uppercase', letterSpacing: '.06em' }}>Total Qty</div>
-                    <strong style={{ color: '#fff', fontSize: '1.1rem' }}>{formatQty(totalQty)}</strong>
+                    <strong style={{ color: '#0f172a', fontSize: '1.1rem' }}>{formatQty(totalQty)}</strong>
                   </div>
                   <div>
                     <div style={{ color: '#64748b', fontSize: '.72rem', textTransform: 'uppercase', letterSpacing: '.06em' }}>SKU</div>
-                    <strong style={{ color: '#fff', fontSize: '1.1rem' }}>{skuCount}</strong>
+                    <strong style={{ color: '#0f172a', fontSize: '1.1rem' }}>{skuCount}</strong>
                   </div>
+
                 </div>
               </div>
             );

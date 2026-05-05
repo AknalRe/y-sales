@@ -144,7 +144,8 @@ export function ReceivablesPage() {
           <h1 className="admin-page-title"><CreditCard size={22} /> Piutang Usaha</h1>
           <p className="admin-page-subtitle">Daftar order unpaid/partial, konsinyasi, dan jadwal penagihan.</p>
         </div>
-        <button onClick={load} className="admin-btn admin-btn-ghost" type="button"><RefreshCw size={15} /> Refresh</button>
+        <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+
       </div>
 
       {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}
@@ -152,22 +153,36 @@ export function ReceivablesPage() {
       {/* Stats */}
       <div className="admin-stats-row">
         <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ color: '#f87171' }}><TrendingDown size={18} /></div>
-          <div><span>Total Piutang</span><strong>{formatRp(stats.totalOutstanding)}</strong></div>
+          <div className="admin-stat-icon" style={{ color: '#ef4444' }}><TrendingDown size={18} /></div>
+          <div>
+            <span>Total Piutang</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 100, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{formatRp(stats.totalOutstanding)}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ color: '#fbbf24' }}><Clock size={18} /></div>
-          <div><span>Open</span><strong>{stats.open}</strong></div>
+          <div>
+            <span>Open</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 30, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{stats.open}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ color: '#f87171' }}><AlertCircle size={18} /></div>
-          <div><span>Overdue</span><strong>{stats.overdue}</strong></div>
+          <div className="admin-stat-icon" style={{ color: '#ef4444' }}><AlertCircle size={18} /></div>
+          <div>
+            <span>Overdue</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 30, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{stats.overdue}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ color: '#f87171' }}><Banknote size={18} /></div>
-          <div><span>Overdue Amount</span><strong>{formatRp(stats.totalOverdue)}</strong></div>
+          <div className="admin-stat-icon" style={{ color: '#ef4444' }}><Banknote size={18} /></div>
+          <div>
+            <span>Overdue Amount</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 100, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{formatRp(stats.totalOverdue)}</strong>}
+          </div>
         </div>
       </div>
+
+
 
       {/* Tab + Filter */}
       <div className="admin-filter-row">
@@ -200,13 +215,12 @@ export function ReceivablesPage() {
 
       <div className="admin-card">
         {loading ? (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead><tr><th>Tipe</th><th>Pokok</th><th>Terbayar</th><th>Outstanding</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
-              <tbody><TableSkeleton rows={5} cols={7} /></tbody>
-            </table>
+          <div className="admin-loading">
+            <RefreshCw size={18} className="spin" />
+            <span>Memuat data piutang...</span>
           </div>
         ) : tab === 'receivables' ? (
+
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -231,11 +245,13 @@ export function ReceivablesPage() {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right' }}>{formatRp(r.principalAmount)}</td>
-                      <td style={{ textAlign: 'right', color: '#34d399' }}>{formatRp(r.paidAmount)}</td>
+                      <td style={{ textAlign: 'right', color: '#16a34a' }}>{formatRp(r.paidAmount)}</td>
+
                       <td style={{ textAlign: 'right' }}>
-                        <strong style={{ color: Number(r.outstandingAmount) > 0 ? '#f87171' : '#34d399' }}>
+                        <strong style={{ color: Number(r.outstandingAmount) > 0 ? '#ef4444' : '#10b981' }}>
                           {formatRp(r.outstandingAmount)}
                         </strong>
+
                       </td>
                       <td>
                         <span style={{ color: overdue ? '#f87171' : '#94a3b8', fontSize: '.85rem' }}>
@@ -333,10 +349,12 @@ export function ReceivablesPage() {
                   <span>Pokok</span><strong>{formatRp(payModal.principalAmount)}</strong>
                 </div>
                 <div>
-                  <span>Terbayar</span><strong style={{ color: '#34d399' }}>{formatRp(payModal.paidAmount)}</strong>
+                  <span>Terbayar</span><strong style={{ color: '#16a34a' }}>{formatRp(payModal.paidAmount)}</strong>
+
                 </div>
                 <div>
-                  <span>Outstanding</span><strong style={{ color: '#f87171' }}>{formatRp(payModal.outstandingAmount)}</strong>
+                  <span>Outstanding</span><strong style={{ color: '#ef4444' }}>{formatRp(payModal.outstandingAmount)}</strong>
+
                 </div>
               </div>
 

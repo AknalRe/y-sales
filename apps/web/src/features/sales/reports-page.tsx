@@ -93,43 +93,58 @@ export function ReportsPage() {
         </div>
         <div style={{ display: 'flex', gap: '.5rem' }}>
           <button onClick={downloadCSV} className="admin-btn admin-btn-ghost" type="button"><Download size={15} /> CSV</button>
-          <button onClick={load} className="admin-btn admin-btn-ghost" type="button"><RefreshCw size={15} /> Refresh</button>
+          <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+
         </div>
       </div>
 
       {/* KPI Stats */}
       <div className="admin-stats-row">
         <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ color: '#34d399' }}><TrendingUp size={18} /></div>
-          <div><span>Total Revenue</span><strong>{formatRp(stats.totalRevenue)}</strong></div>
+          <div className="admin-stat-icon" style={{ color: '#10b981' }}><TrendingUp size={18} /></div>
+          <div>
+            <span>Total Revenue</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 100, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{formatRp(stats.totalRevenue)}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ color: '#60a5fa' }}><ShoppingCart size={18} /></div>
-          <div><span>Transaksi Closed</span><strong>{stats.closed}</strong></div>
+          <div className="admin-stat-icon" style={{ color: '#3b82f6' }}><ShoppingCart size={18} /></div>
+          <div>
+            <span>Transaksi Closed</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 30, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{stats.closed}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ color: '#fbbf24' }}><MapPin size={18} /></div>
-          <div><span>Total Transaksi</span><strong>{stats.total}</strong></div>
+          <div className="admin-stat-icon" style={{ color: '#f59e0b' }}><MapPin size={18} /></div>
+          <div>
+            <span>Total Transaksi</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 30, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{stats.total}</strong>}
+          </div>
         </div>
         <div className="admin-stat-card">
-          <div className="admin-stat-icon" style={{ color: '#a78bfa' }}><Users size={18} /></div>
-          <div><span>Avg Order</span><strong>{formatRp(stats.avgOrder)}</strong></div>
+          <div className="admin-stat-icon" style={{ color: '#8b5cf6' }}><Users size={18} /></div>
+          <div>
+            <span>Avg Order</span>
+            {loading ? <div style={{ background: '#f1f5f9', height: 22, width: 100, borderRadius: 4, marginTop: '.25rem' }} /> : <strong>{formatRp(stats.avgOrder)}</strong>}
+          </div>
         </div>
       </div>
 
+
+
       {/* Filters */}
-      <div className="admin-filter-row">
+      <div className="admin-filter-row" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
         <label style={{ color: 'var(--admin-subtle)', fontSize: '.8rem' }}>Periode:</label>
-        <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="admin-input" />
+        <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="admin-input" style={{ width: 'auto' }} />
         <span style={{ color: 'var(--admin-subtle)' }}>—</span>
-        <input type="date" value={to} onChange={e => setTo(e.target.value)} className="admin-input" />
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select">
+        <input type="date" value={to} onChange={e => setTo(e.target.value)} className="admin-input" style={{ width: 'auto' }} />
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select" style={{ width: 'auto' }}>
           <option value="">Semua Status</option>
           {Object.entries(statusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div className="admin-content-grid-half">
         {/* Leaderboard */}
         <div className="admin-card">
           <div className="admin-card-header"><h2>🏆 Leaderboard Sales</h2></div>

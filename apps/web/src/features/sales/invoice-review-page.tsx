@@ -92,7 +92,8 @@ export function InvoiceReviewPage() {
               {pending} Menunggu
             </span>
           )}
-          <button onClick={load} className="admin-btn admin-btn-ghost" type="button"><RefreshCw size={15} /> Refresh</button>
+          <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+
         </div>
       </div>
 
@@ -111,7 +112,13 @@ export function InvoiceReviewPage() {
       </div>
 
       <div className="admin-card">
-        {loading ? <div className="admin-loading">Memuat data...</div> : (
+        {loading ? (
+          <div className="admin-loading">
+            <RefreshCw size={18} className="spin" />
+            <span>Memuat data transaksi...</span>
+          </div>
+        ) : (
+
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -184,10 +191,12 @@ export function InvoiceReviewPage() {
               <button onClick={() => setRejectModal(null)} className="admin-modal-close">×</button>
             </div>
             <div className="admin-modal-body">
-              <p style={{ color: 'var(--admin-subtle)', marginBottom: '.75rem' }}>
-                Transaksi <strong style={{ color: '#fff' }}>{rejectModal.transactionNo}</strong> akan ditolak.
+              <p style={{ color: '#64748b', marginBottom: '.75rem' }}>
+                Transaksi <strong style={{ color: '#0f172a' }}>{rejectModal.transactionNo}</strong> akan ditolak.
               </p>
-              <label style={{ color: '#94a3b8', fontSize: '.82rem', display: 'block', marginBottom: '.35rem' }}>Alasan Penolakan</label>
+
+              <label style={{ color: '#475569', fontSize: '.82rem', display: 'block', marginBottom: '.35rem', fontWeight: 700 }}>Alasan Penolakan</label>
+
               <textarea
                 value={rejectReason}
                 onChange={e => setRejectReason(e.target.value)}

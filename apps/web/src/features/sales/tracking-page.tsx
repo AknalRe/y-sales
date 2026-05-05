@@ -82,7 +82,8 @@ export function TrackingPage() {
           <h1 className="admin-page-title"><Map size={22} /> Tracking Penjualan</h1>
           <p className="admin-page-subtitle">Monitor kunjungan outlet, lokasi sales, dan aktivitas lapangan secara real-time.</p>
         </div>
-        <button onClick={load} className="admin-btn admin-btn-ghost" type="button"><RefreshCw size={15} /> Refresh</button>
+        <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+
       </div>
 
       {/* Stats */}

@@ -109,16 +109,17 @@ export function UsersPage() {
   }
 
   return (
-    <div className="admin-page-wrapper">
-      <div className="admin-page-hero">
+    <div className="admin-page">
+      <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-hero-title">
+          <h1 className="admin-page-title">
             <Users size={22} />
             Manajemen User
           </h1>
-          <p className="admin-page-hero-subtitle">Kelola akun user dan akses tim Anda.</p>
+          <p className="admin-page-subtitle">Kelola akun user dan akses tim Anda.</p>
         </div>
-        <div className="admin-page-hero-actions">
+        <div style={{ display: 'flex', gap: '.5rem' }}>
+
           <button id="users-refresh-btn" onClick={load} className="admin-btn-ghost" type="button">
             <RefreshCw size={15} />
           </button>
@@ -133,6 +134,7 @@ export function UsersPage() {
           </button>
         </div>
       </div>
+
 
       {error && (
         <div className="admin-alert admin-alert-error">

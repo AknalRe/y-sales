@@ -82,7 +82,7 @@ export function DashboardPage() {
       value: formatRp(summary.todaySalesAmount, true),
       sub: `${summary.todayOrders} transaksi`,
       icon: TrendingUp,
-      color: '#34d399',
+      color: 'kpi-emerald',
       href: '/admin/reports',
     },
     {
@@ -90,7 +90,7 @@ export function DashboardPage() {
       value: String(summary.todayVisits),
       sub: `${summary.totalVisits} total`,
       icon: MapPin,
-      color: '#60a5fa',
+      color: 'kpi-blue',
       href: '/admin/tracking',
     },
     {
@@ -98,7 +98,7 @@ export function DashboardPage() {
       value: String(summary.pendingApprovals),
       sub: 'nota menunggu review',
       icon: Clock,
-      color: summary.pendingApprovals > 0 ? '#f97316' : '#94a3b8',
+      color: summary.pendingApprovals > 0 ? 'kpi-orange' : '',
       href: '/admin/invoice-review',
     },
     {
@@ -106,99 +106,114 @@ export function DashboardPage() {
       value: String(summary.totalProducts),
       sub: `${summary.activeUsers} user aktif`,
       icon: Package,
-      color: '#a78bfa',
+      color: 'kpi-purple',
       href: '/admin/stock',
     },
   ] : [];
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', color: '#e2e8f0', padding: '0 .5rem' }}>
+    <div className="admin-page" style={{ padding: '0 .5rem' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '.75rem' }}>
+      <div className="admin-page-header">
         <div>
-          <h1 style={{ margin: 0, fontSize: 'clamp(1.5rem,3vw,2rem)', fontWeight: 800, color: '#fff', letterSpacing: '-.03em' }}>
+          <h1 className="admin-page-title">
             Dashboard Utama
           </h1>
-          <p style={{ margin: '.3rem 0 0', color: '#64748b', fontSize: '.875rem' }}>
-            Selamat datang, <strong style={{ color: '#a78bfa' }}>{user?.name}</strong>
-            {lastUpdated && <span style={{ marginLeft: '.5rem', color: '#475569' }}>· Update: {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>}
+          <p className="admin-page-subtitle">
+            Selamat datang kembali, <strong style={{ color: '#7c3aed' }}>{user?.name}</strong>
+            {lastUpdated && <span style={{ marginLeft: '.5rem', opacity: 0.7 }}>· Update: {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '.5rem' }}>
           {permissions.includes('invoice.review') && summary && summary.pendingApprovals > 0 && (
-            <Link to="/admin/invoice-review" style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: 'rgba(249,115,22,.15)', border: '1px solid rgba(249,115,22,.3)', color: '#fb923c', borderRadius: 10, padding: '.5rem .85rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none' }}>
-              <AlertCircle size={14} /> {summary.pendingApprovals} Nota Pending
+            <Link to="/admin/invoice-review" style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #ffedd5', color: '#ea580c', borderRadius: 12, padding: '.5rem .85rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none' }}>
+              <Clock size={14} /> Review Nota ({summary.pendingApprovals})
             </Link>
           )}
-          <button onClick={loadSummary} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', color: '#e2e8f0', borderRadius: 10, padding: '.5rem .85rem', fontSize: '.82rem', fontWeight: 600, cursor: 'pointer' }}>
-            <RefreshCw size={14} style={{ animation: loading ? 'spin 1s linear infinite' : undefined }} /> Refresh
+          <button 
+            onClick={loadSummary} 
+            disabled={loading}
+            className="admin-btn-ghost"
+            style={{ padding: '.5rem .75rem', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b' }}
+          >
+            <RefreshCw size={16} className={loading ? 'spin' : ''} />
           </button>
         </div>
       </div>
 
       {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.25)', color: '#fca5a5', borderRadius: 12, padding: '.75rem 1rem', marginBottom: '1rem', fontSize: '.875rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: '#fef2f2', border: '1px solid #fee2e2', color: '#dc2626', borderRadius: 12, padding: '.75rem 1rem', marginBottom: '1.5rem', fontSize: '.875rem' }}>
           <AlertCircle size={15} /> {error}
         </div>
       )}
 
       {/* KPI Cards */}
       {statCards.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '.75rem', marginBottom: '1.5rem' }}>
-          {statCards.map(s => (
-            <Link key={s.label} to={s.href} style={{ textDecoration: 'none' }}>
-              <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 20, padding: '1.25rem', transition: 'all .2s', cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.borderColor = `${s.color}40`; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,.08)'; }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.85rem' }}>
-                  <div style={{ background: `${s.color}18`, border: `1px solid ${s.color}30`, borderRadius: 12, padding: '.5rem', display: 'flex' }}>
-                    <s.icon size={18} style={{ color: s.color }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+          {statCards.map(s => {
+            const themeColor = 
+              s.color === 'kpi-emerald' ? '#10b981' : 
+              s.color === 'kpi-blue' ? '#3b82f6' : 
+              s.color === 'kpi-orange' ? '#f97316' : 
+              s.color === 'kpi-purple' ? '#8b5cf6' : '#94a3b8';
+
+            return (
+              <Link key={s.label} to={s.href} style={{ textDecoration: 'none' }}>
+                <div 
+                  className="admin-card"
+                  style={{ marginBottom: 0, padding: '1.25rem' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                    <div style={{ background: `${themeColor}12`, border: `1px solid ${themeColor}20`, borderRadius: 12, padding: '.5rem', display: 'flex' }}>
+                      <s.icon size={20} style={{ color: themeColor }} />
+                    </div>
+                    <ArrowUpRight size={14} style={{ color: '#94a3b8' }} />
                   </div>
-                  <ArrowUpRight size={14} style={{ color: '#475569' }} />
+                  <div style={{ fontSize: '2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '.35rem' }}>{s.value}</div>
+                  <div style={{ fontSize: '.85rem', color: '#64748b', fontWeight: 600 }}>{s.label}</div>
+                  <div style={{ fontSize: '.75rem', color: '#94a3b8', marginTop: '.25rem' }}>{s.sub}</div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#fff', lineHeight: 1, marginBottom: '.3rem' }}>{s.value}</div>
-                <div style={{ fontSize: '.78rem', color: '#64748b', fontWeight: 500 }}>{s.label}</div>
-                <div style={{ fontSize: '.73rem', color: '#475569', marginTop: '.2rem' }}>{s.sub}</div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
 
       {/* Loading skeleton when no data yet */}
       {loading && !summary && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '.75rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
           {[1, 2, 3, 4].map(i => (
-            <div key={i} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 20, padding: '1.25rem', minHeight: 120 }}>
-              <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: 8, height: 36, width: 36, marginBottom: '.85rem' }} />
-              <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: 6, height: 28, width: '60%', marginBottom: '.4rem' }} />
-              <div style={{ background: 'rgba(255,255,255,.04)', borderRadius: 6, height: 14, width: '80%' }} />
+            <div key={i} className="admin-card" style={{ minHeight: 140, marginBottom: 0 }}>
+              <div style={{ background: '#f1f5f9', borderRadius: 10, height: 36, width: 36, marginBottom: '1.25rem' }} />
+              <div style={{ background: '#f1f5f9', borderRadius: 6, height: 32, width: '60%', marginBottom: '.5rem' }} />
+              <div style={{ background: '#f8fafc', borderRadius: 4, height: 14, width: '80%' }} />
             </div>
           ))}
         </div>
       )}
 
+
+
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '1.25rem' }}>
         {/* Quick Access */}
-        <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 24, padding: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-            <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#e2e8f0' }}>Akses Cepat</h2>
-            <span style={{ background: 'rgba(167,139,250,.15)', color: '#a78bfa', borderRadius: 999, padding: '.2rem .65rem', fontSize: '.73rem', fontWeight: 700 }}>
+        <div className="admin-card">
+          <div className="admin-card-header">
+            <h2>Akses Cepat</h2>
+            <span style={{ background: '#f5f3ff', color: '#7c3aed', borderRadius: 999, padding: '.25rem .75rem', fontSize: '.75rem', fontWeight: 800 }}>
               {user?.roleCode}
             </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '.65rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
             {visibleMenus.map(menu => (
               <Link key={menu.title} to={menu.href} style={{ textDecoration: 'none' }}>
-                <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 16, padding: '1rem', transition: 'all .2s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(167,139,250,.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(167,139,250,.25)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,.07)'; (e.currentTarget as HTMLElement).style.transform = ''; }}
+                <div style={{ background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 18, padding: '1.25rem', transition: 'all 0.2s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#fff'; (e.currentTarget as HTMLElement).style.borderColor = '#7c3aed40'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 15px -3px rgba(124, 58, 237, 0.1)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#f8fafc'; (e.currentTarget as HTMLElement).style.borderColor = '#f1f5f9'; (e.currentTarget as HTMLElement).style.boxShadow = ''; (e.currentTarget as HTMLElement).style.transform = ''; }}
                 >
-                  <menu.icon size={22} style={{ color: '#a78bfa', marginBottom: '.65rem' }} />
-                  <h3 style={{ margin: '0 0 .3rem', fontSize: '.88rem', fontWeight: 700, color: '#e2e8f0' }}>{menu.title}</h3>
-                  <p style={{ margin: 0, fontSize: '.75rem', color: '#64748b', lineHeight: 1.5 }}>{menu.text}</p>
+                  <menu.icon size={24} style={{ color: '#7c3aed', marginBottom: '.75rem' }} />
+                  <h3 style={{ margin: '0 0 .4rem', fontSize: '.95rem', fontWeight: 700, color: '#1e293b' }}>{menu.title}</h3>
+                  <p style={{ margin: 0, fontSize: '.8rem', color: '#64748b', lineHeight: 1.5 }}>{menu.text}</p>
                 </div>
               </Link>
             ))}
@@ -206,42 +221,47 @@ export function DashboardPage() {
         </div>
 
         {/* Activity Feed */}
-        <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 24, padding: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1.25rem' }}>
-            <Activity size={16} style={{ color: '#a78bfa' }} />
-            <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#e2e8f0' }}>Ringkasan Platform</h2>
+        <div className="admin-card">
+          <div className="admin-card-header">
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+              <Activity size={16} style={{ color: '#7c3aed' }} />
+              Ringkasan Platform
+            </h2>
           </div>
+          <div style={{ padding: '0 0.25rem' }}>
+            {summary ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+                {[
+                  { label: 'Total Omset All-Time', value: formatRp(summary.totalSalesAmount, true), color: '#10b981' },
+                  { label: 'Total Order', value: String(summary.totalOrders), color: '#3b82f6' },
+                  { label: 'Total Visit', value: String(summary.totalVisits), color: '#8b5cf6' },
+                  { label: 'Produk Terdaftar', value: String(summary.totalProducts), color: '#f59e0b' },
+                  { label: 'User Aktif', value: String(summary.activeUsers), color: '#ef4444' },
+                ].map(item => (
+                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '.75rem 1rem', background: '#f8fafc', borderRadius: 16, border: '1px solid #f1f5f9' }}>
+                    <span style={{ fontSize: '.85rem', color: '#64748b', fontWeight: 500 }}>{item.label}</span>
+                    <strong style={{ fontSize: '1rem', color: item.color, fontWeight: 800 }}>{item.value}</strong>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} style={{ background: '#f8fafc', borderRadius: 16, height: 48 }} />
+                ))}
+              </div>
+            )}
 
-          {summary ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
-              {[
-                { label: 'Total Omset All-Time', value: formatRp(summary.totalSalesAmount, true), color: '#34d399' },
-                { label: 'Total Order', value: String(summary.totalOrders), color: '#60a5fa' },
-                { label: 'Total Visit', value: String(summary.totalVisits), color: '#a78bfa' },
-                { label: 'Produk Terdaftar', value: String(summary.totalProducts), color: '#fbbf24' },
-                { label: 'User Aktif', value: String(summary.activeUsers), color: '#fb7185' },
-              ].map(item => (
-                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '.65rem .85rem', background: 'rgba(255,255,255,.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,.06)' }}>
-                  <span style={{ fontSize: '.82rem', color: '#64748b' }}>{item.label}</span>
-                  <strong style={{ fontSize: '.95rem', color: item.color }}>{item.value}</strong>
-                </div>
-              ))}
+            <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid #f1f5f9' }}>
+              <Link to="/admin/reports" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', background: '#f5f3ff', color: '#7c3aed', borderRadius: 14, padding: '.75rem', fontSize: '.875rem', fontWeight: 800, textDecoration: 'none', transition: 'all 0.2s' }}>
+                <BarChart3 size={16} /> Lihat Laporan Lengkap
+              </Link>
             </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} style={{ background: 'rgba(255,255,255,.03)', borderRadius: 12, height: 44 }} />
-              ))}
-            </div>
-          )}
-
-          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,.06)' }}>
-            <Link to="/admin/reports" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem', background: 'rgba(167,139,250,.12)', border: '1px solid rgba(167,139,250,.25)', color: '#a78bfa', borderRadius: 12, padding: '.65rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none', transition: 'all .2s' }}>
-              <BarChart3 size={15} /> Lihat Laporan Lengkap
-            </Link>
           </div>
         </div>
       </div>
+
+
     </div>
   );
 }

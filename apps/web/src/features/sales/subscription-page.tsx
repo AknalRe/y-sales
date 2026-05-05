@@ -128,7 +128,8 @@ export function SubscriptionPage() {
           <h1 className="admin-page-title"><CreditCard size={22} /> Subscription Saya</h1>
           <p className="admin-page-subtitle">Informasi plan aktif, batas penggunaan, dan fitur yang tersedia untuk perusahaan Anda.</p>
         </div>
-        <button onClick={load} className="admin-btn admin-btn-ghost" type="button"><RefreshCw size={15} /> Refresh</button>
+        <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+
       </div>
 
       {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}

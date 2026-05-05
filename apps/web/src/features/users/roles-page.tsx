@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
+
 import { useAuth } from '../auth/auth-provider';
 import { getRoles, createRole, deleteRole, type Role } from '@/lib/api/platform';
 
@@ -57,14 +58,14 @@ export function RolesPage() {
   }
 
   return (
-    <div className="admin-page-wrapper">
-      <div className="admin-page-hero">
+    <div className="admin-page">
+      <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-hero-title">
+          <h1 className="admin-page-title">
             <Shield size={22} />
             Manajemen Role
           </h1>
-          <p className="admin-page-hero-subtitle">Buat dan kelola role akses untuk tim Anda.</p>
+          <p className="admin-page-subtitle">Buat dan kelola role akses untuk tim Anda.</p>
         </div>
         <button
           id="roles-create-btn"
@@ -75,6 +76,7 @@ export function RolesPage() {
           <Plus size={15} />
           Buat Role
         </button>
+
       </div>
 
       {error && (
@@ -92,8 +94,19 @@ export function RolesPage() {
 
       <div className="admin-roles-grid">
         {loading ? (
-          <p className="admin-muted">Memuat roles...</p>
+          <>
+            {[1, 2, 3].map(i => (
+              <div key={i} className="admin-card" style={{ height: 140, marginBottom: 0 }}>
+                <div style={{ background: '#f1f5f9', borderRadius: 10, height: 32, width: 32, marginBottom: '1rem' }} />
+                <div style={{ background: '#f1f5f9', borderRadius: 6, height: 24, width: '70%', marginBottom: '.5rem' }} />
+                <div style={{ background: '#f8fafc', borderRadius: 4, height: 12, width: '40%' }} />
+              </div>
+            ))}
+          </>
         ) : (
+
+
+
           roles.map(role => (
             <div key={role.id} className={`admin-role-card ${role.isSystemRole ? 'admin-role-system' : ''}`}>
               <div className="admin-role-card-header">

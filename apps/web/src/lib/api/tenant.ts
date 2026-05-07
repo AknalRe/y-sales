@@ -233,3 +233,11 @@ export type TenantSubscriptionInfo = {
 export function getDashboardSummary(token: string) {
   return apiRequest<DashboardSummary>('/dashboard/summary', { headers: { Authorization: `Bearer ${token}` } });
 }
+
+export function createOrder(token: string, payload: any) {
+  return apiRequest<{ order: any }>('/sales/orders', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}

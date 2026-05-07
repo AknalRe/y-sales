@@ -226,25 +226,8 @@ export function finalizeMediaUpload(accessToken: string, payload: { ownerType: s
   });
 }
 
-// Transaction APIs
-export function getProducts(accessToken: string) {
-  return apiRequest<{ products: any[] }>('/tenant/products', {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  });
-}
 
-export function getOutlets(accessToken: string) {
-  return apiRequest<{ outlets: any[] }>('/tenant/outlets', {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  });
-}
-
-export function createOrder(accessToken: string, payload: any) {
-  return apiRequest<{ order: any }>('/sales/orders', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body: JSON.stringify(payload)
-  });
-}
+// Central API Request function is now the main export.
+// Domain-specific functions should be in platform.ts or tenant.ts.
 
 

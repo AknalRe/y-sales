@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 import { UserCircle, LogOut, RefreshCw, Building2, Shield, Phone, Mail, IdCard, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { useNavigate } from 'react-router-dom';
+import { apiRequest } from '../../lib/api/client';
 
 function apiReq<T>(path: string, token: string): Promise<T> {
-  const base = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
-  return fetch(`${base}${path}`, { headers: { Authorization: `Bearer ${token}` } })
-    .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
+  return apiRequest<T>(path, { headers: { Authorization: `Bearer ${token}` } });
 }
 
 type AttendanceToday = {

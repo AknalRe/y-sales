@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle } from 'lucide-react';
-import { checkInVisit, checkOutVisit, getOutlets, type VisitPayload, type VisitCheckOutPayload } from '../../lib/api/client';
+import { checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../lib/api/client';
+import { getOutlets } from '../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../lib/geo/location';
 import { useAuth } from '../auth/auth-provider';

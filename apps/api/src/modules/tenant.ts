@@ -15,7 +15,10 @@ export function requireTenantId(request: FastifyRequest) {
 
   // Super Admin can pass X-Company-Id to act on a specific tenant
   const overrideCompanyId = request.headers['x-company-id'] as string | undefined;
-  if (user?.isSuperAdmin && overrideCompanyId) return overrideCompanyId;
+  
+  if (user?.isSuperAdmin && overrideCompanyId) {
+    return overrideCompanyId;
+  }
 
   const companyId = user?.companyId;
   if (!companyId) {

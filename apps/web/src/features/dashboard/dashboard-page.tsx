@@ -6,7 +6,7 @@ import {
   AlertCircle, ArrowUpRight, Activity
 } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
-import { getPlatformCompanyView } from '@/lib/api/client';
+import { getPlatformCompanyView, apiRequest } from '@/lib/api/client';
 
 type ReportSummary = {
   totalSalesAmount: string;
@@ -44,20 +44,7 @@ function formatRp(v: string | number, compact = false) {
 }
 
 function apiReq<T>(path: string, token: string): Promise<T> {
-  const base = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
-  const companyView = getPlatformCompanyView();
-  const headers: Record<string, string> = { 
-    Authorization: `Bearer ${token}`, 
-    'Content-Type': 'application/json' 
-  };
-  
-  if (companyView?.companyId) {
-    headers['X-Company-Id'] = companyView.companyId;
-  }
-
-  return fetch(`${base}${path}`, {
-    headers,
-  }).then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
+  return apiRequest<T>(path, { headers: { Authorization: `Bearer ${token}` } });
 }
 
 export function DashboardPage() {
@@ -86,7 +73,11 @@ export function DashboardPage() {
     }
   }
 
-  useEffect(() => { loadSummary(); }, [accessToken]);
+  const companyView = getPlatformCompanyView();
+  
+  useEffect(() => { 
+    loadSummary(); 
+  }, [accessToken, isSuperAdmin, companyView?.companyId]);
 
   const statCards = summary ? [
     {
@@ -107,16 +98,16 @@ export function DashboardPage() {
     },
     {
       label: 'Pending Approval',
-      value: String(summary.pendingApprovals),
+      value: String(summary?.pendingApprovals ?? 0),
       sub: 'nota menunggu review',
       icon: Clock,
-      color: summary.pendingApprovals > 0 ? 'kpi-orange' : '',
+      color: (summary?.pendingApprovals ?? 0) > 0 ? 'kpi-orange' : '',
       href: '/admin/invoice-review',
     },
     {
       label: 'Total Produk',
-      value: String(summary.totalProducts),
-      sub: `${summary.activeUsers} user aktif`,
+      value: String(summary?.totalProducts ?? 0),
+      sub: `${summary?.activeUsers ?? 0} user aktif`,
       icon: Package,
       color: 'kpi-purple',
       href: '/admin/stock',
@@ -279,7 +270,7 @@ export function DashboardPage() {
 }
 
 // Icon missing in imports — add here
-function BarChart3({ size, ...props }: { size?: number; style?: React.CSSProperties }) {
+function BarChart3({ size, ...props }: { size?: number; style?: any }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />

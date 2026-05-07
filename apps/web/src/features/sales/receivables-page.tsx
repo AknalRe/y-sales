@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, TrendingDown, Banknote } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
-import { TableSkeleton, EmptyState } from '@/components/ui';
+import { EmptyState } from '@/components/ui';
+import { apiRequest } from '@/lib/api/client';
 
 type Receivable = {
   id: string;
@@ -52,15 +53,13 @@ function formatRp(v: string | number) {
 }
 
 function apiReq<T>(path: string, token: string, options?: RequestInit): Promise<T> {
-  const base = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
-  return fetch(`${base}${path}`, {
+  return apiRequest<T>(path, {
     ...options,
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...(options?.headers ?? {}),
-    },
-  }).then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
+      ...(options?.headers as any ?? {})
+    }
+  });
 }
 
 export function ReceivablesPage() {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Shield, Zap, Users, Package, Boxes, Clock } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { getMySubscription, type TenantSubscriptionInfo } from '@/lib/api/tenant';
+import { apiRequest } from '@/lib/api/client';
 
 type PlanDetails = {
   id: string;
@@ -76,9 +77,7 @@ function daysRemaining(end?: string | null): number | null {
 }
 
 function apiReq<T>(path: string, token: string): Promise<T> {
-  const base = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
-  return fetch(`${base}${path}`, { headers: { Authorization: `Bearer ${token}` } })
-    .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
+  return apiRequest<T>(path, { headers: { Authorization: `Bearer ${token}` } });
 }
 
 export function SubscriptionPage() {

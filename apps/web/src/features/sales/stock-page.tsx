@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Boxes, RefreshCw, Package, Warehouse as WarehouseIcon, ArrowUpDown, AlertTriangle, Info, History, Filter } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { getWarehouses, type Warehouse } from '@/lib/api/tenant';
-import { getPlatformCompanyView } from '@/lib/api/client';
+import { apiRequest } from '@/lib/api/client';
 import { EmptyState } from '@/components/ui';
 
 type InventoryBalance = {
@@ -38,20 +38,7 @@ function formatQty(v: string | number) {
 }
 
 function apiReq<T>(path: string, token: string): Promise<T> {
-  const base = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
-  const companyView = getPlatformCompanyView();
-  const headers: Record<string, string> = { 
-    Authorization: `Bearer ${token}`, 
-    'Content-Type': 'application/json' 
-  };
-  
-  if (companyView?.companyId) {
-    headers['X-Company-Id'] = companyView.companyId;
-  }
-
-  return fetch(`${base}${path}`, {
-    headers,
-  }).then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
+  return apiRequest<T>(path, { headers: { Authorization: `Bearer ${token}` } });
 }
 
 export function StockPage() {

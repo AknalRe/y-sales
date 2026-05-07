@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart, Package, Plus, Search, Send, CheckCircle2 } from 'lucide-react';
-import { getOutlets, getProducts, createOrder } from '../../lib/api/client';
+import { getOutlets, getProducts, createOrder } from '../../lib/api/tenant';
 import { useAuth } from '../auth/auth-provider';
 import { EmptyState, Spinner } from '../../components/ui';
 
@@ -41,7 +41,7 @@ export function TransactionsPage() {
   }, [products, search]);
 
   const totalAmount = useMemo(() => {
-    return cart.reduce((sum, item) => sum + (Number(item.product.basePrice) * item.quantity), 0);
+    return cart.reduce((sum, item) => sum + (Number(item.product.priceDefault) * item.quantity), 0);
   }, [cart]);
 
   function addToCart(product: any) {
@@ -68,7 +68,7 @@ export function TransactionsPage() {
         items: cart.map(i => ({
           productId: i.product.id,
           quantity: i.quantity,
-          unitPrice: i.product.basePrice
+          unitPrice: i.product.priceDefault
         }))
       });
       setSuccess(true);
@@ -129,7 +129,7 @@ export function TransactionsPage() {
               <span style={{ fontSize: '.75rem', color: '#94a3b8' }}>{p.sku}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-              <span style={{ fontSize: '.85rem', fontWeight: 700, color: '#34d399' }}>Rp {Number(p.basePrice).toLocaleString('id-ID')}</span>
+              <span style={{ fontSize: '.85rem', fontWeight: 700, color: '#34d399' }}>Rp {Number(p.priceDefault).toLocaleString('id-ID')}</span>
               <button 
                 onClick={() => addToCart(p)}
                 style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(167,139,250,.15)', border: 'none', color: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}

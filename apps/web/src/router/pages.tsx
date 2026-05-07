@@ -99,7 +99,7 @@ export const mainRoutes: RouteConfig[] = [
     }
   },
   {
-    path: '/attendance/review', // This will be handled as absolute by AdminShell
+    path: 'attendance/review', // Relative to /admin
     element: <AttendanceReviewPage />,
     handle: {
       label: 'Review Absensi',

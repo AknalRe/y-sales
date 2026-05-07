@@ -12,6 +12,8 @@ import {
   salesTransactions,
   visitSessions,
   warehouses,
+  mediaFiles,
+  transactionNotePhotos,
 } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
@@ -43,7 +45,27 @@ function addDays(date: Date, days: number) {
 export async function salesRoutes(app: FastifyInstance) {
   app.get('/sales/orders', { preHandler: requirePermission('sales.view') }, async (request) => {
     const companyId = requireTenantId(request);
-    const rows = await db.select().from(salesTransactions).where(eq(salesTransactions.companyId, companyId)).orderBy(desc(salesTransactions.createdAt)).limit(100);
+
+    const rows = await db
+      .select({
+        id: salesTransactions.id,
+        transactionNo: salesTransactions.transactionNo,
+        salesUserId: salesTransactions.salesUserId,
+        outletId: salesTransactions.outletId,
+        customerType: salesTransactions.customerType,
+        paymentMethod: salesTransactions.paymentMethod,
+        totalAmount: salesTransactions.totalAmount,
+        status: salesTransactions.status,
+        createdAt: salesTransactions.createdAt,
+        photoUrl: mediaFiles.fileUrl,
+      })
+      .from(salesTransactions)
+      .leftJoin(transactionNotePhotos, eq(salesTransactions.id, transactionNotePhotos.transactionId))
+      .leftJoin(mediaFiles, eq(transactionNotePhotos.mediaFileId, mediaFiles.id))
+      .where(eq(salesTransactions.companyId, companyId))
+      .orderBy(desc(salesTransactions.createdAt))
+      .limit(100);
+
     return { orders: rows };
   });
 

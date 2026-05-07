@@ -43,7 +43,7 @@ export function ReportsPage() {
         getSalesTransactions(accessToken, { status: statusFilter || undefined, from, to }),
         getTenantUsers(accessToken),
       ]);
-      setTransactions(txRes.transactions ?? []);
+      setTransactions(txRes.orders ?? []);
       setUsers(userRes.users ?? []);
     } catch (e) {
       console.error(e);

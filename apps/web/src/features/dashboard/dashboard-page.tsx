@@ -6,6 +6,7 @@ import {
   AlertCircle, ArrowUpRight, Activity
 } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
+import { getPlatformCompanyView } from '@/lib/api/client';
 
 type ReportSummary = {
   totalSalesAmount: string;
@@ -44,15 +45,25 @@ function formatRp(v: string | number, compact = false) {
 
 function apiReq<T>(path: string, token: string): Promise<T> {
   const base = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
+  const companyView = getPlatformCompanyView();
+  const headers: Record<string, string> = { 
+    Authorization: `Bearer ${token}`, 
+    'Content-Type': 'application/json' 
+  };
+  
+  if (companyView?.companyId) {
+    headers['X-Company-Id'] = companyView.companyId;
+  }
+
   return fetch(`${base}${path}`, {
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers,
   }).then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
 }
 
 export function DashboardPage() {
-  const { user, permissions, accessToken } = useAuth();
-  const isAdministrator = user?.roleCode === 'ADMINISTRATOR';
-  const visibleMenus = roleMenus.filter(m => isAdministrator || permissions.includes(m.permission));
+  const { user, permissions, accessToken, isSuperAdmin } = useAuth();
+  const isAdministrator = user?.roleCode === 'ADMINISTRATOR' || user?.roleCode === 'SUPER_ADMIN';
+  const visibleMenus = roleMenus.filter(m => isSuperAdmin || isAdministrator || permissions.includes(m.permission));
 
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,7 +71,8 @@ export function DashboardPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   async function loadSummary() {
-    if (!accessToken || !permissions.includes('reports.view')) return;
+    if (!accessToken) return;
+    if (!isSuperAdmin && !permissions.includes('reports.view')) return;
     setLoading(true);
     setError('');
     try {

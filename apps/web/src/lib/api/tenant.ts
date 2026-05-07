@@ -148,11 +148,11 @@ export function getSalesTransactions(token: string, params?: { status?: string; 
   if (params?.status) q.set('status', params.status);
   if (params?.from) q.set('from', params.from);
   if (params?.to) q.set('to', params.to);
-  return apiRequest<{ transactions: SalesTransaction[] }>(`/sales/transactions?${q}`, { headers: { Authorization: `Bearer ${token}` } });
+  return apiRequest<{ orders: SalesTransaction[] }>(`/sales/orders?${q}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
 export function approveSalesTransaction(token: string, id: string) {
-  return apiRequest<{ transaction: SalesTransaction }>(`/sales/transactions/${id}/approve`, {
+  return apiRequest<{ transaction: SalesTransaction }>(`/sales/orders/${id}/approve`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({}),
@@ -160,7 +160,7 @@ export function approveSalesTransaction(token: string, id: string) {
 }
 
 export function rejectSalesTransaction(token: string, id: string, reason: string) {
-  return apiRequest<{ transaction: SalesTransaction }>(`/sales/transactions/${id}/reject`, {
+  return apiRequest<{ transaction: SalesTransaction }>(`/sales/orders/${id}/reject`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ reason }),

@@ -171,7 +171,7 @@ select {
   display: flex;
   flex-direction: column;
   overflow: hidden auto;
-  background: #4a2922;
+  background: #3b1f1a;
   padding: 0;
   transition: width 260ms ease;
 }
@@ -198,7 +198,7 @@ select {
 .admin-workspace-closed .admin-sidebar-brand {
   padding: 0.5rem 0 1.25rem 0;
   justify-content: center;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 1.5rem;
 }
 
@@ -354,6 +354,12 @@ select {
   color: #ffffff;
 }
 
+.admin-nav-active:hover {
+  background: #c4632e;
+}
+
+
+
 .admin-workspace-closed .admin-nav-link:hover {
   transform: none;
   background: transparent;
@@ -367,7 +373,6 @@ select {
 .admin-nav-active {
   color: #ffffff;
   background: #b55925;
-  box-shadow: 0 10px 25px rgba(181, 89, 37, 0.25);
 }
 
 .admin-nav-active .admin-nav-icon {
@@ -382,7 +387,6 @@ select {
 .admin-workspace-closed .admin-nav-active .admin-nav-icon {
   background: #b55925;
   color: #ffffff;
-  box-shadow: 0 10px 25px rgba(181, 89, 37, 0.3);
 }
 
 .admin-nav-danger:hover {
@@ -464,15 +468,15 @@ select {
   align-items: center;
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   background: #ffffff;
-  padding: 1rem 1.35rem;
+  padding: 0.65rem 1.35rem;
 }
 
 .admin-topbar h1 {
-  font-size: 1.55rem;
+  font-size: 1.2rem;
 }
 
 .admin-command-search {
-  min-height: 3rem;
+  min-height: 2.5rem;
   border-radius: 1.2rem;
   padding: 0 0.95rem;
   box-shadow: 0 16px 44px rgba(15, 23, 42, 0.07), inset 0 0 0 1px rgba(15, 23, 42, 0.07);
@@ -1927,11 +1931,11 @@ select {
   justify-content: space-between;
   gap: 1.5rem;
   align-items: center;
-  border: 1px solid rgba(96, 165, 250, .28);
+  border: 1px solid rgba(74, 41, 34, .35);
   border-radius: 28px;
-  padding: 1.35rem;
-  background: linear-gradient(135deg, rgba(37, 99, 235, .18), rgba(14, 165, 233, .08), rgba(15, 23, 42, .86));
-  box-shadow: 0 22px 55px rgba(2, 6, 23, .28);
+  padding: 1.35rem 1.6rem;
+  background: linear-gradient(135deg, #6b3a2e 0%, #4a2922 45%, #2a1510 100%);
+  box-shadow: 0 22px 55px rgba(74, 41, 34, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 
 .platform-company-view-copy {
@@ -1943,7 +1947,7 @@ select {
   display: inline-flex;
   align-items: center;
   gap: .4rem;
-  color: #bae6fd;
+  color: #fbbf24;
   font-size: .78rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -1955,13 +1959,13 @@ select {
   align-items: center;
   gap: .55rem;
   margin: 0;
-  color: #fff;
+  color: #fef3c7;
   font-size: clamp(1.35rem, 2vw, 2rem);
 }
 
 .platform-company-view-copy p {
   margin: 0;
-  color: var(--platform-subtle);
+  color: #d4a989;
 }
 
 .platform-company-view-actions {
@@ -1969,6 +1973,18 @@ select {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: .65rem;
+}
+
+.platform-company-view-actions .platform-btn-primary {
+  background: linear-gradient(135deg, #b45309, #d97706);
+  box-shadow: 0 10px 28px rgba(180, 83, 9, .35);
+}
+
+.platform-company-view-actions .platform-btn-ghost {
+  color: #fef3c7;
+  background: rgba(255, 255, 255, .1);
+  border-color: rgba(212, 169, 137, .28);
+  backdrop-filter: blur(8px);
 }
 
 .platform-revenue-stat .platform-stat-info small {

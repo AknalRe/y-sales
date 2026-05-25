@@ -1,0 +1,1 @@
+ALTER TABLE "tenant_subscriptions" ADD CONSTRAINT "tenant_subscriptions_company_id_unique" UNIQUE("company_id");

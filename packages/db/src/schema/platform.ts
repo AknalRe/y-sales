@@ -68,7 +68,7 @@ export const subscriptionFeatures = pgTable('subscription_features', {
 // We keep the existing table and ADD new columns via migration.
 export const tenantSubscriptions = pgTable('tenant_subscriptions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').notNull().unique().references(() => companies.id, { onDelete: 'cascade' }),
   planId: uuid('plan_id').references(() => subscriptionPlans.id),
   planCode: varchar('plan_code', { length: 80 }).notNull(),
   billingCycle: billingCycleEnum('billing_cycle').default('monthly').notNull(),

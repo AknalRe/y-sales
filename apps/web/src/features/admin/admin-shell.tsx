@@ -42,10 +42,12 @@ export function AdminShell() {
   const isMobile = useIsMobile(820);
 
   const [open, setOpen] = useState(!isMobile);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     setOpen(!isMobile);
+    if (!isMobile) setMobileMenuOpen(false);
   }, [isMobile]);
 
   const navSections = useMemo(() => getNavSections(permissions, user, isSuperAdmin), [permissions, user, isSuperAdmin]);
@@ -100,9 +102,16 @@ export function AdminShell() {
 
       <main className={`admin-main ${open ? 'admin-main-open' : 'admin-main-closed'}`}>
         <header className="admin-topbar">
-          <div>
-            <h1>{currentTitle}</h1>
-            <span>Admin Portal</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {isMobile && (
+              <button onClick={() => setMobileMenuOpen(true)} className="admin-icon-button" type="button">
+                <Menu size={18} />
+              </button>
+            )}
+            <div>
+              <h1>{currentTitle}</h1>
+              <span>Admin Portal</span>
+            </div>
           </div>
           <div className="admin-user-zone">
             <button id="admin-notification-button" className="admin-icon-button admin-notification" type="button">
@@ -139,6 +148,58 @@ export function AdminShell() {
           <Outlet />
         </div>
       </main>
+
+      {/* DEDICATED MOBILE MENU OVERLAY */}
+      {isMobile && mobileMenuOpen && (
+        <div className="fixed inset-0 z-[100] flex">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <div className="relative flex w-4/5 max-w-xs flex-col bg-white dark:bg-slate-900 h-full shadow-2xl animate-in slide-in-from-left">
+            <div className="flex items-center justify-between p-4 border-b dark:border-slate-800">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Mahasura Mobile</h2>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <span className="sr-only">Close menu</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            
+            <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+              {navSections.map((section) => (
+                <div key={section.title}>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{section.title}</h3>
+                  <ul className="space-y-1">
+                    {section.items.map((item) => {
+                      const Icon = item.handle.icon;
+                      const href = item.index ? '/admin' : (item.path?.startsWith('/') ? item.path : `/admin/${item.path}`);
+                      const active = location.pathname === href;
+                      return (
+                        <li key={href}>
+                          <Link 
+                            to={href} 
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                              active 
+                                ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' 
+                                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            <Icon size={18} className={active ? 'text-indigo-700 dark:text-indigo-400' : 'text-slate-400'} />
+                            {item.handle.label}
+                            {item.handle.badge && (
+                              <span className="ml-auto rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                                {item.handle.badge}
+                              </span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

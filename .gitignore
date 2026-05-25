@@ -52,3 +52,5 @@ temp/
 
 # Reference project only, not part of YukSales source
 sistem-mahasura/
+
+*.pem

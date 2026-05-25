@@ -74,9 +74,9 @@ export function DashboardPage() {
   }
 
   const companyView = getPlatformCompanyView();
-  
-  useEffect(() => { 
-    loadSummary(); 
+
+  useEffect(() => {
+    loadSummary();
   }, [accessToken, isSuperAdmin, companyView?.companyId]);
 
   const statCards = summary ? [
@@ -122,7 +122,8 @@ export function DashboardPage() {
           <h1 className="admin-page-title">
             Dashboard Utama
           </h1>
-          <p className="admin-page-subtitle">
+          {/* <p className="admin-page-subtitle"> */}
+          <p className="">
             Selamat datang kembali, <strong style={{ color: '#7c3aed' }}>{user?.name}</strong>
             {lastUpdated && <span style={{ marginLeft: '.5rem', opacity: 0.7 }}>· Update: {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>}
           </p>
@@ -133,8 +134,8 @@ export function DashboardPage() {
               <Clock size={14} /> Review Nota ({summary.pendingApprovals})
             </Link>
           )}
-          <button 
-            onClick={loadSummary} 
+          <button
+            onClick={loadSummary}
             disabled={loading}
             className="admin-btn-ghost"
             style={{ padding: '.5rem .75rem', borderRadius: 12, background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b' }}
@@ -154,15 +155,15 @@ export function DashboardPage() {
       {statCards.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
           {statCards.map(s => {
-            const themeColor = 
-              s.color === 'kpi-emerald' ? '#10b981' : 
-              s.color === 'kpi-blue' ? '#3b82f6' : 
-              s.color === 'kpi-orange' ? '#f97316' : 
-              s.color === 'kpi-purple' ? '#8b5cf6' : '#94a3b8';
+            const themeColor =
+              s.color === 'kpi-emerald' ? '#10b981' :
+                s.color === 'kpi-blue' ? '#3b82f6' :
+                  s.color === 'kpi-orange' ? '#f97316' :
+                    s.color === 'kpi-purple' ? '#8b5cf6' : '#94a3b8';
 
             return (
               <Link key={s.label} to={s.href} style={{ textDecoration: 'none' }}>
-                <div 
+                <div
                   className="admin-card"
                   style={{ marginBottom: 0, padding: '1.25rem' }}
                 >
@@ -195,10 +196,8 @@ export function DashboardPage() {
         </div>
       )}
 
-
-
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '1.25rem' }}>
+      <div className='flex flex-col'>
         {/* Quick Access */}
         <div className="admin-card">
           <div className="admin-card-header">

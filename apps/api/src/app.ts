@@ -5,8 +5,16 @@ import multipart from '@fastify/multipart';
 import { env } from './config/env.js';
 import { registerRoutes } from './routes.js';
 
+import fs from 'node:fs';
+import path from 'node:path';
+
 export async function buildApp() {
-  const app = Fastify({ logger: env.APP_DEBUG });
+  const app = Fastify({
+    logger: env.APP_DEBUG, https: {
+      key: fs.readFileSync(path.resolve('192.168.18.66+2-key.pem')),
+      cert: fs.readFileSync(path.resolve('192.168.18.66+2.pem')),
+    }
+  });
 
   await app.register(cors, {
     origin: env.WEB_ORIGIN,

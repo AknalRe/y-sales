@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
+import fs from 'node:fs';
 
 export default defineConfig({
   resolve: {
@@ -33,6 +34,13 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    host: true,
+    https: {
+      cert: fs.readFileSync('192.168.18.66+2.pem'),
+      key: fs.readFileSync('192.168.18.66+2-key.pem'),
+    }
+  }
 });
 
 

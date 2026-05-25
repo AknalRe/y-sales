@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp } from 'lucide-react';
+import { Camera, ReceiptText, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
+import { API_BASE_URL } from '../../lib/api/client';
 
 type VisitSession = {
   id: string;
@@ -26,10 +27,8 @@ type AttendanceToday = {
   checkInAt?: string | null;
 };
 
-const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
-
 function apiGet<T>(path: string, token: string): Promise<T> {
-  return fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${token}` } })
+  return fetch(`${API_BASE_URL}${path}`, { headers: { Authorization: `Bearer ${token}` } })
     .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
 }
 
@@ -87,7 +86,7 @@ export function SalesHomePage() {
       {/* Greeting */}
       <div className="sales-home-greeting">
         <div>
-          <p className="sales-greeting-label">Selamat datang 👋</p>
+          <p className="sales-greeting-label">Selamat datang</p>
           <h1 className="sales-greeting-name">{user?.name?.split(' ')[0] ?? 'Sales'}</h1>
         </div>
         <div style={{ display: 'flex', gap: '.5rem' }}>
@@ -154,19 +153,19 @@ export function SalesHomePage() {
       {/* Quick Actions */}
       <div className="sales-quick-actions">
         <Link to="/attendance" className="sales-action-card sales-action-primary">
-          <div className="sales-action-icon">📷</div>
+          <div className="sales-action-icon"><Camera size={22} /></div>
           <span>Absensi Wajah</span>
         </Link>
         <Link to="/sales/visit" className="sales-action-card">
-          <div className="sales-action-icon">📍</div>
+          <div className="sales-action-icon"><MapPin size={22} /></div>
           <span>Check-In Visit</span>
         </Link>
         <Link to="/sales/transactions" className="sales-action-card">
-          <div className="sales-action-icon">🛒</div>
+          <div className="sales-action-icon"><ShoppingCart size={22} /></div>
           <span>Transaksi</span>
         </Link>
         <Link to="/sales/invoices" className="sales-action-card">
-          <div className="sales-action-icon">🧾</div>
+          <div className="sales-action-icon"><ReceiptText size={22} /></div>
           <span>Foto Nota</span>
         </Link>
       </div>
@@ -186,7 +185,7 @@ export function SalesHomePage() {
           </div>
         ) : visits.length === 0 ? (
           <div className="sales-empty-state">
-            <div className="sales-empty-icon">📍</div>
+            <div className="sales-empty-icon"><MapPin size={34} /></div>
             <p>Belum ada kunjungan hari ini</p>
             <Link to="/sales/visit" className="sales-empty-btn">Mulai Kunjungan</Link>
           </div>

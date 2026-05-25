@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Boxes, RefreshCw, Package, Warehouse as WarehouseIcon, ArrowUpDown, AlertTriangle, Info, History, Filter } from 'lucide-react';
+import { Boxes, RefreshCw, Package, Warehouse as WarehouseIcon, ArrowUpDown, AlertTriangle, History } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { getWarehouses, type Warehouse } from '@/lib/api/tenant';
 import { apiRequest } from '@/lib/api/client';

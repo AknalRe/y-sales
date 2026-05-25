@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Shield, Zap, Users, Package, Boxes, Clock } from 'lucide-react';
+import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Shield, Zap, Users, Package, Boxes, Clock, Mail } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { getMySubscription, type TenantSubscriptionInfo } from '@/lib/api/tenant';
 import { apiRequest } from '@/lib/api/client';
@@ -248,12 +248,14 @@ export function SubscriptionPage() {
                 <div style={{ color: '#64748b', fontSize: '.78rem', marginTop: '.3rem' }}>hari tersisa</div>
                 {daysLeft <= 7 && daysLeft > 0 && (
                   <div style={{ marginTop: '.75rem', color: '#fca5a5', fontSize: '.78rem', background: 'rgba(239,68,68,.12)', borderRadius: 8, padding: '.5rem' }}>
-                    ⚠️ Subscription Anda segera habis. Hubungi admin untuk perpanjangan.
+                    <AlertCircle size={14} style={{ display: 'inline', marginRight: '.25rem', verticalAlign: '-2px' }} />
+                    Subscription Anda segera habis. Hubungi admin untuk perpanjangan.
                   </div>
                 )}
                 {daysLeft <= 0 && (
                   <div style={{ marginTop: '.75rem', color: '#f87171', fontSize: '.78rem', background: 'rgba(239,68,68,.12)', borderRadius: 8, padding: '.5rem' }}>
-                    🔴 Subscription telah berakhir. Akses akan dibatasi.
+                    <AlertCircle size={14} style={{ display: 'inline', marginRight: '.25rem', verticalAlign: '-2px' }} />
+                    Subscription telah berakhir. Akses akan dibatasi.
                   </div>
                 )}
               </div>
@@ -262,8 +264,8 @@ export function SubscriptionPage() {
             {/* Contact */}
             <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
               <p style={{ margin: '0 0 .65rem', color: '#64748b', fontSize: '.82rem' }}>Ingin upgrade atau ada pertanyaan?</p>
-              <a href="mailto:support@yuksales.id" style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: 'rgba(139,92,246,.15)', border: '1px solid rgba(139,92,246,.3)', color: '#a78bfa', borderRadius: 10, padding: '.6rem 1rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none', justifyContent: 'center' }}>
-                📧 Hubungi Tim Kami
+              <a href="mailto:support@mahasura.id" style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', borderRadius: 10, padding: '.6rem 1rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none', justifyContent: 'center' }}>
+                <Mail size={15} /> Hubungi Tim Kami
               </a>
             </div>
           </div>

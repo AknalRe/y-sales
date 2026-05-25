@@ -125,6 +125,29 @@ export type DashboardSummary = {
   totalOutlets: number;
 };
 
+export type GeneralSettings = {
+  defaultGeofenceRadiusM: number;
+  maxGpsAccuracyM: number;
+  requireFaceForAttendance: boolean;
+  requireFaceForVisit: boolean;
+  requireTransactionProofPhoto: boolean;
+  requireFaceIdentityMatchForVisit: boolean;
+  faceMatchThreshold: number;
+  requireLivenessForVisit: boolean;
+  rejectVisitOnFaceMismatch: boolean;
+  faceIntegration: {
+    enabled: boolean;
+    provider: 'mock' | 'custom_http' | 'aws_rekognition' | 'azure_face' | 'google_vertex';
+    baseUrl: string;
+    apiKey: string;
+    projectId: string;
+    region: string;
+    model: string;
+    mode: 'verify' | 'detect_and_verify';
+    timeoutMs: number;
+  };
+};
+
 // ─── Visit APIs ─────────────────────────────────────────────────────────────
 
 export function getVisitSchedules(token: string, params?: { date?: string; salesUserId?: string }) {
@@ -232,6 +255,20 @@ export type TenantSubscriptionInfo = {
 
 export function getDashboardSummary(token: string) {
   return apiRequest<DashboardSummary>('/dashboard/summary', { headers: { Authorization: `Bearer ${token}` } });
+}
+
+export function getGeneralSettings(token: string) {
+  return apiRequest<{ settings: GeneralSettings; defaults: GeneralSettings }>('/settings/general', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateGeneralSettings(token: string, payload: Partial<GeneralSettings>) {
+  return apiRequest<{ settings: GeneralSettings }>('/settings/general', {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }
 
 export function createOrder(token: string, payload: any) {

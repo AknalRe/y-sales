@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export async function buildApp() {
+  const allowedOrigins = env.WEB_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
   const app = Fastify({
     logger: env.APP_DEBUG, https: {
       key: fs.readFileSync(path.resolve('192.168.18.66+2-key.pem')),
@@ -17,7 +18,7 @@ export async function buildApp() {
   });
 
   await app.register(cors, {
-    origin: env.WEB_ORIGIN,
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });

@@ -29,7 +29,7 @@ const roleMenus = [
   { permission: 'products.manage', title: 'Manajemen Stok', icon: Package, text: 'Monitor stok dan riwayat mutasi gudang.', href: '/admin/stock' },
   { permission: 'receivables.view', title: 'Piutang Usaha', icon: Clock, text: 'Pantau kredit dan jadwal penagihan.', href: '/admin/receivables' },
   { permission: 'roles.manage', title: 'Role & Permission', icon: Users, text: 'Atur akses fitur per role secara fleksibel.', href: '/admin/roles' },
-  { permission: 'settings.manage', title: 'Pengaturan', icon: SlidersHorizontal, text: 'Custom radius geofence dan aturan GPS.', href: '/admin/users' },
+  { permission: 'settings.manage', title: 'Pengaturan', icon: SlidersHorizontal, text: 'Custom radius geofence dan aturan GPS.', href: '/admin/settings' },
 ];
 
 function formatRp(v: string | number, compact = false) {

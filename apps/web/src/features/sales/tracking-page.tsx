@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Map, RefreshCw, User, MapPin, Clock, CheckCircle2, AlertCircle, Timer, Navigation, Calendar } from 'lucide-react';
+import { Map, RefreshCw, User, MapPin, CheckCircle2, AlertCircle, Timer, Navigation, Calendar } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { getVisitSchedules, getVisitSessions, getTenantUsers, type VisitSchedule, type VisitSession, type TenantUser } from '@/lib/api/tenant';
 

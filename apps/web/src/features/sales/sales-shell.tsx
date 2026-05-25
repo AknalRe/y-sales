@@ -15,22 +15,21 @@ export function SalesShell() {
   const { user } = useAuth();
 
   return (
-    <div className="flex min-h-screen justify-center bg-[#2a1714] text-slate-900">
+    <div className="flex min-h-screen justify-center bg-gray-50 text-slate-900">
       <div className="mobile-shell relative flex flex-col overflow-hidden">
-        <header className="sticky top-0 z-20 bg-[#4a2922] p-4 text-white shadow-lg">
+        <header className="sticky top-0 z-20 bg-[#4A2922] p-4 text-white shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-[#d8b6aa]">YukSales</p>
-              <h1 className="text-lg font-black">{user?.name ?? 'Sales'}</h1>
-              <p className="text-xs text-white/60">Area operasional aktif</p>
+              <h1 className="text-lg font-black">Mahasura Sales</h1>
+              <p className="text-xs text-[#d8b6aa]">{user?.name ?? 'Sales'} - Area operasional</p>
             </div>
-            <div className="grid h-11 w-11 place-items-center rounded-full border-2 border-white/20 bg-[#b55925] font-black text-white">
+            <div className="grid h-11 w-11 place-items-center rounded-full border-2 border-white/20 bg-[#B55925] font-black text-white">
               {user?.name?.slice(0, 2).toUpperCase() ?? 'SL'}
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-4 pb-24">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 pb-24">
           <Outlet />
         </main>
 
@@ -39,10 +38,10 @@ export function SalesShell() {
             const Icon = item.icon;
             const active = location.pathname === item.href;
             return (
-              <Link key={item.href} id={`sales-nav-${item.name.toLowerCase()}`} to={item.href} className={`relative flex h-full w-16 flex-col items-center justify-center gap-1 text-[10px] font-bold transition ${active ? 'text-[#b55925]' : 'text-slate-400 hover:text-slate-700'}`}>
+              <Link key={item.href} id={`sales-nav-${item.name.toLowerCase()}`} to={item.href} className={`relative flex h-full w-16 flex-col items-center justify-center gap-1 text-[10px] font-bold transition ${active ? 'text-[#B55925]' : 'text-slate-400 hover:text-slate-700'}`}>
                 <Icon size={20} />
                 {item.name}
-                {active ? <span className="absolute bottom-0 h-1 w-8 rounded-t-full bg-[#b55925]" /> : null}
+                {active ? <span className="absolute bottom-0 h-1 w-8 rounded-t-full bg-[#B55925]" /> : null}
               </Link>
             );
           })}

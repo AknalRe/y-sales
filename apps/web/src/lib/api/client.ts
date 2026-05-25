@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000').replace(/\/+$/, '');
 const platformCompanyViewKey = 'yuksales.platform.companyView';
 
 export type LoginPayload = {
@@ -176,7 +176,7 @@ export type VisitPayload = {
 };
 
 export function checkInVisit(accessToken: string, payload: VisitPayload) {
-  return apiRequest<{ session: unknown; geofence: unknown }>('/visits/check-in', {
+  return apiRequest<{ visit: { id: string; outletId: string }; geofence: unknown }>('/visits/check-in', {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(payload),

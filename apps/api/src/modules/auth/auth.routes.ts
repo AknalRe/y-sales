@@ -119,11 +119,24 @@ export async function authRoutes(app: FastifyInstance) {
       })
       .from(users)
       .innerJoin(roles, eq(users.roleId, roles.id))
-      .innerJoin(companies, eq(users.companyId, companies.id))
+      .leftJoin(companies, eq(users.companyId, companies.id))
       .where(eq(users.id, authUser.id));
 
     return {
-      user: profile,
+      user: profile ? {
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone,
+        employeeCode: profile.employeeCode,
+        roleCode: profile.roleCode,
+        isSuperAdmin: authUser.isSuperAdmin,
+        company: profile.companyId ? {
+          id: profile.companyId,
+          name: profile.companyName,
+          slug: profile.companySlug,
+        } : null,
+      } : null,
       permissions: authUser.permissions,
     };
   });

@@ -6,6 +6,8 @@ import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } fr
 import { getCurrentLocation, type BrowserLocation } from '../../lib/geo/location';
 import { useAuth } from '../auth/auth-provider';
 
+const activeVisitStorageKey = 'yuksales.sales.activeVisit';
+
 export function VisitPage() {
   const { accessToken } = useAuth();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -25,6 +27,18 @@ export function VisitPage() {
   const [notes, setNotes] = useState('');
 
   useEffect(() => () => stopCamera(stream), [stream]);
+
+  useEffect(() => {
+    const raw = localStorage.getItem(activeVisitStorageKey);
+    if (!raw) return;
+    try {
+      const activeVisit = JSON.parse(raw) as { id: string; outletId: string };
+      setActiveVisitId(activeVisit.id);
+      setSelectedOutlet(activeVisit.outletId);
+    } catch {
+      localStorage.removeItem(activeVisitStorageKey);
+    }
+  }, []);
 
   useEffect(() => {
     if (accessToken) {
@@ -71,9 +85,10 @@ export function VisitPage() {
     };
 
     try {
-      const result: any = await checkInVisit(accessToken, payload);
+      const result = await checkInVisit(accessToken, payload);
       setMessage(`Check-in berhasil!`);
-      setActiveVisitId(result.session?.id || 'dummy-id'); // fallback if needed
+      setActiveVisitId(result.visit.id);
+      localStorage.setItem(activeVisitStorageKey, JSON.stringify({ id: result.visit.id, outletId: result.visit.outletId }));
       setImage(null); // Reset image for check-out
     } catch (error: any) {
       setMessage(`Check-in gagal: ${error.message}`);
@@ -108,6 +123,7 @@ export function VisitPage() {
       await checkOutVisit(accessToken, payload);
       setMessage(`Check-out berhasil!`);
       setActiveVisitId(null);
+      localStorage.removeItem(activeVisitStorageKey);
       setSelectedOutlet('');
       setImage(null);
       setNotes('');
@@ -127,8 +143,8 @@ export function VisitPage() {
         </div>
       </div>
 
-      <div className="admin-card" style={{ marginTop: '1rem', padding: '1rem' }}>
-        <h2 style={{ margin: '0 0 1rem 0', fontSize: '1rem' }}>{!activeVisitId ? '1. Pilih Outlet Tujuan' : 'Sesi Kunjungan Aktif'}</h2>
+      <div className="sales-step-card">
+        <h2>{!activeVisitId ? '1. Pilih Outlet Tujuan' : 'Sesi Kunjungan Aktif'}</h2>
         {!activeVisitId ? (
           <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} className="admin-select" style={{ width: '100%' }}>
             <option value="">-- Pilih Outlet --</option>
@@ -145,17 +161,17 @@ export function VisitPage() {
         )}
       </div>
 
-      <div className="admin-card" style={{ padding: '1rem' }}>
-        <h2 style={{ margin: '0 0 1rem 0', fontSize: '1rem' }}>2. Verifikasi Wajah & GPS</h2>
+      <div className="sales-step-card">
+        <h2>2. Verifikasi Wajah & GPS</h2>
         
-        <div style={{ borderRadius: '1rem', overflow: 'hidden', background: '#000', marginBottom: '1rem', position: 'relative' }}>
+        <div className="sales-camera-frame">
           <video ref={videoRef} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover' }} playsInline muted />
           {image && <img src={image.dataUrl} alt="Captured" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
         </div>
 
         <div style={{ display: 'grid', gap: '.5rem', gridTemplateColumns: '1fr 1fr' }}>
           <button onClick={handleStartCamera} className="admin-btn admin-btn-ghost" type="button" style={{ justifyContent: 'center' }}><Video size={16}/> Buka Kamera</button>
-          <button onClick={handleCapture} className="admin-btn admin-btn-primary" type="button" style={{ justifyContent: 'center' }}><Camera size={16}/> Jepret Wajah</button>
+          <button onClick={handleCapture} disabled={!stream} className="admin-btn admin-btn-primary" type="button" style={{ justifyContent: 'center' }}><Camera size={16}/> Jepret Wajah</button>
         </div>
 
         <div style={{ marginTop: '1rem' }}>
@@ -167,8 +183,8 @@ export function VisitPage() {
       </div>
 
       {activeVisitId && (
-        <div className="admin-card" style={{ padding: '1rem' }}>
-          <h2 style={{ margin: '0 0 1rem 0', fontSize: '1rem' }}>3. Hasil Kunjungan (Check-Out)</h2>
+        <div className="sales-step-card">
+          <h2>3. Hasil Kunjungan (Check-Out)</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
             <select value={outcome} onChange={e => setOutcome(e.target.value as any)} className="admin-select">
               <option value="closed_order">Closed Order (Berhasil Jual)</option>
@@ -183,7 +199,7 @@ export function VisitPage() {
       )}
 
       {message && (
-        <div className="admin-alert" style={{ background: 'rgba(52,211,153,.1)', color: '#34d399', border: '1px solid rgba(52,211,153,.2)' }}>
+        <div className="sales-message">
           {message}
         </div>
       )}
@@ -193,7 +209,7 @@ export function VisitPage() {
           {loading ? <Loader2 className="animate-spin" /> : <CheckCircle2 />} Check-In Visit
         </button>
       ) : (
-        <button onClick={handleCheckOut} disabled={!image || !location || loading} className="admin-btn" style={{ width: '100%', padding: '1rem', fontSize: '1rem', borderRadius: '1rem', justifyContent: 'center', background: '#ef4444', color: '#fff' }}>
+        <button onClick={handleCheckOut} disabled={!image || !location || loading} className="sales-danger-btn">
           {loading ? <Loader2 className="animate-spin" /> : <XCircle />} Check-Out & Selesai
         </button>
       )}

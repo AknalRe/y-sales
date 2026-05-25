@@ -18,6 +18,7 @@ import {
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
+import { getGeneralSettings } from '../../utils/settings.js';
 
 const itemSchema = z.object({
   productId: z.string().uuid(),
@@ -27,13 +28,17 @@ const itemSchema = z.object({
 
 const orderSchema = z.object({
   outletId: z.string().uuid().optional(),
-  visitSessionId: z.string().uuid().optional(),
+  visitSessionId: z.string().uuid(),
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
   clientRequestId: z.string().uuid(),
   sourceWarehouseId: z.string().uuid().optional(),
   dueDate: z.string().date().optional(),
   items: z.array(itemSchema).min(1),
+});
+
+const rejectOrderSchema = z.object({
+  reason: z.string().min(3).optional(),
 });
 
 function addDays(date: Date, days: number) {
@@ -77,22 +82,24 @@ export async function salesRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.clientRequestId, body.clientRequestId)));
     if (existing) return { order: existing, idempotent: true };
 
-    let visit: typeof visitSessions.$inferSelect | undefined;
-    if (body.visitSessionId) {
-      [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
-      if (!visit) throw Object.assign(new Error('Visit session tidak ditemukan untuk sales ini.'), { statusCode: 404 });
-      if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada visit yang masih open.'), { statusCode: 400 });
-      if (body.outletId && visit.outletId !== body.outletId) throw Object.assign(new Error('Outlet order harus sama dengan outlet visit.'), { statusCode: 400 });
-    }
+    const [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
+    if (!visit) throw Object.assign(new Error('Visit session tidak ditemukan untuk sales ini.'), { statusCode: 404 });
+    if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada visit yang masih open.'), { statusCode: 400 });
+    if (body.outletId && visit.outletId !== body.outletId) throw Object.assign(new Error('Outlet order harus sama dengan outlet visit.'), { statusCode: 400 });
+
+    const [stockWarehouse] = body.sourceWarehouseId
+      ? await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.id, body.sourceWarehouseId), eq(warehouses.type, 'sales_van'), eq(warehouses.ownerUserId, request.user!.id)))
+      : await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.type, 'sales_van'), eq(warehouses.ownerUserId, request.user!.id), eq(warehouses.status, 'active')));
+    if (!stockWarehouse) throw Object.assign(new Error('Stok sales belum tersedia untuk user ini.'), { statusCode: 400 });
 
     const order = await db.transaction(async (tx) => {
       const [created] = await tx.insert(salesTransactions).values({
         companyId,
         transactionNo: `SO-${Date.now()}`,
         salesUserId: request.user!.id,
-        outletId: body.outletId ?? visit?.outletId,
+        outletId: visit.outletId,
         visitSessionId: body.visitSessionId,
-        sourceWarehouseId: body.sourceWarehouseId,
+        sourceWarehouseId: stockWarehouse.id,
         customerType: body.customerType,
         paymentMethod: body.paymentMethod,
         subtotalAmount: total,
@@ -105,6 +112,20 @@ export async function salesRoutes(app: FastifyInstance) {
 
       for (const item of body.items) {
         const lineTotal = (Number(item.quantity) * Number(item.unitPrice)).toFixed(2);
+        const [balance] = await tx.select().from(inventoryBalances).where(and(
+          eq(inventoryBalances.companyId, companyId),
+          eq(inventoryBalances.warehouseId, stockWarehouse.id),
+          eq(inventoryBalances.productId, item.productId),
+        ));
+        const availableQuantity = Number(balance?.quantity ?? 0) - Number(balance?.reservedQuantity ?? 0);
+        if (!balance || availableQuantity < Number(item.quantity)) {
+          const [product] = await tx.select().from(products).where(and(eq(products.companyId, companyId), eq(products.id, item.productId)));
+          throw Object.assign(new Error(`Stok sales tidak cukup untuk ${product?.name ?? item.productId}`), { statusCode: 400 });
+        }
+        await tx.update(inventoryBalances).set({
+          reservedQuantity: sql`${inventoryBalances.reservedQuantity} + ${item.quantity}`,
+          updatedAt: new Date(),
+        }).where(eq(inventoryBalances.id, balance.id));
         await tx.insert(salesTransactionItems).values({
           companyId,
           transactionId: created.id,
@@ -127,10 +148,17 @@ export async function salesRoutes(app: FastifyInstance) {
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
     if (!order) return { message: 'Order tidak ditemukan' };
+    if (order.status !== 'pending_approval') throw Object.assign(new Error('Order tidak dalam status pending approval.'), { statusCode: 400 });
+
+    const settings = await getGeneralSettings(companyId);
+    if (settings.requireTransactionProofPhoto) {
+      const [proofCount] = await db.select({ count: sql<number>`count(*)::int` }).from(transactionNotePhotos).where(and(eq(transactionNotePhotos.companyId, companyId), eq(transactionNotePhotos.transactionId, order.id)));
+      if (!proofCount?.count) throw Object.assign(new Error('Bukti foto transaksi wajib diupload sebelum approval.'), { statusCode: 400 });
+    }
 
     const [stockWarehouse] = order.sourceWarehouseId
       ? await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.id, order.sourceWarehouseId)))
-      : await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.code, 'WH-MAIN')));
+      : await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.type, 'sales_van'), eq(warehouses.ownerUserId, order.salesUserId)));
     if (!stockWarehouse) throw new Error('Gudang sumber stok belum tersedia');
 
     const items = await db.select().from(salesTransactionItems).where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));
@@ -144,6 +172,7 @@ export async function salesRoutes(app: FastifyInstance) {
         }
         await tx.update(inventoryBalances).set({
           quantity: sql`${inventoryBalances.quantity} - ${item.quantity}`,
+          reservedQuantity: sql`${inventoryBalances.reservedQuantity} - ${item.reservedQuantity}`,
           updatedAt: new Date(),
         }).where(eq(inventoryBalances.id, balance.id));
         await tx.update(salesTransactionItems).set({ releasedQuantity: item.quantity }).where(eq(salesTransactionItems.id, item.id));
@@ -199,6 +228,42 @@ export async function salesRoutes(app: FastifyInstance) {
         stockReleasedAt: new Date(),
         closedByUserId: request.user!.id,
         closedAt: new Date(),
+        updatedAt: new Date(),
+      }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id)));
+    });
+
+    return { success: true };
+  });
+
+  app.post('/sales/orders/:id/reject', { preHandler: requirePermission('sales.order.review') }, async (request) => {
+    const companyId = requireTenantId(request);
+    const params = z.object({ id: z.string().uuid() }).parse(request.params);
+    const body = rejectOrderSchema.parse(request.body ?? {});
+    const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
+    if (!order) return { message: 'Order tidak ditemukan' };
+    if (order.status !== 'pending_approval') throw Object.assign(new Error('Order tidak dalam status pending approval.'), { statusCode: 400 });
+    if (!order.sourceWarehouseId) throw Object.assign(new Error('Gudang sumber stok order tidak ditemukan.'), { statusCode: 400 });
+
+    const items = await db.select().from(salesTransactionItems).where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));
+
+    await db.transaction(async (tx) => {
+      for (const item of items) {
+        const [balance] = await tx.select().from(inventoryBalances).where(and(
+          eq(inventoryBalances.companyId, companyId),
+          eq(inventoryBalances.warehouseId, order.sourceWarehouseId!),
+          eq(inventoryBalances.productId, item.productId),
+        ));
+        if (balance) {
+          await tx.update(inventoryBalances).set({
+            reservedQuantity: sql`${inventoryBalances.reservedQuantity} - ${item.reservedQuantity}`,
+            updatedAt: new Date(),
+          }).where(eq(inventoryBalances.id, balance.id));
+        }
+      }
+
+      await tx.update(salesTransactions).set({
+        status: 'rejected',
+        rejectionReason: body.reason,
         updatedAt: new Date(),
       }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id)));
     });

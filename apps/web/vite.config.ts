@@ -6,6 +6,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 export default defineConfig({
+  envDir: path.resolve(__dirname, '../..'),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

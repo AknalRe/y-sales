@@ -58,7 +58,7 @@ export function AdminShell() {
 
       <aside className={`${open ? 'admin-workspace-open' : 'admin-workspace-closed'} admin-workspace`}>
         <div className="admin-sidebar-brand">
-          <h2>Yuk Tracking Sales</h2>
+          <h2>Mahasura</h2>
           <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="admin-icon-button" type="button">
             <Menu size={18} />
           </button>
@@ -96,6 +96,7 @@ export function AdminShell() {
         <header className="admin-topbar">
           <div>
             <h1>{currentTitle}</h1>
+            <span>Admin Portal</span>
           </div>
           <div className="admin-user-zone">
             <button id="admin-notification-button" className="admin-icon-button admin-notification" type="button">

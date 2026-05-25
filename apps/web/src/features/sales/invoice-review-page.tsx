@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ReceiptText, CheckCircle2, XCircle, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../auth/auth-provider';
 import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, getTenantUsers, type SalesTransaction, type TenantUser } from '@/lib/api/tenant';
 

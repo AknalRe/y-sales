@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { mediaFiles } from '@yuksales/db/schema';
+import { mediaFiles, salesTransactions, transactionNotePhotos } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
@@ -56,6 +56,22 @@ export async function mediaRoutes(app: FastifyInstance) {
       capturedAt: body.capturedAt ? new Date(body.capturedAt) : new Date(),
       uploadedByUserId: request.user?.id,
     }).returning();
+
+    if (body.ownerType === 'transaction' && body.ownerId) {
+      const [transaction] = await db.select().from(salesTransactions).where(and(
+        eq(salesTransactions.companyId, companyId),
+        eq(salesTransactions.id, body.ownerId),
+      ));
+      if (!transaction) throw Object.assign(new Error('Transaksi tidak ditemukan untuk company ini.'), { statusCode: 404 });
+      await db.insert(transactionNotePhotos).values({
+        companyId,
+        transactionId: transaction.id,
+        mediaFileId: media.id,
+        capturedAt: body.capturedAt ? new Date(body.capturedAt) : new Date(),
+        capturedByUserId: request.user?.id,
+      });
+    }
+
     await writeAuditLog({ request, action: 'media.completed', entityType: 'media_file', entityId: media.id, newValues: media });
     return reply.status(201).send({ media });
   });

@@ -4,6 +4,8 @@ import { getOutlets, getProducts, createOrder } from '../../lib/api/tenant';
 import { useAuth } from '../auth/auth-provider';
 import { EmptyState, Spinner } from '../../components/ui';
 
+const activeVisitStorageKey = 'yuksales.sales.activeVisit';
+
 type CartItem = {
   product: any;
   quantity: number;
@@ -19,12 +21,24 @@ export function TransactionsPage() {
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState('');
+  const [activeVisitId, setActiveVisitId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'credit' | 'consignment'>('cash');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const raw = localStorage.getItem(activeVisitStorageKey);
+    if (raw) {
+      try {
+        const activeVisit = JSON.parse(raw) as { id: string; outletId: string };
+        setActiveVisitId(activeVisit.id);
+        setSelectedOutlet(activeVisit.outletId);
+      } catch {
+        localStorage.removeItem(activeVisitStorageKey);
+      }
+    }
+
     if (accessToken) {
       Promise.all([
         getProducts(accessToken),
@@ -55,7 +69,7 @@ export function TransactionsPage() {
   }
 
   async function handleSubmit() {
-    if (!accessToken || !selectedOutlet || cart.length === 0) return;
+    if (!accessToken || !selectedOutlet || !activeVisitId || cart.length === 0) return;
     setSubmitting(true);
     setError('');
     
@@ -63,6 +77,7 @@ export function TransactionsPage() {
       await createOrder(accessToken, {
         clientRequestId: crypto.randomUUID(),
         outletId: selectedOutlet,
+        visitSessionId: activeVisitId,
         customerType: 'store',
         paymentMethod,
         items: cart.map(i => ({
@@ -105,14 +120,14 @@ export function TransactionsPage() {
       </div>
 
       <div className="admin-card" style={{ marginTop: '1rem', padding: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: 'rgba(255,255,255,.05)', padding: '.5rem 1rem', borderRadius: '1rem' }}>
-          <Search size={18} color="#94a3b8" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: '#ffffff', border: '1px solid rgba(74, 41, 34, .14)', padding: '.65rem 1rem', borderRadius: '1rem' }}>
+          <Search size={18} color="#966556" />
           <input 
             type="text" 
             placeholder="Cari produk SKU atau nama..." 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
-            style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%', fontSize: '.9rem' }}
+            style={{ background: 'transparent', border: 'none', color: '#171717', outline: 'none', width: '100%', fontSize: '.9rem' }}
           />
         </div>
       </div>
@@ -121,18 +136,18 @@ export function TransactionsPage() {
         {loading ? <div style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}><Spinner /></div> : 
          filteredProducts.map(p => (
           <div key={p.id} className="admin-card" style={{ padding: '.75rem', display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-            <div style={{ width: '100%', aspectRatio: '1', background: 'rgba(255,255,255,.03)', borderRadius: '.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Package size={32} color="#64748b" />
+            <div style={{ width: '100%', aspectRatio: '1', background: '#fff7ed', borderRadius: '.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Package size={32} color="#B55925" />
             </div>
             <div style={{ flex: 1 }}>
               <strong style={{ display: 'block', fontSize: '.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</strong>
               <span style={{ fontSize: '.75rem', color: '#94a3b8' }}>{p.sku}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-              <span style={{ fontSize: '.85rem', fontWeight: 700, color: '#34d399' }}>Rp {Number(p.priceDefault).toLocaleString('id-ID')}</span>
+              <span style={{ fontSize: '.85rem', fontWeight: 700, color: '#B55925' }}>Rp {Number(p.priceDefault).toLocaleString('id-ID')}</span>
               <button 
                 onClick={() => addToCart(p)}
-                style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(167,139,250,.15)', border: 'none', color: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Plus size={16} />
               </button>
@@ -141,22 +156,23 @@ export function TransactionsPage() {
         ))}
         {!loading && filteredProducts.length === 0 && (
           <div style={{ gridColumn: '1 / -1' }}>
-            <EmptyState icon="📦" title="Produk tidak ditemukan" />
+            <EmptyState icon={<Package size={44} />} title="Produk tidak ditemukan" />
           </div>
         )}
       </div>
 
       {cart.length > 0 && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#0f172a', borderTop: '1px solid rgba(255,255,255,.1)', padding: '1rem', zIndex: 50, maxWidth: '480px', margin: '0 auto', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', boxShadow: '0 -10px 25px rgba(0,0,0,.5)' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#ffffff', borderTop: '1px solid rgba(74, 41, 34, .14)', padding: '1rem', zIndex: 50, maxWidth: '480px', margin: '0 auto', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', boxShadow: '0 -10px 28px rgba(64,35,30,.14)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '.9rem', color: '#94a3b8' }}><ShoppingCart size={16} style={{ display: 'inline', marginRight: '4px' }} /> {cart.reduce((s,i)=>s+i.quantity, 0)} Items</span>
-            <strong style={{ fontSize: '1.25rem', color: '#34d399' }}>Rp {totalAmount.toLocaleString('id-ID')}</strong>
+            <span style={{ fontSize: '.9rem', color: '#6b7280' }}><ShoppingCart size={16} style={{ display: 'inline', marginRight: '4px' }} /> {cart.reduce((s,i)=>s+i.quantity, 0)} Items</span>
+            <strong style={{ fontSize: '1.25rem', color: '#B55925' }}>Rp {totalAmount.toLocaleString('id-ID')}</strong>
           </div>
           
           {error && <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>{error}</div>}
+          {!activeVisitId && <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>Check-in outlet terlebih dahulu sebelum membuat transaksi.</div>}
 
           <div style={{ display: 'grid', gap: '.5rem', gridTemplateColumns: '1fr', marginBottom: '1rem' }}>
-            <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} className="admin-select" style={{ width: '100%', fontSize: '.85rem' }}>
+            <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} disabled={!!activeVisitId} className="admin-select" style={{ width: '100%', fontSize: '.85rem' }}>
               <option value="">-- Pilih Outlet Tujuan --</option>
               {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
@@ -168,7 +184,7 @@ export function TransactionsPage() {
             </select>
           </div>
 
-          <button onClick={handleSubmit} disabled={submitting || !selectedOutlet} className="admin-btn admin-btn-primary" style={{ width: '100%', padding: '1rem', justifyContent: 'center', borderRadius: '1rem', fontSize: '1rem' }}>
+          <button onClick={handleSubmit} disabled={submitting || !selectedOutlet || !activeVisitId} className="admin-btn admin-btn-primary" style={{ width: '100%', padding: '1rem', justifyContent: 'center', borderRadius: '1rem', fontSize: '1rem' }}>
             {submitting ? <Spinner size={20} /> : <Send size={20} />} {submitting ? 'Mengirim...' : 'Kirim Order Sekarang'}
           </button>
         </div>

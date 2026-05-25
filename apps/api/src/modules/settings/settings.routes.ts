@@ -39,6 +39,7 @@ const generalSettingsSchema = z.object({
   maxGpsAccuracyM: z.number().positive().optional(),
   requireFaceForAttendance: z.boolean().optional(),
   requireFaceForVisit: z.boolean().optional(),
+  requireTransactionProofPhoto: z.boolean().optional(),
   requireFaceIdentityMatchForVisit: z.boolean().optional(),
   faceMatchThreshold: z.number().min(0).max(1).optional(),
   requireLivenessForVisit: z.boolean().optional(),

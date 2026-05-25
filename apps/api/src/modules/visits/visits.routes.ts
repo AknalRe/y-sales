@@ -3,11 +3,12 @@ import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { attendanceSessions, faceCaptures, mediaFiles, outlets, salesTransactions, visitSchedules, visitSessions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
-import { requirePermission } from '../auth/auth.service.js';
+import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 import { verifyFaceIdentity } from '../face/face-verification.service.js';
 import { requireTenantId, requireFeature } from '../tenant.js';
 import { getGeneralSettings } from '../../utils/settings.js';
+import { validateGeofence } from '../../utils/geofence.js';
 
 const scheduleSchema = z.object({
   salesUserId: z.string().uuid(),
@@ -57,17 +58,6 @@ const checkOutSchema = z.object({
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
-}
-
-function distanceMeters(aLat: number, aLng: number, bLat: number, bLng: number) {
-  const earth = 6371000;
-  const toRad = (value: number) => value * Math.PI / 180;
-  const dLat = toRad(bLat - aLat);
-  const dLng = toRad(bLng - aLng);
-  const lat1 = toRad(aLat);
-  const lat2 = toRad(bLat);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return earth * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 async function createVisitFaceCapture({
@@ -202,8 +192,55 @@ export async function visitRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const schedules = await db.select().from(visitSchedules).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.salesUserId, request.user!.id), eq(visitSchedules.scheduledDate, todayDate()))).orderBy(visitSchedules.priority);
     if (schedules.length) return { schedules, target: { outletCount: schedules[0].targetOutletCount, scheduledOutletCount: schedules.length, targetDurationMinutes: schedules[0].targetDurationMinutes, targetClosingCount: schedules[0].targetClosingCount, targetRevenueAmount: schedules[0].targetRevenueAmount } };
-    const outletRows = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.status, 'active')));
-    return { outlets: outletRows, fallback: true };
+    return { schedules: [], target: null };
+  });
+
+  app.get('/visits/sessions', { preHandler: authenticate }, async (request, reply) => {
+    const companyId = requireTenantId(request);
+    const query = z.object({ date: z.string().date().optional(), salesUserId: z.string().uuid().optional() }).parse(request.query);
+    const user = request.user!;
+    const canReview = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('visits.review');
+    const canExecute = user.permissions.includes('visits.execute');
+
+    if (!canReview && !canExecute) {
+      return reply.status(403).send({ message: 'Permission denied', permission: 'visits.execute' });
+    }
+
+    const conditions = [eq(visitSessions.companyId, companyId)];
+    if (query.date) {
+      const start = new Date(`${query.date}T00:00:00.000Z`);
+      const end = new Date(`${query.date}T23:59:59.999Z`);
+      conditions.push(gte(visitSessions.checkInAt, start), lte(visitSessions.checkInAt, end));
+    }
+    if (canReview && query.salesUserId) {
+      conditions.push(eq(visitSessions.salesUserId, query.salesUserId));
+    } else if (!canReview) {
+      conditions.push(eq(visitSessions.salesUserId, user.id));
+    }
+
+    const sessions = await db
+      .select({
+        id: visitSessions.id,
+        companyId: visitSessions.companyId,
+        salesUserId: visitSessions.salesUserId,
+        outletId: visitSessions.outletId,
+        scheduleId: visitSessions.scheduleId,
+        outletName: outlets.name,
+        outletAddress: outlets.address,
+        checkInAt: visitSessions.checkInAt,
+        checkInLatitude: visitSessions.checkInLatitude,
+        checkInLongitude: visitSessions.checkInLongitude,
+        checkOutAt: visitSessions.checkOutAt,
+        outcome: visitSessions.outcome,
+        status: visitSessions.status,
+        createdAt: visitSessions.createdAt,
+      })
+      .from(visitSessions)
+      .innerJoin(outlets, eq(visitSessions.outletId, outlets.id))
+      .where(and(...conditions))
+      .orderBy(desc(visitSessions.checkInAt));
+
+    return { sessions };
   });
 
   app.post('/visits/check-in', { preHandler: requirePermission('visits.execute') }, async (request) => {
@@ -214,18 +251,32 @@ export async function visitRoutes(app: FastifyInstance) {
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, body.outletId)));
     if (!outlet) return { message: 'Outlet tidak ditemukan' };
 
+    let schedule: typeof visitSchedules.$inferSelect | undefined;
     if (body.scheduleId) {
-      const [schedule] = await db.select().from(visitSchedules).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.id, body.scheduleId), eq(visitSchedules.salesUserId, request.user!.id)));
+      [schedule] = await db.select().from(visitSchedules).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.id, body.scheduleId), eq(visitSchedules.salesUserId, request.user!.id)));
       if (!schedule) throw Object.assign(new Error('Schedule tidak ditemukan untuk sales ini.'), { statusCode: 404 });
       if (schedule.outletId && schedule.outletId !== body.outletId) throw Object.assign(new Error('Outlet check-in tidak sesuai schedule.'), { statusCode: 400 });
+      if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Schedule tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
+    } else {
+      [schedule] = await db.select().from(visitSchedules).where(and(
+        eq(visitSchedules.companyId, companyId),
+        eq(visitSchedules.salesUserId, request.user!.id),
+        eq(visitSchedules.outletId, body.outletId),
+        eq(visitSchedules.scheduledDate, todayDate()),
+      )).orderBy(visitSchedules.priority).limit(1);
+      if (!schedule) throw Object.assign(new Error('Outlet ini tidak ada di jadwal visit sales hari ini.'), { statusCode: 400 });
       if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Schedule tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
     }
 
     const settings = await getGeneralSettings(companyId);
-    const distance = distanceMeters(body.latitude, body.longitude, Number(outlet.latitude), Number(outlet.longitude));
     const radius = outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
-    const validLocation = distance <= radius;
-    const gpsAccuracyValid = body.accuracyM === undefined || body.accuracyM <= settings.maxGpsAccuracyM;
+    const geofence = validateGeofence({
+      current: { latitude: body.latitude, longitude: body.longitude },
+      target: { latitude: Number(outlet.latitude), longitude: Number(outlet.longitude) },
+      radiusMeters: radius,
+      accuracyMeters: body.accuracyM,
+      maxAccuracyMeters: settings.maxGpsAccuracyM,
+    });
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-in kunjungan.'), { statusCode: 400 });
     const face = await createVisitFaceCapture({
       userId: request.user!.id,
@@ -245,7 +296,8 @@ export async function visitRoutes(app: FastifyInstance) {
       })
       : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
     if (settings.rejectVisitOnFaceMismatch && identity.status === 'not_matched') throw Object.assign(new Error('Identitas wajah tidak cocok dengan user login.'), { statusCode: 403 });
-    const validationStatus = !hasValidFace ? 'face_not_detected' : validLocation && gpsAccuracyValid && identity.status === 'matched' ? 'valid' : 'manual_review';
+    const identityValid = !settings.requireFaceIdentityMatchForVisit || identity.status === 'matched';
+    const validationStatus = !hasValidFace ? 'face_not_detected' : geofence.valid && identityValid ? 'valid' : 'manual_review';
 
     const [existing] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.clientRequestId, body.clientRequestId)));
     if (existing) return { visit: existing, idempotent: true };
@@ -254,24 +306,24 @@ export async function visitRoutes(app: FastifyInstance) {
       companyId,
       salesUserId: request.user!.id,
       outletId: outlet.id,
-      scheduleId: body.scheduleId,
+      scheduleId: schedule.id,
       checkInAt: new Date(),
       checkInLatitude: String(body.latitude),
       checkInLongitude: String(body.longitude),
       checkInAccuracyM: body.accuracyM ? String(body.accuracyM) : undefined,
-      checkInDistanceM: distance.toFixed(2),
+      checkInDistanceM: geofence.distanceMeters?.toFixed(2),
       checkInFaceCaptureId: face.id,
       geofenceRadiusMUsed: radius,
-      status: validLocation && gpsAccuracyValid && hasValidFace && (!settings.requireFaceIdentityMatchForVisit || identity.status === 'matched') ? 'open' : 'invalid_location',
+      status: 'open',
       validationStatus,
       clientRequestId: body.clientRequestId,
     }).returning();
 
-    const gpsAccuracy = { valid: gpsAccuracyValid, accuracyM: body.accuracyM ?? null, maxAccuracyM: settings.maxGpsAccuracyM };
-    if (body.scheduleId) await db.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, body.scheduleId));
-    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: validLocation, distanceM: distance, radiusM: radius }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    const gpsAccuracy = { valid: geofence.accuracyValid, accuracyM: body.accuracyM ?? null, maxAccuracyM: settings.maxGpsAccuracyM };
+    await db.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, schedule.id));
+    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
 
-    return { visit, geofence: { valid: validLocation, distanceM: distance, radiusM: radius }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
+    return { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
   });
 
   app.post('/visits/check-out', { preHandler: requirePermission('visits.execute') }, async (request) => {
@@ -279,7 +331,9 @@ export async function visitRoutes(app: FastifyInstance) {
     const body = checkOutSchema.parse(request.body);
     const [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
     if (!visit) throw Object.assign(new Error('Visit session tidak ditemukan.'), { statusCode: 404 });
-    if (visit.status !== 'open' || !visit.checkInAt) throw Object.assign(new Error('Visit session tidak dalam status open.'), { statusCode: 400 });
+    if (!visit.checkInAt || visit.checkOutAt || !['open', 'invalid_location'].includes(visit.status)) throw Object.assign(new Error('Visit session tidak dalam status open.'), { statusCode: 400 });
+    const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, visit.outletId)));
+    if (!outlet) throw Object.assign(new Error('Outlet visit tidak ditemukan.'), { statusCode: 404 });
 
     const face = await createVisitFaceCapture({
       userId: request.user!.id,
@@ -288,11 +342,21 @@ export async function visitRoutes(app: FastifyInstance) {
       faceCapture: body.faceCapture,
     });
     const settings = await getGeneralSettings(companyId);
+    const radius = visit.geofenceRadiusMUsed ?? outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
+    const geofence = validateGeofence({
+      current: { latitude: body.latitude, longitude: body.longitude },
+      target: { latitude: Number(outlet.latitude), longitude: Number(outlet.longitude) },
+      radiusMeters: radius,
+      accuracyMeters: body.accuracyM,
+      maxAccuracyMeters: settings.maxGpsAccuracyM,
+    });
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-out kunjungan.'), { statusCode: 400 });
     const identity = settings.requireFaceIdentityMatchForVisit
       ? await verifyFaceIdentity({ companyId, userId: request.user!.id, faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence, settings })
       : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
     if (settings.rejectVisitOnFaceMismatch && identity.status === 'not_matched') throw Object.assign(new Error('Identitas wajah check-out tidak cocok dengan user login.'), { statusCode: 403 });
+    const identityValid = !settings.requireFaceIdentityMatchForVisit || identity.status === 'matched';
+    const validationStatus = visit.validationStatus === 'valid' && geofence.valid && body.faceCapture.faceDetected && identityValid ? 'valid' : 'manual_review';
 
     const now = new Date();
     const durationSeconds = Math.max(0, Math.round((now.getTime() - new Date(visit.checkInAt).getTime()) / 1000));
@@ -306,13 +370,14 @@ export async function visitRoutes(app: FastifyInstance) {
       outcome: body.outcome,
       closingNotes: body.closingNotes,
       status: 'completed',
+      validationStatus,
       updatedAt: now,
     }).where(eq(visitSessions.id, visit.id)).returning();
 
     if (visit.scheduleId) await db.update(visitSchedules).set({ status: 'completed', updatedAt: now }).where(eq(visitSchedules.id, visit.scheduleId));
     const [orderCount] = await db.select({ count: sql<number>`count(*)::int` }).from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.visitSessionId, visit.id)));
-    await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: { ...updated, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
-    return { visit: updated, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity }, result: { durationSeconds, durationMinutes: Math.round(durationSeconds / 60), hasClosingOrder: Number(orderCount?.count ?? 0) > 0 } };
+    await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: { ...updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    return { visit: updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity }, result: { durationSeconds, durationMinutes: Math.round(durationSeconds / 60), hasClosingOrder: Number(orderCount?.count ?? 0) > 0 } };
   });
 
   app.get('/visits/performance', { preHandler: requirePermission('visits.review') }, async (request) => {

@@ -11,6 +11,7 @@ import {
   UserCircle,
   Users,
   Shield,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { DashboardPage } from '@/features/dashboard/dashboard-page';
 import { AttendancePage } from '@/features/attendance/attendance-page';
@@ -28,6 +29,7 @@ import { TransactionsPage } from '@/features/sales/transactions-page';
 import { InvoicesPage } from '@/features/sales/invoices-page';
 import { UsersPage } from '@/features/users/users-page';
 import { RolesPage } from '@/features/users/roles-page';
+import { OperationalSettingsPage } from '@/features/settings/operational-settings-page';
 import { type RouteConfig } from './types';
 
 // --- ADMIN ROUTES ---
@@ -135,6 +137,16 @@ export const mainRoutes: RouteConfig[] = [
     handle: {
       label: 'Subscription',
       icon: CreditCard,
+      permission: 'settings.manage',
+      section: 'Pengaturan',
+    }
+  },
+  {
+    path: 'settings',
+    element: <OperationalSettingsPage />,
+    handle: {
+      label: 'Pengaturan Operasional',
+      icon: SlidersHorizontal,
       permission: 'settings.manage',
       section: 'Pengaturan',
     }

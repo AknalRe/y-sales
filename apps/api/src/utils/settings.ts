@@ -7,6 +7,7 @@ export const generalSettingsDefaults = {
   maxGpsAccuracyM: 100,
   requireFaceForAttendance: true,
   requireFaceForVisit: true,
+  requireTransactionProofPhoto: true,
   requireFaceIdentityMatchForVisit: true,
   faceMatchThreshold: 0.8,
   requireLivenessForVisit: false,

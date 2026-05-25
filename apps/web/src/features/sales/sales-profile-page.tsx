@@ -26,12 +26,12 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 const ROLE_COLOR: Record<string, string> = {
-  SALES_AGENT: '#60a5fa',
-  SUPERVISOR: '#fbbf24',
-  ADMIN: '#a78bfa',
-  OPERATIONAL_MANAGER: '#34d399',
-  OWNER: '#f97316',
-  ADMINISTRATOR: '#f87171',
+  SALES_AGENT: '#B55925',
+  SUPERVISOR: '#966556',
+  ADMIN: '#4A2922',
+  OPERATIONAL_MANAGER: '#22c55e',
+  OWNER: '#c2410c',
+  ADMINISTRATOR: '#B55925',
 };
 
 export function SalesProfilePage() {
@@ -180,7 +180,7 @@ export function SalesProfilePage() {
       </button>
 
       <p style={{ textAlign: 'center', color: '#334155', fontSize: '.72rem', marginTop: '.75rem' }}>
-        YukSales v1.0 · {new Date().getFullYear()}
+        Mahasura v1.0 · {new Date().getFullYear()}
       </p>
     </div>
   );

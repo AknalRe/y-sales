@@ -3850,21 +3850,33 @@ select {
 /* KPI Row */
 .sales-kpi-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: .65rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .9rem;
 }
 
 .sales-kpi-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: .25rem;
+  align-items: flex-start;
+  gap: .4rem;
   background: #ffffff;
   border: 1px solid rgba(74, 41, 34, .14);
-  border-radius: 16px;
-  padding: .85rem .5rem;
-  text-align: center;
+  border-radius: 18px;
+  padding: 1rem;
   box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
+}
+
+.sales-kpi-card strong {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #171717;
+}
+
+.sales-kpi-card span {
+  font-size: .8rem;
+  color: #6b7280;
+  font-weight: 700;
+  margin-top: .15rem;
 }
 
 .sales-kpi-card strong {
@@ -3879,7 +3891,7 @@ select {
   font-weight: 700;
 }
 
-/* Quick Actions */
+/* Quick Actions — Chunky 2×2 Bento Grid */
 .sales-quick-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -3890,28 +3902,36 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .5rem;
+  justify-content: start;
+  gap: .6rem;
+  min-height: 100px;
   background: #ffffff;
   border: 1px solid rgba(74, 41, 34, .14);
-  border-radius: 18px;
-  padding: .9rem .5rem;
+  border-radius: 20px;
+  padding: 1.15rem .75rem;
   text-decoration: none;
-  color: #4A2922;
-  font-size: .72rem;
-  font-weight: 600;
-  transition: all .15s;
+  transition: all .18s ease;
   text-align: center;
+  box-shadow: 0 4px 16px rgba(43, 45, 66, .04);
 }
 
-.sales-action-card:hover,
+.sales-action-card span {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #4A2922;
+}
+
 .sales-action-card:active {
-  transform: scale(.97);
-  opacity: .85;
+  transform: scale(.96);
 }
 
 .sales-action-card.sales-action-primary {
-  background: #4A2922;
+  background: linear-gradient(135deg, #4A2922, #5a352c);
   border-color: #4A2922;
+  box-shadow: 0 8px 28px rgba(74, 41, 34, .22);
+}
+
+.sales-action-primary span {
   color: #ffffff;
 }
 
@@ -3920,13 +3940,14 @@ select {
   height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 16px;
   background: #fff7ed;
   color: #B55925;
+  font-size: 0;
 }
 
 .sales-action-primary .sales-action-icon {
-  background: rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .15);
   color: #ffffff;
 }
 
@@ -3968,11 +3989,16 @@ select {
   display: flex;
   align-items: center;
   gap: .85rem;
-  background: #ffffff;
-  border: 1px solid rgba(74, 41, 34, .14);
+  background: transparent;
+  border: 1px dashed rgba(74, 41, 34, .22);
   border-radius: 16px;
   padding: .85rem 1rem;
   transition: all .15s;
+}
+
+.sales-visit-card:hover {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(74, 41, 34, .35);
 }
 
 .sales-visit-card.done {
@@ -4056,8 +4082,8 @@ select {
 .sales-visit-skeleton-item {
   height: 72px;
   border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid rgba(74, 41, 34, .14);
+  background: transparent;
+  border: 1px dashed rgba(74, 41, 34, .22);
   position: relative;
   overflow: hidden;
 }
@@ -4076,8 +4102,8 @@ select {
   flex-direction: column;
   align-items: center;
   gap: .65rem;
-  background: #ffffff;
-  border: 1px solid rgba(74, 41, 34, .14);
+  background: transparent;
+  border: 1px dashed rgba(74, 41, 34, .22);
   border-radius: 18px;
   padding: 2rem;
   text-align: center;

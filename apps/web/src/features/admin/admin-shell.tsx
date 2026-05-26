@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Bell,
@@ -11,6 +11,8 @@ import { useAuth } from '../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
 import { PlatformCompanyViewBanner } from '@/features/platform/company-view-banner';
+import { AdminDesktopSidebar } from './admin-desktop-sidebar';
+import { AdminMobileSidebar } from './admin-mobile-sidebar';
 
 // Helper to group routes by section
 const getNavSections = (permissions: string[], user: any, isSuperAdmin: boolean) => {
@@ -64,53 +66,20 @@ export function AdminShell() {
   return (
     <div className="admin-command-shell">
 
-
-      {!isMobile && (
-        <aside className={`${open ? 'admin-workspace-open' : 'admin-workspace-closed'} admin-workspace`}>
-          <div className="admin-sidebar-brand">
-            <h2>Mahasura</h2>
-            <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="admin-icon-button" type="button">
-              <Menu size={18} />
-            </button>
-          </div>
-
-          <nav className="admin-nav" aria-label="Administrator navigation">
-            {navSections.map((section) => (
-              <section key={section.title} className="admin-nav-section">
-                {section.title === 'Development' && <p>{section.title}</p>}
-                <ul>
-                  {section.items.map((item) => {
-                    const Icon = item.handle.icon;
-                    const href = item.index ? '/admin' : (item.path?.startsWith('/') ? item.path : `/admin/${item.path}`);
-                    const active = location.pathname === href;
-                    return (
-                      <li key={href}>
-                        <Link id={`admin-nav-${item.handle.label.toLowerCase().replaceAll(' ', '-')}`} to={href} className={`admin-nav-link ${active ? 'admin-nav-active' : ''}`}>
-                          <span className="admin-nav-icon"><Icon size={19} /></span>
-                          <span className="admin-nav-text">{item.handle.label}</span>
-                          {item.handle.badge && <span className="admin-nav-badge">{item.handle.badge}</span>}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ))}
-          </nav>
-        </aside>
-      )}
+      {/* Sidebar Mobile */}
+      {!isMobile && <AdminDesktopSidebar open={open} setOpen={setOpen} navSections={navSections} />}
 
       <main className={`admin-main ${open ? 'admin-main-open' : 'admin-main-closed'}`}>
         <header className="admin-topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {isMobile && (
-              <button onClick={() => setMobileMenuOpen(true)} className="admin-icon-button" type="button">
+              <button onClick={() => setMobileMenuOpen(true)} className="grid place-items-center w-[2.65rem] h-[2.65rem] rounded-2xl bg-white text-slate-500 shadow-[inset_0_0_0_1px_rgba(15,23,42,0.07)]" type="button">
                 <Menu size={18} />
               </button>
             )}
-            <div>
-              <h1>{currentTitle}</h1>
-              <span>Admin Portal</span>
+            <div className='flex flex-col'>
+              <h1 className='!text-[16px] sm:!text-xl'>{currentTitle}</h1>
+              <span className='!text-[14px] sm:!text-base'>Admin Portal</span>
             </div>
           </div>
           <div className="admin-user-zone">
@@ -149,56 +118,13 @@ export function AdminShell() {
         </div>
       </main>
 
-      {/* DEDICATED MOBILE MENU OVERLAY */}
-      {isMobile && mobileMenuOpen && (
-        <div className="fixed inset-0 z-[100] flex">
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <div className="relative flex w-4/5 max-w-xs flex-col bg-white dark:bg-slate-900 h-full shadow-2xl animate-in slide-in-from-left">
-            <div className="flex items-center justify-between p-4 border-b dark:border-slate-800">
-              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Mahasura Mobile</h2>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
-                <span className="sr-only">Close menu</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-            </div>
-            
-            <nav className="flex-1 overflow-y-auto p-4 space-y-6">
-              {navSections.map((section) => (
-                <div key={section.title}>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">{section.title}</h3>
-                  <ul className="space-y-1">
-                    {section.items.map((item) => {
-                      const Icon = item.handle.icon;
-                      const href = item.index ? '/admin' : (item.path?.startsWith('/') ? item.path : `/admin/${item.path}`);
-                      const active = location.pathname === href;
-                      return (
-                        <li key={href}>
-                          <Link 
-                            to={href} 
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                              active 
-                                ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' 
-                                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-                            }`}
-                          >
-                            <Icon size={18} className={active ? 'text-indigo-700 dark:text-indigo-400' : 'text-slate-400'} />
-                            {item.handle.label}
-                            {item.handle.badge && (
-                              <span className="ml-auto rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                                {item.handle.badge}
-                              </span>
-                            )}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-            </nav>
-          </div>
-        </div>
+      {/* Sidebar Mobile */}
+      {isMobile && (
+        <AdminMobileSidebar
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
+          navSections={navSections}
+        />
       )}
     </div>
   );

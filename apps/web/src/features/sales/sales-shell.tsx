@@ -17,7 +17,7 @@ export function SalesShell() {
   return (
     <div className="flex min-h-screen justify-center bg-gray-50 text-slate-900">
       <div className="mobile-shell relative flex flex-col overflow-hidden">
-        <header className="sticky top-0 z-20 bg-[#4A2922] p-4 text-white shadow-md">
+        {/* <header className="sticky top-0 z-20 bg-[#4A2922] p-4 text-white shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-lg font-black">Mahasura Sales</h1>
@@ -27,13 +27,13 @@ export function SalesShell() {
               {user?.name?.slice(0, 2).toUpperCase() ?? 'SL'}
             </div>
           </div>
-        </header>
+        </header> */}
 
         <main className="flex-1 overflow-y-auto bg-gray-50 p-4 pb-24">
           <Outlet />
         </main>
 
-        <nav className="absolute bottom-0 left-0 right-0 z-20 flex h-16 items-center justify-around border-t border-slate-200 bg-white px-1 shadow-[0_-10px_30px_rgba(15,23,42,0.08)]">
+        <nav className="fixed bottom-0 z-[52] flex h-16 w-full max-w-[28rem] items-center justify-around border-t border-slate-200 bg-white px-1 shadow-[0_-10px_30px_rgba(15,23,42,0.08)]">
           {bottomNav.map((item) => {
             const Icon = item.icon;
             const active = location.pathname === item.href;

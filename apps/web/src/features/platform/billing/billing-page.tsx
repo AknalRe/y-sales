@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { Banknote, FileText, Plus, ReceiptText } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import {
   platformCreateInvoice,
   platformGetCompanies,
@@ -109,7 +109,7 @@ export function PlatformBillingPage() {
     const m = Number(plan.priceMonthly ?? 0);
     const y = Number(plan.priceYearly ?? m * 12);
     let price = 0;
-    
+
     if (cycle === 'weekly') price = m / 4;
     else if (cycle === 'monthly') price = m;
     else if (cycle === 'quarterly') price = m * 3;
@@ -117,7 +117,7 @@ export function PlatformBillingPage() {
     else if (cycle === 'yearly') price = y;
     else if (cycle === 'biennially') price = y * 2;
     else if (cycle === 'lifetime') price = y; // fallback for lifetime
-    
+
     return String(price * (Number(qty) || 1));
   }
 
@@ -125,14 +125,14 @@ export function PlatformBillingPage() {
     if (!start || cycle === 'lifetime') return '';
     const date = new Date(start);
     const q = Number(qty) || 1;
-    
+
     if (cycle === 'weekly') date.setDate(date.getDate() + (7 * q));
     else if (cycle === 'monthly') date.setMonth(date.getMonth() + (1 * q));
     else if (cycle === 'quarterly') date.setMonth(date.getMonth() + (3 * q));
     else if (cycle === 'semi_annually') date.setMonth(date.getMonth() + (6 * q));
     else if (cycle === 'yearly') date.setFullYear(date.getFullYear() + (1 * q));
     else if (cycle === 'biennially') date.setFullYear(date.getFullYear() + (2 * q));
-    
+
     // Usually period ends a day before the next cycle starts
     date.setDate(date.getDate() - 1);
     return date.toISOString().slice(0, 10);
@@ -184,11 +184,11 @@ export function PlatformBillingPage() {
         subscriptionId: invoiceForm.subscriptionId || undefined,
         billingReason: invoiceForm.billingReason,
         // normalize to valid enum values for db
-        billingCycle: ['weekly', 'monthly', 'quarterly', 'semi_annually'].includes(invoiceForm.billingCycle) 
-          ? 'monthly' 
-          : invoiceForm.billingCycle === 'lifetime' 
-          ? 'lifetime' 
-          : 'yearly',
+        billingCycle: ['weekly', 'monthly', 'quarterly', 'semi_annually'].includes(invoiceForm.billingCycle)
+          ? 'monthly'
+          : invoiceForm.billingCycle === 'lifetime'
+            ? 'lifetime'
+            : 'yearly',
         // Only send planCode for non-renewal reasons
         planCode: invoiceForm.billingReason !== 'renewal' ? (invoiceForm.planCode || undefined) : undefined,
         periodStart: toIso(invoiceForm.periodStart),
@@ -437,8 +437,8 @@ export function PlatformBillingPage() {
                     <label>
                       {invoiceForm.billingReason === 'upgrade' ? '↑ Plan Tujuan (Upgrade)'
                         : invoiceForm.billingReason === 'downgrade' ? '↓ Plan Tujuan (Downgrade)'
-                        : invoiceForm.billingReason === 'new_subscription' ? 'Plan yang Diaktifkan'
-                        : 'Plan'}
+                          : invoiceForm.billingReason === 'new_subscription' ? 'Plan yang Diaktifkan'
+                            : 'Plan'}
                     </label>
                     <select
                       value={invoiceForm.planCode}
@@ -468,14 +468,14 @@ export function PlatformBillingPage() {
                   <div className="platform-field">
                     <label>Billing Cycle</label>
                     <div style={{ display: 'flex', gap: '.5rem' }}>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        value={invoiceForm.cycleQty} 
-                        onChange={e => handleFormChange({ cycleQty: e.target.value })} 
-                        className="platform-input" 
-                        style={{ width: '80px' }} 
-                        placeholder="Qty" 
+                      <input
+                        type="number"
+                        min="1"
+                        value={invoiceForm.cycleQty}
+                        onChange={e => handleFormChange({ cycleQty: e.target.value })}
+                        className="platform-input"
+                        style={{ width: '80px' }}
+                        placeholder="Qty"
                       />
                       <select value={invoiceForm.billingCycle} onChange={e => handleFormChange({ billingCycle: e.target.value })} className="platform-select" style={{ flex: 1 }}>
                         <option value="weekly">Mingguan (Weekly)</option>

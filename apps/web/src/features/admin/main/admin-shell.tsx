@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
-import { PlatformCompanyViewBanner } from '@/features/platform/company-view-banner';
+import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-view-banner';
 import { AdminDesktopSidebar } from './admin-desktop-sidebar';
 import { AdminMobileSidebar } from './admin-mobile-sidebar';
 

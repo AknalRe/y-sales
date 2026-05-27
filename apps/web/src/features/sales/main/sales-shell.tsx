@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Home, MapPin, ReceiptText, ShoppingCart, UserRound } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
+import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-view-banner';
 
 const bottomNav = [
   { name: 'Beranda', href: '/sales', icon: Home },
@@ -30,6 +31,7 @@ export function SalesShell() {
         </header> */}
 
         <main className="flex-1 overflow-y-auto bg-gray-50 p-4 pb-24">
+          <PlatformCompanyViewBanner />
           <Outlet />
         </main>
 

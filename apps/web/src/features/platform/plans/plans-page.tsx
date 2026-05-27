@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CreditCard, Plus, Edit2, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { platformGetPlans, platformCreatePlan, platformUpdatePlan, platformGetFeatures, type SubscriptionFeature, type SubscriptionPlan } from '@/lib/api/platform';
 import { DEFAULT_PLAN_LIMITS, PLAN_LIMITS, type PlanLimitKey } from '@/lib/subscription-catalog';
 

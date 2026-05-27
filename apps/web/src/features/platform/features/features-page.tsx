@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Edit2, Layers3, Plus, Trash2 } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import {
   platformCreateFeature,
   platformDeleteFeature,

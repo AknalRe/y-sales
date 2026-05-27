@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Printer, ReceiptText } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { platformGetInvoice, type PlatformInvoiceDetail } from '@/lib/api/platform';
 
 const money = (value: string | number | undefined | null) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;

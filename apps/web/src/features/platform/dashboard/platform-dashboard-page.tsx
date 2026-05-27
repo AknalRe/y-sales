@@ -14,7 +14,7 @@ import {
   ReceiptText,
   Sparkles,
 } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { platformGetCompanies, platformGetPlans, type Company, type SubscriptionPlan } from '@/lib/api/platform';
 
 const formatRupiah = (value: number) => `Rp ${Math.round(value).toLocaleString('id-ID')}`;

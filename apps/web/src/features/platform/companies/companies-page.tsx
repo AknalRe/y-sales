@@ -4,7 +4,7 @@ import {
   Building2, Plus, Search, CheckCircle2, AlertTriangle,
   XCircle, Clock, RefreshCw, ChevronRight, Edit2
 } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import {
   platformGetCompanies, platformCreateCompany, platformSuspendCompany,
   platformActivateCompany, platformGetPlans, platformUpdateCompany, platformUpdateSubscription,

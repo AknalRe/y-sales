@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { Banknote, Building2, CreditCard, LayoutDashboard, Layers3, LogOut, Menu, Shield, UserCircle } from 'lucide-react';
 import { useState } from 'react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 
 const platformNav = [
   { path: '/platform', label: 'Dashboard', icon: LayoutDashboard, exact: true },

@@ -1,6 +1,6 @@
 import { FlaskConical, Box, Layout, ShieldCheck, Zap } from 'lucide-react';
 import { Placeholder, type RouteConfig } from './types';
-
+import Component from "@/features/playground/ui-component";
 // Playground routes for testing and samples (Similar to favorite.tsx in Clarice)
 export const playgroundRoutes: RouteConfig[] = [
   {
@@ -41,7 +41,7 @@ export const playgroundRoutes: RouteConfig[] = [
   },
   {
     path: 'playground/components',
-    element: <Placeholder title="UI Showroom" description="Katalog semua komponen UI: Button, Input, Card, dll." />,
+    element: <Component />,
     handle: {
       label: 'UI Components',
       icon: Box,

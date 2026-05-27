@@ -6,7 +6,8 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
 }
 
 function Textarea({ className, label, id, ...props }: TextareaProps) {
-  const textareaId = id || React.useId()
+  const generatedId = React.useId()
+  const textareaId = id || generatedId
   return (
     <div className="flex flex-col gap-1">
       {label && (

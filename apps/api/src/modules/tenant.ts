@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { desc, eq } from 'drizzle-orm';
-import { tenantSubscriptions } from '@yuksales/db/schema';
+import { z } from 'zod';
+import { companies, tenantSubscriptions } from '@yuksales/db/schema';
 import { db } from '../plugins/db.js';
 import type { AuthUser } from './auth/auth.service.js';
 import type { PlanFeatureKey, PlanLimitKey } from './subscription-catalog.js';
@@ -17,7 +18,11 @@ export function requireTenantId(request: FastifyRequest) {
   const overrideCompanyId = request.headers['x-company-id'] as string | undefined;
   
   if (user?.isSuperAdmin && overrideCompanyId) {
-    return overrideCompanyId;
+    const parsed = z.string().uuid().safeParse(overrideCompanyId);
+    if (!parsed.success) {
+      throw Object.assign(new Error('X-Company-Id harus berupa UUID valid.'), { statusCode: 400 });
+    }
+    return parsed.data;
   }
 
   const companyId = user?.companyId;
@@ -47,6 +52,20 @@ export async function getActiveTenantSubscription(companyId: string) {
     .limit(1);
 
   return subscription ?? null;
+}
+
+export async function ensureTenantExists(companyId: string) {
+  const [company] = await db
+    .select({ id: companies.id, status: companies.status })
+    .from(companies)
+    .where(eq(companies.id, companyId))
+    .limit(1);
+
+  if (!company) {
+    throw Object.assign(new Error('Tenant company tidak ditemukan.'), { statusCode: 404 });
+  }
+
+  return company;
 }
 
 export async function requireFeature(request: FastifyRequest, feature: PlanFeatureKey) {

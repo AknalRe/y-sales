@@ -16,6 +16,7 @@ export async function apiRequest<TResponse>(path: string, options: RequestInit =
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -66,7 +67,6 @@ export function getPlatformCompanyView() {
 export function login(payload: LoginPayload) {
   return apiRequest<{
     accessToken: string;
-    refreshToken: string;
     user: {
       id: string;
       name: string;
@@ -82,9 +82,32 @@ export function login(payload: LoginPayload) {
   });
 }
 
+export function refreshSession() {
+  return apiRequest<{ accessToken: string }>('/auth/refresh', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
+export function logout() {
+  return apiRequest<{ success: true }>('/auth/logout', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
 export function getMe(accessToken: string) {
   return apiRequest<{
-    user: { id: string; name: string; email?: string; phone?: string; employeeCode?: string; roleCode: string };
+    user: {
+      id: string;
+      name: string;
+      email?: string;
+      phone?: string;
+      employeeCode?: string;
+      roleCode: string;
+      isSuperAdmin: boolean;
+      company: { id: string; name: string; slug: string } | null;
+    };
     permissions: string[];
   }>('/auth/me', {
     headers: {
@@ -229,4 +252,3 @@ export function finalizeMediaUpload(accessToken: string, payload: { ownerType: s
 
 // Central API Request function is now the main export.
 // Domain-specific functions should be in platform.ts or tenant.ts.
-

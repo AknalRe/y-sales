@@ -12,6 +12,8 @@ import {
   Users,
   Shield,
   SlidersHorizontal,
+  CalendarPlus,
+  Store,
 } from 'lucide-react';
 import { DashboardPage } from '@/features/admin/dashboard/dashboard-page';
 import { AttendancePage } from '@/features/standalone/attendance-page';
@@ -30,6 +32,8 @@ import { InvoicesPage } from '@/features/sales/invoices/invoices-page';
 import { UsersPage } from '@/features/admin/users/users-page';
 import { RolesPage } from '@/features/admin/roles/roles-page';
 import { OperationalSettingsPage } from '@/features/admin/settings/operational-settings-page';
+import { SalesSchedulePage } from '@/features/admin/schedule/sales-schedule-page';
+import { OutletsPage } from '@/features/admin/outlets/outlets-page';
 import { type RouteConfig } from './types';
 
 // --- ADMIN ROUTES ---
@@ -54,6 +58,28 @@ export const mainRoutes: RouteConfig[] = [
       permission: 'visits.review',
       section: 'Command Center',
       badge: 'GPS'
+    }
+  },
+  {
+    path: 'outlets',
+    element: <OutletsPage />,
+    handle: {
+      label: 'Management Outlet',
+      icon: Store,
+      permission: 'outlets.manage',
+      section: 'Sales Ops',
+      badge: 'Master'
+    }
+  },
+  {
+    path: 'sales-schedules',
+    element: <SalesSchedulePage />,
+    handle: {
+      label: 'Jadwalkan Sales',
+      icon: CalendarPlus,
+      permission: 'visits.review',
+      section: 'Sales Ops',
+      badge: 'Plan'
     }
   },
   {

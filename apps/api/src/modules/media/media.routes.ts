@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { mediaFiles, salesTransactions, transactionNotePhotos } from '@yuksales/db/schema';
+import { mediaFiles, salesTransactions, transactionNotePhotos, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
@@ -33,6 +33,17 @@ function extractObjectKey(fileUrl: string) {
   const marker = '/yuksales-assets/';
   const idx = fileUrl.indexOf(marker);
   return idx >= 0 ? fileUrl.slice(idx + marker.length) : fileUrl;
+}
+
+async function getTenantMedia(companyId: string, mediaId: string) {
+  const [row] = await db
+    .select({ media: mediaFiles })
+    .from(mediaFiles)
+    .leftJoin(users, eq(mediaFiles.uploadedByUserId, users.id))
+    .where(and(eq(mediaFiles.id, mediaId), eq(users.companyId, companyId)))
+    .limit(1);
+
+  return row?.media ?? null;
 }
 
 export async function mediaRoutes(app: FastifyInstance) {
@@ -77,9 +88,9 @@ export async function mediaRoutes(app: FastifyInstance) {
   });
 
   app.get('/media/:id', { preHandler: requirePermission('media.manage') }, async (request) => {
-    requireTenantId(request);
+    const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
-    const [media] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, params.id));
+    const media = await getTenantMedia(companyId, params.id);
     if (!media) throw Object.assign(new Error('Media tidak ditemukan.'), { statusCode: 404 });
     return { media };
   });
@@ -87,10 +98,10 @@ export async function mediaRoutes(app: FastifyInstance) {
   app.delete('/media/:id', { preHandler: requirePermission('media.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
-    const [media] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, params.id));
+    const media = await getTenantMedia(companyId, params.id);
     if (!media) throw Object.assign(new Error('Media tidak ditemukan.'), { statusCode: 404 });
     await deleteObject(extractObjectKey(media.fileUrl), companyId);
-    await db.delete(mediaFiles).where(and(eq(mediaFiles.id, params.id)));
+    await db.delete(mediaFiles).where(eq(mediaFiles.id, params.id));
     await writeAuditLog({ request, action: 'media.deleted', entityType: 'media_file', entityId: media.id, oldValues: media });
     return { success: true };
   });

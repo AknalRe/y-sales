@@ -17,15 +17,27 @@
     "db:debug": "pnpm --filter @yuksales/db db:debug"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "latest",
-    "typescript": "latest"
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0",
+    "typescript": "latest",
+    "typescript-eslint": "^8.58.2"
   },
   "packageManager": "pnpm@10.0.0",
   "pnpm": {
+    "overrides": {
+      "@babel/plugin-transform-modules-systemjs": ">=7.29.4",
+      "brace-expansion": ">=5.0.6",
+      "esbuild": ">=0.25.0",
+      "fast-uri": ">=3.1.2",
+      "fast-xml-builder": ">=1.1.7",
+      "serialize-javascript": ">=7.0.5",
+      "ws": ">=8.20.1"
+    },
     "onlyBuiltDependencies": [
       "esbuild",
       "bcryptjs"
     ]
   }
 }
-

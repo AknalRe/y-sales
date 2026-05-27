@@ -10,12 +10,15 @@ import path from 'node:path';
 
 export async function buildApp() {
   const allowedOrigins = env.WEB_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
+  const httpsOptions = env.API_HTTPS_ENABLED
+    ? {
+        key: fs.readFileSync(path.resolve(env.API_TLS_KEY_PATH)),
+        cert: fs.readFileSync(path.resolve(env.API_TLS_CERT_PATH)),
+      }
+    : undefined;
   const app = Fastify({
     logger: env.APP_DEBUG,
-    https: {
-      key: fs.readFileSync(path.resolve('192.168.18.66+2-key.pem')),
-      cert: fs.readFileSync(path.resolve('192.168.18.66+2.pem')),
-    }
+    ...(httpsOptions ? { https: httpsOptions } : {}),
   });
 
   await app.register(cors, {

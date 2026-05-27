@@ -228,7 +228,7 @@ const statusColors: Record<
 };
 
 
-export default function index() {
+export default function PlaygroundUiComponent() {
     const id = React.useId();
 
     useOnceToast("success", "Login berhasil", "Selamat datang 👋");

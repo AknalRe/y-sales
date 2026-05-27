@@ -2,7 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { eq } from 'drizzle-orm';
-import { permissions, rolePermissions, roles, sessions, users } from '@yuksales/db/schema';
+import { z } from 'zod';
+import { companies, permissions, rolePermissions, roles, sessions, users } from '@yuksales/db/schema';
 import { env } from '../../config/env.js';
 import { db } from '../../plugins/db.js';
 
@@ -93,6 +94,24 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
       isSuperAdmin: permissionData.isSuperAdmin,
       permissions: permissionData.permissions,
     };
+
+    const overrideCompanyId = request.headers['x-company-id'];
+    if (permissionData.isSuperAdmin && typeof overrideCompanyId === 'string') {
+      const parsedCompanyId = z.string().uuid().safeParse(overrideCompanyId);
+      if (!parsedCompanyId.success) {
+        return reply.status(400).send({ message: 'X-Company-Id harus berupa UUID valid.' });
+      }
+
+      const [company] = await db
+        .select({ id: companies.id })
+        .from(companies)
+        .where(eq(companies.id, parsedCompanyId.data))
+        .limit(1);
+
+      if (!company) {
+        return reply.status(404).send({ message: 'Tenant company tidak ditemukan.' });
+      }
+    }
   } catch {
     return reply.status(401).send({ message: 'Invalid or expired token' });
   }
@@ -163,5 +182,4 @@ export async function findValidRefreshSession(refreshToken: string) {
 
   return null;
 }
-
 

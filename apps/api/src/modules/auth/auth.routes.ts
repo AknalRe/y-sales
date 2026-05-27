@@ -1,8 +1,9 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 import { eq, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { companies, roles, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
+import { env } from '../../config/env.js';
 import {
   authenticate,
   createSession,
@@ -19,8 +20,30 @@ const loginSchema = z.object({
 });
 
 const refreshSchema = z.object({
-  refreshToken: z.string().min(20),
+  refreshToken: z.string().min(20).optional(),
 });
+
+function cookieOptions(maxAgeSeconds: number) {
+  const sameSite = env.REFRESH_COOKIE_SECURE ? 'None' : 'Lax';
+  const secure = env.REFRESH_COOKIE_SECURE ? '; Secure' : '';
+  return `HttpOnly; SameSite=${sameSite}; Path=/auth; Max-Age=${maxAgeSeconds}${secure}`;
+}
+
+function setRefreshCookie(reply: FastifyReply, refreshToken: string) {
+  reply.header('Set-Cookie', `${env.REFRESH_COOKIE_NAME}=${encodeURIComponent(refreshToken)}; ${cookieOptions(30 * 24 * 60 * 60)}`);
+}
+
+function clearRefreshCookie(reply: FastifyReply) {
+  reply.header('Set-Cookie', `${env.REFRESH_COOKIE_NAME}=; ${cookieOptions(0)}`);
+}
+
+function getCookieValue(cookieHeader: string | undefined, name: string) {
+  if (!cookieHeader) return undefined;
+  const cookies = cookieHeader.split(';').map((cookie) => cookie.trim());
+  const prefix = `${name}=`;
+  const found = cookies.find((cookie) => cookie.startsWith(prefix));
+  return found ? decodeURIComponent(found.slice(prefix.length)) : undefined;
+}
 
 export async function authRoutes(app: FastifyInstance) {
   app.post('/auth/login', async (request, reply) => {
@@ -62,10 +85,10 @@ export async function authRoutes(app: FastifyInstance) {
 
     const accessToken = signAccessToken({ sub: user.id, companyId: user.companyId, roleCode: user.roleCode, isSuperAdmin: user.roleCode === 'SUPER_ADMIN' });
     const refreshToken = await createSession(user.id, user.companyId, user.roleCode, body.deviceId);
+    setRefreshCookie(reply, refreshToken);
 
     return {
       accessToken,
-      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -83,8 +106,13 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post('/auth/refresh', async (request, reply) => {
-    const body = refreshSchema.parse(request.body);
-    const result = await findValidRefreshSession(body.refreshToken);
+    const body = refreshSchema.parse(request.body ?? {});
+    const refreshToken = body.refreshToken ?? getCookieValue(request.headers.cookie, env.REFRESH_COOKIE_NAME);
+    if (!refreshToken) {
+      return reply.status(401).send({ message: 'Invalid refresh token' });
+    }
+
+    const result = await findValidRefreshSession(refreshToken);
 
     if (!result) {
       return reply.status(401).send({ message: 'Invalid refresh token' });
@@ -95,11 +123,13 @@ export async function authRoutes(app: FastifyInstance) {
     };
   });
 
-  app.post('/auth/logout', async (request) => {
-    const body = refreshSchema.partial().parse(request.body ?? {});
-    if (body.refreshToken) {
-      await revokeRefreshToken(body.refreshToken);
+  app.post('/auth/logout', async (request, reply) => {
+    const body = refreshSchema.parse(request.body ?? {});
+    const refreshToken = body.refreshToken ?? getCookieValue(request.headers.cookie, env.REFRESH_COOKIE_NAME);
+    if (refreshToken) {
+      await revokeRefreshToken(refreshToken);
     }
+    clearRefreshCookie(reply);
     return { success: true };
   });
 
@@ -141,5 +171,3 @@ export async function authRoutes(app: FastifyInstance) {
     };
   });
 }
-
-

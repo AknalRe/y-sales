@@ -188,8 +188,6 @@ function DateFieldMultiple({
     className,
     formatStr = "dd/MM/yyyy",
 }: DateFieldMultipleProps) {
-
-    console.log(value)
     return (
         <BaseDateField
             label={label}

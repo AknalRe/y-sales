@@ -61,7 +61,21 @@ export type Outlet = {
   longitude: string;
   geofenceRadiusM?: number | null;
   status: 'draft' | 'pending_verification' | 'active' | 'rejected' | 'inactive';
+  rejectionReason?: string | null;
   createdAt: string;
+};
+
+export type OutletPayload = {
+  code: string;
+  name: string;
+  customerType: 'store' | 'agent';
+  ownerName?: string;
+  phone?: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  geofenceRadiusM?: number;
+  status?: 'draft' | 'pending_verification' | 'active' | 'rejected' | 'inactive';
 };
 
 export type SalesTransaction = {
@@ -157,6 +171,44 @@ export function getVisitSchedules(token: string, params?: { date?: string; sales
   return apiRequest<{ schedules: VisitSchedule[] }>(`/visits/schedules?${q}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
+export type CreateVisitSchedulePayload = {
+  salesUserId: string;
+  outletIds: string[];
+  scheduledDate: string;
+  plannedStartTime?: string;
+  plannedEndTime?: string;
+  targetOutletCount: number;
+  targetDurationMinutes?: number;
+  targetClosingCount: number;
+  targetRevenueAmount: string;
+  priority: number;
+  notes?: string;
+};
+
+export function createVisitSchedules(token: string, payload: CreateVisitSchedulePayload) {
+  return apiRequest<{ schedules: VisitSchedule[]; simulation: unknown }>('/visits/schedules', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function approveVisitSchedule(token: string, id: string) {
+  return apiRequest<{ schedule: VisitSchedule }>(`/visits/schedules/${id}/approve`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+}
+
+export function cancelVisitSchedule(token: string, id: string) {
+  return apiRequest<{ schedule: VisitSchedule }>(`/visits/schedules/${id}/cancel`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+}
+
 export function getVisitSessions(token: string, params?: { date?: string; salesUserId?: string }) {
   const q = new URLSearchParams();
   if (params?.date) q.set('date', params.date);
@@ -215,17 +267,49 @@ export function getTenantUsers(token: string, status?: string) {
 
 // ─── Outlet APIs ──────────────────────────────────────────────────────────────
 
-export function getOutlets(token: string, params?: { status?: string }) {
+export function getOutlets(token: string, params?: { status?: string; q?: string }) {
   const q = new URLSearchParams();
   if (params?.status) q.set('status', params.status);
+  if (params?.q) q.set('q', params.q);
   return apiRequest<{ outlets: Outlet[] }>(`/outlets?${q}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
+export function createOutlet(token: string, payload: OutletPayload) {
+  return apiRequest<{ outlet: Outlet }>('/outlets', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateOutlet(token: string, outletId: string, payload: Partial<OutletPayload>) {
+  return apiRequest<{ outlet: Outlet }>(`/outlets/${outletId}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function approveOutlet(token: string, outletId: string) {
-  return apiRequest(`/outlets/${outletId}/verify`, {
+  return apiRequest<{ outlet: Outlet }>(`/outlets/${outletId}/verify`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'approve' }),
+  });
+}
+
+export function rejectOutlet(token: string, outletId: string, reason: string) {
+  return apiRequest<{ outlet: Outlet }>(`/outlets/${outletId}/reject`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export function deleteOutlet(token: string, outletId: string) {
+  return apiRequest<{ outlet: Outlet }>(`/outlets/${outletId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 

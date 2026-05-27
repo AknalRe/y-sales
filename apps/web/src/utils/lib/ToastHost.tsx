@@ -68,7 +68,7 @@ export function useOnceToast(
   }, [type, title, description]);
 }
 
-let toastHasBeenShown = new WeakMap<object, boolean>();
+const toastHasBeenShown = new WeakMap<object, boolean>();
 
 export function showToast(
   type: "success" | "error" | "info" | "warning",

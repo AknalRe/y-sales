@@ -122,7 +122,8 @@ export function StockPage() {
       )}
 
       {/* Modern Stats Row */}
-      <div className="admin-stats-row" style={{ gap: '1rem', marginBottom: '2rem' }}>
+      {/* <div className="admin-stats-row" style={{ gap: '1rem', marginBottom: '2rem' }}> */}
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4" >
         <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
           <div className="admin-stat-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}><WarehouseIcon size={20} /></div>
           <div>

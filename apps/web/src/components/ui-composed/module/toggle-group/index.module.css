@@ -1,0 +1,54 @@
+.Panel {
+  display: flex;
+  gap: 1px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-card);
+  border-radius: var(--radius-md);
+  padding: 0.125rem;
+}
+
+.Button {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin: 0;
+  outline: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-muted-foreground);
+  user-select: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  &:focus-visible {
+    background-color: transparent;
+    outline: 2px solid var(--color-ring);
+    outline-offset: -1px;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--color-muted);
+    }
+  }
+
+  &:active {
+    background-color: var(--color-border);
+  }
+
+  &[data-pressed] {
+    background-color: var(--color-muted);
+    color: var(--color-foreground);
+  }
+}
+
+.Icon {
+  width: 1rem;
+  height: 1rem;
+}

@@ -97,7 +97,8 @@ export function TrackingPage() {
       </div>
 
       {/* Stats Cards */}
-      {/* <div className="admin-stats-row" style={{ gap: '1rem', marginBottom: '2rem' }}>
+      {/* <div className="admin-stats-row" style={{ gap: '1rem', marginBottom: '2rem' }}> */}
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4" >
         <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
           <div className="admin-stat-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}><MapPin size={20} /></div>
           <div>
@@ -126,11 +127,11 @@ export function TrackingPage() {
             <strong style={{ fontSize: '1.5rem', color: '#0f172a' }}>{stats.invalid}</strong>
           </div>
         </div>
-      </div> */}
+      </div>
 
       {/* Filters & Tabs */}
-      {/* <div className="admin-filter-row" style={{ background: '#fff', padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+      <div className="admin-filter-row" style={{ background: '#fff', padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: "wrap", gap: '1rem' }}>
           <div className="admin-filter-group" style={{ background: '#f8fafc', padding: '.25rem .75rem', borderRadius: 12 }}>
             <Calendar size={16} style={{ color: '#64748b' }} />
             <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="admin-input" style={{ border: 'none', background: 'transparent' }} />
@@ -149,9 +150,9 @@ export function TrackingPage() {
           <button onClick={() => setTab('sessions')} className={`admin-tab ${tab === 'sessions' ? 'active' : ''}`} style={{ borderRadius: 11, fontSize: '.85rem' }}>Kunjungan (Visit)</button>
           <button onClick={() => setTab('schedules')} className={`admin-tab ${tab === 'schedules' ? 'active' : ''}`} style={{ borderRadius: 11, fontSize: '.85rem' }}>Jadwal Sales</button>
         </div>
-      </div> */}
+      </div>
 
-      {/* <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
+      {/* <div className="admin-card" style={{ padding: 0, overflow: 'hidden', width: "100%" }}>
         {loading ? (
           <div style={{ padding: '4rem', textAlign: 'center' }}>
             <RefreshCw size={32} className="spin" style={{ margin: '0 auto 1rem', opacity: 0.2 }} />

@@ -99,7 +99,8 @@ export function ReportsPage() {
       </div>
 
       {/* KPI Stats */}
-      <div className="admin-stats-row">
+      {/* <div className="admin-stats-row"> */}
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4" >
         <div className="admin-stat-card">
           <div className="admin-stat-icon" style={{ color: '#10b981' }}><TrendingUp size={18} /></div>
           <div>

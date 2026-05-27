@@ -1,4 +1,4 @@
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000').replace(/\/+$/, '');
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:4000').replace(/\/+$/, '');
 const platformCompanyViewKey = 'yuksales.platform.companyView';
 
 export type LoginPayload = {
@@ -229,5 +229,4 @@ export function finalizeMediaUpload(accessToken: string, payload: { ownerType: s
 
 // Central API Request function is now the main export.
 // Domain-specific functions should be in platform.ts or tenant.ts.
-
 

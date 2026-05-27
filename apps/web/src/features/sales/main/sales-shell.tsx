@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Home, MapPin, ReceiptText, ShoppingCart, UserRound } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 
 const bottomNav = [
   { name: 'Beranda', href: '/sales', icon: Home },

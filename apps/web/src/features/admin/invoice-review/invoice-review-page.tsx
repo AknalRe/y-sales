@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, getTenantUsers, type SalesTransaction, type TenantUser } from '@/lib/api/tenant';
 
 function formatRp(v: string | number) {
@@ -106,9 +106,9 @@ export function InvoiceReviewPage() {
               {pending} Perlu Review
             </div>
           )}
-          <button 
-            onClick={load} 
-            className="admin-btn-ghost" 
+          <button
+            onClick={load}
+            className="admin-btn-ghost"
             style={{ padding: '.5rem', borderRadius: 12 }}
             disabled={loading}
           >
@@ -123,12 +123,12 @@ export function InvoiceReviewPage() {
         </div>
       )}
 
-      <div className="admin-filter-row" style={{ background: '#fff', padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', border: '1px solid #f1f5f9' }}>
+      {/* <div className="admin-filter-row" style={{ background: '#fff', padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', border: '1px solid #f1f5f9' }}>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <span style={{ fontSize: '.85rem', fontWeight: 700, color: '#64748b' }}>Filter Status:</span>
-          <select 
-            value={statusFilter} 
-            onChange={e => setStatusFilter(e.target.value)} 
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
             className="admin-select"
             style={{ width: 'auto', minWidth: 180, borderRadius: 12 }}
           >
@@ -140,9 +140,9 @@ export function InvoiceReviewPage() {
             <option value="rejected">Rejected</option>
           </select>
         </div>
-      </div>
+      </div> */}
 
-      <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
+      {/* <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <div style={{ padding: '4rem', textAlign: 'center', color: '#64748b' }}>
             <RefreshCw size={32} className="spin" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
@@ -198,14 +198,14 @@ export function InvoiceReviewPage() {
                     </td>
                     <td>
                       {tx.photoUrl ? (
-                        <button 
+                        <button
                           onClick={() => setViewPhoto(tx.photoUrl!)}
                           style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', position: 'relative' }}
                         >
-                          <img 
-                            src={tx.photoUrl} 
-                            alt="Nota" 
-                            style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover', border: '2px solid #f1f5f9' }} 
+                          <img
+                            src={tx.photoUrl}
+                            alt="Nota"
+                            style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover', border: '2px solid #f1f5f9' }}
                           />
                           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0 }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0'}>
                             <Eye size={14} color="#fff" />
@@ -262,10 +262,10 @@ export function InvoiceReviewPage() {
             </table>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Reject Modal */}
-      {rejectModal && (
+      {/* {rejectModal && (
         <div className="admin-modal-overlay" onClick={() => setRejectModal(null)} style={{ backdropFilter: 'blur(4px)', background: 'rgba(15, 23, 42, 0.6)' }}>
           <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 24, padding: '1.5rem' }}>
             <div className="admin-modal-header" style={{ border: 'none', padding: 0, marginBottom: '1.5rem' }}>
@@ -304,10 +304,10 @@ export function InvoiceReviewPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Photo View Modal */}
-      {viewPhoto && (
+      {/* {viewPhoto && (
         <div className="admin-modal-overlay" onClick={() => setViewPhoto(null)} style={{ backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.8)', zIndex: 1000 }}>
           <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ background: 'transparent', boxShadow: 'none', maxWidth: '90vw', maxHeight: '90vh', padding: 0 }}>
             <button 
@@ -323,7 +323,7 @@ export function InvoiceReviewPage() {
             />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

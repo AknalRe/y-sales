@@ -3,7 +3,7 @@ import {
   Users, Plus, Search, Trash2, RefreshCw,
   KeyRound, AlertTriangle, CheckCircle2, UserX
 } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { getUsers, createUser, updateUser, deleteUser, resetPassword, getRoles, type TenantUser, type Role } from '@/lib/api/platform';
 
 const statusIcon = {
@@ -163,7 +163,7 @@ export function UsersPage() {
         <span className="admin-count-badge">{filtered.length} user</span>
       </div>
 
-      <div className="admin-table-card">
+      {/* <div className="admin-table-card">
         {loading ? (
           <div className="admin-loading"><RefreshCw size={18} className="spin" /><span>Memuat...</span></div>
         ) : (
@@ -249,10 +249,10 @@ export function UsersPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </div> */}
 
       {/* Create User Modal */}
-      {showCreate && (
+      {/* {showCreate && (
         <div className="admin-modal-overlay" onClick={() => setShowCreate(false)}>
           <div className="admin-modal" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
@@ -346,10 +346,10 @@ export function UsersPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Reset Password Modal */}
-      {resetTarget && (
+      {/* {resetTarget && (
         <div className="admin-modal-overlay" onClick={() => setResetTarget(null)}>
           <div className="admin-modal admin-modal-sm" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
@@ -386,7 +386,7 @@ export function UsersPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Camera, CheckCircle2, ReceiptText } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
-import { apiRequest } from '../../lib/api/client';
-import { createMediaUpload, uploadToStorageUrl, finalizeMediaUpload } from '../../lib/api/client';
-import { EmptyState, Spinner } from '../../components/ui';
+import { useAuth } from '../../auth/auth-provider';
+import { apiRequest } from '../../../lib/api/client';
+import { createMediaUpload, uploadToStorageUrl, finalizeMediaUpload } from '../../../lib/api/client';
+import { EmptyState, Spinner } from '../../../components/ui';
 
 const orderStatusLabel: Record<string, string> = {
   draft: 'Draft',
@@ -17,7 +17,7 @@ export function InvoicesPage() {
   const { accessToken } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -93,49 +93,49 @@ export function InvoicesPage() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem', marginTop: '1rem' }}>
-        {loading ? <div style={{ padding: '2rem', textAlign: 'center' }}><Spinner /></div> : 
-         orders.map(order => (
-          <div key={order.id} className="sales-note-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.5rem' }}>
-              <div>
-                <strong style={{ display: 'block', color: '#171717' }}>{order.transactionNo}</strong>
-                <span style={{ fontSize: '.75rem', color: '#6b7280' }}>
-                  {new Date(order.createdAt).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}
-                </span>
+        {loading ? <div style={{ padding: '2rem', textAlign: 'center' }}><Spinner /></div> :
+          orders.map(order => (
+            <div key={order.id} className="sales-note-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.5rem' }}>
+                <div>
+                  <strong style={{ display: 'block', color: '#171717' }}>{order.transactionNo}</strong>
+                  <span style={{ fontSize: '.75rem', color: '#6b7280' }}>
+                    {new Date(order.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <span className={`platform-status-dot platform-status-${order.status}`}>{orderStatusLabel[order.status] ?? order.status}</span>
               </div>
-              <span className={`platform-status-dot platform-status-${order.status}`}>{orderStatusLabel[order.status] ?? order.status}</span>
-            </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
-              <strong style={{ color: '#B55925', fontSize: '1.1rem' }}>
-                Rp {Number(order.totalAmount).toLocaleString('id-ID')}
-              </strong>
 
-              {order.hasInvoice ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '.3rem', color: '#4fa87e', fontSize: '.8rem', fontWeight: 700 }}>
-                  <CheckCircle2 size={16} /> Nota Terkirim
-                </span>
-              ) : (
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', padding: '.5rem 1rem', borderRadius: '.75rem', fontSize: '.8rem', fontWeight: 800, cursor: uploadingFor === order.id ? 'not-allowed' : 'pointer', opacity: uploadingFor === order.id ? 0.7 : 1 }}>
-                  {uploadingFor === order.id ? <Spinner size={16} /> : <Camera size={16} />}
-                  {uploadingFor === order.id ? 'Mengunggah...' : 'Jepret Nota'}
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    capture="environment" // Force open back camera on mobile
-                    style={{ display: 'none' }}
-                    disabled={uploadingFor === order.id}
-                    onChange={e => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileSelected(order.id, e.target.files[0]);
-                      }
-                    }}
-                  />
-                </label>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
+                <strong style={{ color: '#B55925', fontSize: '1.1rem' }}>
+                  Rp {Number(order.totalAmount).toLocaleString('id-ID')}
+                </strong>
+
+                {order.hasInvoice ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '.3rem', color: '#4fa87e', fontSize: '.8rem', fontWeight: 700 }}>
+                    <CheckCircle2 size={16} /> Nota Terkirim
+                  </span>
+                ) : (
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', padding: '.5rem 1rem', borderRadius: '.75rem', fontSize: '.8rem', fontWeight: 800, cursor: uploadingFor === order.id ? 'not-allowed' : 'pointer', opacity: uploadingFor === order.id ? 0.7 : 1 }}>
+                    {uploadingFor === order.id ? <Spinner size={16} /> : <Camera size={16} />}
+                    {uploadingFor === order.id ? 'Mengunggah...' : 'Jepret Nota'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment" // Force open back camera on mobile
+                      style={{ display: 'none' }}
+                      disabled={uploadingFor === order.id}
+                      onChange={e => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileSelected(order.id, e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
         {!loading && orders.length === 0 && (
           <EmptyState icon={<ReceiptText size={48} />} title="Belum ada transaksi" description="Transaksi yang Anda buat akan muncul di sini." />
         )}

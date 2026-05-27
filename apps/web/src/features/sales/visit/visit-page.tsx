@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle } from 'lucide-react';
-import { checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../lib/api/client';
-import { getOutlets } from '../../lib/api/tenant';
-import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../lib/camera/capture';
-import { getCurrentLocation, type BrowserLocation } from '../../lib/geo/location';
-import { useAuth } from '../auth/auth-provider';
+import { checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
+import { getOutlets } from '../../../lib/api/tenant';
+import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
+import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
+import { useAuth } from '../../auth/auth-provider';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 
@@ -16,7 +16,7 @@ export function VisitPage() {
   const [location, setLocation] = useState<BrowserLocation | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  
+
   // Data
   const [outlets, setOutlets] = useState<any[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState('');
@@ -163,20 +163,20 @@ export function VisitPage() {
 
       <div className="sales-step-card">
         <h2>2. Verifikasi Wajah & GPS</h2>
-        
+
         <div className="sales-camera-frame">
           <video ref={videoRef} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover' }} playsInline muted />
           {image && <img src={image.dataUrl} alt="Captured" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
         </div>
 
         <div style={{ display: 'grid', gap: '.5rem', gridTemplateColumns: '1fr 1fr' }}>
-          <button onClick={handleStartCamera} className="admin-btn admin-btn-ghost" type="button" style={{ justifyContent: 'center' }}><Video size={16}/> Buka Kamera</button>
-          <button onClick={handleCapture} disabled={!stream} className="admin-btn admin-btn-primary" type="button" style={{ justifyContent: 'center' }}><Camera size={16}/> Jepret Wajah</button>
+          <button onClick={handleStartCamera} className="admin-btn admin-btn-ghost" type="button" style={{ justifyContent: 'center' }}><Video size={16} /> Buka Kamera</button>
+          <button onClick={handleCapture} disabled={!stream} className="admin-btn admin-btn-primary" type="button" style={{ justifyContent: 'center' }}><Camera size={16} /> Jepret Wajah</button>
         </div>
 
         <div style={{ marginTop: '1rem' }}>
           <button onClick={handleLocation} className="admin-btn admin-btn-ghost" type="button" style={{ width: '100%', justifyContent: 'center' }}>
-            <MapPin size={16}/> Ambil Lokasi GPS
+            <MapPin size={16} /> Ambil Lokasi GPS
           </button>
           {location && <p style={{ fontSize: '.75rem', color: '#94a3b8', textAlign: 'center', marginTop: '.5rem' }}>Akurasi: ±{Math.round(location.accuracyM ?? 0)}m</p>}
         </div>

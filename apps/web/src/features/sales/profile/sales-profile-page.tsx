@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { UserCircle, LogOut, RefreshCw, Building2, Shield, Phone, Mail, IdCard, Wifi, WifiOff } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { useNavigate } from 'react-router-dom';
-import { apiRequest } from '../../lib/api/client';
+import { apiRequest } from '../../../lib/api/client';
 
 function apiReq<T>(path: string, token: string): Promise<T> {
   return apiRequest<T>(path, { headers: { Authorization: `Bearer ${token}` } });
@@ -54,7 +54,7 @@ export function SalesProfilePage() {
     setLoading(true);
     apiReq<{ session: AttendanceToday | null }>('/attendance/today', accessToken)
       .then(r => setTodayAttendance(r.session))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [accessToken]);
 

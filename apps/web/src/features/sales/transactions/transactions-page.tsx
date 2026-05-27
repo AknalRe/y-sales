@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2 } from 'lucide-react';
-import { getOutlets, getProducts, createOrder } from '../../lib/api/tenant';
-import { useAuth } from '../auth/auth-provider';
-import { EmptyState, Spinner } from '../../components/ui';
+import { getOutlets, getProducts, createOrder } from '../../../lib/api/tenant';
+import { useAuth } from '../../auth/auth-provider';
+import { EmptyState, Spinner } from '../../../components/ui';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 

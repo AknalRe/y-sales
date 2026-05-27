@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Shield, Zap, Users, Package, Boxes, Clock, Mail } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { getMySubscription, type TenantSubscriptionInfo } from '@/lib/api/tenant';
 import { apiRequest } from '@/lib/api/client';
 
@@ -18,36 +18,36 @@ type PlanDetails = {
 
 const PLAN_COLORS: Record<string, { bg: string; text: string; border: string; icon: string }> = {
   starter: { bg: 'rgba(100,116,139,.12)', text: '#94a3b8', border: 'rgba(100,116,139,.25)', icon: '🌱' },
-  basic:   { bg: 'rgba(59,130,246,.12)',  text: '#60a5fa', border: 'rgba(59,130,246,.25)',  icon: '⚡' },
-  pro:     { bg: 'rgba(139,92,246,.15)',  text: '#a78bfa', border: 'rgba(139,92,246,.3)',   icon: '🚀' },
+  basic: { bg: 'rgba(59,130,246,.12)', text: '#60a5fa', border: 'rgba(59,130,246,.25)', icon: '⚡' },
+  pro: { bg: 'rgba(139,92,246,.15)', text: '#a78bfa', border: 'rgba(139,92,246,.3)', icon: '🚀' },
   enterprise: { bg: 'rgba(250,204,21,.12)', text: '#fde047', border: 'rgba(250,204,21,.25)', icon: '👑' },
 };
 
 const STATUS_COLOR: Record<string, { bg: string; text: string; label: string }> = {
-  trialing:  { bg: 'rgba(96,165,250,.15)',  text: '#60a5fa', label: 'Masa Trial' },
-  active:    { bg: 'rgba(52,211,153,.15)',  text: '#34d399', label: 'Aktif' },
-  past_due:  { bg: 'rgba(249,115,22,.15)', text: '#fb923c', label: 'Jatuh Tempo' },
-  suspended: { bg: 'rgba(239,68,68,.12)',  text: '#f87171', label: 'Suspended' },
+  trialing: { bg: 'rgba(96,165,250,.15)', text: '#60a5fa', label: 'Masa Trial' },
+  active: { bg: 'rgba(52,211,153,.15)', text: '#34d399', label: 'Aktif' },
+  past_due: { bg: 'rgba(249,115,22,.15)', text: '#fb923c', label: 'Jatuh Tempo' },
+  suspended: { bg: 'rgba(239,68,68,.12)', text: '#f87171', label: 'Suspended' },
   cancelled: { bg: 'rgba(107,114,128,.12)', text: '#6b7280', label: 'Dibatalkan' },
-  expired:   { bg: 'rgba(239,68,68,.12)',  text: '#f87171', label: 'Expired' },
+  expired: { bg: 'rgba(239,68,68,.12)', text: '#f87171', label: 'Expired' },
 };
 
 const FEATURE_LABELS: Record<string, { icon: string; label: string }> = {
-  visits:           { icon: '📍', label: 'Visit Outlet (Geofence)' },
-  attendance:       { icon: '🤳', label: 'Absensi Wajah' },
+  visits: { icon: '📍', label: 'Visit Outlet (Geofence)' },
+  attendance: { icon: '🤳', label: 'Absensi Wajah' },
   face_recognition: { icon: '👁️', label: 'Face Recognition AI' },
-  reports:          { icon: '📊', label: 'Laporan & Ekspor' },
-  offline_sync:     { icon: '🔄', label: 'Offline Sync' },
-  api_access:       { icon: '🔌', label: 'API Access' },
-  multi_warehouse:  { icon: '🏭', label: 'Multi Gudang' },
-  consignment:      { icon: '📦', label: 'Konsinyasi' },
-  receivables:      { icon: '💳', label: 'Piutang Usaha' },
-  gps_tracking:     { icon: '🛰️', label: 'GPS Tracking' },
+  reports: { icon: '📊', label: 'Laporan & Ekspor' },
+  offline_sync: { icon: '🔄', label: 'Offline Sync' },
+  api_access: { icon: '🔌', label: 'API Access' },
+  multi_warehouse: { icon: '🏭', label: 'Multi Gudang' },
+  consignment: { icon: '📦', label: 'Konsinyasi' },
+  receivables: { icon: '💳', label: 'Piutang Usaha' },
+  gps_tracking: { icon: '🛰️', label: 'GPS Tracking' },
 };
 
 const LIMIT_ICONS: Record<string, React.ReactNode> = {
-  users:    <Users size={14} />,
-  outlets:  <Boxes size={14} />,
+  users: <Users size={14} />,
+  outlets: <Boxes size={14} />,
   products: <Package size={14} />,
   storage_gb: <Shield size={14} />,
   api_calls_per_day: <Zap size={14} />,
@@ -146,7 +146,7 @@ export function SubscriptionPage() {
           {/* Main Info */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Plan Header */}
-            <div className="admin-card" style={{ borderColor: planStyle.border, background: planStyle.bg, padding: '1.5rem' }}>
+            {/* <div className="admin-card" style={{ borderColor: planStyle.border, background: planStyle.bg, padding: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>{planStyle.icon}</div>
                 <div style={{ flex: 1 }}>
@@ -169,10 +169,10 @@ export function SubscriptionPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </div> */}
 
             {/* Limits */}
-            {limits && Object.keys(limits).length > 0 && (
+            {/* {limits && Object.keys(limits).length > 0 && (
               <div className="admin-card">
                 <div className="admin-card-header">
                   <h2>Batas Penggunaan</h2>
@@ -191,10 +191,10 @@ export function SubscriptionPage() {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Features */}
-            {features && features.length > 0 && (
+            {/* {features && features.length > 0 && (
               <div className="admin-card">
                 <div className="admin-card-header">
                   <h2>Fitur Tersedia</h2>
@@ -213,13 +213,13 @@ export function SubscriptionPage() {
                   })}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Side Panel */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
             {/* Period Info */}
-            <div className="admin-card">
+            {/* <div className="admin-card">
               <div className="admin-card-header" style={{ marginBottom: '.75rem', paddingBottom: '.65rem' }}>
                 <h2>Info Periode</h2>
                 <Clock size={15} style={{ color: '#64748b' }} />
@@ -239,10 +239,10 @@ export function SubscriptionPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Days Remaining */}
-            {daysLeft !== null && (
+            {/* {daysLeft !== null && (
               <div className="admin-card" style={{ textAlign: 'center', padding: '1.25rem', background: daysLeft <= 7 ? 'rgba(239,68,68,.08)' : 'rgba(52,211,153,.06)', borderColor: daysLeft <= 7 ? 'rgba(239,68,68,.2)' : 'rgba(52,211,153,.15)' }}>
                 <div style={{ fontSize: '2.5rem', fontWeight: 900, color: daysLeft <= 7 ? '#f87171' : '#34d399', lineHeight: 1 }}>{daysLeft}</div>
                 <div style={{ color: '#64748b', fontSize: '.78rem', marginTop: '.3rem' }}>hari tersisa</div>
@@ -259,15 +259,15 @@ export function SubscriptionPage() {
                   </div>
                 )}
               </div>
-            )}
+            )} */}
 
             {/* Contact */}
-            <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
+            {/* <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
               <p style={{ margin: '0 0 .65rem', color: '#64748b', fontSize: '.82rem' }}>Ingin upgrade atau ada pertanyaan?</p>
               <a href="mailto:support@mahasura.id" style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', borderRadius: 10, padding: '.6rem 1rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none', justifyContent: 'center' }}>
                 <Mail size={15} /> Hubungi Tim Kami
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       )}

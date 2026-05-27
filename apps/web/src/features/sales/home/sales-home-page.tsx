@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Camera, ReceiptText, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
-import { API_BASE_URL } from '../../lib/api/client';
+import { useAuth } from '../../auth/auth-provider';
+import { API_BASE_URL } from '../../../lib/api/client';
 
 type VisitSession = {
   id: string;
@@ -40,12 +40,12 @@ function formatRp(v: string | number) {
 }
 
 const OUTCOME_LABEL: Record<string, { text: string; color: string }> = {
-  closed_order:     { text: 'Order Closed',   color: '#34d399' },
-  no_order:         { text: 'Tidak Ada Order', color: '#94a3b8' },
-  follow_up:        { text: 'Follow Up',       color: '#fbbf24' },
-  outlet_closed:    { text: 'Outlet Tutup',    color: '#f87171' },
-  rejected:         { text: 'Ditolak',         color: '#f87171' },
-  invalid_location: { text: 'Lokasi Salah',    color: '#f87171' },
+  closed_order: { text: 'Order Closed', color: '#34d399' },
+  no_order: { text: 'Tidak Ada Order', color: '#94a3b8' },
+  follow_up: { text: 'Follow Up', color: '#fbbf24' },
+  outlet_closed: { text: 'Outlet Tutup', color: '#f87171' },
+  rejected: { text: 'Ditolak', color: '#f87171' },
+  invalid_location: { text: 'Lokasi Salah', color: '#f87171' },
 };
 
 export function SalesHomePage() {

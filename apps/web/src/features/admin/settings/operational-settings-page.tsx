@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Camera, CheckCircle2, MapPin, Radar, Save, ShieldCheck, SlidersHorizontal, UserCheck } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { getGeneralSettings, updateGeneralSettings, type GeneralSettings } from '@/lib/api/tenant';
 import { Spinner } from '@/components/ui';
 

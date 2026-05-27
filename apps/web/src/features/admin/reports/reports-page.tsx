@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Download, RefreshCw, TrendingUp, ShoppingCart, MapPin, Users } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { getSalesTransactions, getTenantUsers, type SalesTransaction, type TenantUser } from '@/lib/api/tenant';
 
 const statusLabel: Record<string, string> = {
@@ -133,7 +133,7 @@ export function ReportsPage() {
 
 
       {/* Filters */}
-      <div className="admin-filter-row" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+      {/* <div className="admin-filter-row" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
         <label style={{ color: 'var(--admin-subtle)', fontSize: '.8rem' }}>Periode:</label>
         <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="admin-input" style={{ width: 'auto' }} />
         <span style={{ color: 'var(--admin-subtle)' }}>—</span>
@@ -142,11 +142,11 @@ export function ReportsPage() {
           <option value="">Semua Status</option>
           {Object.entries(statusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-      </div>
+      </div> */}
 
       <div className="admin-content-grid-half">
         {/* Leaderboard */}
-        <div className="admin-card">
+        {/* <div className="admin-card">
           <div className="admin-card-header"><h2>🏆 Leaderboard Sales</h2></div>
           <div className="admin-table-wrap">
             <table className="admin-table">
@@ -164,10 +164,10 @@ export function ReportsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </div> */}
 
         {/* Transaction List */}
-        <div className="admin-card">
+        {/* <div className="admin-card">
           <div className="admin-card-header"><h2>Transaksi ({transactions.length})</h2></div>
           {loading ? <div className="admin-loading">Memuat...</div> : (
             <div className="admin-table-wrap" style={{ maxHeight: 360, overflowY: 'auto' }}>
@@ -191,7 +191,7 @@ export function ReportsPage() {
               </table>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );

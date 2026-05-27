@@ -1,10 +1,10 @@
-import { 
-  LayoutDashboard, 
+import {
+  LayoutDashboard,
   ShieldCheck,
-  Map, 
-  BarChart3, 
-  Boxes, 
-  CreditCard, 
+  Map,
+  BarChart3,
+  Boxes,
+  CreditCard,
   ReceiptText,
   ShoppingCart,
   Inbox,
@@ -13,23 +13,23 @@ import {
   Shield,
   SlidersHorizontal,
 } from 'lucide-react';
-import { DashboardPage } from '@/features/dashboard/dashboard-page';
-import { AttendancePage } from '@/features/attendance/attendance-page';
-import { AttendanceReviewPage } from '@/features/attendance/attendance-review-page';
-import { SalesHomePage } from '@/features/sales/sales-home-page';
-import { TrackingPage } from '@/features/sales/tracking-page';
-import { ReportsPage } from '@/features/sales/reports-page';
-import { InvoiceReviewPage } from '@/features/sales/invoice-review-page';
-import { StockPage } from '@/features/sales/stock-page';
-import { ReceivablesPage } from '@/features/sales/receivables-page';
-import { SubscriptionPage } from '@/features/sales/subscription-page';
-import { SalesProfilePage } from '@/features/sales/sales-profile-page';
-import { VisitPage } from '@/features/sales/visit-page';
-import { TransactionsPage } from '@/features/sales/transactions-page';
-import { InvoicesPage } from '@/features/sales/invoices-page';
-import { UsersPage } from '@/features/users/users-page';
-import { RolesPage } from '@/features/users/roles-page';
-import { OperationalSettingsPage } from '@/features/settings/operational-settings-page';
+import { DashboardPage } from '@/features/admin/dashboard/dashboard-page';
+import { AttendancePage } from '@/features/standalone/attendance-page';
+import { AttendanceReviewPage } from '@/features/admin/attendance/attendance-review-page';
+import { SalesHomePage } from '@/features/sales/home/sales-home-page';
+import { TrackingPage } from '@/features/admin/tracking/tracking-page';
+import { ReportsPage } from '@/features/admin/reports/reports-page';
+import { InvoiceReviewPage } from '@/features/admin/invoice-review/invoice-review-page';
+import { StockPage } from '@/features/admin/stock/stock-page';
+import { ReceivablesPage } from '@/features/admin/receivables/receivables-page';
+import { SubscriptionPage } from '@/features/admin/subscription/subscription-page';
+import { SalesProfilePage } from '@/features/sales/profile/sales-profile-page';
+import { VisitPage } from '@/features/sales/visit/visit-page';
+import { TransactionsPage } from '@/features/sales/transactions/transactions-page';
+import { InvoicesPage } from '@/features/sales/invoices/invoices-page';
+import { UsersPage } from '@/features/admin/users/users-page';
+import { RolesPage } from '@/features/admin/roles/roles-page';
+import { OperationalSettingsPage } from '@/features/admin/settings/operational-settings-page';
 import { type RouteConfig } from './types';
 
 // --- ADMIN ROUTES ---

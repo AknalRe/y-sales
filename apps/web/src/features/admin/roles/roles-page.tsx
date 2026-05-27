@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { getRoles, createRole, deleteRole, type Role } from '@/lib/api/platform';
 
 export function RolesPage() {

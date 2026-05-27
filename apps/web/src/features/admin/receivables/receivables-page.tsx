@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, TrendingDown, Banknote } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { EmptyState } from '@/components/ui';
 import { apiRequest } from '@/lib/api/client';
 
@@ -184,7 +184,7 @@ export function ReceivablesPage() {
 
 
       {/* Tab + Filter */}
-      <div className="admin-filter-row">
+      {/* <div className="admin-filter-row">
         <div className="admin-tab-group">
           <button onClick={() => { setTab('receivables'); setStatusFilter(''); }} className={`admin-tab ${tab === 'receivables' ? 'active' : ''}`}>Piutang (Kredit)</button>
           <button onClick={() => { setTab('consignments'); setStatusFilter(''); }} className={`admin-tab ${tab === 'consignments' ? 'active' : ''}`}>Konsinyasi</button>
@@ -332,10 +332,10 @@ export function ReceivablesPage() {
             </table>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Payment Modal */}
-      {payModal && (
+      {/* {payModal && (
         <div className="admin-modal-overlay" onClick={() => setPayModal(null)}>
           <div className="admin-modal" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
@@ -399,7 +399,7 @@ export function ReceivablesPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

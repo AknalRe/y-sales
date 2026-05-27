@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Camera, RefreshCw, MapPin, ShieldCheck, AlertTriangle } from 'lucide-react';
 
-import { getAttendanceReview, type AttendanceReviewItem } from '../../lib/api/client';
-import { useAuth } from '../auth/auth-provider';
+import { getAttendanceReview, type AttendanceReviewItem } from '../../../lib/api/client';
+import { useAuth } from '../../auth/auth-provider';
 
 export function AttendanceReviewPage() {
   const { accessToken } = useAuth();
@@ -88,25 +88,25 @@ export function AttendanceReviewPage() {
                 </div>
 
                 <div className="flex items-center gap-6 text-xs text-slate-500 font-bold pt-3 border-t border-slate-100">
-                   <div className="flex items-center gap-2">
-                     <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                     <span>Check-in: <strong className="text-slate-900">{row.checkInAt ?? '-'}</strong></span>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <span className="h-2 w-2 rounded-full bg-slate-300"></span>
-                     <span>Check-out: <strong className="text-slate-900">{row.checkOutAt ?? '-'}</strong></span>
-                   </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                    <span>Check-in: <strong className="text-slate-900">{row.checkInAt ?? '-'}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-slate-300"></span>
+                    <span>Check-out: <strong className="text-slate-900">{row.checkOutAt ?? '-'}</strong></span>
+                  </div>
                 </div>
               </div>
             </article>
           ))}
 
           {!rows.length && (
-             <div className="text-center py-24 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 text-slate-400">
-               <ShieldCheck size={48} className="mx-auto mb-4 opacity-20" />
-               <p className="font-bold text-lg">Belum ada data absensi</p>
-               <p className="text-sm">Semua data absensi untuk hari ini sudah direview atau belum ada masuk.</p>
-             </div>
+            <div className="text-center py-24 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 text-slate-400">
+              <ShieldCheck size={48} className="mx-auto mb-4 opacity-20" />
+              <p className="font-bold text-lg">Belum ada data absensi</p>
+              <p className="text-sm">Semua data absensi untuk hari ini sudah direview atau belum ada masuk.</p>
+            </div>
           )}
         </div>
       )}

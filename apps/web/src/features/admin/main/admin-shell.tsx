@@ -7,7 +7,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
 import { PlatformCompanyViewBanner } from '@/features/platform/company-view-banner';

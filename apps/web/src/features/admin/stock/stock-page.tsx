@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Boxes, RefreshCw, Package, Warehouse as WarehouseIcon, ArrowUpDown, AlertTriangle, History } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { getWarehouses, type Warehouse } from '@/lib/api/tenant';
 import { apiRequest } from '@/lib/api/client';
 import { EmptyState } from '@/components/ui';
@@ -105,9 +105,9 @@ export function StockPage() {
           </h1>
           <p className="admin-page-subtitle">Monitor ketersediaan produk, mutasi barang, dan performa gudang secara real-time.</p>
         </div>
-        <button 
-          onClick={load} 
-          className="admin-btn-ghost" 
+        <button
+          onClick={load}
+          className="admin-btn-ghost"
           style={{ padding: '.6rem', borderRadius: 14 }}
           disabled={loading}
         >
@@ -154,7 +154,7 @@ export function StockPage() {
       </div>
 
       {/* Premium Filter Row */}
-      <div className="admin-filter-row" style={{ background: '#fff', padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* <div className="admin-filter-row" style={{ background: '#fff', padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <div className="admin-filter-group" style={{ background: '#f8fafc', padding: '.25rem .75rem', borderRadius: 12 }}>
             <WarehouseIcon size={16} style={{ color: '#64748b' }} />
@@ -302,10 +302,10 @@ export function StockPage() {
             </table>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Warehouse Summary Cards (Only in Stock Tab) */}
-      {tab === 'stock' && warehouses.length > 0 && (
+      {/* {tab === 'stock' && warehouses.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem', marginTop: '2rem' }}>
           {warehouses.filter(w => w.status === 'active').map(w => {
             const whBalances = balances.filter(b => b.warehouseId === w.id);
@@ -339,7 +339,7 @@ export function StockPage() {
             );
           })}
         </div>
-      )}
+      )} */}
     </div>
   );
 }

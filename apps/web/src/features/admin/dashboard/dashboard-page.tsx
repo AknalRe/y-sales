@@ -5,7 +5,7 @@ import {
   TrendingUp, ShoppingCart, Package, Clock, RefreshCw,
   AlertCircle, ArrowUpRight, Activity
 } from 'lucide-react';
-import { useAuth } from '../auth/auth-provider';
+import { useAuth } from '../../auth/auth-provider';
 import { getPlatformCompanyView, apiRequest } from '@/lib/api/client';
 
 type ReportSummary = {

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { getMe, login } from '../../lib/api/client';
+import { getMe, login, clearPlatformCompanyView } from '../../lib/api/client';
 
 type SessionUser = {
   id: string;
@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     signOut() {
       localStorage.removeItem(storageKey);
+      clearPlatformCompanyView();
       setAccessToken(undefined);
       setRefreshToken(undefined);
       setUser(undefined);

@@ -4,9 +4,11 @@ import {
   Bell,
   LogOut,
   Menu,
+  Moon,
+  Sun,
   UserCircle,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
@@ -47,6 +49,27 @@ export function AdminShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  const toggleTheme = useCallback(() => {
+    const next = !document.documentElement.classList.contains('dark');
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+    setIsDark(next);
+  }, []);
+
+  // Sync on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    } else if (saved === 'light') {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    }
+  }, []);
+
   useEffect(() => {
     setOpen(!isMobile);
     if (!isMobile) setMobileMenuOpen(false);
@@ -83,6 +106,9 @@ export function AdminShell() {
             </div>
           </div>
           <div className="admin-user-zone">
+            <button onClick={toggleTheme} className="admin-icon-button" type="button" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+              {isDark ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
             <button id="admin-notification-button" className="admin-icon-button admin-notification" type="button">
               <Bell size={18} />
               <span />

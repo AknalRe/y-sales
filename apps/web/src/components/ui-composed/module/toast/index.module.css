@@ -71,11 +71,7 @@
   --scale: calc(max(0, 1 - (var(--toast-index) * 0.1)));
   --shrink: calc(1 - var(--scale));
   --height: var(--toast-frontmost-height, var(--toast-height));
-  --offset-y: calc(
-    var(--toast-offset-y) * -1 +
-      (var(--toast-index) * var(--gap) * -1) +
-      var(--toast-swipe-movement-y)
-  );
+  --offset-y: calc(var(--toast-offset-y) * -1 + (var(--toast-index) * var(--gap) * -1) + var(--toast-swipe-movement-y));
 
   position: absolute;
   right: 0;
@@ -83,11 +79,9 @@
   width: 100%;
   box-sizing: border-box;
   background: var(--color-card);
-  background-image: linear-gradient(
-    0deg,
-    rgb(from var(--toast-accent) r g b / var(--toast-tint-alpha)),
-    rgb(from var(--toast-accent) r g b / var(--toast-tint-alpha))
-  );
+  background-image: linear-gradient(0deg,
+      rgb(from var(--toast-accent) r g b / var(--toast-tint-alpha)),
+      rgb(from var(--toast-accent) r g b / var(--toast-tint-alpha)));
   color: var(--toast-fg);
   border: 1px solid var(--toast-border);
   border-left: 3px solid rgb(from var(--toast-accent) r g b / var(--toast-accent-alpha));
@@ -104,15 +98,7 @@
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.5s,
     height 0.15s;
-  transform: translateX(var(--toast-swipe-movement-x))
-    translateY(
-      calc(
-        var(--toast-swipe-movement-y) -
-          (var(--toast-index) * var(--peek)) -
-          (var(--shrink) * var(--height))
-      )
-    )
-    scale(var(--scale));
+  transform: translateX(var(--toast-swipe-movement-x)) translateY(calc(var(--toast-swipe-movement-y) - (var(--toast-index) * var(--peek)) - (var(--shrink) * var(--height)))) scale(var(--scale));
 
   &[data-expanded] {
     transform: translateX(var(--toast-swipe-movement-x)) translateY(var(--offset-y));
@@ -188,8 +174,13 @@
 }
 
 @keyframes toast-progress {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
 }
 
 .ToastSuccess {
@@ -245,7 +236,7 @@
 }
 
 .Title {
-  font-weight: 500;
+  font-weight: 400;
   font-size: 0.975rem;
   line-height: 1.25rem;
   margin: 0;
@@ -303,6 +294,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

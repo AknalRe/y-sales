@@ -206,24 +206,24 @@ const statusColors: Record<
     { bg: string; text: string; border: string }
 > = {
     Active: {
-        bg: "bg-emerald-50 dark:bg-emerald-950/30",
-        text: "text-emerald-600 dark:text-emerald-400",
-        border: "border-emerald-200 dark:border-emerald-800",
+        bg: "bg-success/10 dark:bg-success/20",
+        text: "text-success",
+        border: "border-success/30 dark:border-success/40",
     },
     "On Leave": {
-        bg: "bg-amber-50 dark:bg-amber-950/30",
-        text: "text-amber-600 dark:text-amber-400",
-        border: "border-amber-200 dark:border-amber-800",
+        bg: "bg-warning/10 dark:bg-warning/20",
+        text: "text-warning-foreground",
+        border: "border-warning/30 dark:border-warning/40",
     },
     Probation: {
-        bg: "bg-blue-50 dark:bg-blue-950/30",
-        text: "text-blue-600 dark:text-blue-400",
-        border: "border-blue-200 dark:border-blue-800",
+        bg: "bg-info/10 dark:bg-info/20",
+        text: "text-info",
+        border: "border-info/30 dark:border-info/40",
     },
     Inactive: {
-        bg: "bg-red-50 dark:bg-red-950/30",
-        text: "text-red-600 dark:text-red-400",
-        border: "border-red-200 dark:border-red-800",
+        bg: "bg-destructive/10 dark:bg-destructive/20",
+        text: "text-destructive",
+        border: "border-destructive/30 dark:border-destructive/40",
     },
 };
 
@@ -238,7 +238,7 @@ export default function PlaygroundUiComponent() {
             className={cn("w-full flex-1 overflow-auto")}
         >
             <div className="grid p-0 m-0 place-items-start justify-center">
-                <div className="bg-[#8f8f8f] dark:bg-[#171717] rounded-2xl dark:shadow-none shadow-[0_6px_32px_rgba(40,60,150,0.12)] p-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 items-start gap-4 min-w-[360px] max-w-[90vw]">
+                <div className="bg-secondary rounded-2xl dark:shadow-none shadow-[0_6px_32px_rgba(40,60,150,0.12)] p-4 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 items-start gap-4 min-w-[360px] max-w-[90vw]">
                     <Card title="dialog">
                         <Dialog>
                             <DialogTrigger>Dialog</DialogTrigger>
@@ -547,11 +547,11 @@ function Card({ children, title, className }: { children: any, title: any, class
 
     return (
         <div className={cn(
-            "relative flex flex-col items-center justify-center min-h-[220px] rounded-[12px] bg-white dark:bg-[#0a0a0a] dark:shadow-none shadow-[0_1px_6px_rgba(80,120,200,0.08)] p-[1.2rem_1.5rem]",
+            "relative flex flex-col items-center justify-center min-h-[220px] rounded-[12px] bg-card text-card-foreground dark:shadow-none shadow-[0_1px_6px_rgba(80,120,200,0.08)] p-[1.2rem_1.5rem]",
             className
         )}
         >
-            <div className="absolute left-0 top-0 w-full bg-[#e8e8e8] dark:bg-black text-[#8f8f8f] text-xs font-medium py-1 px-0 rounded-t-[12px] text-center">
+            <div className="absolute left-0 top-0 w-full bg-muted text-muted-foreground text-xs font-medium py-1 px-0 rounded-t-[12px] text-center">
                 {title}
             </div>
             {children}

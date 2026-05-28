@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Navigate, useRoutes } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 import { useAuth } from '@/features/auth/auth-provider';
+import { getHomePathForRole } from '@yuksales/shared';
 import { RequireAuth, RequireSuperAdmin } from '@/features/auth/require-auth';
 import { LoginPage } from '@/features/auth/login-page';
 import { AdminShell } from '@/features/admin/main/admin-shell';
@@ -94,9 +95,7 @@ export function AppRouter() {
     ...transform(standaloneFromAdmin),
     {
       path: '*',
-      element: isSuperAdmin
-        ? <Navigate to="/platform" replace />
-        : <Navigate to="/admin" replace />
+      element: <Navigate to={getHomePathForRole(user?.roleCode ?? '', isSuperAdmin)} replace />
     }
   ]);
 }

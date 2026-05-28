@@ -20,6 +20,18 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-tanstack': ['@tanstack/react-query'],
+            'vendor-base-ui': ['@base-ui/react'],
+            'vendor-ui': ['lucide-react', 'clsx', 'class-variance-authority', 'tailwind-merge'],
+          },
+        },
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),

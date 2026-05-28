@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Loader2, LockKeyhole, MapPin } from 'lucide-react';
 import { useAuth } from './auth-provider';
+import { getHomePathForRole } from '@yuksales/shared';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       const signedInUser = await signIn(identifier, password);
-      navigate(signedInUser.isSuperAdmin ? '/platform' : '/admin');
+      navigate(getHomePathForRole(signedInUser.roleCode, signedInUser.isSuperAdmin));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login gagal');
     } finally {

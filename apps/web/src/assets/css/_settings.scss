@@ -1,0 +1,174 @@
+/* ─── Operational Settings ───────────────────────────────────────────────── */
+.settings-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(135deg, #40231E, #4A2922);
+  color: #ffffff;
+  border-radius: 22px;
+  padding: 1.35rem;
+  box-shadow: 0 18px 40px rgba(64, 35, 30, .18);
+}
+
+.settings-hero h1 {
+  margin: .25rem 0;
+  font-size: 1.55rem;
+  line-height: 1.15;
+}
+
+.settings-hero p {
+  margin: 0;
+  color: #ead7d0;
+  max-width: 720px;
+}
+
+.settings-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin: 0;
+  color: #d8b6aa !important;
+  font-size: .78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.settings-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: .9rem;
+}
+
+.settings-number-card {
+  display: grid;
+  gap: .65rem;
+  background: #ffffff;
+  border: 1px solid rgba(74, 41, 34, .14);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
+}
+
+.settings-number-card span {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  color: #171717;
+  font-weight: 800;
+}
+
+.settings-number-card span svg {
+  color: #B55925;
+}
+
+.settings-number-card input {
+  width: 100%;
+  border: 1px solid rgba(74, 41, 34, .14);
+  background: #fffaf7;
+  border-radius: 12px;
+  padding: .72rem .85rem;
+  color: #171717;
+  font-size: 1rem;
+  font-weight: 800;
+  outline: none;
+}
+
+.settings-number-card input:focus {
+  border-color: #B55925;
+  box-shadow: 0 0 0 4px rgba(181, 89, 37, .14);
+}
+
+.settings-number-card small {
+  color: #6b7280;
+  line-height: 1.45;
+}
+
+.settings-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: .9rem;
+}
+
+.settings-toggle-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .85rem;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid rgba(74, 41, 34, .14);
+  border-radius: 18px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+
+.settings-toggle-card:hover {
+  border-color: rgba(74, 41, 34, .14);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(43, 45, 66, .06);
+}
+
+.settings-toggle-card.active {
+  background: #fff7ed;
+  border-color: #B55925;
+}
+
+.settings-toggle-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #B55925;
+}
+
+.settings-toggle-copy {
+  display: grid;
+  gap: .2rem;
+}
+
+.settings-toggle-copy strong {
+  color: #171717;
+  font-size: .92rem;
+}
+
+.settings-toggle-copy small {
+  color: #6b7280;
+  line-height: 1.45;
+}
+
+.settings-switch {
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #cbced4;
+  padding: 3px;
+  transition: background .18s ease;
+}
+
+.settings-switch span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  transition: transform .18s ease;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, .2);
+}
+
+.settings-toggle-card.active .settings-switch {
+  background: #B55925;
+}
+
+.settings-toggle-card.active .settings-switch span {
+  transform: translateX(18px);
+}

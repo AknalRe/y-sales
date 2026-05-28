@@ -1,0 +1,238 @@
+/* --- ADMIN MANAGEMENT STYLES (LIGHT MODE) --- */
+.admin-user-cell {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+}
+
+.admin-user-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: .75rem;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: .875rem;
+  flex-shrink: 0;
+}
+
+.admin-user-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.admin-user-code {
+  font-size: .7rem;
+  color: var(--muted-foreground);
+  margin-top: 1px;
+}
+
+.admin-role-badge {
+  font-size: .7rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  padding: .2rem .65rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .25rem .65rem;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: transparent;
+}
+
+.admin-status-pill-active {
+  color: #10b981;
+  background: #ecfdf5;
+  border-color: #d1fae5;
+}
+
+.admin-status-pill-inactive {
+  color: #64748b;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.admin-status-pill-suspended {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fee2e2;
+}
+
+.admin-row-actions {
+  display: flex;
+  gap: .5rem;
+}
+
+.admin-btn-icon-sm {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.admin-btn-icon-sm:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.admin-btn-danger-sm:hover {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #fee2e2;
+}
+
+/* Modal Styles */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1000;
+}
+
+.admin-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.admin-modal-sm {
+  max-width: 400px;
+}
+
+.admin-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.admin-modal-close {
+  background: transparent;
+  border: 0;
+  font-size: 1.5rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.admin-modal-body {
+  padding: 1.5rem;
+}
+
+.admin-modal-footer {
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: .75rem;
+}
+
+/* Roles Specific */
+.admin-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.admin-role-card {
+  padding: 1.5rem;
+}
+
+.admin-role-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+
+.admin-role-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: #ede9fe;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+  display: grid;
+  place-items: center;
+}
+
+
+.admin-role-card-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.admin-role-card-code {
+  font-family: monospace;
+  font-size: .75rem;
+  color: #475569;
+  background: #f1f5f9;
+  padding: .15rem .5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
+}
+
+
+.admin-role-desc {
+  margin: 0;
+  font-size: .875rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.admin-role-system-badge {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  padding-top: .85rem;
+  border-top: 1px dashed #f1f5f9;
+}
+
+.admin-role-system-badge svg {
+  opacity: .7;
+}

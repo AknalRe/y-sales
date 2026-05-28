@@ -1,0 +1,248 @@
+.platform-plans-grid,
+.admin-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.platform-plan-card,
+.admin-role-card {
+  padding: 1.1rem;
+}
+
+.admin-role-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+
+
+.platform-plan-card-name {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.admin-role-card-name {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+
+.platform-plan-card-code {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, .12);
+  border-radius: 999px;
+  padding: .15rem .45rem;
+  font-size: .72rem;
+}
+
+.admin-role-card-code {
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: .15rem .45rem;
+  font-size: .72rem;
+}
+
+
+.platform-plan-meta-row {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+  margin-top: .35rem;
+}
+
+.platform-level-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: .18rem .5rem;
+  font-size: .72rem;
+  font-weight: 900;
+  color: #fde68a;
+  background: rgba(245, 158, 11, .14);
+  border: 1px solid rgba(245, 158, 11, .22);
+}
+
+.platform-plan-card-desc,
+.admin-role-desc {
+  color: var(--platform-subtle);
+  min-height: 42px;
+}
+
+.platform-plan-pricing {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  margin: 1rem 0;
+}
+
+.platform-plan-pricing>div {
+  padding: .75rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.platform-plan-price-label {
+  display: block;
+  color: var(--platform-subtle);
+  font-size: .72rem;
+}
+
+.platform-plan-price-value {
+  display: block;
+  margin-top: .25rem;
+  font-weight: 900;
+}
+
+.platform-plan-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+
+.platform-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: .7rem;
+}
+
+.platform-feature-option {
+  text-align: left;
+  border: 1px solid var(--platform-border);
+  border-radius: 18px;
+  padding: .85rem;
+  color: #dbeafe;
+  background: rgba(255, 255, 255, .045);
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.platform-feature-option:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, .075);
+}
+
+.platform-feature-option-active {
+  border-color: rgba(99, 220, 152, .48);
+  background: linear-gradient(135deg, rgba(34, 197, 94, .16), rgba(6, 182, 212, .08));
+  box-shadow: inset 0 0 0 1px rgba(99, 220, 152, .16);
+}
+
+.platform-feature-option-title {
+  display: block;
+  font-weight: 900;
+  color: #fff;
+}
+
+.platform-feature-option-desc {
+  display: block;
+  margin-top: .3rem;
+  min-height: 34px;
+  color: var(--platform-subtle);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.platform-feature-option-category {
+  display: inline-flex;
+  margin-top: .55rem;
+  border-radius: 999px;
+  padding: .18rem .48rem;
+  color: #bae6fd;
+  background: rgba(14, 165, 233, .13);
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.platform-limit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  gap: .75rem;
+}
+
+.platform-limit-item {
+  display: grid;
+  gap: .7rem;
+  border: 1px solid var(--platform-border);
+  border-radius: 18px;
+  padding: .85rem;
+  background: rgba(255, 255, 255, .045);
+}
+
+.platform-limit-item strong {
+  display: block;
+  color: #fff;
+}
+
+.platform-limit-item small {
+  display: block;
+  margin-top: .25rem;
+  color: var(--platform-subtle);
+  line-height: 1.35;
+}
+
+.platform-limit-input-wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .55rem;
+}
+
+.platform-limit-input-wrap em {
+  color: #cbd5e1;
+  font-size: .78rem;
+  font-style: normal;
+}
+
+.platform-feature-tag,
+.platform-badge {
+  border-radius: 999px;
+  padding: .28rem .55rem;
+  font-size: .74rem;
+  background: rgba(255, 255, 255, .08);
+  color: #dbeafe;
+}
+
+.admin-role-badge {
+  border-radius: 999px;
+  padding: .28rem .55rem;
+  font-size: .74rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+
+
+.platform-plan-card-footer {
+  display: flex;
+  gap: .45rem;
+  margin-top: 1rem;
+}
+
+.platform-badge-success {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, .13);
+}
+
+.platform-badge-muted {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, .13);
+}
+
+.platform-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 6, 23, .72);
+  backdrop-filter: blur(10px);
+}

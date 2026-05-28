@@ -1,0 +1,202 @@
+.platform-loading,
+.admin-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .6rem;
+  padding: 3rem;
+  color: var(--platform-subtle);
+}
+
+.platform-company-cell,
+.admin-user-cell,
+.platform-company-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.platform-company-avatar,
+.admin-user-avatar {
+  width: 42px;
+  height: 42px;
+  font-weight: 900;
+}
+
+.platform-company-avatar-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  font-weight: 900;
+}
+
+.platform-company-name,
+.admin-user-name {
+  font-weight: 900;
+  color: #fff;
+}
+
+.platform-company-slug,
+.admin-user-code {
+  font-size: .78rem;
+  color: var(--platform-subtle);
+}
+
+.platform-status-badge,
+.platform-row-actions,
+.admin-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.platform-row-actions,
+.admin-row-actions {
+  gap: .45rem;
+}
+
+.platform-btn-danger-sm {
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, .28);
+  background: rgba(239, 68, 68, .12);
+}
+
+.platform-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.platform-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.15rem;
+}
+
+.platform-stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 20px;
+  box-shadow: none;
+}
+
+.platform-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-stat-label {
+  color: var(--platform-subtle);
+  font-size: .82rem;
+}
+
+.platform-stat-value {
+  font-size: 2rem;
+  letter-spacing: -.05em;
+}
+
+.platform-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.platform-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--platform-border);
+}
+
+.platform-card-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.platform-card-body {
+  padding: 1rem;
+}
+
+.platform-link-sm {
+  color: #67e8f9;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: .85rem;
+}
+
+.platform-company-list,
+.platform-plan-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: .65rem;
+}
+
+.platform-company-row,
+.platform-plan-row {
+  padding: .75rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.platform-company-row-info,
+.platform-plan-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.platform-row-link {
+  color: #fff;
+}
+
+.platform-status-dot {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: .2rem .55rem;
+  font-size: .72rem;
+  background: rgba(148, 163, 184, .13);
+  color: #64748b;
+}
+
+.platform-status-closed,
+.platform-status-approved,
+.platform-status-paid {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.platform-status-submitted,
+.platform-status-draft {
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.platform-status-rejected,
+.platform-status-overdue,
+.platform-status-cancelled {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.platform-status-active {
+  color: #86efac;
+  background: rgba(34, 197, 94, .12);
+}
+
+.platform-status-trialing {
+  color: #fde68a;
+  background: rgba(245, 158, 11, .12);
+}
+
+.platform-status-suspended {
+  color: #fecaca;
+  background: rgba(239, 68, 68, .12);
+}

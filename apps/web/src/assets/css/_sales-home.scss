@@ -1,0 +1,470 @@
+/* ─── Sales Home Page ─────────────────────────────────────────────────────── */
+.sales-home {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: .25rem .25rem 5rem;
+}
+
+.sales-home-greeting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .25rem .25rem 0;
+}
+
+.sales-greeting-label {
+  margin: 0;
+  font-size: .8rem;
+  color: #966556;
+  font-weight: 700;
+}
+
+.sales-greeting-name {
+  margin: .2rem 0 0;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #171717;
+  letter-spacing: -.03em;
+}
+
+.sales-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(74, 41, 34, .14);
+  color: #B55925;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+}
+
+.sales-icon-btn:hover {
+  background: #fff7ed;
+  color: #40231E;
+}
+
+/* Attendance Banner */
+.sales-attendance-banner {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  border-radius: 18px;
+  padding: .9rem 1.1rem;
+  border: 1px solid transparent;
+}
+
+.sales-attendance-banner.checked-in {
+  background: #dff5ea;
+  border-color: #bfead4;
+  color: #4fa87e;
+}
+
+.sales-attendance-banner.not-checked-in {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+.sales-attendance-banner>div {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  flex: 1;
+}
+
+.sales-attendance-banner strong {
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.sales-attendance-banner span {
+  font-size: .78rem;
+  opacity: .85;
+}
+
+.sales-banner-btn {
+  background: #ffffff;
+  border: 1px solid #fed7aa;
+  color: #B55925;
+  border-radius: 10px;
+  padding: .4rem .85rem;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+}
+
+.sales-banner-btn:hover {
+  background: #fff7ed;
+}
+
+/* KPI Row */
+.sales-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .9rem;
+}
+
+.sales-kpi-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .4rem;
+  background: #ffffff;
+  border: 1px solid rgba(74, 41, 34, .14);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
+}
+
+.sales-kpi-card strong {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #171717;
+}
+
+.sales-kpi-card span {
+  font-size: .8rem;
+  color: #6b7280;
+  font-weight: 700;
+  margin-top: .15rem;
+}
+
+.sales-kpi-card strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #171717;
+}
+
+.sales-kpi-card span {
+  font-size: .7rem;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+/* Quick Actions — Chunky 2×2 Bento Grid */
+.sales-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .5rem;
+}
+
+.sales-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  gap: .6rem;
+  min-height: 100px;
+  background: #ffffff;
+  border: 1px solid rgba(74, 41, 34, .14);
+  border-radius: 20px;
+  padding: 1.15rem .75rem;
+  text-decoration: none;
+  transition: all .18s ease;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(43, 45, 66, .04);
+}
+
+.sales-action-card span {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #4A2922;
+}
+
+.sales-action-card:active {
+  transform: scale(.96);
+}
+
+.sales-action-card.sales-action-primary {
+  background: linear-gradient(135deg, #4A2922, #5a352c);
+  border-color: #4A2922;
+  box-shadow: 0 8px 28px rgba(74, 41, 34, .22);
+}
+
+.sales-action-primary span {
+  color: #ffffff;
+}
+
+.sales-action-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #fff7ed;
+  color: #B55925;
+  font-size: 0;
+}
+
+.sales-action-primary .sales-action-icon {
+  background: rgba(255, 255, 255, .15);
+  color: #ffffff;
+}
+
+/* Visits Section */
+.sales-visits-section {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.sales-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 .1rem;
+}
+
+.sales-section-header h2 {
+  margin: 0;
+  font-size: .95rem;
+  font-weight: 800;
+  color: #171717;
+}
+
+.sales-section-link {
+  font-size: .78rem;
+  color: #B55925;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sales-visits-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.sales-visit-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  background: transparent;
+  border: 1px dashed rgba(74, 41, 34, .22);
+  border-radius: 16px;
+  padding: .85rem 1rem;
+  transition: all .15s;
+}
+
+.sales-visit-card:hover {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(74, 41, 34, .35);
+}
+
+.sales-visit-card.done {
+  opacity: .75;
+}
+
+.sales-visit-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sales-visit-status-dot.done {
+  background: #22c55e;
+}
+
+.sales-visit-status-dot.active {
+  background: #B55925;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .4;
+  }
+}
+
+.sales-visit-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.sales-visit-content h3 {
+  margin: 0 0 .15rem;
+  font-size: .875rem;
+  font-weight: 700;
+  color: #171717;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sales-visit-content p {
+  margin: 0;
+  font-size: .75rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sales-visit-outcome {
+  font-size: .72rem;
+  font-weight: 600;
+  margin-top: .15rem;
+  display: block;
+}
+
+.sales-visit-time {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  color: #6b7280;
+  font-size: .73rem;
+  white-space: nowrap;
+}
+
+.sales-visits-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.sales-visit-skeleton-item {
+  height: 72px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1px dashed rgba(74, 41, 34, .22);
+  position: relative;
+  overflow: hidden;
+}
+
+.sales-visit-skeleton-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(181, 89, 37, .08) 50%, transparent 100%);
+  animation: shimmer 1.6s infinite;
+}
+
+/* Empty state in sales */
+.sales-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .65rem;
+  background: transparent;
+  border: 1px dashed rgba(74, 41, 34, .22);
+  border-radius: 18px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.sales-empty-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #fff7ed;
+  color: #B55925;
+  opacity: .6;
+}
+
+.sales-empty-state p {
+  margin: 0;
+  color: #6b7280;
+  font-size: .85rem;
+}
+
+.sales-empty-btn {
+  background: #fff7ed;
+  border: 1px solid rgba(74, 41, 34, .14);
+  color: #B55925;
+  border-radius: 12px;
+  padding: .55rem 1.25rem;
+  font-size: .82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all .2s;
+}
+
+.sales-empty-btn:hover {
+  background: #fff7ed;
+}
+
+.sales-step-card {
+  background: #ffffff;
+  border: 1px solid rgba(74, 41, 34, .14);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
+}
+
+.sales-step-card h2 {
+  margin: 0 0 1rem;
+  color: #171717;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.sales-camera-frame {
+  position: relative;
+  overflow: hidden;
+  background: #40231E;
+  border: 1px solid rgba(74, 41, 34, .14);
+  border-radius: 18px;
+  margin-bottom: 1rem;
+}
+
+.sales-message {
+  background: #dff5ea;
+  color: #4fa87e;
+  border: 1px solid #bfead4;
+  border-radius: 14px;
+  padding: .75rem .9rem;
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+.sales-danger-btn {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: .45rem;
+  background: #ef7070;
+  border: 1px solid #ef7070;
+  color: #fff;
+  padding: 1rem;
+  border-radius: 1rem;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+
+.sales-danger-btn:hover:not(:disabled) {
+  background: #c03838;
+}
+
+.sales-danger-btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.sales-note-card {
+  background: #ffffff;
+  border: 1px solid rgba(74, 41, 34, .14);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
+}

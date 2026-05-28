@@ -1,0 +1,221 @@
+.platform-shell {
+  min-height: 100vh;
+  color: var(--platform-text);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(139, 92, 246, 0.34), transparent 34%),
+    radial-gradient(circle at 88% 15%, rgba(6, 182, 212, 0.24), transparent 31%),
+    linear-gradient(135deg, #070a13 0%, #101827 54%, #050712 100%);
+}
+
+.platform-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--platform-border);
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(22px);
+  transition: width .25s ease;
+}
+
+.platform-sidebar-open {
+  width: 292px;
+}
+
+.platform-sidebar-closed {
+  width: 92px;
+}
+
+.platform-brand {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--platform-border);
+}
+
+.platform-brand-icon,
+.platform-avatar,
+.platform-company-avatar,
+.platform-company-avatar-sm,
+.platform-stat-icon,
+.platform-plan-icon,
+.admin-user-avatar,
+.admin-role-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--platform-primary), var(--platform-primary-2));
+  color: #fff;
+  box-shadow: 0 16px 35px rgba(6, 182, 212, .18);
+}
+
+.platform-brand-icon {
+  width: 44px;
+  height: 44px;
+}
+
+.platform-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.platform-brand-name {
+  font-weight: 900;
+  letter-spacing: -.03em;
+}
+
+.platform-brand-role {
+  margin-top: .25rem;
+  font-size: .72rem;
+  color: var(--platform-subtle);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+
+.platform-toggle-btn,
+.platform-btn-icon,
+.admin-btn-icon-sm {
+  border: 1px solid var(--platform-border);
+  background: rgba(255, 255, 255, .06);
+  color: inherit;
+  border-radius: 13px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.platform-toggle-btn {
+  margin-left: auto;
+}
+
+.platform-toggle-btn:hover,
+.platform-btn-icon:hover,
+.admin-btn-icon-sm:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, .12);
+}
+
+.platform-nav {
+  padding: 1rem;
+  display: grid;
+  gap: .5rem;
+}
+
+.platform-nav-link {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  min-height: 46px;
+  padding: 0 .95rem;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  color: var(--platform-subtle);
+  text-decoration: none;
+  transition: .2s ease;
+}
+
+.platform-nav-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, .07);
+}
+
+.platform-nav-active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(139, 92, 246, .32), rgba(6, 182, 212, .18));
+  border-color: rgba(139, 92, 246, .38);
+}
+
+.platform-sidebar-footer {
+  margin-top: auto;
+  padding: 1rem;
+  position: relative;
+}
+
+.platform-user-area {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  cursor: pointer;
+  padding: .7rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.platform-avatar {
+  width: 42px;
+  height: 42px;
+  font-weight: 900;
+}
+
+.platform-user-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-user-info span {
+  color: var(--platform-subtle);
+  font-size: .8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.platform-profile-menu {
+  position: absolute;
+  bottom: 76px;
+  left: 1rem;
+  right: 1rem;
+  border: 1px solid var(--platform-border);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, .96);
+  backdrop-filter: blur(18px);
+  padding: .45rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+}
+
+.platform-profile-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  border: 0;
+  border-radius: 12px;
+  padding: .7rem;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+}
+
+.platform-profile-item:hover {
+  background: rgba(255, 255, 255, .08);
+}
+
+.platform-profile-danger {
+  color: var(--platform-danger);
+}
+
+.platform-main {
+  min-height: 100vh;
+  padding: 2rem;
+  transition: padding-left .25s ease;
+}
+
+.platform-main-open {
+  padding-left: 324px;
+}
+
+.platform-main-closed {
+  padding-left: 124px;
+}
+
+.platform-page {
+  max-width: 1240px;
+  margin: 0 auto;
+}

@@ -1,0 +1,33 @@
+.brand-card {
+  border: 1px solid rgba(74, 41, 34, 0.09);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 22px 60px rgba(64, 35, 30, 0.10);
+}
+
+.brand-glass {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(22px);
+}
+
+.brand-button {
+  background: linear-gradient(135deg, var(--brand-accent), #cf6f2e);
+  color: white;
+  box-shadow: 0 16px 32px rgba(181, 89, 37, 0.28);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.brand-button:hover {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  box-shadow: 0 20px 42px rgba(181, 89, 37, 0.34);
+}
+
+.mobile-shell {
+  width: 100%;
+  max-width: 28rem;
+  min-height: 100vh;
+  background: #ffffff;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.32);
+}

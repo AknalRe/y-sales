@@ -90,12 +90,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden auto;
-  background: #3b1f1a;
+  background: var(--brand-darker);
   padding: 0;
   transition: width 260ms ease;
 
   &-open {
-    width: 18.5rem;
+    width: 21.5rem;
   }
 
   &-closed {
@@ -151,7 +151,7 @@
       box-shadow: none;
 
       .admin-nav-icon {
-        background: #b55925;
+        background: var(--admin-accent);
         color: #ffffff;
       }
     }
@@ -175,9 +175,25 @@
 }
 
 #admin-sidebar-toggle {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  backdrop-filter: blur(8px);
+  transition: all 200ms ease;
+
+  &:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.08);
+  }
 }
 
 // ─── Company Card ────────────────────────────────────────────────────────
@@ -299,10 +315,10 @@
 
 .admin-nav-active {
   color: #ffffff;
-  background: #b55925;
+  background: var(--admin-accent);
 
   &:hover {
-    background: #c4632e;
+    background: var(--admin-accent-hover);
   }
 
   .admin-nav-icon {
@@ -327,6 +343,9 @@
   flex: 1;
   font-weight: 800;
   font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-nav-badge {
@@ -406,7 +425,7 @@
   transition: padding-left 260ms ease;
 
   &-open {
-    padding-left: 18.5rem;
+    padding-left: 21.5rem;
   }
 
   &-closed {
@@ -1025,8 +1044,16 @@
   }
 
   #admin-sidebar-toggle {
-    color: var(--admin-foreground);
+    color: var(--admin-muted);
     background: var(--admin-surface);
+    border-color: var(--admin-border);
+
+    &:hover {
+      color: var(--admin-foreground);
+      background: var(--admin-surface-hover);
+      border-color: var(--admin-border-strong);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
   }
 
   .admin-nav-section p {

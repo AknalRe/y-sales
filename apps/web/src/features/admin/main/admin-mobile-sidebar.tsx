@@ -16,11 +16,21 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
 
   return (
     <div className="fixed inset-0 z-[100] flex">
-      <div className="fixed inset-0  backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-      <div className="relative flex w-4/5 max-w-xs flex-col bg-[#3B1F1A] h-full shadow-2xl animate-in slide-in-from-left">
-        <div className="flex items-center justify-between p-4 border-b border-b-[#4e2b25]">
-          <h2 className="text-lg font-bold text-white">Mahasura Mobile</h2>
-          <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+      <div className="fixed inset-0 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setMobileMenuOpen(false)} />
+      <div
+        className="relative flex w-4/5 max-w-xs flex-col h-full shadow-2xl animate-in slide-in-from-left"
+        style={{ background: 'var(--admin-surface)' }}
+      >
+        <div
+          className="flex items-center justify-between p-4"
+          style={{ borderBottom: '1px solid var(--admin-border)' }}
+        >
+          <h2 className="text-lg font-bold" style={{ color: 'var(--admin-foreground)' }}>Mahasura</h2>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="p-2 rounded-full"
+            style={{ color: 'var(--admin-muted)' }}
+          >
             <span className="sr-only">Close menu</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
@@ -29,7 +39,12 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
         <nav className="flex-1 overflow-y-auto p-4 space-y-6">
           {navSections.map((section) => (
             <div key={section.title}>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-white">{section.title}</h3>
+              <h3
+                className="mb-2 text-xs font-semibold uppercase tracking-wider"
+                style={{ color: 'var(--admin-muted)' }}
+              >
+                {section.title}
+              </h3>
               <ul className="space-y-1">
                 {section.items.map((item) => {
                   const Icon = item.handle.icon;
@@ -40,18 +55,14 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
                       <Link
                         to={href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${active
-                          ? 'text-white bg-[#B55925]'
-                          : 'text-white'
-                          }`}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
+                        style={{
+                          color: active ? '#ffffff' : 'var(--admin-text)',
+                          background: active ? 'var(--admin-accent)' : 'transparent',
+                        }}
                       >
-                        <Icon size={18} className={active ? 'text-white' : 'text-white'} />
+                        <Icon size={18} style={{ color: active ? '#ffffff' : 'var(--admin-muted)' }} />
                         {item.handle.label}
-                        {/* {item.handle.badge && (
-                          <span className="ml-auto rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                            {item.handle.badge}
-                          </span>
-                        )} */}
                       </Link>
                     </li>
                   );

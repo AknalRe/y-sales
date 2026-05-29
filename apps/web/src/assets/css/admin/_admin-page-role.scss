@@ -27,7 +27,7 @@
 
   .admin-user-code {
     font-size: .7rem;
-    color: var(--muted-foreground);
+    color: var(--admin-muted);
     margin-top: 1px;
   }
 
@@ -111,7 +111,7 @@
   .admin-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(15, 23, 42, .4);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -125,7 +125,7 @@
     border-radius: 20px;
     width: 100%;
     max-width: 500px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--admin-shadow-2xl);
     border: 1px solid var(--admin-border);
     overflow: hidden;
 

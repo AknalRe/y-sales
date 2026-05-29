@@ -6,7 +6,7 @@
     border-radius: 24px !important;
     background: var(--admin-bg-card) !important;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .03) !important;
 }
 
 .admin-table {
@@ -14,33 +14,63 @@
     min-width: max-content;
     border-collapse: collapse;
 
-    th {
-        text-align: left;
-        color: #64748b;
-        font-size: .78rem;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        padding: 1rem;
-        border-bottom: 1px solid #e2e8f0;
+    thead {
+
+        th,
+        [data-slot="table-head"] {
+            text-align: left;
+            color: var(--admin-table-thead-text, var(--admin-muted)) !important;
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 1rem;
+            border-bottom: 1px solid var(--admin-border);
+            background: transparent !important;
+            height: auto;
+        }
+
+        tr,
+        [data-slot="table-row"] {
+            background: transparent !important;
+
+            &:hover {
+                background: transparent !important;
+            }
+        }
     }
 
-    td {
+    td,
+    [data-slot="table-cell"] {
         padding: 1rem;
-        border-bottom: 1px solid rgba(148, 163, 184, .09);
+        border-bottom: 1px solid var(--admin-border-subtle);
         vertical-align: middle;
+        color: var(--admin-text);
+        font-size: .875rem;
+        transition: background .25s ease;
     }
 
-    tr:hover td {
-        background: #f8fafc;
+    tbody tr:hover td,
+    tbody [data-slot="table-row"]:hover [data-slot="table-cell"] {
+        background: var(--admin-table-row-hover);
+    }
+
+    [data-slot="table-row"] {
+        border-bottom-color: var(--admin-border-subtle);
+        transition: background .25s ease;
+
+        &:hover {
+            background: var(--admin-table-row-hover) !important;
+        }
     }
 }
 
 .admin-table-empty {
     text-align: center;
-    color: #64748b;
+    color: var(--admin-muted);
     padding: 2rem !important;
 }
 
 .admin-muted {
-    color: #64748b;
+    color: var(--admin-muted);
 }

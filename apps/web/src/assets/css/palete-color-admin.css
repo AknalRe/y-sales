@@ -43,6 +43,11 @@
     --admin-shadow-dropdown: 0 20px 50px rgba(15, 23, 42, 0.12);
     --admin-shadow-icon: 0 18px 35px rgba(15, 23, 42, 0.16);
 
+    /* Admin Table — Light Mode */
+    --admin-table-row-hover: rgba(148, 163, 184, .04);
+    --admin-table-thead-bg: transparent;
+    --admin-table-thead-text: var(--admin-muted);
+
     /* Admin Sidebar — Light Mode */
     --admin-sidebar-bg: var(--brand-darker);
     --admin-sidebar-text: rgba(255, 255, 255, .75);
@@ -109,6 +114,11 @@
     --admin-shadow-dropdown: 0 20px 50px rgba(0, 0, 0, 0.3);
     --admin-shadow-icon: 0 18px 35px rgba(0, 0, 0, 0.3);
 
+    /* Admin Table — Dark Mode */
+    --admin-table-row-hover: #101727;
+    --admin-table-thead-bg: transparent;
+    --admin-table-thead-text: var(--admin-muted);
+
     /* Admin Sidebar — Dark Mode */
     --admin-sidebar-bg: var(--admin-bg);
     --admin-sidebar-text: var(--admin-muted);
@@ -171,4 +181,9 @@
     --color-admin-accent-teal-light: var(--admin-accent-teal-light);
     --color-admin-accent-teal-bg: var(--admin-accent-teal-bg);
     --color-admin-accent-blue: var(--admin-accent-blue);
+
+    /* Admin Table */
+    --color-admin-table-row-hover: var(--admin-table-row-hover);
+    --color-admin-table-thead-bg: var(--admin-table-thead-bg);
+    --color-admin-table-thead-text: var(--admin-table-thead-text);
 }

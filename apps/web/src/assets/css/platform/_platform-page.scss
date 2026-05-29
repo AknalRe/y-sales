@@ -265,6 +265,7 @@
 
 // Platform company view
 .platform-company-view-banner {
+  margin: 1rem 0 2rem 0;
   display: flex;
   justify-content: space-between;
   gap: 1.5rem;
@@ -273,7 +274,6 @@
   border-radius: 28px;
   padding: 1.35rem 1.6rem;
   background: linear-gradient(135deg, #6b3a2e 0%, #4a2922 45%, #2a1510 100%);
-  box-shadow: 0 22px 55px rgba(74, 41, 34, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 
 .platform-company-view-copy {

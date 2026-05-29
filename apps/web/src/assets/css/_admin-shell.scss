@@ -90,7 +90,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden auto;
-  background: var(--brand-darker);
+  background: var(--admin-sidebar-bg);
   padding: 0;
   transition: width 260ms ease;
 
@@ -115,7 +115,7 @@
     .admin-sidebar-brand {
       padding: 0.5rem 0 1.25rem 0;
       justify-content: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--admin-sidebar-border);
       margin-bottom: 1.5rem;
     }
 
@@ -127,10 +127,10 @@
       &:hover {
         transform: none;
         background: transparent;
-        color: #ffffff;
+        color: var(--admin-sidebar-text-hover);
 
         .admin-nav-icon {
-          background: rgba(255, 255, 255, 0.15);
+          background: var(--admin-sidebar-icon-bg-active);
         }
       }
     }
@@ -143,7 +143,7 @@
       height: 2.8rem;
       width: 2.8rem;
       border-radius: 1rem;
-      background: rgba(15, 23, 42, 0.04);
+      background: var(--admin-sidebar-icon-bg);
     }
 
     .admin-nav-active {
@@ -151,7 +151,7 @@
       box-shadow: none;
 
       .admin-nav-icon {
-        background: var(--admin-accent);
+        background: var(--admin-sidebar-active-bg);
         color: #ffffff;
       }
     }
@@ -163,36 +163,36 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem 1.25rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--admin-sidebar-border);
   margin-bottom: 1rem;
 
   h2 {
     margin: 0;
-    color: #ffffff;
+    color: var(--admin-sidebar-brand-text);
     font-size: 1.2rem;
     font-weight: 600;
   }
 }
 
 #admin-sidebar-toggle {
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--admin-sidebar-toggle-text);
+  background: var(--admin-sidebar-toggle-bg);
+  border: 1px solid var(--admin-sidebar-toggle-border);
   border-radius: 0.85rem;
   backdrop-filter: blur(8px);
   transition: all 200ms ease;
 
   &:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--admin-sidebar-text-hover);
+    background: var(--admin-sidebar-toggle-hover-bg);
+    border-color: var(--admin-sidebar-toggle-hover-border);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
   }
 
   &:active {
     transform: translateY(0);
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--admin-sidebar-hover);
   }
 }
 
@@ -281,7 +281,7 @@
 
   p {
     margin: 1.1rem 0 0.55rem 0.65rem;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--admin-sidebar-label);
     font-size: 0.7rem;
     font-weight: 900;
     letter-spacing: 0.16em;
@@ -302,31 +302,31 @@
   margin-bottom: 0.4rem;
   border-radius: 1.15rem;
   padding: 0.8rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--admin-sidebar-text);
   text-decoration: none;
   transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease, color 180ms ease;
 
   &:hover {
     transform: translateX(3px);
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background: var(--admin-sidebar-hover);
+    color: var(--admin-sidebar-text-hover);
   }
 }
 
 .admin-nav-active {
-  color: #ffffff;
-  background: var(--admin-accent);
+  color: var(--admin-sidebar-text-hover);
+  background: var(--admin-sidebar-active-bg);
 
   &:hover {
-    background: var(--admin-accent-hover);
+    background: var(--admin-sidebar-active-hover);
   }
 
   .admin-nav-icon {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--admin-sidebar-icon-bg-active);
   }
 
   .admin-nav-badge {
-    background: rgba(255, 255, 255, 0.22);
+    background: var(--admin-sidebar-active-badge);
   }
 }
 
@@ -336,7 +336,7 @@
   width: 2rem;
   place-items: center;
   border-radius: 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--admin-sidebar-icon-bg);
 }
 
 .admin-nav-text {
@@ -350,29 +350,30 @@
 
 .admin-nav-badge {
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.08);
+  background: var(--admin-sidebar-badge-bg);
   padding: 0.22rem 0.48rem;
   font-size: 0.66rem;
   font-weight: 900;
+  color: var(--admin-sidebar-badge-text);
 }
 
 .admin-nav-footer {
   margin-top: auto;
   padding-top: 1rem;
-  border-top: 1px solid rgba(15, 23, 42, 0.05);
+  border-top: 1px solid var(--admin-sidebar-divider);
 }
 
 .admin-nav-danger {
-  color: #ef4444 !important;
+  color: var(--admin-sidebar-danger) !important;
 
   .admin-nav-icon {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    background: var(--admin-sidebar-danger-bg);
+    color: var(--admin-sidebar-danger);
   }
 
   &:hover {
-    background: rgba(239, 68, 68, 0.1) !important;
-    color: #ef4444 !important;
+    background: var(--admin-sidebar-danger-bg) !important;
+    color: var(--admin-sidebar-danger) !important;
   }
 }
 
@@ -880,20 +881,6 @@
     }
   }
 
-  .admin-nav-footer {
-    border-top-color: var(--admin-border-subtle);
-  }
-
-  .admin-sidebar-brand {
-    border-bottom-color: var(--admin-border-subtle);
-  }
-
-  .admin-search-mini {
-    background: var(--admin-surface);
-    box-shadow: inset 0 0 0 1px var(--admin-border);
-    color: var(--admin-muted);
-  }
-
   .admin-command-search {
     box-shadow: 0 16px 44px rgba(0, 0, 0, 0.2), inset 0 0 0 1px var(--admin-border);
     background: var(--admin-surface);
@@ -1016,131 +1003,8 @@
     }
   }
 
-  .admin-nav-danger {
-    .admin-nav-icon {
-      background: var(--admin-danger-soft);
-    }
-
-    &:hover {
-      background: var(--admin-danger-soft) !important;
-    }
-  }
-
   .admin-surface-header h2 {
     color: var(--admin-foreground);
-  }
-
-  // Sidebar — switch to cool navy/slate palette in dark mode
-  .admin-workspace {
-    background: var(--admin-bg);
-  }
-
-  .admin-sidebar-brand {
-    border-bottom-color: var(--admin-border);
-
-    h2 {
-      color: var(--admin-foreground);
-    }
-  }
-
-  #admin-sidebar-toggle {
-    color: var(--admin-muted);
-    background: var(--admin-surface);
-    border-color: var(--admin-border);
-
-    &:hover {
-      color: var(--admin-foreground);
-      background: var(--admin-surface-hover);
-      border-color: var(--admin-border-strong);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .admin-nav-section p {
-    color: var(--admin-muted);
-  }
-
-  .admin-nav-link {
-    color: var(--admin-muted);
-
-    &:hover {
-      background: var(--admin-surface-hover);
-      color: var(--admin-foreground);
-    }
-  }
-
-  .admin-nav-active {
-    background: var(--admin-accent);
-
-    &:hover {
-      background: var(--admin-accent-hover);
-    }
-  }
-
-  .admin-nav-icon {
-    background: var(--admin-surface);
-    color: var(--admin-muted);
-  }
-
-  .admin-nav-text {
-    color: var(--admin-text);
-  }
-
-  .admin-nav-badge {
-    background: var(--admin-surface-hover);
-    color: var(--admin-muted);
-  }
-
-  .admin-company-card {
-    h2 {
-      color: var(--admin-foreground);
-    }
-
-    span {
-      color: var(--admin-muted);
-    }
-  }
-
-  .admin-search-mini {
-    background: var(--admin-surface);
-    box-shadow: inset 0 0 0 1px var(--admin-border);
-    color: var(--admin-muted);
-  }
-
-  .admin-sync-card {
-    background: var(--admin-surface);
-    border-color: var(--admin-border);
-
-    strong {
-      color: var(--admin-foreground);
-    }
-
-    span {
-      color: var(--admin-muted);
-    }
-  }
-
-  .admin-sync-orb {
-    background: var(--admin-accent-shadow);
-    color: var(--admin-accent);
-  }
-
-  .admin-nav-footer {
-    border-top-color: var(--admin-border);
-  }
-
-  .admin-nav-danger {
-    color: var(--admin-danger-light) !important;
-
-    .admin-nav-icon {
-      background: var(--admin-danger-soft);
-      color: var(--admin-danger-light);
-    }
-
-    &:hover {
-      background: var(--admin-danger-soft) !important;
-      color: var(--admin-danger-light) !important;
-    }
   }
 
   // Scrollbar within admin shell
@@ -1148,30 +1012,6 @@
   .admin-content-grid::-webkit-scrollbar-thumb,
   .admin-ops-panel::-webkit-scrollbar-thumb {
     background: var(--admin-scrollbar);
-  }
-
-  // Sidebar closed state
-  .admin-workspace-closed {
-    .admin-nav-link {
-      &:hover {
-        color: var(--admin-foreground);
-
-        .admin-nav-icon {
-          background: var(--admin-surface-hover);
-        }
-      }
-    }
-
-    .admin-nav-active {
-      .admin-nav-icon {
-        background: var(--admin-accent);
-        color: #fff;
-      }
-    }
-
-    .admin-nav-icon {
-      background: var(--admin-surface);
-    }
   }
 }
 

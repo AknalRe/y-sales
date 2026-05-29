@@ -39,6 +39,30 @@
     --admin-focus-ring: #7c3aed;
     --admin-scrollbar: #966556;
 
+    /* Admin Sidebar — Light Mode */
+    --admin-sidebar-bg: var(--brand-darker);
+    --admin-sidebar-text: rgba(255, 255, 255, .75);
+    --admin-sidebar-text-hover: #ffffff;
+    --admin-sidebar-icon-bg: rgba(255, 255, 255, .1);
+    --admin-sidebar-icon-bg-active: rgba(255, 255, 255, .15);
+    --admin-sidebar-hover: rgba(255, 255, 255, .08);
+    --admin-sidebar-active-bg: #B55925;
+    --admin-sidebar-active-hover: #c4632e;
+    --admin-sidebar-active-badge: rgba(255, 255, 255, .22);
+    --admin-sidebar-badge-bg: rgba(15, 23, 42, .08);
+    --admin-sidebar-badge-text: rgba(255, 255, 255, .75);
+    --admin-sidebar-label: rgba(255, 255, 255, .45);
+    --admin-sidebar-border: rgba(255, 255, 255, .08);
+    --admin-sidebar-divider: rgba(15, 23, 42, .05);
+    --admin-sidebar-brand-text: #ffffff;
+    --admin-sidebar-toggle-bg: rgba(255, 255, 255, .06);
+    --admin-sidebar-toggle-border: rgba(255, 255, 255, .08);
+    --admin-sidebar-toggle-text: rgba(255, 255, 255, .7);
+    --admin-sidebar-toggle-hover-bg: rgba(255, 255, 255, .12);
+    --admin-sidebar-toggle-hover-border: rgba(255, 255, 255, .15);
+    --admin-sidebar-danger: #ef4444;
+    --admin-sidebar-danger-bg: rgba(239, 68, 68, .1);
+
     /* Platform (SaaS) — Light Mode */
     --platform-success: #22c55e;
     --platform-warning: #f59e0b;
@@ -100,6 +124,30 @@
     --admin-success-soft: rgba(134, 239, 172, .15);
     --admin-focus-ring: #a78bfa;
     --admin-scrollbar: #475569;
+
+    /* Admin Sidebar — Dark Mode */
+    --admin-sidebar-bg: var(--admin-bg);
+    --admin-sidebar-text: var(--admin-muted);
+    --admin-sidebar-text-hover: var(--admin-foreground);
+    --admin-sidebar-icon-bg: rgba(148, 163, 184, .1);
+    --admin-sidebar-icon-bg-active: rgba(148, 163, 184, .15);
+    --admin-sidebar-hover: rgba(148, 163, 184, .08);
+    --admin-sidebar-active-bg: var(--admin-accent);
+    --admin-sidebar-active-hover: var(--admin-accent-hover);
+    --admin-sidebar-active-badge: rgba(148, 163, 184, .22);
+    --admin-sidebar-badge-bg: rgba(148, 163, 184, .1);
+    --admin-sidebar-badge-text: var(--admin-muted);
+    --admin-sidebar-label: var(--admin-muted-dim);
+    --admin-sidebar-border: var(--admin-border);
+    --admin-sidebar-divider: var(--admin-border-subtle);
+    --admin-sidebar-brand-text: var(--admin-foreground);
+    --admin-sidebar-toggle-bg: rgba(148, 163, 184, .06);
+    --admin-sidebar-toggle-border: var(--admin-border);
+    --admin-sidebar-toggle-text: var(--admin-muted);
+    --admin-sidebar-toggle-hover-bg: var(--admin-surface-hover);
+    --admin-sidebar-toggle-hover-border: var(--admin-border-strong);
+    --admin-sidebar-danger: var(--admin-danger);
+    --admin-sidebar-danger-bg: var(--admin-danger-soft);
 
     /* Platform (SaaS) — Dark Mode */
     --platform-success: #63dc98;

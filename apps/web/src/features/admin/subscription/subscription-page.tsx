@@ -136,7 +136,7 @@ export function SubscriptionPage() {
       {loading ? (
         <div className="admin-loading">Memuat info subscription...</div>
       ) : !sub ? (
-        <div className="admin-card" style={{ textAlign: 'center', padding: '3rem' }}>
+        <div className="admin-card text-center" style={{ padding: '3rem' }}>
           <CreditCard size={40} style={{ color: 'var(--admin-text)', margin: '0 auto .75rem' }} />
           <h2 style={{ color: 'var(--admin-muted)', marginBottom: '.5rem' }}>Tidak ada subscription aktif</h2>
           <p style={{ color: 'var(--admin-muted-dim)', fontSize: '.875rem' }}>Hubungi admin platform untuk mengaktifkan subscription Anda.</p>
@@ -159,12 +159,12 @@ export function SubscriptionPage() {
                     </span>
                   </div>
                   {plan?.description && (
-                    <p className="m-0 text-sm text-[var(--admin-muted)]">{plan.description}</p>
+                    <p className="m-0 text-sm text-admin-muted">{plan.description}</p>
                   )}
                 </div>
                 {plan && (
                   <div className="text-right">
-                    <div className="text-[0.72rem] uppercase tracking-[0.06em] text-[var(--admin-muted)]">Harga Bulanan</div>
+                    <div className="text-[0.72rem] uppercase tracking-[0.06em] text-admin-muted">Harga Bulanan</div>
                     <div style={{ color: planStyle.text }} className="text-[1.35rem] font-extrabold">{formatRp(plan.priceMonthly)}</div>
                   </div>
                 )}
@@ -179,12 +179,12 @@ export function SubscriptionPage() {
                 </div>
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2.5">
                   {Object.entries(limits).map(([key, val]) => (
-                    <div key={key} className="bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] rounded-[14px] p-3.5 px-4">
-                      <div className="flex items-center gap-1.5 text-[var(--admin-muted)] text-[0.73rem] uppercase tracking-[0.07em] mb-1.5">
+                    <div key={key} className="bg-admin-surface-hover border border-admin-border rounded-[14px] p-3.5 px-4">
+                      <div className="flex items-center gap-1.5 text-admin-muted text-[0.73rem] uppercase tracking-[0.07em] mb-1.5">
                         {LIMIT_ICONS[key] ?? <Shield size={14} />}
                         {LIMIT_LABELS[key] ?? key}
                       </div>
-                      <div className="text-[1.5rem] font-extrabold text-[var(--admin-foreground)]">
+                      <div className="text-[1.5rem] font-extrabold text-admin-foreground">
                         {val === -1 ? '∞' : val.toLocaleString('id-ID')}
                       </div>
                     </div>
@@ -203,9 +203,9 @@ export function SubscriptionPage() {
                   {features.map(f => {
                     const info = FEATURE_LABELS[f];
                     return (
-                      <div key={f} className="flex items-center gap-2.5 py-2.5 px-3.5 bg-[var(--admin-success-soft)] border border-[var(--admin-success-soft)] rounded-xl">
-                        <CheckCircle2 size={16} className="text-[var(--admin-success)] shrink-0" />
-                        <span className="text-sm text-[var(--admin-text)]">
+                      <div key={f} className="flex items-center gap-2.5 py-2.5 px-3.5 bg-admin-success-soft border border-admin-success-soft rounded-xl">
+                        <CheckCircle2 size={16} className="text-admin-success shrink-0" />
+                        <span className="text-sm text-admin-text">
                           {info ? `${info.icon} ${info.label}` : f}
                         </span>
                       </div>
@@ -222,7 +222,7 @@ export function SubscriptionPage() {
             <div className="admin-card">
               <div className="admin-card-header mb-3 pb-2.5">
                 <h2>Info Periode</h2>
-                <Clock size={15} className="text-[var(--admin-muted)]" />
+                <Clock size={15} className="text-admin-muted" />
               </div>
               <div className="flex flex-col gap-2.5">
                 {[
@@ -234,8 +234,8 @@ export function SubscriptionPage() {
                   { label: 'Nominal Bayar', value: sub.amountPaid ? formatRp(sub.amountPaid) : '—' },
                 ].filter(r => r.value !== '—').map(({ label, value }) => (
                   <div key={label} className="flex justify-between items-center text-[0.82rem]">
-                    <span className="text-[var(--admin-muted)]">{label}</span>
-                    <span className="text-[var(--admin-text)] font-semibold">{value}</span>
+                    <span className="text-admin-muted">{label}</span>
+                    <span className="text-admin-text font-semibold">{value}</span>
                   </div>
                 ))}
               </div>
@@ -253,15 +253,15 @@ export function SubscriptionPage() {
                 <div style={{ color: daysLeft <= 7 ? 'var(--admin-danger-light)' : 'var(--admin-success)' }} className="text-[2.5rem] font-black leading-none">
                   {daysLeft}
                 </div>
-                <div className="text-[var(--admin-muted)] text-[0.78rem] mt-1">hari tersisa</div>
+                <div className="text-admin-muted text-[0.78rem] mt-1">hari tersisa</div>
                 {daysLeft <= 7 && daysLeft > 0 && (
-                  <div className="mt-3 text-[var(--admin-danger-light)] text-[0.78rem] bg-[var(--admin-danger-soft)] rounded-lg p-2">
+                  <div className="mt-3 text-admin-danger-light text-[0.78rem] bg-admin-danger-soft rounded-lg p-2">
                     <AlertCircle size={14} className="inline mr-1 align-[-2px]" />
                     Subscription Anda segera habis. Hubungi admin untuk perpanjangan.
                   </div>
                 )}
                 {daysLeft <= 0 && (
-                  <div className="mt-3 text-[var(--admin-danger-light)] text-[0.78rem] bg-[var(--admin-danger-soft)] rounded-lg p-2">
+                  <div className="mt-3 text-admin-danger-light text-[0.78rem] bg-admin-danger-soft rounded-lg p-2">
                     <AlertCircle size={14} className="inline mr-1 align-[-2px]" />
                     Subscription telah berakhir. Akses akan dibatasi.
                   </div>
@@ -270,9 +270,9 @@ export function SubscriptionPage() {
             )}
 
             {/* Contact */}
-            <div className="admin-card p-4 px-4.5">
-              <p className="mb-2.5 text-[var(--admin-muted)] text-[0.82rem]">Ingin upgrade atau ada pertanyaan?</p>
-              <a href="mailto:support@mahasura.id" className="flex items-center gap-1.5 bg-[var(--brand-cream)] border border-[var(--brand-border)] text-[var(--brand-accent)] rounded-[10px] py-2.5 px-4 text-[0.82rem] font-bold no-underline justify-center">
+            <div className="admin-card p-4">
+              <p className="mb-2.5 text-admin-muted text-[0.82rem]">Ingin upgrade atau ada pertanyaan?</p>
+              <a href="mailto:support@mahasura.id" className="flex items-center gap-1.5 bg-brand-cream border border-brand-border text-brand-accent rounded-[10px] py-2.5 px-4 text-[0.82rem] font-bold no-underline justify-center">
                 <Mail size={15} /> Hubungi Tim Kami
               </a>
             </div>

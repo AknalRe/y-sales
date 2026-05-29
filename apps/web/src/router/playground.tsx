@@ -1,11 +1,12 @@
 import { FlaskConical, Box, Layout, ShieldCheck, Zap } from 'lucide-react';
 import { Placeholder, type RouteConfig } from './types';
 import Component from "@/features/playground/ui-component";
+import SamplePage from "@/features/playground/samples";
 // Playground routes for testing and samples (Similar to favorite.tsx in Clarice)
 export const playgroundRoutes: RouteConfig[] = [
   {
     path: 'playground/sample',
-    element: <Placeholder title="Sample Master" description="Kumpulan contoh implementasi fitur-fitur kompleks." />,
+    element: <SamplePage />,
     handle: {
       label: 'Samples',
       icon: FlaskConical,

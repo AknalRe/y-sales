@@ -99,10 +99,18 @@ export function RolesPage() {
         {loading ? (
           <>
             {[1, 2, 3].map(i => (
-              <div key={i} className="admin-card dashboard-skeleton-card" style={{ height: 140, marginBottom: 0 }}>
-                <div className="dashboard-skeleton-icon" />
-                <div className="dashboard-skeleton-title" />
-                <div className="dashboard-skeleton-text" />
+              <div key={i} className="admin-card admin-role-card" style={{ minHeight: 140 }}>
+                <div className="admin-role-card-header">
+                  <div className="admin-role-icon" style={{ background: 'var(--admin-surface-hover)', border: '1px solid var(--admin-border)' }}>
+                    <div style={{ width: 16, height: 16, borderRadius: 4, background: 'var(--admin-border)' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ width: '60%', height: 14, borderRadius: 4, background: 'var(--admin-border)', marginBottom: 6 }} />
+                    <div style={{ width: '35%', height: 10, borderRadius: 4, background: 'var(--admin-border-subtle)' }} />
+                  </div>
+                </div>
+                <div style={{ width: '90%', height: 10, borderRadius: 4, background: 'var(--admin-border-subtle)', marginTop: 8 }} />
+                <div style={{ width: '70%', height: 10, borderRadius: 4, background: 'var(--admin-border-subtle)', marginTop: 6 }} />
               </div>
             ))}
           </>

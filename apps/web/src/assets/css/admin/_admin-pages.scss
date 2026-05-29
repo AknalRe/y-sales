@@ -225,7 +225,7 @@
   }
 
   .dashboard-skeleton-icon {
-    background: #f1f5f9;
+    background: var(--admin-surface-hover);
     border-radius: 10px;
     height: 36px;
     width: 36px;
@@ -233,7 +233,7 @@
   }
 
   .dashboard-skeleton-title {
-    background: #f1f5f9;
+    background: var(--admin-surface-hover);
     border-radius: 6px;
     height: 32px;
     width: 60%;
@@ -241,7 +241,7 @@
   }
 
   .dashboard-skeleton-text {
-    background: #f8fafc;
+    background: var(--admin-border-subtle);
     border-radius: 4px;
     height: 14px;
     width: 80%;
@@ -349,7 +349,7 @@
   }
 
   .dashboard-summary-skeleton {
-    background: #f8fafc;
+    background: var(--admin-surface-hover);
     border-radius: 16px;
     height: 48px;
   }
@@ -793,12 +793,12 @@
     gap: .7rem;
     font-size: 1.5rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--admin-foreground);
   }
 
   .admin-page-subtitle {
     margin: .25rem 0 0;
-    color: #64748b;
+    color: var(--admin-muted);
     font-size: .95rem;
   }
 
@@ -810,7 +810,7 @@
     font-size: clamp(1.8rem, 3vw, 2.75rem);
     line-height: 1;
     letter-spacing: -.05em;
-    color: #0f172a;
+    color: var(--admin-foreground);
   }
 
   .platform-page-subtitle {
@@ -820,7 +820,7 @@
 
   .admin-page-hero-subtitle {
     margin: .65rem 0 0;
-    color: #64748b;
+    color: var(--admin-muted);
   }
 
   .platform-page-actions,

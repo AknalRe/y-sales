@@ -138,7 +138,7 @@ export function AdminShell() {
           </div>
         </header>
 
-        <div className="admin-content-grid">
+        <div className="admin-content">
           <PlatformCompanyViewBanner />
           <Outlet />
         </div>

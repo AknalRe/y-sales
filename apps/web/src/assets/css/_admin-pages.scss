@@ -422,6 +422,12 @@
 
   .admin-stat-icon {
     flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .admin-filter-row {
@@ -643,6 +649,7 @@
 
   .admin-table {
     width: 100%;
+    min-width: max-content;
     border-collapse: collapse;
 
     th {

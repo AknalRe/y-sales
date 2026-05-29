@@ -56,36 +56,6 @@
     --warning-foreground: oklch(0.205 0 0);
     --info: oklch(0.588 0.158 241.966);
     --info-foreground: oklch(0.985 0 0);
-
-    /* Brand (login / marketing) */
-    --brand-primary: #4A2922;
-    --brand-secondary: #966556;
-    --brand-accent: #B55925;
-    --brand-dark: #40231E;
-    --brand-darker: #542F25;
-    --brand-muted: #59252D;
-    --brand-cream: #fff7ed;
-    --brand-surface: #ffffff;
-    --brand-page: #f5f5f5;
-    --brand-soft: #fff7ed;
-    --brand-border: rgba(74, 41, 34, .14);
-
-    /* Admin UI */
-    --admin-subtle: #64748b;
-
-    /* Platform (SaaS dark UI) */
-    --platform-success: #63dc98;
-    --platform-warning: #ffbe4a;
-    --platform-danger: #ff6363;
-    --platform-muted: var(--muted-foreground);
-    --platform-bg: #070a13;
-    --platform-panel: rgba(15, 23, 42, 0.72);
-    --platform-panel-strong: rgba(15, 23, 42, 0.92);
-    --platform-border: rgba(148, 163, 184, 0.16);
-    --platform-text: #f8fafc;
-    --platform-subtle: var(--muted-foreground);
-    --platform-primary: #8b5cf6;
-    --platform-primary-2: #06b6d4;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -148,6 +118,7 @@
     --warning-foreground: oklch(0.205 0 0);
     --info: oklch(0.588 0.158 241.966);
     --info-foreground: oklch(0.985 0 0);
+
 }
 
 @theme inline {
@@ -216,33 +187,4 @@
     --color-info: var(--info);
     --color-info-foreground: var(--info-foreground);
 
-    /* Brand */
-    --color-brand-primary: var(--brand-primary);
-    --color-brand-secondary: var(--brand-secondary);
-    --color-brand-accent: var(--brand-accent);
-    --color-brand-dark: var(--brand-dark);
-    --color-brand-darker: var(--brand-darker);
-    --color-brand-muted: var(--brand-muted);
-    --color-brand-cream: var(--brand-cream);
-    --color-brand-surface: var(--brand-surface);
-    --color-brand-page: var(--brand-page);
-    --color-brand-soft: var(--brand-soft);
-    --color-brand-border: var(--brand-border);
-
-    /* Admin */
-    --color-admin-subtle: var(--admin-subtle);
-
-    /* Platform */
-    --color-platform-bg: var(--platform-bg);
-    --color-platform-panel: var(--platform-panel);
-    --color-platform-panel-strong: var(--platform-panel-strong);
-    --color-platform-border: var(--platform-border);
-    --color-platform-text: var(--platform-text);
-    --color-platform-subtle: var(--platform-subtle);
-    --color-platform-primary: var(--platform-primary);
-    --color-platform-primary-2: var(--platform-primary-2);
-    --color-platform-danger: var(--platform-danger);
-    --color-platform-success: var(--platform-success);
-    --color-platform-warning: var(--platform-warning);
-    --color-platform-muted: var(--platform-muted);
 }

@@ -137,20 +137,20 @@ export function SubscriptionPage() {
         <div className="admin-loading">Memuat info subscription...</div>
       ) : !sub ? (
         <div className="admin-card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <CreditCard size={40} style={{ color: '#334155', margin: '0 auto .75rem' }} />
-          <h2 style={{ color: '#94a3b8', marginBottom: '.5rem' }}>Tidak ada subscription aktif</h2>
-          <p style={{ color: '#475569', fontSize: '.875rem' }}>Hubungi admin platform untuk mengaktifkan subscription Anda.</p>
+          <CreditCard size={40} style={{ color: 'var(--admin-text)', margin: '0 auto .75rem' }} />
+          <h2 style={{ color: 'var(--admin-muted)', marginBottom: '.5rem' }}>Tidak ada subscription aktif</h2>
+          <p style={{ color: 'var(--admin-muted-dim)', fontSize: '.875rem' }}>Hubungi admin platform untuk mengaktifkan subscription Anda.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1rem', alignItems: 'start' }}>
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 items-start">
           {/* Main Info */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="flex flex-col gap-4">
             {/* Plan Header */}
             <div className="admin-card" style={{ borderColor: planStyle.border, background: planStyle.bg, padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <div className="flex items-center gap-4 flex-wrap">
                 <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>{planStyle.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem', flexWrap: 'wrap', marginBottom: '.35rem' }}>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2.5 flex-wrap mb-1">
                     <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: planStyle.text, textTransform: 'uppercase', letterSpacing: '-.02em' }}>
                       Plan {plan?.name ?? sub.planCode}
                     </h2>
@@ -159,13 +159,13 @@ export function SubscriptionPage() {
                     </span>
                   </div>
                   {plan?.description && (
-                    <p style={{ margin: 0, color: '#94a3b8', fontSize: '.875rem' }}>{plan.description}</p>
+                    <p className="m-0 text-sm text-[var(--admin-muted)]">{plan.description}</p>
                   )}
                 </div>
                 {plan && (
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#64748b', fontSize: '.72rem', textTransform: 'uppercase', letterSpacing: '.06em' }}>Harga Bulanan</div>
-                    <div style={{ color: planStyle.text, fontSize: '1.35rem', fontWeight: 800 }}>{formatRp(plan.priceMonthly)}</div>
+                  <div className="text-right">
+                    <div className="text-[0.72rem] uppercase tracking-[0.06em] text-[var(--admin-muted)]">Harga Bulanan</div>
+                    <div style={{ color: planStyle.text }} className="text-[1.35rem] font-extrabold">{formatRp(plan.priceMonthly)}</div>
                   </div>
                 )}
               </div>
@@ -177,14 +177,14 @@ export function SubscriptionPage() {
                 <div className="admin-card-header">
                   <h2>Batas Penggunaan</h2>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '.65rem' }}>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2.5">
                   {Object.entries(limits).map(([key, val]) => (
-                    <div key={key} style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 14, padding: '.85rem 1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem', color: '#64748b', fontSize: '.73rem', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.4rem' }}>
+                    <div key={key} className="bg-[var(--admin-surface-hover)] border border-[var(--admin-border)] rounded-[14px] p-3.5 px-4">
+                      <div className="flex items-center gap-1.5 text-[var(--admin-muted)] text-[0.73rem] uppercase tracking-[0.07em] mb-1.5">
                         {LIMIT_ICONS[key] ?? <Shield size={14} />}
                         {LIMIT_LABELS[key] ?? key}
                       </div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>
+                      <div className="text-[1.5rem] font-extrabold text-[var(--admin-foreground)]">
                         {val === -1 ? '∞' : val.toLocaleString('id-ID')}
                       </div>
                     </div>
@@ -199,13 +199,13 @@ export function SubscriptionPage() {
                 <div className="admin-card-header">
                   <h2>Fitur Tersedia</h2>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '.5rem' }}>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2">
                   {features.map(f => {
                     const info = FEATURE_LABELS[f];
                     return (
-                      <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '.65rem', padding: '.65rem .85rem', background: 'rgba(52,211,153,.05)', border: '1px solid rgba(52,211,153,.12)', borderRadius: 12 }}>
-                        <CheckCircle2 size={16} style={{ color: '#34d399', flexShrink: 0 }} />
-                        <span style={{ fontSize: '.85rem', color: '#e2e8f0' }}>
+                      <div key={f} className="flex items-center gap-2.5 py-2.5 px-3.5 bg-[var(--admin-success-soft)] border border-[var(--admin-success-soft)] rounded-xl">
+                        <CheckCircle2 size={16} className="text-[var(--admin-success)] shrink-0" />
+                        <span className="text-sm text-[var(--admin-text)]">
                           {info ? `${info.icon} ${info.label}` : f}
                         </span>
                       </div>
@@ -217,14 +217,14 @@ export function SubscriptionPage() {
           </div>
 
           {/* Side Panel */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+          <div className="flex flex-col gap-3">
             {/* Period Info */}
             <div className="admin-card">
-              <div className="admin-card-header" style={{ marginBottom: '.75rem', paddingBottom: '.65rem' }}>
+              <div className="admin-card-header mb-3 pb-2.5">
                 <h2>Info Periode</h2>
-                <Clock size={15} style={{ color: '#64748b' }} />
+                <Clock size={15} className="text-[var(--admin-muted)]" />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
+              <div className="flex flex-col gap-2.5">
                 {[
                   { label: 'Billing Cycle', value: sub.billingCycle === 'monthly' ? 'Bulanan' : sub.billingCycle === 'yearly' ? 'Tahunan' : 'Seumur Hidup' },
                   { label: 'Mulai Periode', value: formatDate(sub.currentPeriodStart) },
@@ -233,9 +233,9 @@ export function SubscriptionPage() {
                   { label: 'Dibayar Pada', value: formatDate(sub.paidAt) },
                   { label: 'Nominal Bayar', value: sub.amountPaid ? formatRp(sub.amountPaid) : '—' },
                 ].filter(r => r.value !== '—').map(({ label, value }) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '.82rem' }}>
-                    <span style={{ color: '#64748b' }}>{label}</span>
-                    <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{value}</span>
+                  <div key={label} className="flex justify-between items-center text-[0.82rem]">
+                    <span className="text-[var(--admin-muted)]">{label}</span>
+                    <span className="text-[var(--admin-text)] font-semibold">{value}</span>
                   </div>
                 ))}
               </div>
@@ -243,18 +243,26 @@ export function SubscriptionPage() {
 
             {/* Days Remaining */}
             {daysLeft !== null && (
-              <div className="admin-card" style={{ textAlign: 'center', padding: '1.25rem', background: daysLeft <= 7 ? 'rgba(239,68,68,.08)' : 'rgba(52,211,153,.06)', borderColor: daysLeft <= 7 ? 'rgba(239,68,68,.2)' : 'rgba(52,211,153,.15)' }}>
-                <div style={{ fontSize: '2.5rem', fontWeight: 900, color: daysLeft <= 7 ? '#f87171' : '#34d399', lineHeight: 1 }}>{daysLeft}</div>
-                <div style={{ color: '#64748b', fontSize: '.78rem', marginTop: '.3rem' }}>hari tersisa</div>
+              <div
+                className="admin-card text-center p-5"
+                style={{
+                  background: daysLeft <= 7 ? 'var(--admin-danger-soft)' : 'var(--admin-success-soft)',
+                  borderColor: daysLeft <= 7 ? 'var(--admin-danger-soft)' : 'var(--admin-success-soft)',
+                }}
+              >
+                <div style={{ color: daysLeft <= 7 ? 'var(--admin-danger-light)' : 'var(--admin-success)' }} className="text-[2.5rem] font-black leading-none">
+                  {daysLeft}
+                </div>
+                <div className="text-[var(--admin-muted)] text-[0.78rem] mt-1">hari tersisa</div>
                 {daysLeft <= 7 && daysLeft > 0 && (
-                  <div style={{ marginTop: '.75rem', color: '#fca5a5', fontSize: '.78rem', background: 'rgba(239,68,68,.12)', borderRadius: 8, padding: '.5rem' }}>
-                    <AlertCircle size={14} style={{ display: 'inline', marginRight: '.25rem', verticalAlign: '-2px' }} />
+                  <div className="mt-3 text-[var(--admin-danger-light)] text-[0.78rem] bg-[var(--admin-danger-soft)] rounded-lg p-2">
+                    <AlertCircle size={14} className="inline mr-1 align-[-2px]" />
                     Subscription Anda segera habis. Hubungi admin untuk perpanjangan.
                   </div>
                 )}
                 {daysLeft <= 0 && (
-                  <div style={{ marginTop: '.75rem', color: '#f87171', fontSize: '.78rem', background: 'rgba(239,68,68,.12)', borderRadius: 8, padding: '.5rem' }}>
-                    <AlertCircle size={14} style={{ display: 'inline', marginRight: '.25rem', verticalAlign: '-2px' }} />
+                  <div className="mt-3 text-[var(--admin-danger-light)] text-[0.78rem] bg-[var(--admin-danger-soft)] rounded-lg p-2">
+                    <AlertCircle size={14} className="inline mr-1 align-[-2px]" />
                     Subscription telah berakhir. Akses akan dibatasi.
                   </div>
                 )}
@@ -262,9 +270,9 @@ export function SubscriptionPage() {
             )}
 
             {/* Contact */}
-            <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
-              <p style={{ margin: '0 0 .65rem', color: '#64748b', fontSize: '.82rem' }}>Ingin upgrade atau ada pertanyaan?</p>
-              <a href="mailto:support@mahasura.id" style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', borderRadius: 10, padding: '.6rem 1rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none', justifyContent: 'center' }}>
+            <div className="admin-card p-4 px-4.5">
+              <p className="mb-2.5 text-[var(--admin-muted)] text-[0.82rem]">Ingin upgrade atau ada pertanyaan?</p>
+              <a href="mailto:support@mahasura.id" className="flex items-center gap-1.5 bg-[var(--brand-cream)] border border-[var(--brand-border)] text-[var(--brand-accent)] rounded-[10px] py-2.5 px-4 text-[0.82rem] font-bold no-underline justify-center">
                 <Mail size={15} /> Hubungi Tim Kami
               </a>
             </div>

@@ -1,3 +1,14 @@
+// ─── Scrollbar ───────────────────────────────────────────────────────────
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--admin-scrollbar);
+  border-radius: 999px;
+}
+
 .admin-command-shell {
   min-height: 100vh;
   color: #172033;
@@ -783,45 +794,45 @@
 // ─── Dark Mode Overrides ─────────────────────────────────────────────────
 .dark {
   .admin-command-shell {
-    color: #e2e8f0;
-    background: #0f172a;
+    color: var(--admin-text);
+    background: var(--admin-bg);
   }
 
   .admin-topbar {
-    background: #1e293b;
-    border-bottom-color: #334155;
+    background: var(--admin-surface);
+    border-bottom-color: var(--admin-border);
 
     h1 {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
   }
 
   .admin-company-card {
     h2 {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
 
     span {
-      color: #94a3b8;
+      color: var(--admin-muted);
     }
   }
 
   .admin-user-copy {
     strong {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
 
     span {
-      color: #94a3b8;
+      color: var(--admin-muted);
     }
   }
 
   .admin-icon-button {
-    color: #94a3b8;
+    color: var(--admin-muted);
 
     &:hover {
-      background: #334155;
-      color: #f8fafc;
+      background: var(--admin-surface-hover);
+      color: var(--admin-foreground);
       box-shadow: 0 18px 35px rgba(0, 0, 0, 0.3);
     }
   }
@@ -832,169 +843,305 @@
   .admin-ops-panel,
   .admin-panel-block,
   .admin-alert-card {
-    border-color: #334155;
-    background: #1e293b;
+    border-color: var(--admin-border);
+    background: var(--admin-surface);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
   }
 
   .admin-sync-card {
     span {
-      color: #94a3b8;
+      color: var(--admin-muted);
     }
 
     strong {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
   }
 
   .admin-nav-footer {
-    border-top-color: rgba(255, 255, 255, 0.06);
+    border-top-color: var(--admin-border-subtle);
   }
 
   .admin-sidebar-brand {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
+    border-bottom-color: var(--admin-border-subtle);
   }
 
   .admin-search-mini {
-    background: #1e293b;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
+    background: var(--admin-surface);
+    box-shadow: inset 0 0 0 1px var(--admin-border);
+    color: var(--admin-muted);
   }
 
   .admin-command-search {
-    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    background: #1e293b;
-    color: #94a3b8;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.2), inset 0 0 0 1px var(--admin-border);
+    background: var(--admin-surface);
+    color: var(--admin-muted);
 
     input {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
 
     kbd {
-      background: #334155;
-      color: #94a3b8;
+      background: var(--admin-surface-hover);
+      color: var(--admin-muted);
     }
   }
 
   .admin-notification {
-    background: #1e293b;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    background: var(--admin-surface);
+    box-shadow: inset 0 0 0 1px var(--admin-border);
   }
 
   .admin-panel-profile {
     h3 {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
 
     p,
     span {
-      color: #94a3b8;
+      color: var(--admin-muted);
     }
   }
 
   .admin-panel-title {
-    color: #5eead4;
+    color: var(--admin-accent-light);
 
     h4 {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
   }
 
   .admin-panel-score {
-    color: #5eead4;
+    color: var(--admin-accent-light);
   }
 
   .admin-kicker {
-    color: #5eead4;
+    color: var(--admin-accent-light);
   }
 
   .admin-metric-row {
-    color: #94a3b8;
+    color: var(--admin-muted);
 
     strong {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
   }
 
   .admin-progress {
-    background: #334155;
+    background: var(--admin-border);
   }
 
   .admin-queue-item {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
+    border-bottom-color: var(--admin-border-subtle);
 
     strong {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
 
     small {
-      color: #94a3b8;
+      color: var(--admin-muted);
     }
   }
 
   .admin-alert-card {
-    color: #fbbf24;
-    background: rgba(245, 158, 11, 0.08);
+    color: var(--admin-accent);
+    background: var(--admin-accent-shadow);
 
     strong {
-      color: #fcd34d;
+      color: var(--admin-accent-light);
     }
 
     span {
-      color: #94a3b8;
+      color: var(--admin-muted);
     }
   }
 
   .admin-live-pill {
-    background: rgba(34, 197, 94, 0.12);
-    color: #86efac;
+    background: var(--admin-success-soft);
+    color: var(--admin-success);
   }
 
   .admin-profile-trigger:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--admin-surface-hover);
   }
 
   .admin-profile-dropdown {
-    background: #1e293b;
-    border-color: #334155;
+    background: var(--admin-surface);
+    border-color: var(--admin-border);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   }
 
   .admin-dropdown-header {
     strong {
-      color: #f8fafc;
+      color: var(--admin-foreground);
     }
 
     span {
-      color: #94a3b8;
+      color: var(--admin-muted);
     }
   }
 
   .admin-dropdown-divider {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--admin-border-subtle);
   }
 
   .admin-dropdown-item {
-    color: #94a3b8;
+    color: var(--admin-muted);
 
     &:hover {
-      background: rgba(255, 255, 255, 0.06);
-      color: #f8fafc;
+      background: var(--admin-surface-hover);
+      color: var(--admin-foreground);
     }
   }
 
   .admin-nav-danger {
     .admin-nav-icon {
-      background: rgba(239, 68, 68, 0.15);
+      background: var(--admin-danger-soft);
     }
 
     &:hover {
-      background: rgba(239, 68, 68, 0.15) !important;
+      background: var(--admin-danger-soft) !important;
     }
   }
 
   .admin-surface-header h2 {
-    color: #f8fafc;
+    color: var(--admin-foreground);
+  }
+
+  // Sidebar — switch to cool navy/slate palette in dark mode
+  .admin-workspace {
+    background: var(--admin-bg);
+  }
+
+  .admin-sidebar-brand {
+    border-bottom-color: var(--admin-border);
+
+    h2 {
+      color: var(--admin-foreground);
+    }
+  }
+
+  #admin-sidebar-toggle {
+    color: var(--admin-foreground);
+    background: var(--admin-surface);
+  }
+
+  .admin-nav-section p {
+    color: var(--admin-muted);
+  }
+
+  .admin-nav-link {
+    color: var(--admin-muted);
+
+    &:hover {
+      background: var(--admin-surface-hover);
+      color: var(--admin-foreground);
+    }
+  }
+
+  .admin-nav-active {
+    background: var(--admin-accent);
+
+    &:hover {
+      background: var(--admin-accent-hover);
+    }
+  }
+
+  .admin-nav-icon {
+    background: var(--admin-surface);
+    color: var(--admin-muted);
+  }
+
+  .admin-nav-text {
+    color: var(--admin-text);
+  }
+
+  .admin-nav-badge {
+    background: var(--admin-surface-hover);
+    color: var(--admin-muted);
+  }
+
+  .admin-company-card {
+    h2 {
+      color: var(--admin-foreground);
+    }
+
+    span {
+      color: var(--admin-muted);
+    }
+  }
+
+  .admin-search-mini {
+    background: var(--admin-surface);
+    box-shadow: inset 0 0 0 1px var(--admin-border);
+    color: var(--admin-muted);
+  }
+
+  .admin-sync-card {
+    background: var(--admin-surface);
+    border-color: var(--admin-border);
+
+    strong {
+      color: var(--admin-foreground);
+    }
+
+    span {
+      color: var(--admin-muted);
+    }
+  }
+
+  .admin-sync-orb {
+    background: var(--admin-accent-shadow);
+    color: var(--admin-accent);
+  }
+
+  .admin-nav-footer {
+    border-top-color: var(--admin-border);
+  }
+
+  .admin-nav-danger {
+    color: var(--admin-danger-light) !important;
+
+    .admin-nav-icon {
+      background: var(--admin-danger-soft);
+      color: var(--admin-danger-light);
+    }
+
+    &:hover {
+      background: var(--admin-danger-soft) !important;
+      color: var(--admin-danger-light) !important;
+    }
+  }
+
+  // Scrollbar within admin shell
+  .admin-workspace::-webkit-scrollbar-thumb,
+  .admin-content-grid::-webkit-scrollbar-thumb,
+  .admin-ops-panel::-webkit-scrollbar-thumb {
+    background: var(--admin-scrollbar);
+  }
+
+  // Sidebar closed state
+  .admin-workspace-closed {
+    .admin-nav-link {
+      &:hover {
+        color: var(--admin-foreground);
+
+        .admin-nav-icon {
+          background: var(--admin-surface-hover);
+        }
+      }
+    }
+
+    .admin-nav-active {
+      .admin-nav-icon {
+        background: var(--admin-accent);
+        color: #fff;
+      }
+    }
+
+    .admin-nav-icon {
+      background: var(--admin-surface);
+    }
   }
 }
 
@@ -1007,27 +1154,27 @@
   .text-slate-800,
   .text-gray-800,
   .text-black {
-    color: #f1f5f9 !important;
+    color: var(--admin-foreground) !important;
   }
 
   .text-slate-700,
   .text-gray-700 {
-    color: #cbd5e1 !important;
+    color: var(--admin-text) !important;
   }
 
   .text-slate-600,
   .text-gray-600 {
-    color: #94a3b8 !important;
+    color: var(--admin-muted) !important;
   }
 
   .text-slate-500,
   .text-gray-500 {
-    color: #64748b !important;
+    color: var(--admin-muted-dim) !important;
   }
 
   .text-slate-400,
   .text-gray-400 {
-    color: #475569 !important;
+    color: var(--admin-muted-dim) !important;
   }
 
   // Semantic text colors
@@ -1071,17 +1218,17 @@
 
   // Background colors
   .bg-white {
-    background: #172033 !important;
+    background: var(--admin-surface) !important;
   }
 
   .bg-slate-50,
   .bg-gray-50 {
-    background: #0f1729 !important;
+    background: var(--admin-bg) !important;
   }
 
   .bg-slate-100,
   .bg-gray-100 {
-    background: #1e293b !important;
+    background: var(--admin-surface) !important;
   }
 
   .bg-emerald-50 {
@@ -1111,12 +1258,12 @@
   // Border colors
   .border-slate-200,
   .border-gray-200 {
-    border-color: rgba(255, 255, 255, .08) !important;
+    border-color: var(--admin-border) !important;
   }
 
   .border-slate-300,
   .border-gray-300 {
-    border-color: rgba(255, 255, 255, .12) !important;
+    border-color: var(--admin-border-strong) !important;
   }
 
   // Shadows
@@ -1140,9 +1287,9 @@
   input:not(.admin-input),
   textarea:not(.admin-textarea),
   select:not(.admin-select) {
-    background: #172033 !important;
-    border-color: rgba(255, 255, 255, .08) !important;
-    color: #f1f5f9 !important;
+    background: var(--admin-surface) !important;
+    border-color: var(--admin-border) !important;
+    color: var(--admin-foreground) !important;
     color-scheme: dark;
   }
 }

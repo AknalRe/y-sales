@@ -37,6 +37,7 @@
     --admin-success: #4ade80;
     --admin-success-soft: rgba(34, 197, 94, .15);
     --admin-focus-ring: #7c3aed;
+    --admin-scrollbar: #966556;
 
     /* Platform (SaaS) — Light Mode */
     --platform-success: #22c55e;
@@ -98,6 +99,7 @@
     --admin-success: #86efac;
     --admin-success-soft: rgba(134, 239, 172, .15);
     --admin-focus-ring: #a78bfa;
+    --admin-scrollbar: #475569;
 
     /* Platform (SaaS) — Dark Mode */
     --platform-success: #63dc98;
@@ -158,6 +160,7 @@
     --color-admin-success: var(--admin-success);
     --color-admin-success-soft: var(--admin-success-soft);
     --color-admin-focus-ring: var(--admin-focus-ring);
+    --color-admin-scrollbar: var(--admin-scrollbar);
 
     /* Platform */
     --color-platform-bg: var(--platform-bg);

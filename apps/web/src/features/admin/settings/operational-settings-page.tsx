@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Camera, CheckCircle2, MapPin, Radar, Save, ShieldCheck, SlidersHorizontal, UserCheck } from 'lucide-react';
+import { Camera, CheckCircle2, MapPin, Radar, Save, ShieldCheck, SlidersHorizontal, UserCheck, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { getGeneralSettings, updateGeneralSettings, type GeneralSettings } from '@/lib/api/tenant';
 import { Spinner } from '@/components/ui';
@@ -68,21 +68,29 @@ export function OperationalSettingsPage() {
 
   return (
     <main className="admin-page">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-[22px] p-5" style={{ background: 'linear-gradient(135deg, #40231E, #4A2922)', color: '#ffffff', boxShadow: '0 18px 40px rgba(64, 35, 30, .18)' }}>
+      <div className="admin-page-header">
         <div>
-          <p className="inline-flex items-center gap-1.5 m-0 text-[0.78rem] font-extrabold uppercase tracking-[0.08em]" style={{ color: '#d8b6aa' }}>
-            <SlidersHorizontal size={15} /> Operational Rules
-          </p>
-          <h1 className="my-1 text-[1.55rem] leading-[1.15]">Pengaturan Operasional</h1>
-          <p className="m-0 max-w-[720px]" style={{ color: '#ead7d0' }}>Atur validasi visit, radius outlet, GPS, bukti transaksi, dan face verification untuk company ini.</p>
+          <h1 className="admin-page-title">
+            <SlidersHorizontal size={24} />
+            Pengaturan Operasional
+          </h1>
+          <p className="admin-page-subtitle">Atur validasi visit, radius outlet, GPS, bukti transaksi, dan face verification untuk company ini.</p>
         </div>
-        <button onClick={handleSave} disabled={saving} className="bg-[#B55925] hover:bg-[#c4632e] text-white border-none rounded-xl px-4 py-2.5 font-semibold cursor-pointer text-sm w-full sm:w-auto shrink-0 inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors" type="button">
+        <button onClick={handleSave} disabled={saving} className="admin-btn-primary" type="button">
           {saving ? <Spinner size={16} /> : <Save size={16} />} Simpan
         </button>
       </div>
 
-      {message && <div className="platform-alert platform-alert-success">{message}</div>}
-      {error && <div className="platform-alert platform-alert-error">{error}</div>}
+      {message && (
+        <div className="admin-alert admin-alert-success">
+          <CheckCircle2 size={15} /> {message}
+        </div>
+      )}
+      {error && (
+        <div className="admin-alert admin-alert-error">
+          <AlertTriangle size={15} /> {error}
+        </div>
+      )}
 
       <section className="settings-metrics">
         <label className="settings-number-card">

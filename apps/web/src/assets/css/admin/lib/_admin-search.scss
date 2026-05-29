@@ -4,22 +4,22 @@
     display: flex;
     align-items: center;
     gap: .7rem;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--admin-border-subtle);
     border-radius: 18px;
     padding: .85rem 1rem;
-    color: #64748b;
-    background: #ffffff;
+    color: var(--admin-muted);
+    background: var(--admin-bg-card);
     margin-bottom: 1rem;
 
     input {
         width: 100%;
         border: 0;
         outline: 0;
-        color: #0f172a;
+        color: var(--admin-foreground);
         background: transparent;
 
         &::placeholder {
-            color: var(--muted-foreground);
+            color: var(--admin-muted-dim);
         }
     }
 }
@@ -37,9 +37,9 @@
 }
 
 .admin-count-badge {
-    color: #64748b;
-    border: 1px solid #e2e8f0;
+    color: var(--admin-muted);
+    border: 1px solid var(--admin-border-subtle);
     padding: .65rem .9rem;
     border-radius: 999px;
-    background: #f1f5f9;
+    background: var(--admin-bg-card);
 }

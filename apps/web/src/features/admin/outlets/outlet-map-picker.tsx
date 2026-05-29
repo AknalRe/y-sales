@@ -12,7 +12,7 @@ const defaultCenter: L.LatLngExpression = [-6.2, 106.816666];
 
 const outletMarkerIcon = L.divIcon({
   className: '',
-  html: '<div style="width:22px;height:22px;border-radius:999px;background:#b55925;border:4px solid #fff;box-shadow:0 10px 24px rgba(15,23,42,.28);"></div>',
+  html: '<div style="width:22px;height:22px;border-radius:999px;background:var(--admin-accent,#d9580c);border:4px solid #fff;box-shadow:0 10px 24px rgba(15,23,42,.28);"></div>',
   iconSize: [22, 22],
   iconAnchor: [11, 11],
 });

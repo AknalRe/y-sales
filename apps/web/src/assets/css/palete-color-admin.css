@@ -16,10 +16,10 @@
     --admin-text: #334155;
     --admin-muted: #64748b;
     --admin-muted-dim: #475569;
-    --admin-accent: #B55925;
-    --admin-accent-hover: #c4632e;
-    --admin-accent-light: #cf6f2e;
-    --admin-accent-shadow: rgba(181, 89, 37, .18);
+    --admin-accent: #e8650a;
+    --admin-accent-hover: #f07a1a;
+    --admin-accent-light: #ff8c30;
+    --admin-accent-shadow: rgba(232, 101, 10, .2);
     --admin-danger: #ef4444;
     --admin-danger-light: #f87171;
     --admin-danger-bg: #fef2f2;
@@ -50,8 +50,8 @@
     --admin-sidebar-icon-bg: rgba(255, 255, 255, .1);
     --admin-sidebar-icon-bg-active: rgba(255, 255, 255, .15);
     --admin-sidebar-hover: rgba(255, 255, 255, .08);
-    --admin-sidebar-active-bg: #B55925;
-    --admin-sidebar-active-hover: #c4632e;
+    --admin-sidebar-active-bg: #e8650a;
+    --admin-sidebar-active-hover: #f07a1a;
     --admin-sidebar-active-badge: rgba(255, 255, 255, .22);
     --admin-sidebar-badge-bg: rgba(15, 23, 42, .08);
     --admin-sidebar-badge-text: rgba(255, 255, 255, .75);

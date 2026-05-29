@@ -9,16 +9,17 @@
   .settings-metrics {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: .9rem;
+    gap: 1rem;
+    margin-top: 1.5rem;
   }
 
   .settings-number-card {
     display: grid;
     gap: .65rem;
-    background: var(--admin-surface);
-    border: 1px solid var(--brand-border);
-    border-radius: 18px;
-    padding: 1rem;
+    background: var(--admin-bg-card);
+    border: 1px solid var(--admin-border-subtle);
+    border-radius: 20px;
+    padding: 1.25rem;
     box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
   }
 
@@ -36,8 +37,8 @@
 
   .settings-number-card input {
     width: 100%;
-    border: 1px solid var(--brand-border);
-    background: var(--brand-soft);
+    border: 1px solid var(--admin-border-subtle);
+    background: var(--admin-bg);
     border-radius: 12px;
     padding: .72rem .85rem;
     color: var(--admin-foreground);
@@ -59,7 +60,8 @@
   .settings-toggle-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: .9rem;
+    gap: 1rem;
+    margin-top: 1.5rem;
   }
 
   .settings-toggle-card {
@@ -68,32 +70,32 @@
     align-items: center;
     gap: .85rem;
     text-align: left;
-    background: var(--admin-surface);
-    border: 1px solid var(--brand-border);
-    border-radius: 18px;
-    padding: 1rem;
+    background: var(--admin-bg-card);
+    border: 1px solid var(--admin-border-subtle);
+    border-radius: 20px;
+    padding: 1.25rem;
     cursor: pointer;
     transition: all .18s ease;
   }
 
   .settings-toggle-card:hover {
-    border-color: var(--admin-border-strong);
-    transform: translateY(-1px);
-    box-shadow: 0 10px 30px rgba(43, 45, 66, .06);
+    border-color: var(--admin-border);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(43, 45, 66, .08);
   }
 
   .settings-toggle-card.active {
-    background: var(--brand-cream);
+    background: var(--admin-accent-shadow);
     border-color: var(--admin-accent);
   }
 
   .settings-toggle-icon {
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     display: grid;
     place-items: center;
     border-radius: 14px;
-    background: var(--brand-cream);
+    background: var(--admin-accent-shadow);
     color: var(--admin-accent);
   }
 

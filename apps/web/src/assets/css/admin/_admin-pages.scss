@@ -7,8 +7,8 @@
 @use "./lib/admin-search";
 @use "./lib/admin-tabs";
 @use "./lib/admin-grid";
-// @use "./lib/admin-alert";
-// @use "./lib/admin-modals";
+@use "./lib/admin-alert";
+@use "./lib/admin-modals";
 
 @use "admin-page-dashboard" as _pd;
 @use "admin-page-tracking" as _pt;

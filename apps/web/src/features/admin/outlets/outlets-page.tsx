@@ -230,7 +230,7 @@ export function OutletsPage() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">
-            <Store size={24} style={{ color: '#b55925' }} />
+            <Store size={24} className="text-admin-accent" />
             Management Outlet
           </h1>
           <p className="admin-page-subtitle">Kelola master outlet, titik GPS, radius kunjungan, dan status verifikasi toko.</p>
@@ -476,7 +476,7 @@ export function OutletsPage() {
   );
 }
 
-function StatCard({ label, value, tone = '#b55925' }: { label: string; value: number; tone?: string }) {
+function StatCard({ label, value, tone = 'var(--admin-accent)' }: { label: string; value: number; tone?: string }) {
   return (
     <div className="rounded-[1.25rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
       <p className="text-xs font-black uppercase tracking-wide text-admin-muted">{label}</p>

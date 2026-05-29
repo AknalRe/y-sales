@@ -376,7 +376,7 @@
 .admin-panel-block,
 .admin-alert-card {
   border: 1px solid var(--admin-border);
-  background: var(--admin-surface);
+  background: var(--admin-bg-card);
   box-shadow: var(--admin-shadow-card);
   backdrop-filter: blur(18px);
 }

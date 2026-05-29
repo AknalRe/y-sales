@@ -7,6 +7,7 @@
     --admin-subtle: #64748b;
     --admin-bg: #f8fafc;
     --admin-surface: #ffffff;
+    --admin-bg-card: #ffffff;
     --admin-surface-hover: #f1f5f9;
     --admin-border: #e2e8f0;
     --admin-border-strong: #cbd5e1;
@@ -72,6 +73,7 @@
     --admin-subtle: #94a3b8;
     --admin-bg: #0f172a;
     --admin-surface: #1e293b;
+    --admin-bg-card: #0f172a;
     --admin-surface-hover: #334155;
     --admin-border: #334155;
     --admin-border-strong: #475569;
@@ -137,6 +139,7 @@
     --color-admin-subtle: var(--admin-subtle);
     --color-admin-bg: var(--admin-bg);
     --color-admin-surface: var(--admin-surface);
+    --color-admin-bg-card: var(--admin-bg-card);
     --color-admin-surface-hover: var(--admin-surface-hover);
     --color-admin-border: var(--admin-border);
     --color-admin-border-strong: var(--admin-border-strong);

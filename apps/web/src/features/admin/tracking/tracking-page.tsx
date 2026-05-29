@@ -90,10 +90,9 @@ export function TrackingPage() {
         <button
           onClick={load}
           className="admin-btn-ghost"
-          style={{ padding: '.6rem', borderRadius: 14 }}
           disabled={loading}
         >
-          <RefreshCw size={20} className={loading ? 'spin' : ''} />
+          <RefreshCw size={16} className={loading ? 'spin' : ''} />
         </button>
       </div>
 

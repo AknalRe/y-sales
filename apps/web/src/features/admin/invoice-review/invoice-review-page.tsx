@@ -125,7 +125,7 @@ export function InvoiceReviewPage() {
             style={{ padding: '.5rem', borderRadius: 12 }}
             disabled={loading}
           >
-            <RefreshCw size={18} className={loading ? 'spin' : ''} />
+            <RefreshCw size={16} className={loading ? 'spin' : ''} />
           </button>
         </div>
       </div>

@@ -11,12 +11,12 @@
   .dashboard-kpi-card {
     display: flex;
     flex-direction: column;
-    background: var(--admin-surface);
+    background: var(--admin-bg-card);
     border: 1px solid var(--admin-border);
     border-radius: 24px;
     padding: 1.5rem;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow: var(--admin-shadow-sm);
     text-decoration: none;
 
     &:hover {
@@ -91,10 +91,6 @@
     opacity: .7;
   }
 
-  .dashboard-header-actions {
-    display: flex;
-    gap: .5rem;
-  }
 
   .dashboard-review-badge {
     display: flex;
@@ -110,25 +106,6 @@
     text-decoration: none;
   }
 
-  .dashboard-refresh-btn {
-    padding: .5rem .75rem;
-    border-radius: 12px;
-    background: var(--admin-bg);
-    border: 1px solid var(--admin-border);
-    color: var(--admin-muted);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-
-    &:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-
-    .spin {
-      animation: spin .8s linear infinite;
-    }
-  }
 
   .dashboard-error {
     display: flex;

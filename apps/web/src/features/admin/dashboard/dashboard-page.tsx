@@ -125,7 +125,7 @@ export function DashboardPage() {
             {lastUpdated && <span className="dashboard-update-time">· Update: {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>}
           </p>
         </div>
-        <div className="dashboard-header-actions">
+        <div>
           {permissions.includes('invoice.review') && summary && summary.pendingApprovals > 0 && (
             <Link to="/admin/invoice-review" className="dashboard-review-badge">
               <Clock size={14} /> Review Nota ({summary.pendingApprovals})
@@ -134,7 +134,7 @@ export function DashboardPage() {
           <button
             onClick={loadSummary}
             disabled={loading}
-            className="dashboard-refresh-btn"
+            className="admin-btn-ghost"
           >
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
           </button>

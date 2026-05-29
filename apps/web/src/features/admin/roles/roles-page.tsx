@@ -3,6 +3,9 @@ import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2 } from 'lucide-
 
 import { useAuth } from '../../auth/auth-provider';
 import { getRoles, createRole, deleteRole, type Role } from '@/lib/api/platform';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export function RolesPage() {
   const { accessToken } = useAuth();
@@ -96,19 +99,16 @@ export function RolesPage() {
         {loading ? (
           <>
             {[1, 2, 3].map(i => (
-              <div key={i} className="admin-card" style={{ height: 140, marginBottom: 0 }}>
-                <div style={{ background: '#f1f5f9', borderRadius: 10, height: 32, width: 32, marginBottom: '1rem' }} />
-                <div style={{ background: '#f1f5f9', borderRadius: 6, height: 24, width: '70%', marginBottom: '.5rem' }} />
-                <div style={{ background: '#f8fafc', borderRadius: 4, height: 12, width: '40%' }} />
+              <div key={i} className="admin-card dashboard-skeleton-card" style={{ height: 140, marginBottom: 0 }}>
+                <div className="dashboard-skeleton-icon" />
+                <div className="dashboard-skeleton-title" />
+                <div className="dashboard-skeleton-text" />
               </div>
             ))}
           </>
         ) : (
-
-
-
           roles.map(role => (
-            <div key={role.id} className={`admin-role-card ${role.isSystemRole ? 'admin-role-system' : ''}`}>
+            <div key={role.id} className={`admin-card admin-role-card ${role.isSystemRole ? 'admin-role-system' : ''}`}>
               <div className="admin-role-card-header">
                 <div className="admin-role-icon">
                   {role.isSystemRole ? <Lock size={16} /> : <Shield size={16} />}
@@ -118,15 +118,17 @@ export function RolesPage() {
                   <code className="admin-role-card-code">{role.code}</code>
                 </div>
                 {!role.isSystemRole && (
-                  <button
+                  <Button
                     id={`roles-delete-${role.id}`}
                     onClick={() => handleDelete(role)}
+                    variant="ghost"
+                    size="icon"
                     className="admin-btn-icon-sm admin-btn-danger-sm"
                     title="Hapus Role"
                     type="button"
                   >
                     <Trash2 size={13} />
-                  </button>
+                  </Button>
                 )}
               </div>
               {role.description && (
@@ -157,7 +159,7 @@ export function RolesPage() {
             <div className="admin-modal-body">
               <div className="admin-field">
                 <label htmlFor="role-code">Kode Role *</label>
-                <input
+                <Input
                   id="role-code"
                   type="text"
                   value={form.code}
@@ -169,7 +171,7 @@ export function RolesPage() {
               </div>
               <div className="admin-field">
                 <label htmlFor="role-name">Nama Role *</label>
-                <input
+                <Input
                   id="role-name"
                   type="text"
                   value={form.name}
@@ -180,7 +182,7 @@ export function RolesPage() {
               </div>
               <div className="admin-field">
                 <label htmlFor="role-desc">Deskripsi</label>
-                <textarea
+                <Textarea
                   id="role-desc"
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -191,8 +193,8 @@ export function RolesPage() {
               </div>
             </div>
             <div className="admin-modal-footer">
-              <button onClick={() => setShowCreate(false)} className="admin-btn-ghost" type="button">Batal</button>
-              <button
+              <Button onClick={() => setShowCreate(false)} variant="ghost" className="admin-btn-ghost" type="button">Batal</Button>
+              <Button
                 id="roles-submit-create"
                 onClick={handleCreate}
                 className="admin-btn-primary"
@@ -200,7 +202,7 @@ export function RolesPage() {
                 disabled={saving || !form.code || !form.name}
               >
                 {saving ? 'Menyimpan...' : 'Buat Role'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

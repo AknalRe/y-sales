@@ -5,11 +5,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { getUsers, createUser, updateUser, deleteUser, resetPassword, getRoles, type TenantUser, type Role } from '@/lib/api/platform';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { EmptyState } from '@/components/ui';
 
 const statusIcon = {
-  active: <CheckCircle2 size={13} color="var(--color-success)" />,
-  inactive: <UserX size={13} color="var(--color-muted)" />,
-  suspended: <AlertTriangle size={13} color="var(--color-danger)" />,
+  active: <CheckCircle2 size={13} className="text-admin-success" />,
+  inactive: <UserX size={13} className="text-admin-muted" />,
+  suspended: <AlertTriangle size={13} className="text-admin-danger" />,
 };
 
 export function UsersPage() {
@@ -118,8 +120,7 @@ export function UsersPage() {
           </h1>
           <p className="admin-page-subtitle">Kelola akun user dan akses tim Anda.</p>
         </div>
-        <div style={{ display: 'flex', gap: '.5rem' }}>
-
+        <div className="flex gap-2">
           <button id="users-refresh-btn" onClick={load} className="admin-btn-ghost" type="button">
             <RefreshCw size={15} />
           </button>
@@ -134,7 +135,6 @@ export function UsersPage() {
           </button>
         </div>
       </div>
-
 
       {error && (
         <div className="admin-alert admin-alert-error">
@@ -167,21 +167,21 @@ export function UsersPage() {
         {loading ? (
           <div className="admin-loading"><RefreshCw size={18} className="spin" /><span>Memuat...</span></div>
         ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Nama</th>
-                <th>Kontak</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Login Terakhir</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="admin-table">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nama</TableHead>
+                <TableHead>Kontak</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Login Terakhir</TableHead>
+                <TableHead>Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filtered.map(user => (
-                <tr key={user.id}>
-                  <td>
+                <TableRow key={user.id}>
+                  <TableCell>
                     <div className="admin-user-cell">
                       <div className="admin-user-avatar">
                         {user.name.charAt(0).toUpperCase()}
@@ -193,15 +193,15 @@ export function UsersPage() {
                         )}
                       </div>
                     </div>
-                  </td>
-                  <td className="admin-muted">
+                  </TableCell>
+                  <TableCell className="text-admin-muted">
                     {user.email && <div>{user.email}</div>}
                     {user.phone && <div>{user.phone}</div>}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <span className="admin-role-badge">{user.roleName ?? user.roleCode}</span>
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <button
                       id={`users-toggle-status-${user.id}`}
                       onClick={() => toggleStatus(user)}
@@ -211,13 +211,13 @@ export function UsersPage() {
                       {statusIcon[user.status as keyof typeof statusIcon]}
                       {user.status}
                     </button>
-                  </td>
-                  <td className="admin-muted">
+                  </TableCell>
+                  <TableCell className="text-admin-muted">
                     {user.lastLoginAt
                       ? new Date(user.lastLoginAt).toLocaleDateString('id-ID')
                       : 'Belum pernah'}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <div className="admin-row-actions">
                       <button
                         id={`users-reset-pass-${user.id}`}
@@ -238,16 +238,14 @@ export function UsersPage() {
                         <Trash2 size={14} />
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
               {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="admin-table-empty">Belum ada user.</td>
-                </tr>
+                <EmptyState colSpan={6} icon="👥" title="Belum ada user" description="Tambahkan user pertama Anda." />
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </div>
 
@@ -357,7 +355,7 @@ export function UsersPage() {
               <button onClick={() => setResetTarget(null)} className="admin-modal-close" type="button">×</button>
             </div>
             <div className="admin-modal-body">
-              <p className="admin-muted" style={{ marginBottom: '1rem' }}>
+              <p className="text-admin-muted mb-4">
                 Reset password untuk <strong>{resetTarget.name}</strong>.
               </p>
               <div className="admin-field">

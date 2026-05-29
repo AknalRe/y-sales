@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/auth-provider';
 import { getWarehouses, type Warehouse } from '@/lib/api/tenant';
 import { apiRequest } from '@/lib/api/client';
 import { EmptyState } from '@/components/ui';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 type InventoryBalance = {
   id: string;
@@ -100,7 +101,7 @@ export function StockPage() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">
-            <Boxes size={24} style={{ color: '#b55925' }} />
+            <Boxes size={24} className="text-admin-accent" />
             Manajemen Stok
           </h1>
           <p className="admin-page-subtitle">Monitor ketersediaan produk, mutasi barang, dan performa gudang secara real-time.</p>
@@ -122,43 +123,50 @@ export function StockPage() {
       )}
 
       {/* Modern Stats Row */}
-      {/* <div className="admin-stats-row" style={{ gap: '1rem', marginBottom: '2rem' }}> */}
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4" >
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4">
         <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
-          <div className="admin-stat-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}><WarehouseIcon size={20} /></div>
+          <div className="admin-stat-icon bg-admin-accent-shadow text-admin-accent">
+            <WarehouseIcon size={20} />
+          </div>
           <div>
-            <span style={{ fontSize: '.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Gudang Aktif</span>
-            <strong style={{ fontSize: '1.5rem', color: '#0f172a' }}>{stats.totalWH}</strong>
+            <span className="text-admin-muted font-semibold uppercase tracking-wide" style={{ fontSize: '.75rem' }}>Gudang Aktif</span>
+            <strong className="text-admin-foreground" style={{ fontSize: '1.5rem' }}>{stats.totalWH}</strong>
           </div>
         </div>
         <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
-          <div className="admin-stat-icon" style={{ background: '#f5f3ff', color: '#8b5cf6' }}><Package size={20} /></div>
+          <div className="admin-stat-icon bg-admin-accent-shadow text-admin-focus-ring">
+            <Package size={20} />
+          </div>
           <div>
-            <span style={{ fontSize: '.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Total Produk</span>
-            <strong style={{ fontSize: '1.5rem', color: '#0f172a' }}>{stats.totalProducts}</strong>
+            <span className="text-admin-muted font-semibold uppercase tracking-wide" style={{ fontSize: '.75rem' }}>Total Produk</span>
+            <strong className="text-admin-foreground" style={{ fontSize: '1.5rem' }}>{stats.totalProducts}</strong>
           </div>
         </div>
         <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
-          <div className="admin-stat-icon" style={{ background: '#fffbeb', color: '#f59e0b' }}><AlertTriangle size={20} /></div>
+          <div className="admin-stat-icon bg-admin-accent-shadow text-admin-accent-light">
+            <AlertTriangle size={20} />
+          </div>
           <div>
-            <span style={{ fontSize: '.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Stok Rendah</span>
-            <strong style={{ fontSize: '1.5rem', color: '#0f172a' }}>{stats.lowStock}</strong>
+            <span className="text-admin-muted font-semibold uppercase tracking-wide" style={{ fontSize: '.75rem' }}>Stok Rendah</span>
+            <strong className="text-admin-foreground" style={{ fontSize: '1.5rem' }}>{stats.lowStock}</strong>
           </div>
         </div>
         <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
-          <div className="admin-stat-icon" style={{ background: '#fef2f2', color: '#ef4444' }}><Boxes size={20} /></div>
+          <div className="admin-stat-icon bg-admin-danger-soft text-admin-danger">
+            <Boxes size={20} />
+          </div>
           <div>
-            <span style={{ fontSize: '.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.025em' }}>Stok Habis</span>
-            <strong style={{ fontSize: '1.5rem', color: '#0f172a' }}>{stats.outOfStock}</strong>
+            <span className="text-admin-muted font-semibold uppercase tracking-wide" style={{ fontSize: '.75rem' }}>Stok Habis</span>
+            <strong className="text-admin-foreground" style={{ fontSize: '1.5rem' }}>{stats.outOfStock}</strong>
           </div>
         </div>
       </div>
 
       {/* Premium Filter Row */}
-      {/* <div className="admin-filter-row" style={{ background: '#fff', padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <div className="admin-filter-group" style={{ background: '#f8fafc', padding: '.25rem .75rem', borderRadius: 12 }}>
-            <WarehouseIcon size={16} style={{ color: '#64748b' }} />
+      <div className="admin-filter-row bg-admin-surface border border-admin-border-subtle" style={{ padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="flex gap-4 items-center">
+          <div className="admin-filter-group bg-admin-bg" style={{ padding: '.25rem .75rem', borderRadius: 12 }}>
+            <WarehouseIcon size={16} className="text-admin-muted" />
             <select value={selectedWH} onChange={e => setSelectedWH(e.target.value)} className="admin-select" style={{ border: 'none', background: 'transparent' }}>
               <option value="">Semua Gudang</option>
               {warehouses.map(w => (
@@ -167,8 +175,8 @@ export function StockPage() {
             </select>
           </div>
           {tab === 'stock' && (
-            <div className="admin-filter-group" style={{ background: '#f8fafc', padding: '.25rem .75rem', borderRadius: 12 }}>
-              <Package size={16} style={{ color: '#64748b' }} />
+            <div className="admin-filter-group bg-admin-bg" style={{ padding: '.25rem .75rem', borderRadius: 12 }}>
+              <Package size={16} className="text-admin-muted" />
               <input
                 type="text"
                 placeholder="Cari SKU atau nama produk..."
@@ -180,7 +188,7 @@ export function StockPage() {
             </div>
           )}
         </div>
-        <div className="admin-tab-group" style={{ background: '#f1f5f9', padding: '.3rem', borderRadius: 14 }}>
+        <div className="admin-tab-group bg-admin-bg" style={{ padding: '.3rem', borderRadius: 14 }}>
           <button onClick={() => setTab('stock')} className={`admin-tab ${tab === 'stock' ? 'active' : ''}`} style={{ borderRadius: 11, fontSize: '.85rem' }}>
             <Boxes size={14} /> Stok Saat Ini
           </button>
@@ -193,23 +201,23 @@ export function StockPage() {
       <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <div style={{ padding: '4rem', textAlign: 'center' }}>
-            <RefreshCw size={32} className="spin" style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
-            <p style={{ color: '#64748b', fontWeight: 600 }}>Menghitung inventaris...</p>
+            <RefreshCw size={32} className="spin text-admin-muted" style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
+            <p className="text-admin-muted font-semibold">Menghitung inventaris...</p>
           </div>
         ) : tab === 'stock' ? (
           <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Informasi Produk</th>
-                  <th>Gudang</th>
-                  <th style={{ textAlign: 'right' }}>Total Qty</th>
-                  <th style={{ textAlign: 'right' }}>Reserved</th>
-                  <th style={{ textAlign: 'right' }}>Tersedia</th>
-                  <th>Update Terakhir</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="admin-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Informasi Produk</TableHead>
+                  <TableHead>Gudang</TableHead>
+                  <TableHead className="text-right">Total Qty</TableHead>
+                  <TableHead className="text-right">Reserved</TableHead>
+                  <TableHead className="text-right">Tersedia</TableHead>
+                  <TableHead>Update Terakhir</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredBalances.map(b => {
                   const qty = Number(b.quantity);
                   const reserved = Number(b.reservedQuantity);
@@ -217,130 +225,133 @@ export function StockPage() {
                   const isLow = qty > 0 && qty < 10;
                   const isEmpty = qty === 0;
                   return (
-                    <tr key={b.id}>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
-                          <div style={{ width: 36, height: 36, background: isEmpty ? '#fef2f2' : isLow ? '#fffbeb' : '#f8fafc', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: isEmpty ? '#ef4444' : isLow ? '#f59e0b' : '#b55925', border: '1px solid #f1f5f9' }}>
+                    <TableRow key={b.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`rounded-xl border border-admin-border-subtle flex items-center justify-center font-extrabold ${isEmpty ? 'bg-admin-danger-soft text-admin-danger' : isLow ? 'bg-admin-accent-shadow text-admin-accent-light' : 'bg-admin-bg text-admin-accent'}`}
+                            style={{ width: 36, height: 36 }}
+                          >
                             {b.productName.charAt(0)}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '.9rem' }}>{b.productName}</div>
-                            <code style={{ fontSize: '.72rem', color: '#94a3b8' }}>{b.productSku}</code>
+                            <div className="text-admin-foreground font-extrabold" style={{ fontSize: '.9rem' }}>{b.productName}</div>
+                            <code className="text-admin-subtle" style={{ fontSize: '.72rem' }}>{b.productSku}</code>
                           </div>
                         </div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 600, color: '#334155' }}>{b.warehouseName}</div>
-                        <div style={{ fontSize: '.72rem', color: '#94a3b8' }}>{b.warehouseTypeLabel ?? b.warehouseType}</div>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <strong style={{ color: isEmpty ? '#ef4444' : '#0f172a', fontSize: '1rem' }}>{formatQty(b.quantity)}</strong>
-                      </td>
-                      <td style={{ textAlign: 'right', color: '#94a3b8' }}>{formatQty(b.reservedQuantity)}</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ background: available <= 0 ? '#fef2f2' : '#ecfdf5', color: available <= 0 ? '#ef4444' : '#10b981', padding: '.25rem .5rem', borderRadius: 8, display: 'inline-block', fontWeight: 800 }}>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-admin-text font-semibold">{b.warehouseName}</div>
+                        <div className="text-admin-subtle" style={{ fontSize: '.72rem' }}>{b.warehouseTypeLabel ?? b.warehouseType}</div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <strong className={isEmpty ? 'text-admin-danger' : 'text-admin-foreground'} style={{ fontSize: '1rem' }}>{formatQty(b.quantity)}</strong>
+                      </TableCell>
+                      <TableCell className="text-right text-admin-subtle">{formatQty(b.reservedQuantity)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className={`inline-block font-extrabold rounded-lg ${available <= 0 ? 'bg-admin-danger-soft text-admin-danger' : 'bg-admin-success-soft text-admin-success'}`} style={{ padding: '.25rem .5rem' }}>
                           {formatQty(available)}
                         </div>
-                      </td>
-                      <td style={{ color: '#64748b', fontSize: '.8rem' }}>
+                      </TableCell>
+                      <TableCell className="text-admin-muted" style={{ fontSize: '.8rem' }}>
                         {new Date(b.updatedAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
                 {!filteredBalances.length && (
                   <EmptyState colSpan={6} icon="📦" title="Stok Kosong" description="Tidak ada data produk yang ditemukan untuk kriteria ini." />
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         ) : (
           <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Waktu</th>
-                  <th>Produk</th>
-                  <th>Gudang</th>
-                  <th>Tipe Mutasi</th>
-                  <th style={{ textAlign: 'right' }}>Perubahan</th>
-                  <th>Catatan</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="admin-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Waktu</TableHead>
+                  <TableHead>Produk</TableHead>
+                  <TableHead>Gudang</TableHead>
+                  <TableHead>Tipe Mutasi</TableHead>
+                  <TableHead className="text-right">Perubahan</TableHead>
+                  <TableHead>Catatan</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {movements.map(m => {
                   const delta = Number(m.quantityDelta);
                   const isOut = delta < 0;
                   return (
-                    <tr key={m.id}>
-                      <td style={{ color: '#64748b', fontSize: '.8rem', whiteSpace: 'nowrap' }}>
+                    <TableRow key={m.id}>
+                      <TableCell className="text-admin-muted whitespace-nowrap" style={{ fontSize: '.8rem' }}>
                         {new Date(m.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 700, color: '#0f172a' }}>{m.productName}</div>
-                        <code style={{ fontSize: '.72rem', color: '#94a3b8' }}>{m.productSku}</code>
-                      </td>
-                      <td><div style={{ fontWeight: 600, color: '#334155' }}>{m.warehouseCode}</div></td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem', color: isOut ? '#ef4444' : '#10b981', fontWeight: 700, fontSize: '.8rem' }}>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-admin-foreground font-bold">{m.productName}</div>
+                        <code className="text-admin-subtle" style={{ fontSize: '.72rem' }}>{m.productSku}</code>
+                      </TableCell>
+                      <TableCell className="text-admin-text font-semibold">{m.warehouseCode}</TableCell>
+                      <TableCell>
+                        <div className={`flex items-center gap-1 font-bold ${isOut ? 'text-admin-danger' : 'text-admin-success'}`} style={{ fontSize: '.8rem' }}>
                           <ArrowUpDown size={13} />
                           {m.movementLabel ?? m.movementType}
                         </div>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <strong style={{ color: isOut ? '#ef4444' : '#10b981', fontFamily: 'monospace', fontSize: '1.1rem' }}>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <strong className={`font-mono ${isOut ? 'text-admin-danger' : 'text-admin-success'}`} style={{ fontSize: '1.1rem' }}>
                           {isOut ? '' : '+'}{formatQty(m.quantityDelta)}
                         </strong>
-                      </td>
-                      <td style={{ color: '#64748b', fontSize: '.82rem', maxWidth: 200 }}>{m.notes ?? '—'}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="text-admin-muted" style={{ fontSize: '.82rem', maxWidth: 200 }}>{m.notes ?? '—'}</TableCell>
+                    </TableRow>
                   );
                 })}
                 {!movements.length && (
                   <EmptyState colSpan={6} icon="📋" title="Belum ada Mutasi" description="Riwayat pergerakan stok akan muncul di sini." />
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
-      </div> */}
+      </div>
 
       {/* Warehouse Summary Cards (Only in Stock Tab) */}
-      {/* {tab === 'stock' && warehouses.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem', marginTop: '2rem' }}>
+      {tab === 'stock' && warehouses.length > 0 && (
+        <div className="grid gap-4 mt-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
           {warehouses.filter(w => w.status === 'active').map(w => {
             const whBalances = balances.filter(b => b.warehouseId === w.id);
             const totalQty = whBalances.reduce((s, b) => s + Number(b.quantity), 0);
             const skuCount = whBalances.length;
             return (
-              <div key={w.id} className="admin-card" style={{ margin: 0, padding: '1.5rem', border: '1px solid #f1f5f9', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.05 }}>
+              <div key={w.id} className="admin-card border border-admin-border-subtle relative overflow-hidden" style={{ margin: 0, padding: '1.5rem' }}>
+                <div className="absolute opacity-5" style={{ top: '-10px', right: '-10px' }}>
                   <WarehouseIcon size={80} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                <div className="flex items-center justify-between mb-5">
                   <div>
-                    <strong style={{ color: '#0f172a', fontSize: '1.1rem', display: 'block' }}>{w.name}</strong>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '.3rem', marginTop: '.2rem' }}>
-                      <span className="admin-badge" style={{ background: '#f8fafc', color: '#64748b', fontSize: '.65rem' }}>{w.code}</span>
-                      <span className="admin-badge" style={{ background: '#f8fafc', color: '#64748b', fontSize: '.65rem' }}>{w.type.toUpperCase()}</span>
+                    <strong className="text-admin-foreground block" style={{ fontSize: '1.1rem' }}>{w.name}</strong>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="admin-badge bg-admin-bg text-admin-muted" style={{ fontSize: '.65rem' }}>{w.code}</span>
+                      <span className="admin-badge bg-admin-bg text-admin-muted" style={{ fontSize: '.65rem' }}>{w.type.toUpperCase()}</span>
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '2rem' }}>
+                <div className="flex gap-8">
                   <div>
-                    <div style={{ color: '#94a3b8', fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.25rem' }}>Total Kuantitas</div>
-                    <strong style={{ color: '#0f172a', fontSize: '1.4rem' }}>{formatQty(totalQty)}</strong>
+                    <div className="text-admin-subtle font-bold uppercase mb-1" style={{ fontSize: '.7rem', letterSpacing: '.05em' }}>Total Kuantitas</div>
+                    <strong className="text-admin-foreground" style={{ fontSize: '1.4rem' }}>{formatQty(totalQty)}</strong>
                   </div>
                   <div>
-                    <div style={{ color: '#94a3b8', fontSize: '.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.25rem' }}>Item SKU</div>
-                    <strong style={{ color: '#0f172a', fontSize: '1.4rem' }}>{skuCount}</strong>
+                    <div className="text-admin-subtle font-bold uppercase mb-1" style={{ fontSize: '.7rem', letterSpacing: '.05em' }}>Item SKU</div>
+                    <strong className="text-admin-foreground" style={{ fontSize: '1.4rem' }}>{skuCount}</strong>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
-      )} */}
+      )}
     </div>
   );
 }

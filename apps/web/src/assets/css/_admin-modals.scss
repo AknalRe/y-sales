@@ -63,14 +63,14 @@
 
 /* ─── Admin Modal ───────────────────────────────────────────────────────── */
 .admin-modal {
-  background: #ffffff !important;
+  background: var(--admin-surface) !important;
   border-radius: 20px !important;
   width: 100%;
   max-width: 500px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--admin-border) !important;
   overflow: hidden;
-  color: #0f172a !important;
+  color: var(--admin-foreground) !important;
 
   &-sm {
     width: min(460px, 100%);
@@ -78,7 +78,7 @@
 
   &-header {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--admin-border-subtle);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -87,7 +87,7 @@
       margin: 0;
       font-size: 1.15rem;
       font-weight: 700;
-      color: #0f172a;
+      color: var(--admin-foreground);
     }
   }
 
@@ -95,7 +95,7 @@
     background: transparent;
     border: 0;
     font-size: 1.5rem;
-    color: var(--muted-foreground);
+    color: var(--admin-muted);
     cursor: pointer;
   }
 
@@ -105,8 +105,8 @@
 
   &-footer {
     padding: 1rem 1.5rem;
-    background: #f8fafc;
-    border-top: 1px solid #f1f5f9;
+    background: var(--admin-bg);
+    border-top: 1px solid var(--admin-border);
     display: flex;
     justify-content: flex-end;
     gap: .75rem;
@@ -127,7 +127,7 @@
   gap: .45rem;
 
   label {
-    color: #475569;
+    color: var(--admin-muted-dim);
     font-size: .85rem;
     font-weight: 800;
   }
@@ -165,16 +165,16 @@
 .admin-select {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #cbd5e1 !important;
+  border: 1px solid var(--admin-border-strong) !important;
   border-radius: 10px !important;
-  background: #ffffff !important;
-  color: #000000 !important;
+  background: var(--admin-surface) !important;
+  color: var(--admin-foreground) !important;
   padding: .6rem .8rem !important;
   outline: none;
 
   &:focus {
-    border-color: #7c3aed !important;
-    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1) !important;
+    border-color: var(--admin-accent) !important;
+    box-shadow: 0 0 0 4px var(--admin-accent-shadow) !important;
   }
 }
 

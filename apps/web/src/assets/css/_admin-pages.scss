@@ -1,6 +1,6 @@
 /* ─── Admin Page Layout ─────────────────────────────────────────────────── */
 .admin-page {
-  color: #334155;
+  color: var(--admin-text);
 
   .admin-page-header {
     display: flex;
@@ -17,19 +17,19 @@
     gap: .6rem;
     font-size: 1.65rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--admin-foreground);
     letter-spacing: -0.02em;
   }
 
   .admin-page-subtitle {
     margin: .25rem 0 0;
-    color: #64748b;
+    color: var(--admin-muted);
     font-size: .875rem;
   }
 
   .admin-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
     border-radius: 24px;
     padding: 1.5rem;
     margin-bottom: 1rem;
@@ -38,7 +38,7 @@
 
     &:hover {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-      border-color: #cbd5e1;
+      border-color: var(--admin-border-strong);
       transform: translateY(-2px);
     }
 
@@ -48,13 +48,13 @@
       justify-content: space-between;
       margin-bottom: 1rem;
       padding-bottom: 0.85rem;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid var(--admin-border-subtle);
 
       h2 {
         margin: 0;
         font-size: 1rem;
         font-weight: 700;
-        color: #0f172a;
+        color: var(--admin-foreground);
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -72,8 +72,8 @@
   .dashboard-kpi-card {
     display: flex;
     flex-direction: column;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
     border-radius: 24px;
     padding: 1.5rem;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -83,7 +83,7 @@
     &:hover {
       transform: translateY(-4px);
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-      border-color: #cbd5e1;
+      border-color: var(--admin-border-strong);
     }
   }
 
@@ -100,14 +100,14 @@
   .dashboard-kpi-value {
     font-size: 2rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--admin-foreground);
     line-height: 1.1;
     margin-bottom: 0.35rem;
   }
 
   .dashboard-kpi-label {
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--admin-muted);
     font-weight: 600;
   }
 
@@ -140,10 +140,10 @@
   // Dashboard-specific
   .dashboard-welcome {
     font-size: .875rem;
-    color: #64748b;
+    color: var(--admin-muted);
 
     strong {
-      color: #7c3aed;
+      color: var(--admin-accent);
     }
   }
 
@@ -161,9 +161,9 @@
     display: flex;
     align-items: center;
     gap: .4rem;
-    background: #fff7ed;
-    border: 1px solid #ffedd5;
-    color: #ea580c;
+    background: var(--admin-accent-shadow);
+    border: 1px solid var(--admin-accent);
+    color: var(--admin-accent);
     border-radius: 12px;
     padding: .5rem .85rem;
     font-size: .82rem;
@@ -174,9 +174,9 @@
   .dashboard-refresh-btn {
     padding: .5rem .75rem;
     border-radius: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    color: #64748b;
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border);
+    color: var(--admin-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -195,9 +195,9 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: #fef2f2;
-    border: 1px solid #fee2e2;
-    color: #dc2626;
+    background: var(--admin-danger-bg);
+    border: 1px solid var(--admin-danger-soft);
+    color: var(--admin-danger);
     border-radius: 12px;
     padding: .75rem 1rem;
     margin-bottom: 1.5rem;
@@ -254,22 +254,22 @@
   }
 
   .dashboard-quick-access-card {
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border-subtle);
     border-radius: 18px;
     padding: 1.25rem;
     transition: all .2s;
     text-decoration: none;
 
     &:hover {
-      background: #fff;
-      border-color: #7c3aed40;
-      box-shadow: 0 10px 15px -3px rgba(124, 58, 237, .1);
+      background: var(--admin-surface);
+      border-color: var(--admin-accent);
+      box-shadow: 0 10px 15px -3px var(--admin-accent-shadow);
       transform: translateY(-2px);
     }
 
     svg {
-      color: #7c3aed;
+      color: var(--admin-accent);
       margin-bottom: .75rem;
     }
 
@@ -277,20 +277,20 @@
       margin: 0 0 .4rem;
       font-size: .95rem;
       font-weight: 700;
-      color: #1e293b;
+      color: var(--admin-foreground);
     }
 
     p {
       margin: 0;
       font-size: .8rem;
-      color: #64748b;
+      color: var(--admin-muted);
       line-height: 1.5;
     }
   }
 
   .dashboard-role-badge {
-    background: #f5f3ff;
-    color: #7c3aed;
+    background: var(--admin-accent-shadow);
+    color: var(--admin-accent);
     border-radius: 999px;
     padding: .25rem .75rem;
     font-size: .75rem;
@@ -312,9 +312,9 @@
     justify-content: space-between;
     align-items: center;
     padding: .75rem 1rem;
-    background: #f8fafc;
+    background: var(--admin-bg);
     border-radius: 16px;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--admin-border-subtle);
 
     span {
       font-size: .85rem;
@@ -357,7 +357,7 @@
   .dashboard-summary-footer {
     margin-top: 1.25rem;
     padding-top: 1.25rem;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--admin-border-subtle);
   }
 
   .dashboard-report-link {
@@ -365,8 +365,8 @@
     align-items: center;
     justify-content: center;
     gap: .5rem;
-    background: #f5f3ff;
-    color: #7c3aed;
+    background: var(--admin-accent-shadow);
+    color: var(--admin-accent);
     border-radius: 14px;
     padding: .75rem;
     font-size: .875rem;
@@ -393,8 +393,8 @@
   }
 
   .admin-stat-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
     border-radius: 16px;
     padding: 1rem 1.1rem;
     display: flex;
@@ -407,14 +407,14 @@
     }
 
     span {
-      color: #64748b;
+      color: var(--admin-muted);
       font-size: .75rem;
       text-transform: uppercase;
       letter-spacing: .07em;
     }
 
     strong {
-      color: #0f172a;
+      color: var(--admin-foreground);
       font-size: 1.3rem;
       font-weight: 700;
     }
@@ -442,32 +442,32 @@
     display: flex;
     align-items: center;
     gap: .45rem;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
     border-radius: 10px;
     padding: .42rem .75rem;
   }
 
   .admin-input {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
+    background: var(--admin-surface) !important;
+    border: 1px solid var(--admin-border-strong) !important;
     border-radius: 10px;
-    color: #000000 !important;
+    color: var(--admin-foreground) !important;
     padding: .42rem .75rem;
     font-size: .875rem;
     outline: none;
     min-width: 140px;
 
     &:focus {
-      border-color: #7c3aed !important;
+      border-color: var(--admin-accent) !important;
     }
   }
 
   .admin-select {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
+    background: var(--admin-surface) !important;
+    border: 1px solid var(--admin-border-strong) !important;
     border-radius: 10px;
-    color: #000000 !important;
+    color: var(--admin-foreground) !important;
     padding: .42rem .75rem;
     font-size: .875rem;
     outline: none;
@@ -486,14 +486,14 @@
   .admin-tab {
     background: transparent;
     border: 0;
-    color: #64748b;
+    color: var(--admin-muted);
     padding: .4rem .85rem;
     font-size: .82rem;
     cursor: pointer;
     transition: all .15s;
 
     &.active {
-      background: #B55925;
+      background: var(--admin-accent);
       color: #ffffff;
     }
   }
@@ -510,7 +510,7 @@
 
   .admin-empty {
     text-align: center;
-    color: #475569;
+    color: var(--admin-muted);
     padding: 2rem !important;
     font-size: .875rem;
   }
@@ -524,7 +524,7 @@
     justify-content: center;
     align-items: center;
     padding: 3rem;
-    color: #475569;
+    color: var(--admin-muted);
     font-size: .875rem;
   }
 
@@ -1743,7 +1743,7 @@
     color: #94a3b8;
 
     &.active {
-      background: #b55925;
+      background: var(--admin-accent);
       color: #fff;
     }
   }

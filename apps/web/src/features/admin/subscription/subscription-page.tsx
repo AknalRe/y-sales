@@ -146,7 +146,7 @@ export function SubscriptionPage() {
           {/* Main Info */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Plan Header */}
-            {/* <div className="admin-card" style={{ borderColor: planStyle.border, background: planStyle.bg, padding: '1.5rem' }}>
+            <div className="admin-card" style={{ borderColor: planStyle.border, background: planStyle.bg, padding: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>{planStyle.icon}</div>
                 <div style={{ flex: 1 }}>
@@ -169,10 +169,10 @@ export function SubscriptionPage() {
                   </div>
                 )}
               </div>
-            </div> */}
+            </div>
 
             {/* Limits */}
-            {/* {limits && Object.keys(limits).length > 0 && (
+            {limits && Object.keys(limits).length > 0 && (
               <div className="admin-card">
                 <div className="admin-card-header">
                   <h2>Batas Penggunaan</h2>
@@ -191,10 +191,10 @@ export function SubscriptionPage() {
                   ))}
                 </div>
               </div>
-            )} */}
+            )}
 
             {/* Features */}
-            {/* {features && features.length > 0 && (
+            {features && features.length > 0 && (
               <div className="admin-card">
                 <div className="admin-card-header">
                   <h2>Fitur Tersedia</h2>
@@ -213,13 +213,13 @@ export function SubscriptionPage() {
                   })}
                 </div>
               </div>
-            )} */}
+            )}
           </div>
 
           {/* Side Panel */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
             {/* Period Info */}
-            {/* <div className="admin-card">
+            <div className="admin-card">
               <div className="admin-card-header" style={{ marginBottom: '.75rem', paddingBottom: '.65rem' }}>
                 <h2>Info Periode</h2>
                 <Clock size={15} style={{ color: '#64748b' }} />
@@ -239,10 +239,10 @@ export function SubscriptionPage() {
                   </div>
                 ))}
               </div>
-            </div> */}
+            </div>
 
             {/* Days Remaining */}
-            {/* {daysLeft !== null && (
+            {daysLeft !== null && (
               <div className="admin-card" style={{ textAlign: 'center', padding: '1.25rem', background: daysLeft <= 7 ? 'rgba(239,68,68,.08)' : 'rgba(52,211,153,.06)', borderColor: daysLeft <= 7 ? 'rgba(239,68,68,.2)' : 'rgba(52,211,153,.15)' }}>
                 <div style={{ fontSize: '2.5rem', fontWeight: 900, color: daysLeft <= 7 ? '#f87171' : '#34d399', lineHeight: 1 }}>{daysLeft}</div>
                 <div style={{ color: '#64748b', fontSize: '.78rem', marginTop: '.3rem' }}>hari tersisa</div>
@@ -259,15 +259,15 @@ export function SubscriptionPage() {
                   </div>
                 )}
               </div>
-            )} */}
+            )}
 
             {/* Contact */}
-            {/* <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
+            <div className="admin-card" style={{ padding: '1rem 1.1rem' }}>
               <p style={{ margin: '0 0 .65rem', color: '#64748b', fontSize: '.82rem' }}>Ingin upgrade atau ada pertanyaan?</p>
               <a href="mailto:support@mahasura.id" style={{ display: 'flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', borderRadius: 10, padding: '.6rem 1rem', fontSize: '.82rem', fontWeight: 700, textDecoration: 'none', justifyContent: 'center' }}>
                 <Mail size={15} /> Hubungi Tim Kami
               </a>
-            </div> */}
+            </div>
           </div>
         </div>
       )}

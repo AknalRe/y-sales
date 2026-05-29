@@ -32,10 +32,14 @@
   font-weight: 900;
 }
 
-.platform-company-name,
-.admin-user-name {
+.platform-company-name {
   font-weight: 900;
   color: #fff;
+}
+
+.admin-user-name {
+  font-weight: 900;
+  color: var(--admin-foreground);
 }
 
 .platform-company-slug,

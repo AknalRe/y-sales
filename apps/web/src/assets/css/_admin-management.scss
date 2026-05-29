@@ -20,7 +20,7 @@
 
 .admin-user-name {
   font-weight: 600;
-  color: #0f172a;
+  color: var(--admin-foreground);
 }
 
 .admin-user-code {
@@ -32,11 +32,11 @@
 .admin-role-badge {
   font-size: .7rem;
   font-weight: 600;
-  color: #475569;
-  background: #f1f5f9;
+  color: var(--admin-muted);
+  background: var(--admin-surface-hover);
   padding: .2rem .65rem;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border);
 }
 
 /* ─── Status Pills ──────────────────────────────────────────────────────── */
@@ -55,21 +55,21 @@
   background: transparent;
 
   &-active {
-    color: #10b981;
-    background: #ecfdf5;
-    border-color: #d1fae5;
+    color: var(--admin-success);
+    background: var(--admin-success-bg);
+    border-color: var(--admin-success-soft);
   }
 
   &-inactive {
-    color: #64748b;
-    background: #f1f5f9;
-    border-color: #e2e8f0;
+    color: var(--admin-muted);
+    background: var(--admin-surface-hover);
+    border-color: var(--admin-border);
   }
 
   &-suspended {
-    color: #ef4444;
-    background: #fef2f2;
-    border-color: #fee2e2;
+    color: var(--admin-danger);
+    background: var(--admin-danger-bg);
+    border-color: var(--admin-danger-soft);
   }
 }
 
@@ -85,23 +85,23 @@
   border-radius: 8px;
   display: grid;
   place-items: center;
-  background: #f8fafc;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
+  background: var(--admin-surface);
+  color: var(--admin-muted);
+  border: 1px solid var(--admin-border);
   cursor: pointer;
   transition: all .2s;
 
   &:hover {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: var(--admin-surface-hover);
+    color: var(--admin-foreground);
   }
 }
 
 .admin-btn-danger-sm {
   &:hover {
-    background: #fef2f2;
-    color: #ef4444;
-    border-color: #fee2e2;
+    background: var(--admin-danger-bg);
+    color: var(--admin-danger);
+    border-color: var(--admin-danger-soft);
   }
 }
 
@@ -119,12 +119,12 @@
 }
 
 .admin-modal {
-  background: #ffffff;
+  background: var(--admin-surface);
   border-radius: 20px;
   width: 100%;
   max-width: 500px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--admin-border);
   overflow: hidden;
 
   &-sm {
@@ -133,7 +133,7 @@
 
   &-header {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--admin-border-subtle);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -142,7 +142,7 @@
       margin: 0;
       font-size: 1.15rem;
       font-weight: 700;
-      color: #0f172a;
+      color: var(--admin-foreground);
     }
   }
 
@@ -150,7 +150,7 @@
     background: transparent;
     border: 0;
     font-size: 1.5rem;
-    color: var(--muted-foreground);
+    color: var(--admin-muted);
     cursor: pointer;
   }
 
@@ -160,8 +160,8 @@
 
   &-footer {
     padding: 1rem 1.5rem;
-    background: #f8fafc;
-    border-top: 1px solid #f1f5f9;
+    background: var(--admin-bg);
+    border-top: 1px solid var(--admin-border-subtle);
     display: flex;
     justify-content: flex-end;
     gap: .75rem;
@@ -189,18 +189,18 @@
     margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--admin-foreground);
   }
 
   &-code {
     font-family: monospace;
     font-size: .75rem;
-    color: #475569;
-    background: #f1f5f9;
+    color: var(--admin-muted);
+    background: var(--admin-surface-hover);
     padding: .15rem .5rem;
     border-radius: 4px;
     font-weight: 700;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--admin-border);
   }
 }
 
@@ -208,9 +208,9 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 12px;
-  background: #ede9fe;
-  color: #7c3aed;
-  border: 1px solid #ddd6fe;
+  background: var(--admin-accent-shadow);
+  color: var(--admin-accent);
+  border: 1px solid var(--admin-border);
   display: grid;
   place-items: center;
 }
@@ -218,7 +218,7 @@
 .admin-role-desc {
   margin: 0;
   font-size: .875rem;
-  color: #64748b;
+  color: var(--admin-muted);
   line-height: 1.5;
 }
 
@@ -229,9 +229,9 @@
   gap: .45rem;
   font-size: .75rem;
   font-weight: 700;
-  color: var(--muted-foreground);
+  color: var(--admin-muted);
   padding-top: .85rem;
-  border-top: 1px dashed #f1f5f9;
+  border-top: 1px dashed var(--admin-border-subtle);
 
   svg {
     opacity: .7;

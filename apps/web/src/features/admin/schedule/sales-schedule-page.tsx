@@ -23,16 +23,6 @@ const scheduleStatusLabel: Record<string, string> = {
   cancelled: 'Dibatalkan',
 };
 
-const scheduleStatusTone: Record<string, { bg: string; color: string; border: string }> = {
-  draft: { bg: '#f8fafc', color: '#64748b', border: '#e2e8f0' },
-  assigned: { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
-  approved: { bg: '#ecfdf5', color: '#059669', border: '#bbf7d0' },
-  in_progress: { bg: '#fffbeb', color: '#d97706', border: '#fde68a' },
-  completed: { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
-  missed: { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' },
-  cancelled: { bg: '#f8fafc', color: '#475569', border: '#cbd5e1' },
-};
-
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -202,12 +192,30 @@ export function SalesSchedulePage() {
     }
   }
 
+  function getStatusStyle(status: string) {
+    switch (status) {
+      case 'assigned':
+        return { background: 'var(--admin-accent-shadow)', color: 'var(--admin-accent)', border: '1px solid var(--admin-border-strong)' };
+      case 'approved':
+      case 'completed':
+        return { background: 'var(--admin-success-soft)', color: 'var(--admin-success)', border: '1px solid var(--admin-border)' };
+      case 'in_progress':
+        return { background: 'var(--admin-accent-shadow)', color: 'var(--admin-accent-light)', border: '1px solid var(--admin-border)' };
+      case 'missed':
+        return { background: 'var(--admin-danger-bg)', color: 'var(--admin-danger)', border: '1px solid var(--admin-danger-soft)' };
+      case 'cancelled':
+        return { background: 'var(--admin-bg)', color: 'var(--admin-muted-dim)', border: '1px solid var(--admin-border)' };
+      default:
+        return { background: 'var(--admin-bg)', color: 'var(--admin-muted)', border: '1px solid var(--admin-border)' };
+    }
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">
-            <CalendarPlus size={24} style={{ color: '#b55925' }} />
+            <CalendarPlus size={24} style={{ color: 'var(--admin-accent)' }} />
             Jadwalkan Sales
           </h1>
           <p className="admin-page-subtitle">
@@ -227,26 +235,27 @@ export function SalesSchedulePage() {
         </div>
       )}
       {success && (
-        <div className="admin-alert" style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #bbf7d0' }}>
+        <div className="admin-alert admin-alert-success">
           <CheckCircle2 size={15} />
           {success}
         </div>
       )}
 
       <div className="grid gap-5 xl:grid-cols-[420px_1fr]">
-        <form onSubmit={handleCreate} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+        {/* ─── Create Form ─────────────────────────────────────── */}
+        <form onSubmit={handleCreate} className="admin-card" style={{ padding: '1.25rem' }}>
           <div className="mb-5 flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-orange-50 text-[#b55925]">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl" style={{ background: 'var(--admin-accent-shadow)', color: 'var(--admin-accent)' }}>
               <Send size={19} />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900">Buat Jadwal</h2>
-              <p className="text-sm font-medium text-slate-500">Satu outlet akan menjadi satu schedule.</p>
+              <h2 className="text-lg font-black text-admin-foreground">Buat Jadwal</h2>
+              <p className="text-sm font-medium text-admin-muted">Satu outlet akan menjadi satu schedule.</p>
             </div>
           </div>
 
           <div className="grid gap-4">
-            <label className="grid gap-2 text-sm font-bold text-slate-700">
+            <label className="grid gap-2 text-sm font-bold text-admin-text">
               Sales
               <select
                 className="admin-select"
@@ -262,7 +271,7 @@ export function SalesSchedulePage() {
             </label>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm font-bold text-slate-700">
+              <label className="grid gap-2 text-sm font-bold text-admin-text">
                 Tanggal
                 <input
                   type="date"
@@ -272,7 +281,7 @@ export function SalesSchedulePage() {
                   required
                 />
               </label>
-              <label className="grid gap-2 text-sm font-bold text-slate-700">
+              <label className="grid gap-2 text-sm font-bold text-admin-text">
                 Prioritas
                 <select
                   className="admin-select"
@@ -289,7 +298,7 @@ export function SalesSchedulePage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm font-bold text-slate-700">
+              <label className="grid gap-2 text-sm font-bold text-admin-text">
                 Mulai
                 <input
                   type="time"
@@ -298,7 +307,7 @@ export function SalesSchedulePage() {
                   onChange={(event) => setForm((current) => ({ ...current, plannedStartTime: event.target.value }))}
                 />
               </label>
-              <label className="grid gap-2 text-sm font-bold text-slate-700">
+              <label className="grid gap-2 text-sm font-bold text-admin-text">
                 Selesai
                 <input
                   type="time"
@@ -310,7 +319,7 @@ export function SalesSchedulePage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <label className="grid gap-2 text-sm font-bold text-slate-700">
+              <label className="grid gap-2 text-sm font-bold text-admin-text">
                 Target Closing
                 <input
                   type="number"
@@ -320,7 +329,7 @@ export function SalesSchedulePage() {
                   onChange={(event) => setForm((current) => ({ ...current, targetClosingCount: Number(event.target.value) }))}
                 />
               </label>
-              <label className="grid gap-2 text-sm font-bold text-slate-700">
+              <label className="grid gap-2 text-sm font-bold text-admin-text">
                 Target Omset
                 <input
                   type="number"
@@ -330,7 +339,7 @@ export function SalesSchedulePage() {
                   onChange={(event) => setForm((current) => ({ ...current, targetRevenueAmount: event.target.value }))}
                 />
               </label>
-              <label className="grid gap-2 text-sm font-bold text-slate-700">
+              <label className="grid gap-2 text-sm font-bold text-admin-text">
                 Durasi/Outlet
                 <input
                   type="number"
@@ -343,7 +352,7 @@ export function SalesSchedulePage() {
               </label>
             </div>
 
-            <label className="grid gap-2 text-sm font-bold text-slate-700">
+            <label className="grid gap-2 text-sm font-bold text-admin-text">
               Catatan
               <textarea
                 className="admin-input min-h-20 resize-none"
@@ -353,19 +362,20 @@ export function SalesSchedulePage() {
               />
             </label>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            {/* ─── Outlet Picker ──────────────────────────────── */}
+            <div className="rounded-2xl p-4" style={{ border: '1px solid var(--admin-border)', background: 'var(--admin-bg)' }}>
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">Pilih Outlet</h3>
-                  <p className="text-xs font-semibold text-slate-500">{selectedOutlets.length} outlet dipilih</p>
+                  <h3 className="text-sm font-black text-admin-foreground">Pilih Outlet</h3>
+                  <p className="text-xs font-semibold text-admin-muted">{selectedOutlets.length} outlet dipilih</p>
                 </div>
-                <span className="rounded-xl bg-white px-3 py-1 text-xs font-black text-[#b55925] ring-1 ring-slate-200">
+                <span className="rounded-xl px-3 py-1 text-xs font-black" style={{ background: 'var(--admin-surface)', color: 'var(--admin-accent)', border: '1px solid var(--admin-border)' }}>
                   Target {selectedOutlets.length}
                 </span>
               </div>
 
               <div className="relative mb-3">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted" />
                 <input
                   className="admin-input w-full pl-9"
                   placeholder="Cari outlet..."
@@ -382,15 +392,24 @@ export function SalesSchedulePage() {
                       key={outlet.id}
                       type="button"
                       onClick={() => toggleOutlet(outlet.id)}
-                      className="flex w-full items-start gap-3 rounded-2xl border bg-white p-3 text-left transition hover:border-orange-200"
-                      style={{ borderColor: selected ? '#f2b38a' : '#e2e8f0' }}
+                      className="flex w-full items-start gap-3 rounded-2xl p-3 text-left transition"
+                      style={{
+                        background: 'var(--admin-surface)',
+                        border: `1px solid ${selected ? 'var(--admin-accent)' : 'var(--admin-border)'}`,
+                      }}
                     >
-                      <span className="mt-1 grid h-5 w-5 place-items-center rounded-md border" style={{ background: selected ? '#b55925' : '#fff', borderColor: selected ? '#b55925' : '#cbd5e1' }}>
-                        {selected ? <CheckCircle2 size={13} color="#fff" /> : null}
+                      <span
+                        className="mt-1 grid h-5 w-5 place-items-center rounded-md"
+                        style={{
+                          background: selected ? 'var(--admin-accent)' : 'var(--admin-surface)',
+                          border: `1px solid ${selected ? 'var(--admin-accent)' : 'var(--admin-border-strong)'}`,
+                        }}
+                      >
+                        {selected ? <CheckCircle2 size={13} color="var(--admin-surface)" /> : null}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <strong className="block truncate text-sm text-slate-900">{outlet.code} - {outlet.name}</strong>
-                        <span className="mt-1 flex items-center gap-1 text-xs font-medium text-slate-500">
+                        <strong className="block truncate text-sm text-admin-foreground">{outlet.code} - {outlet.name}</strong>
+                        <span className="mt-1 flex items-center gap-1 text-xs font-medium text-admin-muted">
                           <MapPin size={12} />
                           <span className="truncate">{outlet.address}</span>
                         </span>
@@ -399,25 +418,26 @@ export function SalesSchedulePage() {
                   );
                 })}
                 {!filteredOutlets.length && (
-                  <p className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-center text-sm font-semibold text-slate-500">
+                  <p className="rounded-2xl p-4 text-center text-sm font-semibold" style={{ border: '1px dashed var(--admin-border)', background: 'var(--admin-surface)', color: 'var(--admin-muted)' }}>
                     Outlet aktif tidak ditemukan.
                   </p>
                 )}
               </div>
             </div>
 
-            <button className="brand-button flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-black text-white disabled:opacity-60" type="submit" disabled={saving}>
+            <button className="admin-btn-primary flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-black disabled:opacity-60" type="submit" disabled={saving}>
               {saving ? <RefreshCw size={16} className="spin" /> : <CalendarPlus size={16} />}
               Buat Jadwal Sales
             </button>
           </div>
         </form>
 
-        <section className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+        {/* ─── Schedule List ──────────────────────────────────── */}
+        <section className="admin-card" style={{ padding: '1.25rem' }}>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-black text-slate-900">Daftar Jadwal</h2>
-              <p className="text-sm font-medium text-slate-500">Filter berdasarkan tanggal dan sales.</p>
+              <h2 className="text-lg font-black text-admin-foreground">Daftar Jadwal</h2>
+              <p className="text-sm font-medium text-admin-muted">Filter berdasarkan tanggal dan sales.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <input className="admin-input" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} />
@@ -440,15 +460,19 @@ export function SalesSchedulePage() {
               {groupedSchedules.map((group) => {
                 const first = group[0];
                 return (
-                  <article key={`${first.salesUserId}-${first.scheduledDate}-${first.id}`} className="rounded-2xl border border-slate-200 p-4">
+                  <article
+                    key={`${first.salesUserId}-${first.scheduledDate}-${first.id}`}
+                    className="rounded-2xl p-4"
+                    style={{ border: '1px solid var(--admin-border)' }}
+                  >
                     <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                       <div className="flex items-start gap-3">
-                        <div className="grid h-11 w-11 place-items-center rounded-2xl bg-orange-50 text-[#b55925]">
+                        <div className="grid h-11 w-11 place-items-center rounded-2xl" style={{ background: 'var(--admin-accent-shadow)', color: 'var(--admin-accent)' }}>
                           <UserRound size={18} />
                         </div>
                         <div>
-                          <h3 className="text-base font-black text-slate-900">{getUserName(first.salesUserId)}</h3>
-                          <p className="mt-1 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
+                          <h3 className="text-base font-black text-admin-foreground">{getUserName(first.salesUserId)}</h3>
+                          <p className="mt-1 flex flex-wrap items-center gap-2 text-xs font-bold text-admin-muted">
                             <span>{first.scheduledDate}</span>
                             <span>Target {group.length} outlet</span>
                             {first.plannedStartTime || first.plannedEndTime ? (
@@ -458,24 +482,28 @@ export function SalesSchedulePage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-black uppercase tracking-wide text-slate-400">Target Omset</p>
-                        <strong className="text-sm font-black text-[#b55925]">{formatRp(first.targetRevenueAmount)}</strong>
+                        <p className="text-xs font-black uppercase tracking-wide text-admin-muted-dim">Target Omset</p>
+                        <strong className="text-sm font-black text-admin-accent">{formatRp(first.targetRevenueAmount)}</strong>
                       </div>
                     </div>
 
                     <div className="grid gap-2">
                       {group.map((schedule) => {
-                        const tone = scheduleStatusTone[schedule.status] ?? scheduleStatusTone.draft;
+                        const statusStyle = getStatusStyle(schedule.status);
                         const canApprove = schedule.status === 'assigned';
                         const canCancel = ['assigned', 'approved'].includes(schedule.status);
                         return (
-                          <div key={schedule.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3">
+                          <div
+                            key={schedule.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl p-3"
+                            style={{ background: 'var(--admin-bg)' }}
+                          >
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-black text-slate-900">{getOutletName(schedule.outletId)}</p>
-                              <p className="text-xs font-semibold text-slate-500">Prioritas {schedule.priority} - Target closing {schedule.targetClosingCount}</p>
+                              <p className="truncate text-sm font-black text-admin-foreground">{getOutletName(schedule.outletId)}</p>
+                              <p className="text-xs font-semibold text-admin-muted">Prioritas {schedule.priority} - Target closing {schedule.targetClosingCount}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="rounded-xl px-3 py-1 text-xs font-black" style={{ background: tone.bg, color: tone.color, border: `1px solid ${tone.border}` }}>
+                              <span className="rounded-xl px-3 py-1 text-xs font-black" style={statusStyle}>
                                 {scheduleStatusLabel[schedule.status] ?? schedule.status}
                               </span>
                               {canApprove ? (
@@ -500,10 +528,10 @@ export function SalesSchedulePage() {
               })}
             </div>
           ) : (
-            <div className="rounded-[1.5rem] border-2 border-dashed border-slate-200 py-16 text-center">
-              <CalendarPlus size={42} className="mx-auto mb-3 text-slate-300" />
-              <p className="text-base font-black text-slate-700">Belum ada jadwal sales</p>
-              <p className="mt-1 text-sm font-medium text-slate-500">Buat jadwal agar sales punya list outlet kunjungan hari ini.</p>
+            <div className="rounded-[1.5rem] py-16 text-center" style={{ border: '2px dashed var(--admin-border)' }}>
+              <CalendarPlus size={42} className="mx-auto mb-3 text-admin-subtle" />
+              <p className="text-base font-black text-admin-foreground">Belum ada jadwal sales</p>
+              <p className="mt-1 text-sm font-medium text-admin-muted">Buat jadwal agar sales punya list outlet kunjungan hari ini.</p>
             </div>
           )}
         </section>

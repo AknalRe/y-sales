@@ -5,18 +5,21 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 @use 'base';
-@use 'animations';
-@use 'brand';
-@use 'admin-shell';
-@use 'platform-ui';
-@use 'admin-pages';
-@use 'admin-users';
-@use 'admin-roles';
-@use 'admin-modals';
-@use 'receivables';
-@use 'sales-profile';
-@use 'skeleton';
-@use 'empty-state';
-@use 'sales-home';
-@use 'admin-management';
-@use 'settings';
+@use 'util/animations';
+@use 'util/skeleton';
+@use 'util/empty-state';
+
+@use 'brand/index';
+
+@use './admin/admin-shell';
+@use './admin/admin-pages';
+@use './admin/admin-users';
+@use './admin/admin-roles';
+@use './admin/admin-modals';
+@use './admin/admin-management';
+@use './admin/admin-settings';
+
+@use './sales/sales-home';
+@use './sales/sales-profile';
+
+@use './platform/platform-ui';

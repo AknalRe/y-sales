@@ -1,3 +1,4 @@
+/* ─── Loading States ────────────────────────────────────────────────────── */
 .platform-loading,
 .admin-loading {
   display: flex;
@@ -8,6 +9,7 @@
   color: var(--platform-subtle);
 }
 
+/* ─── Company & User Cells ──────────────────────────────────────────────── */
 .platform-company-cell,
 .admin-user-cell,
 .platform-company-row {
@@ -42,6 +44,7 @@
   color: var(--platform-subtle);
 }
 
+/* ─── Status & Row Actions ──────────────────────────────────────────────── */
 .platform-status-badge,
 .platform-row-actions,
 .admin-row-actions {
@@ -61,6 +64,7 @@
   background: rgba(239, 68, 68, .12);
 }
 
+/* ─── Stats Grid ────────────────────────────────────────────────────────── */
 .platform-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -97,23 +101,25 @@
   letter-spacing: -.05em;
 }
 
+/* ─── Two Column Layout ─────────────────────────────────────────────────── */
 .platform-two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
+/* ─── Card Components ───────────────────────────────────────────────────── */
 .platform-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.1rem;
   border-bottom: 1px solid var(--platform-border);
-}
 
-.platform-card-header h2 {
-  margin: 0;
-  font-size: 1rem;
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+  }
 }
 
 .platform-card-body {
@@ -127,6 +133,7 @@
   font-size: .85rem;
 }
 
+/* ─── Company & Plan Lists ──────────────────────────────────────────────── */
 .platform-company-list,
 .platform-plan-list {
   list-style: none;
@@ -155,6 +162,7 @@
   color: #fff;
 }
 
+/* ─── Status Dots ───────────────────────────────────────────────────────── */
 .platform-status-dot {
   display: inline-flex;
   align-items: center;

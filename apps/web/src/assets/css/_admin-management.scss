@@ -1,4 +1,4 @@
-/* --- ADMIN MANAGEMENT STYLES (LIGHT MODE) --- */
+/* ─── Admin Management Components ───────────────────────────────────────── */
 .admin-user-cell {
   display: flex;
   align-items: center;
@@ -39,6 +39,7 @@
   border: 1px solid #e2e8f0;
 }
 
+/* ─── Status Pills ──────────────────────────────────────────────────────── */
 .admin-status-pill {
   display: inline-flex;
   align-items: center;
@@ -52,26 +53,27 @@
   border: 1px solid transparent;
   cursor: pointer;
   background: transparent;
+
+  &-active {
+    color: #10b981;
+    background: #ecfdf5;
+    border-color: #d1fae5;
+  }
+
+  &-inactive {
+    color: #64748b;
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+  }
+
+  &-suspended {
+    color: #ef4444;
+    background: #fef2f2;
+    border-color: #fee2e2;
+  }
 }
 
-.admin-status-pill-active {
-  color: #10b981;
-  background: #ecfdf5;
-  border-color: #d1fae5;
-}
-
-.admin-status-pill-inactive {
-  color: #64748b;
-  background: #f1f5f9;
-  border-color: #e2e8f0;
-}
-
-.admin-status-pill-suspended {
-  color: #ef4444;
-  background: #fef2f2;
-  border-color: #fee2e2;
-}
-
+/* ─── Row Actions ────────────────────────────────────────────────────────── */
 .admin-row-actions {
   display: flex;
   gap: .5rem;
@@ -88,20 +90,22 @@
   border: 1px solid #e2e8f0;
   cursor: pointer;
   transition: all .2s;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
 }
 
-.admin-btn-icon-sm:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+.admin-btn-danger-sm {
+  &:hover {
+    background: #fef2f2;
+    color: #ef4444;
+    border-color: #fee2e2;
+  }
 }
 
-.admin-btn-danger-sm:hover {
-  background: #fef2f2;
-  color: #ef4444;
-  border-color: #fee2e2;
-}
-
-/* Modal Styles */
+/* ─── Admin Modal Overrides ─────────────────────────────────────────────── */
 .admin-modal-overlay {
   position: fixed;
   inset: 0;
@@ -122,49 +126,49 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   border: 1px solid #e2e8f0;
   overflow: hidden;
+
+  &-sm {
+    max-width: 400px;
+  }
+
+  &-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+  }
+
+  &-close {
+    background: transparent;
+    border: 0;
+    font-size: 1.5rem;
+    color: var(--muted-foreground);
+    cursor: pointer;
+  }
+
+  &-body {
+    padding: 1.5rem;
+  }
+
+  &-footer {
+    padding: 1rem 1.5rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: flex-end;
+    gap: .75rem;
+  }
 }
 
-.admin-modal-sm {
-  max-width: 400px;
-}
-
-.admin-modal-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.admin-modal-header h2 {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.admin-modal-close {
-  background: transparent;
-  border: 0;
-  font-size: 1.5rem;
-  color: var(--muted-foreground);
-  cursor: pointer;
-}
-
-.admin-modal-body {
-  padding: 1.5rem;
-}
-
-.admin-modal-footer {
-  padding: 1rem 1.5rem;
-  background: #f8fafc;
-  border-top: 1px solid #f1f5f9;
-  display: flex;
-  justify-content: flex-end;
-  gap: .75rem;
-}
-
-/* Roles Specific */
+/* ─── Roles Grid ────────────────────────────────────────────────────────── */
 .admin-roles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -173,15 +177,32 @@
 
 .admin-role-card {
   padding: 1.5rem;
-}
 
-.admin-role-card-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
+  &-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
 
+  &-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  &-code {
+    font-family: monospace;
+    font-size: .75rem;
+    color: #475569;
+    background: #f1f5f9;
+    padding: .15rem .5rem;
+    border-radius: 4px;
+    font-weight: 700;
+    border: 1px solid #e2e8f0;
+  }
+}
 
 .admin-role-icon {
   width: 2.5rem;
@@ -193,26 +214,6 @@
   display: grid;
   place-items: center;
 }
-
-
-.admin-role-card-name {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.admin-role-card-code {
-  font-family: monospace;
-  font-size: .75rem;
-  color: #475569;
-  background: #f1f5f9;
-  padding: .15rem .5rem;
-  border-radius: 4px;
-  font-weight: 700;
-  border: 1px solid #e2e8f0;
-}
-
 
 .admin-role-desc {
   margin: 0;
@@ -231,8 +232,8 @@
   color: var(--muted-foreground);
   padding-top: .85rem;
   border-top: 1px dashed #f1f5f9;
-}
 
-.admin-role-system-badge svg {
-  opacity: .7;
+  svg {
+    opacity: .7;
+  }
 }

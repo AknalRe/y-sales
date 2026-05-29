@@ -1,3 +1,4 @@
+/* ─── Roles & Plans Grid ────────────────────────────────────────────────── */
 .platform-plans-grid,
 .admin-roles-grid {
   display: grid;
@@ -17,8 +18,6 @@
   margin-bottom: 1.25rem;
 }
 
-
-
 .platform-plan-card-name {
   margin: 0;
   font-size: 1.2rem;
@@ -30,7 +29,6 @@
   color: #0f172a;
   font-weight: 700;
 }
-
 
 .platform-plan-card-code {
   color: #93c5fd;
@@ -48,7 +46,7 @@
   font-size: .72rem;
 }
 
-
+/* ─── Plan Meta ─────────────────────────────────────────────────────────── */
 .platform-plan-meta-row {
   display: flex;
   align-items: center;
@@ -75,17 +73,18 @@
   min-height: 42px;
 }
 
+/* ─── Plan Pricing ──────────────────────────────────────────────────────── */
 .platform-plan-pricing {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: .75rem;
   margin: 1rem 0;
-}
 
-.platform-plan-pricing>div {
-  padding: .75rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, .05);
+  >div {
+    padding: .75rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .05);
+  }
 }
 
 .platform-plan-price-label {
@@ -106,6 +105,7 @@
   gap: .45rem;
 }
 
+/* ─── Feature Options ───────────────────────────────────────────────────── */
 .platform-feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -121,45 +121,46 @@
   background: rgba(255, 255, 255, .045);
   cursor: pointer;
   transition: .2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, .075);
+  }
+
+  &-active {
+    border-color: rgba(99, 220, 152, .48);
+    background: linear-gradient(135deg, rgba(34, 197, 94, .16), rgba(6, 182, 212, .08));
+    box-shadow: inset 0 0 0 1px rgba(99, 220, 152, .16);
+  }
+
+  &-title {
+    display: block;
+    font-weight: 900;
+    color: #fff;
+  }
+
+  &-desc {
+    display: block;
+    margin-top: .3rem;
+    min-height: 34px;
+    color: var(--platform-subtle);
+    font-size: .78rem;
+    line-height: 1.35;
+  }
+
+  &-category {
+    display: inline-flex;
+    margin-top: .55rem;
+    border-radius: 999px;
+    padding: .18rem .48rem;
+    color: #bae6fd;
+    background: rgba(14, 165, 233, .13);
+    font-size: .7rem;
+    font-weight: 800;
+  }
 }
 
-.platform-feature-option:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, .075);
-}
-
-.platform-feature-option-active {
-  border-color: rgba(99, 220, 152, .48);
-  background: linear-gradient(135deg, rgba(34, 197, 94, .16), rgba(6, 182, 212, .08));
-  box-shadow: inset 0 0 0 1px rgba(99, 220, 152, .16);
-}
-
-.platform-feature-option-title {
-  display: block;
-  font-weight: 900;
-  color: #fff;
-}
-
-.platform-feature-option-desc {
-  display: block;
-  margin-top: .3rem;
-  min-height: 34px;
-  color: var(--platform-subtle);
-  font-size: .78rem;
-  line-height: 1.35;
-}
-
-.platform-feature-option-category {
-  display: inline-flex;
-  margin-top: .55rem;
-  border-radius: 999px;
-  padding: .18rem .48rem;
-  color: #bae6fd;
-  background: rgba(14, 165, 233, .13);
-  font-size: .7rem;
-  font-weight: 800;
-}
-
+/* ─── Limits ────────────────────────────────────────────────────────────── */
 .platform-limit-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
@@ -173,18 +174,18 @@
   border-radius: 18px;
   padding: .85rem;
   background: rgba(255, 255, 255, .045);
-}
 
-.platform-limit-item strong {
-  display: block;
-  color: #fff;
-}
+  strong {
+    display: block;
+    color: #fff;
+  }
 
-.platform-limit-item small {
-  display: block;
-  margin-top: .25rem;
-  color: var(--platform-subtle);
-  line-height: 1.35;
+  small {
+    display: block;
+    margin-top: .25rem;
+    color: var(--platform-subtle);
+    line-height: 1.35;
+  }
 }
 
 .platform-limit-input-wrap {
@@ -192,14 +193,15 @@
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: .55rem;
+
+  em {
+    color: #cbd5e1;
+    font-size: .78rem;
+    font-style: normal;
+  }
 }
 
-.platform-limit-input-wrap em {
-  color: #cbd5e1;
-  font-size: .78rem;
-  font-style: normal;
-}
-
+/* ─── Feature Tags & Badges ─────────────────────────────────────────────── */
 .platform-feature-tag,
 .platform-badge {
   border-radius: 999px;
@@ -218,8 +220,6 @@
   border: 1px solid #e2e8f0;
 }
 
-
-
 .platform-plan-card-footer {
   display: flex;
   gap: .45rem;
@@ -236,6 +236,7 @@
   background: rgba(148, 163, 184, .13);
 }
 
+/* ─── Platform Modal Overlay ────────────────────────────────────────────── */
 .platform-modal-overlay {
   position: fixed;
   inset: 0;

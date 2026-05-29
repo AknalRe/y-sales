@@ -1,0 +1,51 @@
+/* ────────────────────────────────────────────────────────────────────────
+   Brand Colors (Login / Marketing)
+   ──────────────────────────────────────────────────────────────────────── */
+
+:root {
+    --brand-primary: #4A2922;
+    --brand-secondary: #966556;
+    --brand-accent: #B55925;
+    --brand-dark: #40231E;
+    --brand-darker: #542F25;
+    --brand-muted: #59252D;
+    --brand-cream: #fff7ed;
+    --brand-surface: #ffffff;
+    --brand-page: #f5f5f5;
+    --brand-soft: #fff7ed;
+    --brand-border: rgba(74, 41, 34, .14);
+    --brand-foreground: #1a0e0b;
+    --brand-text: #3d1f18;
+}
+
+.dark {
+    --brand-primary: #d4a89c;
+    --brand-secondary: #c49a8c;
+    --brand-accent: #d97b4a;
+    --brand-dark: #1a0e0b;
+    --brand-darker: #0f0806;
+    --brand-muted: #2a1216;
+    --brand-cream: #1a0e0b;
+    --brand-surface: #241410;
+    --brand-page: #1a0e0b;
+    --brand-soft: #241410;
+    --brand-border: rgba(212, 168, 156, .16);
+    --brand-foreground: #fff7ed;
+    --brand-text: #e8d5cc;
+}
+
+@theme inline {
+    --color-brand-primary: var(--brand-primary);
+    --color-brand-secondary: var(--brand-secondary);
+    --color-brand-accent: var(--brand-accent);
+    --color-brand-dark: var(--brand-dark);
+    --color-brand-darker: var(--brand-darker);
+    --color-brand-muted: var(--brand-muted);
+    --color-brand-cream: var(--brand-cream);
+    --color-brand-surface: var(--brand-surface);
+    --color-brand-page: var(--brand-page);
+    --color-brand-soft: var(--brand-soft);
+    --color-brand-border: var(--brand-border);
+    --color-brand-foreground: var(--brand-foreground);
+    --color-brand-text: var(--brand-text);
+}

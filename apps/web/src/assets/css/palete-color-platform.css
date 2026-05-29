@@ -1,0 +1,65 @@
+/* ────────────────────────────────────────────────────────────────────────
+   Platform Colors (SaaS)
+   ──────────────────────────────────────────────────────────────────────── */
+
+:root {
+    --platform-success: #22c55e;
+    --platform-warning: #f59e0b;
+    --platform-danger: #ef4444;
+    --platform-muted: var(--muted-foreground);
+    --platform-bg: #f8fafc;
+    --platform-panel: #ffffff;
+    --platform-panel-strong: #ffffff;
+    --platform-border: #e2e8f0;
+    --platform-text: #0f172a;
+    --platform-subtle: #64748b;
+    --platform-primary: #8b5cf6;
+    --platform-primary-2: #06b6d4;
+    --platform-accent-green: #059669;
+    --platform-accent-blue: #2563eb;
+    --platform-accent-amber: #92400e;
+    --platform-accent-amber-bg: rgba(245, 158, 11, .1);
+    --platform-surface-hover: rgba(0, 0, 0, .04);
+    --platform-muted-dim: #9ca3af;
+}
+
+.dark {
+    --platform-success: #63dc98;
+    --platform-warning: #ffbe4a;
+    --platform-danger: #ff6363;
+    --platform-bg: #070a13;
+    --platform-panel: rgba(15, 23, 42, 0.72);
+    --platform-panel-strong: rgba(15, 23, 42, 0.92);
+    --platform-border: rgba(148, 163, 184, 0.16);
+    --platform-text: #f8fafc;
+    --platform-subtle: #94a3b8;
+    --platform-primary: #a78bfa;
+    --platform-primary-2: #22d3ee;
+    --platform-accent-green: #a7f3d0;
+    --platform-accent-blue: #93c5fd;
+    --platform-accent-amber: #fef3c7;
+    --platform-accent-amber-bg: rgba(245, 158, 11, .13);
+    --platform-surface-hover: rgba(255, 255, 255, .04);
+    --platform-muted-dim: #9ca3af;
+}
+
+@theme inline {
+    --color-platform-bg: var(--platform-bg);
+    --color-platform-panel: var(--platform-panel);
+    --color-platform-panel-strong: var(--platform-panel-strong);
+    --color-platform-border: var(--platform-border);
+    --color-platform-text: var(--platform-text);
+    --color-platform-subtle: var(--platform-subtle);
+    --color-platform-primary: var(--platform-primary);
+    --color-platform-primary-2: var(--platform-primary-2);
+    --color-platform-danger: var(--platform-danger);
+    --color-platform-success: var(--platform-success);
+    --color-platform-warning: var(--platform-warning);
+    --color-platform-muted: var(--platform-muted);
+    --color-platform-accent-green: var(--platform-accent-green);
+    --color-platform-accent-blue: var(--platform-accent-blue);
+    --color-platform-accent-amber: var(--platform-accent-amber);
+    --color-platform-accent-amber-bg: var(--platform-accent-amber-bg);
+    --color-platform-surface-hover: var(--platform-surface-hover);
+    --color-platform-muted-dim: var(--platform-muted-dim);
+}

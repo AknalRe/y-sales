@@ -1,19 +1,8 @@
-:root {
-    /* Brand (login / marketing) — Light Mode */
-    --brand-primary: #4A2922;
-    --brand-secondary: #966556;
-    --brand-accent: #B55925;
-    --brand-dark: #40231E;
-    --brand-darker: #542F25;
-    --brand-muted: #59252D;
-    --brand-cream: #fff7ed;
-    --brand-surface: #ffffff;
-    --brand-page: #f5f5f5;
-    --brand-soft: #fff7ed;
-    --brand-border: rgba(74, 41, 34, .14);
-    --brand-foreground: #1a0e0b;
-    --brand-text: #3d1f18;
+/* ────────────────────────────────────────────────────────────────────────
+   Admin UI Colors (Admin Shell + Sidebar)
+   ──────────────────────────────────────────────────────────────────────── */
 
+:root {
     /* Admin UI — Light Mode */
     --admin-subtle: #64748b;
     --admin-bg: #f8fafc;
@@ -62,44 +51,9 @@
     --admin-sidebar-toggle-hover-border: rgba(255, 255, 255, .15);
     --admin-sidebar-danger: #ef4444;
     --admin-sidebar-danger-bg: rgba(239, 68, 68, .1);
-
-    /* Platform (SaaS) — Light Mode */
-    --platform-success: #22c55e;
-    --platform-warning: #f59e0b;
-    --platform-danger: #ef4444;
-    --platform-muted: var(--muted-foreground);
-    --platform-bg: #f8fafc;
-    --platform-panel: #ffffff;
-    --platform-panel-strong: #ffffff;
-    --platform-border: #e2e8f0;
-    --platform-text: #0f172a;
-    --platform-subtle: #64748b;
-    --platform-primary: #8b5cf6;
-    --platform-primary-2: #06b6d4;
-    --platform-accent-green: #059669;
-    --platform-accent-blue: #2563eb;
-    --platform-accent-amber: #92400e;
-    --platform-accent-amber-bg: rgba(245, 158, 11, .1);
-    --platform-surface-hover: rgba(0, 0, 0, .04);
-    --platform-muted-dim: #9ca3af;
 }
 
 .dark {
-    /* Brand — Dark Mode */
-    --brand-primary: #d4a89c;
-    --brand-secondary: #c49a8c;
-    --brand-accent: #d97b4a;
-    --brand-dark: #1a0e0b;
-    --brand-darker: #0f0806;
-    --brand-muted: #2a1216;
-    --brand-cream: #1a0e0b;
-    --brand-surface: #241410;
-    --brand-page: #1a0e0b;
-    --brand-soft: #241410;
-    --brand-border: rgba(212, 168, 156, .16);
-    --brand-foreground: #fff7ed;
-    --brand-text: #e8d5cc;
-
     /* Admin UI — Dark Mode */
     --admin-subtle: #94a3b8;
     --admin-bg: #0f172a;
@@ -148,43 +102,9 @@
     --admin-sidebar-toggle-hover-border: var(--admin-border-strong);
     --admin-sidebar-danger: var(--admin-danger);
     --admin-sidebar-danger-bg: var(--admin-danger-soft);
-
-    /* Platform (SaaS) — Dark Mode */
-    --platform-success: #63dc98;
-    --platform-warning: #ffbe4a;
-    --platform-danger: #ff6363;
-    --platform-bg: #070a13;
-    --platform-panel: rgba(15, 23, 42, 0.72);
-    --platform-panel-strong: rgba(15, 23, 42, 0.92);
-    --platform-border: rgba(148, 163, 184, 0.16);
-    --platform-text: #f8fafc;
-    --platform-subtle: #94a3b8;
-    --platform-primary: #a78bfa;
-    --platform-primary-2: #22d3ee;
-    --platform-accent-green: #a7f3d0;
-    --platform-accent-blue: #93c5fd;
-    --platform-accent-amber: #fef3c7;
-    --platform-accent-amber-bg: rgba(245, 158, 11, .13);
-    --platform-surface-hover: rgba(255, 255, 255, .04);
-    --platform-muted-dim: #9ca3af;
 }
 
 @theme inline {
-    /* Brand */
-    --color-brand-primary: var(--brand-primary);
-    --color-brand-secondary: var(--brand-secondary);
-    --color-brand-accent: var(--brand-accent);
-    --color-brand-dark: var(--brand-dark);
-    --color-brand-darker: var(--brand-darker);
-    --color-brand-muted: var(--brand-muted);
-    --color-brand-cream: var(--brand-cream);
-    --color-brand-surface: var(--brand-surface);
-    --color-brand-page: var(--brand-page);
-    --color-brand-soft: var(--brand-soft);
-    --color-brand-border: var(--brand-border);
-    --color-brand-foreground: var(--brand-foreground);
-    --color-brand-text: var(--brand-text);
-
     /* Admin */
     --color-admin-subtle: var(--admin-subtle);
     --color-admin-bg: var(--admin-bg);
@@ -209,24 +129,4 @@
     --color-admin-success-soft: var(--admin-success-soft);
     --color-admin-focus-ring: var(--admin-focus-ring);
     --color-admin-scrollbar: var(--admin-scrollbar);
-
-    /* Platform */
-    --color-platform-bg: var(--platform-bg);
-    --color-platform-panel: var(--platform-panel);
-    --color-platform-panel-strong: var(--platform-panel-strong);
-    --color-platform-border: var(--platform-border);
-    --color-platform-text: var(--platform-text);
-    --color-platform-subtle: var(--platform-subtle);
-    --color-platform-primary: var(--platform-primary);
-    --color-platform-primary-2: var(--platform-primary-2);
-    --color-platform-danger: var(--platform-danger);
-    --color-platform-success: var(--platform-success);
-    --color-platform-warning: var(--platform-warning);
-    --color-platform-muted: var(--platform-muted);
-    --color-platform-accent-green: var(--platform-accent-green);
-    --color-platform-accent-blue: var(--platform-accent-blue);
-    --color-platform-accent-amber: var(--platform-accent-amber);
-    --color-platform-accent-amber-bg: var(--platform-accent-amber-bg);
-    --color-platform-surface-hover: var(--platform-surface-hover);
-    --color-platform-muted-dim: var(--platform-muted-dim);
 }

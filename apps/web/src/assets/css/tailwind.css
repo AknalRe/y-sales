@@ -1,3 +1,6 @@
 @import "tailwindcss";
 @import "tailwindtheme";
-@import "color-palette";
+@import "palete-color-brand";
+@import "palete-color-admin";
+@import "palete-color-sales";
+@import "palete-color-platform";

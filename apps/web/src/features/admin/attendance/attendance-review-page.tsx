@@ -58,7 +58,7 @@ export function AttendanceReviewPage() {
       ) : (
         <div className="grid gap-4 mt-6">
           {rows.map((row) => (
-            <article key={row.id} className="grid gap-6 rounded-[2rem] border border-admin-border-subtle bg-admin-surface p-6 shadow-sm hover:shadow-md transition-shadow md:grid-cols-[180px_1fr]">
+            <article key={row.id} className="grid gap-6 rounded-[2rem] border border-admin-border-subtle bg-admin-bg-card p-6 shadow-sm hover:shadow-md transition-shadow md:grid-cols-[180px_1fr]">
               <div className="aspect-square overflow-hidden rounded-[1.5rem] bg-admin-bg border border-admin-border-subtle shadow-inner">
                 {row.faceImageUrl ? (
                   <img src={row.faceImageUrl} alt={row.salesName} className="h-full w-full object-cover" />
@@ -102,7 +102,7 @@ export function AttendanceReviewPage() {
           ))}
 
           {!rows.length && (
-            <div className="text-center py-24 bg-admin-surface rounded-[2.5rem] border-2 border-dashed border-admin-border-subtle text-admin-subtle">
+            <div className="text-center py-24 bg-admin-bg-card rounded-[2.5rem] border-2 border-dashed border-admin-border-subtle text-admin-subtle">
               <ShieldCheck size={48} className="mx-auto mb-4 opacity-20" />
               <p className="font-bold text-lg">Belum ada data absensi</p>
               <p className="text-sm">Semua data absensi untuk hari ini sudah direview atau belum ada masuk.</p>
@@ -116,7 +116,7 @@ export function AttendanceReviewPage() {
 
 function Metric({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-admin-bg/50 border border-admin-border-subtle p-4 transition-colors hover:bg-admin-surface hover:border-admin-border">
+    <div className="rounded-2xl bg-admin-bg/50 border border-admin-border-subtle p-4 transition-colors hover:bg-admin-bg-card hover:border-admin-border">
       <div className="flex items-center gap-2 mb-2 text-admin-accent">
         <Icon size={14} strokeWidth={3} />
         <span className="text-[10px] uppercase font-black tracking-widest text-admin-subtle">{label}</span>

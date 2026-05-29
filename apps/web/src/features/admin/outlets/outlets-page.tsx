@@ -269,7 +269,7 @@ export function OutletsPage() {
         <StatCard label="Nonaktif" value={stats.inactive} tone="#64748b" />
       </div>
 
-      <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-surface p-5 shadow-sm">
+      <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-5 shadow-sm">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="relative min-w-[240px] flex-1">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted" />
@@ -478,7 +478,7 @@ export function OutletsPage() {
 
 function StatCard({ label, value, tone = '#b55925' }: { label: string; value: number; tone?: string }) {
   return (
-    <div className="rounded-[1.25rem] border border-admin-border bg-admin-surface p-4 shadow-sm">
+    <div className="rounded-[1.25rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
       <p className="text-xs font-black uppercase tracking-wide text-admin-muted">{label}</p>
       <strong className="mt-2 block text-2xl font-black text-admin-foreground" style={{ color: tone }}>{value}</strong>
     </div>

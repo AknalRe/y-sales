@@ -162,7 +162,7 @@ export function StockPage() {
       </div>
 
       {/* Premium Filter Row */}
-      <div className="admin-filter-row bg-admin-surface border border-admin-border-subtle" style={{ padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="admin-filter-row bg-admin-bg-card border border-admin-border-subtle" style={{ padding: '1rem', borderRadius: 20, marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="flex gap-4 items-center">
           <div className="admin-filter-group bg-admin-bg" style={{ padding: '.25rem .75rem', borderRadius: 12 }}>
             <WarehouseIcon size={16} className="text-admin-muted" />

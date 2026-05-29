@@ -27,6 +27,20 @@
     --admin-success-soft: rgba(34, 197, 94, .15);
     --admin-focus-ring: #7c3aed;
     --admin-scrollbar: #966556;
+    --admin-accent-teal: #0f766e;
+    --admin-accent-teal-light: #14b8a6;
+    --admin-accent-teal-bg: #ccfbf1;
+    --admin-accent-teal-shadow: rgba(16, 185, 129, .12);
+    --admin-accent-blue: #0ea5e9;
+    --admin-accent-blue-shadow: rgba(14, 165, 233, .12);
+    --admin-accent-amber-shadow: rgba(245, 158, 11, .1);
+    --admin-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, .05);
+    --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -4px rgba(0, 0, 0, .1);
+    --admin-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, .1), 0 8px 10px -6px rgba(0, 0, 0, .1);
+    --admin-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, .25);
+    --admin-shadow-card: 0 24px 70px rgba(15, 23, 42, 0.08);
+    --admin-shadow-dropdown: 0 20px 50px rgba(15, 23, 42, 0.12);
+    --admin-shadow-icon: 0 18px 35px rgba(15, 23, 42, 0.16);
 
     /* Admin Sidebar — Light Mode */
     --admin-sidebar-bg: var(--brand-darker);
@@ -78,6 +92,20 @@
     --admin-success-soft: rgba(134, 239, 172, .15);
     --admin-focus-ring: #a78bfa;
     --admin-scrollbar: #475569;
+    --admin-accent-teal: #14b8a6;
+    --admin-accent-teal-light: #2dd4bf;
+    --admin-accent-teal-bg: rgba(16, 185, 129, .12);
+    --admin-accent-teal-shadow: rgba(16, 185, 129, .18);
+    --admin-accent-blue: #38bdf8;
+    --admin-accent-blue-shadow: rgba(14, 165, 233, .18);
+    --admin-accent-amber-shadow: rgba(245, 158, 11, .15);
+    --admin-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, .2);
+    --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .3), 0 4px 6px -4px rgba(0, 0, 0, .3);
+    --admin-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, .3), 0 8px 10px -6px rgba(0, 0, 0, .3);
+    --admin-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, .4);
+    --admin-shadow-card: 0 24px 70px rgba(0, 0, 0, 0.2);
+    --admin-shadow-dropdown: 0 20px 50px rgba(0, 0, 0, 0.3);
+    --admin-shadow-icon: 0 18px 35px rgba(0, 0, 0, 0.3);
 
     /* Admin Sidebar — Dark Mode */
     --admin-sidebar-bg: var(--admin-bg);
@@ -129,4 +157,15 @@
     --color-admin-success-soft: var(--admin-success-soft);
     --color-admin-focus-ring: var(--admin-focus-ring);
     --color-admin-scrollbar: var(--admin-scrollbar);
+    --color-admin-shadow-sm: var(--admin-shadow-sm);
+    --color-admin-shadow-lg: var(--admin-shadow-lg);
+    --color-admin-shadow-xl: var(--admin-shadow-xl);
+    --color-admin-shadow-2xl: var(--admin-shadow-2xl);
+    --color-admin-shadow-card: var(--admin-shadow-card);
+    --color-admin-shadow-dropdown: var(--admin-shadow-dropdown);
+    --color-admin-shadow-icon: var(--admin-shadow-icon);
+    --color-admin-accent-teal: var(--admin-accent-teal);
+    --color-admin-accent-teal-light: var(--admin-accent-teal-light);
+    --color-admin-accent-teal-bg: var(--admin-accent-teal-bg);
+    --color-admin-accent-blue: var(--admin-accent-blue);
 }

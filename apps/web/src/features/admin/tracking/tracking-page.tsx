@@ -129,7 +129,7 @@ export function TrackingPage() {
       </div>
 
       {/* Filters & Tabs */}
-      <div className="flex flex-wrap justify-between items-center gap-4 bg-admin-surface border border-admin-border rounded-2xl p-4 mb-6">
+      <div className="flex flex-wrap justify-between items-center gap-4 bg-admin-bg-card border border-admin-border rounded-2xl p-4 mb-6">
         <div className="flex flex-wrap gap-3">
           <div className="admin-filter-group" style={{ background: 'var(--admin-bg)', padding: '.25rem .75rem', borderRadius: 12 }}>
             <Calendar size={16} className="text-admin-muted" />

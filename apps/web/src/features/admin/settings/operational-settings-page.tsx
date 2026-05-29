@@ -67,7 +67,7 @@ export function OperationalSettingsPage() {
   }
 
   return (
-    <main className="settings-page">
+    <main className="admin-page">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-[22px] p-5" style={{ background: 'linear-gradient(135deg, #40231E, #4A2922)', color: '#ffffff', boxShadow: '0 18px 40px rgba(64, 35, 30, .18)' }}>
         <div>
           <p className="inline-flex items-center gap-1.5 m-0 text-[0.78rem] font-extrabold uppercase tracking-[0.08em]" style={{ color: '#d8b6aa' }}>

@@ -1,0 +1,46 @@
+// ─── Tables ───────────────────────────────────────────────────────────
+
+.admin-table-card,
+.admin-role-card {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 24px !important;
+    background: #ffffff !important;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+}
+
+.admin-table {
+    width: 100%;
+    min-width: max-content;
+    border-collapse: collapse;
+
+    th {
+        text-align: left;
+        color: #64748b;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(148, 163, 184, .09);
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background: #f8fafc;
+    }
+}
+
+.admin-table-empty {
+    text-align: center;
+    color: #64748b;
+    padding: 2rem !important;
+}
+
+.admin-muted {
+    color: #64748b;
+}

@@ -1,0 +1,45 @@
+// ─── Search ───────────────────────────────────────────────────────────
+
+.admin-search-box {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 18px;
+    padding: .85rem 1rem;
+    color: #64748b;
+    background: #ffffff;
+    margin-bottom: 1rem;
+
+    input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        color: #0f172a;
+        background: transparent;
+
+        &::placeholder {
+            color: var(--muted-foreground);
+        }
+    }
+}
+
+.admin-search-row {
+    display: flex;
+    gap: .8rem;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    .admin-search-box {
+        flex: 1;
+        margin-bottom: 0;
+    }
+}
+
+.admin-count-badge {
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    padding: .65rem .9rem;
+    border-radius: 999px;
+    background: #f1f5f9;
+}

@@ -1,3 +1,6 @@
+@use "admin-pages" as _pg;
+
+
 // ─── Scrollbar ───────────────────────────────────────────────────────────
 ::-webkit-scrollbar {
   width: 10px;
@@ -382,6 +385,11 @@
 .admin-main {
   min-height: 100vh;
   transition: padding-left 260ms ease;
+
+  .admin-page {
+    color: var(--admin-text);
+    @include _pg.pages();
+  }
 
   &-open {
     padding-left: 21.5rem;

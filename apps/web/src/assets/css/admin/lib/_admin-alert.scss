@@ -1,0 +1,32 @@
+ // ─── Alerts ───────────────────────────────────────────────────────────
+
+ .admin-alert {
+     display: flex;
+     align-items: center;
+     gap: .55rem;
+     padding: .85rem 1rem;
+     border-radius: 16px;
+     margin-bottom: 1rem;
+     border: 1px solid #e2e8f0;
+
+     &-error {
+         color: #991b1b;
+         background: #fef2f2;
+         border-color: #fee2e2;
+     }
+
+     &-success {
+         color: #bbf7d0;
+         background: rgba(34, 197, 94, .12);
+         border-color: rgba(34, 197, 94, .24);
+     }
+
+     &-close {
+         margin-left: auto;
+         background: transparent;
+         border: 0;
+         color: inherit;
+         cursor: pointer;
+         font-size: 1.1rem;
+     }
+ }

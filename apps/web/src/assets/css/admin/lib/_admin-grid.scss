@@ -1,0 +1,8 @@
+ // ─── Layout Grids ─────────────────────────────────────────────────────
+
+ .admin-content-grid-half {
+     display: grid;
+     grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+     gap: 1.25rem;
+     margin-top: 0.5rem;
+ }

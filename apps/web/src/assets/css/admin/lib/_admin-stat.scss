@@ -1,0 +1,64 @@
+// ─── Stats & Filters ─────────────────────────────────────────────────
+
+.admin-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.admin-stat-card {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+
+    div {
+        display: grid;
+        gap: .15rem;
+    }
+
+    span {
+        color: var(--admin-muted);
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+    }
+
+    strong {
+        color: var(--admin-foreground);
+        font-size: 1.3rem;
+        font-weight: 700;
+    }
+}
+
+.admin-stat-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-filter-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.admin-filter-group {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 10px;
+    padding: .42rem .75rem;
+}

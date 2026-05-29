@@ -11,13 +11,7 @@
 
 @use 'brand/index';
 
-@use './admin/admin-shell';
-@use './admin/admin-pages';
-@use './admin/admin-users';
-@use './admin/admin-roles';
-@use './admin/admin-modals';
-@use './admin/admin-management';
-@use './admin/admin-settings';
+@use 'admin/admin-shell';
 
 @use './sales/sales-home';
 @use './sales/sales-profile';

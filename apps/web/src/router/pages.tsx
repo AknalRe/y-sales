@@ -183,7 +183,7 @@ export const mainRoutes: RouteConfig[] = [
 export const standaloneRoutes: RouteConfig[] = [
   {
     path: '/attendance',
-    element: <AttendancePage />,
+    element: <AttendancePage mode="sales" />,
     handle: {
       label: 'Absensi',
       icon: ShieldCheck,

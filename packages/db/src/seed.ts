@@ -183,7 +183,7 @@ for (const [roleCode, permCodes] of Object.entries(rolePermissionSeeds)) {
   console.log(`  [OK] ${roleCode.padEnd(22)} ${seeded}/${permCodes.length} permissions`);
 }
 console.log('  ─────────────────────────────────────────────────────────');
-console.log('Role permissions seeded.\n');
+console.log('  Role permissions seeded.\n');
 
 for (const setting of settingSeeds) {
   await db.insert(appSettings).values(setting).onConflictDoUpdate({
@@ -346,6 +346,9 @@ await db.insert(tenantSubscriptions).values({
   status: 'active',
 }).onConflictDoNothing();
 
+// ─── Users ────────────────────────────────────────────────────────────────
+console.log('  ── Users ─────────────────────────────────────────────────');
+
 // ─── Super Admin User ──────────────────────────────────────────────────────
 const [superAdminRole] = await db.select().from(roles).where(and(eq(roles.code, 'SUPER_ADMIN')));
 if (superAdminRole && process.env.SUPER_ADMIN_PASSWORD) {
@@ -365,7 +368,7 @@ if (superAdminRole && process.env.SUPER_ADMIN_PASSWORD) {
     set: { name: superAdminName, roleId: superAdminRole.id, passwordHash, status: 'active', updatedAt: new Date() },
   });
 
-  console.log(`Super Admin created: ${superAdminEmail}`);
+  console.log(`  Super Admin created: ${superAdminEmail}`);
 }
 
 // ─── Sales Agent User ─────────────────────────────────────────────────────
@@ -400,7 +403,7 @@ if (salesAgentRole && process.env.SALES_PASSWORD) {
     },
   });
 
-  console.log(`Sales Agent created: ${salesEmail}`);
+  console.log(`  Sales Agent created: ${salesEmail}`);
 }
 
 // ─── Administrator User ───────────────────────────────────────────────────
@@ -435,9 +438,10 @@ if (administrator && process.env.ADMIN_PASSWORD) {
     },
   });
 
-  console.log(`Administrator created: ${adminEmail}`);
+  console.log(`  Administrator created: ${adminEmail}`);
 }
 
-console.log('Seed completed');
+console.log('  ─────────────────────────────────────────────────────────');
+console.log('  Seed completed');
 
 

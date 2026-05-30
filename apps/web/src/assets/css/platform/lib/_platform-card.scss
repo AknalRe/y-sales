@@ -1,0 +1,46 @@
+// Platform card & stat base
+.platform-card,
+.platform-stat-card,
+.platform-plan-card {
+    border: 1px solid var(--platform-border);
+    border-radius: 24px;
+    background: var(--platform-panel);
+    overflow: hidden;
+}
+
+.platform-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .85rem 1.1rem;
+    border-bottom: 1px solid var(--platform-border);
+    color: #fff;
+    font-weight: 900;
+    font-size: 1rem;
+
+    h2 {
+        margin: 0;
+        font-size: 1rem;
+    }
+}
+
+.platform-card-body {
+    padding: 1rem;
+}
+
+.platform-link-sm {
+    font-size: .8rem;
+    font-weight: 700;
+    color: #93c5fd;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    transition: .2s ease;
+
+    &:hover {
+        color: #bfdbfe;
+    }
+}

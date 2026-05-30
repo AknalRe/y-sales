@@ -1,0 +1,62 @@
+// Platform features
+.platform-feature-catalog {
+    display: grid;
+    gap: 1rem;
+}
+
+.platform-count-badge {
+    border: 1px solid var(--platform-border);
+    border-radius: 999px;
+    padding: .25rem .6rem;
+    color: var(--platform-subtle);
+    font-weight: 800;
+    font-size: .8rem;
+}
+
+.platform-feature-list {
+    display: grid;
+    gap: .75rem;
+    padding: 1rem;
+}
+
+.platform-feature-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    border: 1px solid rgba(148, 163, 184, .16);
+    border-radius: 20px;
+    padding: 1rem;
+    background: rgba(255, 255, 255, .035);
+
+    div:first-child {
+        display: grid;
+        gap: .3rem;
+    }
+
+    strong {
+        color: #fff;
+        font-size: 1rem;
+    }
+
+    code {
+        width: fit-content;
+        border-radius: 999px;
+        padding: .18rem .48rem;
+        background: rgba(96, 165, 250, .14);
+        color: #bfdbfe;
+    }
+
+    p {
+        margin: 0;
+        color: var(--platform-subtle);
+    }
+}
+
+.platform-feature-inactive {
+    opacity: .58;
+}
+
+.platform-feature-deprecated {
+    border-color: rgba(245, 158, 11, .28);
+}

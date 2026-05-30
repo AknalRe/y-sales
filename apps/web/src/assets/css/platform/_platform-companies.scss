@@ -1,0 +1,64 @@
+// Platform company view
+.platform-company-view-banner {
+    margin: 1rem 0 2rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1.5rem;
+    align-items: center;
+    border: 1px solid rgba(74, 41, 34, .35);
+    border-radius: 28px;
+    padding: 1.35rem 1.6rem;
+    background: linear-gradient(135deg, #6b3a2e 0%, #4a2922 45%, #2a1510 100%);
+}
+
+.platform-company-view-copy {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+
+    h1 {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin: 0;
+        color: #fef3c7;
+        font-size: clamp(1.35rem, 2vw, 2rem);
+    }
+
+    p {
+        margin: 0;
+        color: #d4a989;
+    }
+}
+
+.platform-company-view-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    color: #fbbf24;
+    font-size: .78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.platform-company-view-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .65rem;
+    flex: 1 1 200px;
+
+    .platform-btn-primary {
+        background: linear-gradient(135deg, #b45309, #d97706);
+        box-shadow: 0 10px 28px rgba(180, 83, 9, .35);
+    }
+
+    .platform-btn-ghost {
+        color: #fef3c7;
+        background: rgba(255, 255, 255, .1);
+        border-color: rgba(212, 169, 137, .28);
+        backdrop-filter: blur(8px);
+    }
+}

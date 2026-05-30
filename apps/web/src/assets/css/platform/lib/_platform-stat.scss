@@ -1,0 +1,41 @@
+// Platform stats grid
+.platform-stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    >* {
+        flex: 1 1 200px;
+    }
+}
+
+.platform-stat-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem;
+}
+
+.platform-stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 20px;
+    box-shadow: none;
+}
+
+.platform-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.platform-stat-label {
+    color: var(--platform-subtle);
+    font-size: .82rem;
+}
+
+.platform-stat-value {
+    font-size: 2rem;
+    letter-spacing: -.05em;
+}

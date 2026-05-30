@@ -1,3 +1,22 @@
+// ─── Platform Shell ──────────────────────────────────────────────────────────
+// Modular component imports
+
+// Core shell layout (sidebar, nav, topbar, main)
 @use 'platform-ui';
+
+// Lib components (reusable)
+@use 'lib/platform-button';
+@use 'lib/platform-card';
+@use 'lib/platform-stat';
+@use 'lib/platform-grid';
+@use 'lib/platform-table';
+@use 'lib/platform-heading';
+@use 'lib/platform-search';
+@use 'lib/platform-alert';
+
+// Page-specific styles
 @use 'platform-page';
 @use 'platform-plans-roles';
+@use 'platform-dashboard';
+@use 'platform-companies';
+@use 'platform-features';

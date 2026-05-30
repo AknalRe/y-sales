@@ -1,0 +1,109 @@
+// Platform table
+.platform-table-card {
+    border: 1px solid var(--platform-border);
+    border-radius: 24px;
+    background: var(--platform-panel);
+    overflow: hidden;
+}
+
+.platform-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.platform-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+
+    th {
+        text-align: left;
+        color: #cbd5e1;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        padding: 1rem;
+        border-bottom: 1px solid var(--platform-border);
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(148, 163, 184, .09);
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background: rgba(255, 255, 255, .04);
+    }
+}
+
+.platform-empty {
+    text-align: center;
+    color: var(--muted-foreground);
+    padding: 2rem !important;
+}
+
+.platform-muted {
+    color: var(--muted-foreground);
+}
+
+// Platform subscription cells
+.platform-subscription-cell {
+    display: grid;
+    gap: .22rem;
+    min-width: 160px;
+}
+
+.platform-subscription-plan {
+    color: #fff;
+    font-weight: 900;
+}
+
+.platform-subscription-meta {
+    color: #93c5fd;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.platform-subscription-end {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: .28rem .58rem;
+    color: #fef3c7;
+    background: rgba(245, 158, 11, .13);
+    border: 1px solid rgba(245, 158, 11, .2);
+    font-size: .8rem;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// Platform status & row actions
+.platform-status-badge,
+.platform-row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.platform-row-actions {
+    gap: .45rem;
+}
+
+.platform-btn-danger-sm {
+    color: #fecaca;
+    border-color: rgba(239, 68, 68, .28);
+    background: rgba(239, 68, 68, .12);
+}
+
+// Platform loading
+.platform-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .6rem;
+    padding: 3rem;
+    color: var(--platform-subtle);
+}

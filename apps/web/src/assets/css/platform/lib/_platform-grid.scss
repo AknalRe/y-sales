@@ -1,0 +1,140 @@
+// Platform grid & list components
+.platform-two-col {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    >* {
+        flex: 1 1 320px;
+    }
+}
+
+.platform-company-list,
+.platform-plan-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: .65rem;
+}
+
+.platform-company-row,
+.platform-plan-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .045);
+}
+
+.platform-company-row-info,
+.platform-plan-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.platform-row-link {
+    color: #fff;
+}
+
+.platform-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.platform-plan-card {
+    padding: 1.1rem;
+}
+
+// Platform company cells
+.platform-company-cell {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.platform-company-info {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.platform-company-avatar {
+    width: 42px;
+    height: 42px;
+    font-weight: 900;
+}
+
+.platform-company-avatar-sm {
+    width: 36px;
+    height: 36px;
+    border-radius: 14px;
+    font-weight: 900;
+}
+
+.platform-company-name {
+    font-weight: 900;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.platform-company-slug {
+    font-size: .78rem;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// Platform status dots
+.platform-status-dot {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    padding: .2rem .55rem;
+    font-size: .72rem;
+    background: rgba(148, 163, 184, .13);
+    color: #64748b;
+}
+
+.platform-status-closed,
+.platform-status-approved,
+.platform-status-paid {
+    color: #166534;
+    background: #dcfce7;
+}
+
+.platform-status-submitted,
+.platform-status-draft {
+    color: #92400e;
+    background: #fffbeb;
+}
+
+.platform-status-rejected,
+.platform-status-overdue,
+.platform-status-cancelled {
+    color: #991b1b;
+    background: #fee2e2;
+}
+
+.platform-status-active {
+    color: #86efac;
+    background: rgba(34, 197, 94, .12);
+}
+
+.platform-status-trialing {
+    color: #fde68a;
+    background: rgba(245, 158, 11, .12);
+}
+
+.platform-status-suspended {
+    color: #fecaca;
+    background: rgba(239, 68, 68, .12);
+}

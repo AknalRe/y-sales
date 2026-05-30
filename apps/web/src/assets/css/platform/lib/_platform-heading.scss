@@ -1,0 +1,32 @@
+// Platform page heading
+.platform-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.platform-page-title {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .7rem;
+    font-size: clamp(1.8rem, 3vw, 2.75rem);
+    line-height: 1;
+    letter-spacing: -.05em;
+    color: #fff;
+}
+
+.platform-page-subtitle {
+    margin: .65rem 0 0;
+    color: var(--platform-subtle);
+}
+
+.platform-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .7rem;
+}

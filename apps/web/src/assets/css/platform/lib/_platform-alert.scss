@@ -1,0 +1,28 @@
+// Platform alerts & badges
+.platform-alert {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .85rem 1rem;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--platform-border);
+
+    &-error {
+        color: #fecaca;
+        background: rgba(239, 68, 68, .12);
+        border-color: rgba(239, 68, 68, .26);
+    }
+}
+
+.platform-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: .73rem;
+    font-weight: 600;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, .1);
+    color: #cbd5e1;
+}

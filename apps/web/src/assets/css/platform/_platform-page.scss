@@ -340,6 +340,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+  padding: 1rem;
 
   >div {
     border: 1px solid var(--platform-border);
@@ -723,11 +724,21 @@
 
   .platform-company-row,
   .platform-plan-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
     min-height: 58px;
   }
 
   .platform-company-row-info small {
     color: var(--platform-subtle);
+  }
+
+  .platform-plan-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 14px;
+    font-weight: 900;
   }
 }
 
@@ -814,6 +825,10 @@
   text-decoration: none;
   font-weight: 800;
   font-size: .85rem;
+  text-wrap: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 /* ─── Company & Plan Lists ──────────────────────────────────────────────── */

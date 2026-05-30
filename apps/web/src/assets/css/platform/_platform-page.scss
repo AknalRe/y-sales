@@ -2,6 +2,7 @@
 // Platform page layout
 .platform-page-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
@@ -11,6 +12,7 @@
 .platform-page-title {
   margin: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: .7rem;
   font-size: clamp(1.8rem, 3vw, 2.75rem);
@@ -21,6 +23,7 @@
 
 .admin-page-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
@@ -67,6 +70,7 @@
 .platform-page-actions,
 .admin-page-hero-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: .7rem;
 }
 
@@ -163,6 +167,7 @@
 // Platform search
 .platform-search-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: .7rem;
   border: 1px solid var(--platform-border);
@@ -175,7 +180,8 @@
 }
 
 .platform-search-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   border: 0;
   outline: 0;
   color: #fff;
@@ -197,8 +203,14 @@
   overflow: hidden;
 }
 
+.platform-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .platform-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
 
   th {
@@ -261,12 +273,16 @@
   border: 1px solid rgba(245, 158, 11, .2);
   font-size: .8rem;
   font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 // Platform company view
 .platform-company-view-banner {
   margin: 1rem 0 2rem 0;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1.5rem;
   align-items: center;
@@ -277,7 +293,8 @@
 }
 
 .platform-company-view-copy {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: .45rem;
 
   h1 {
@@ -311,6 +328,7 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: .65rem;
+  flex: 1 1 200px;
 
   .platform-btn-primary {
     background: linear-gradient(135deg, #b45309, #d97706);
@@ -332,7 +350,7 @@
 }
 
 .platform-revenue-card {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
   border-color: rgba(34, 197, 94, .18);
 }
 
@@ -463,14 +481,15 @@
 
 // Platform dashboard
 .platform-dashboard-polished {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
 
 .platform-dashboard-hero {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.25rem;
   align-items: stretch;
   overflow: hidden;
@@ -494,9 +513,11 @@
 
 .platform-hero-content {
   position: relative;
-  display: grid;
-  align-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   gap: .85rem;
+  flex: 1 1 320px;
   min-height: 230px;
 
   h1 {
@@ -541,9 +562,11 @@
 
 .platform-hero-panel {
   position: relative;
-  display: grid;
-  align-content: end;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   gap: .45rem;
+  flex: 1 1 260px;
   border: 1px solid rgba(255, 255, 255, .16);
   border-radius: 26px;
   padding: 1.25rem;
@@ -589,9 +612,13 @@
 
 // Platform KPI
 .platform-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
+
+  >* {
+    flex: 1 1 220px;
+  }
 }
 
 .platform-kpi-card {
@@ -663,14 +690,21 @@
 }
 
 .platform-dashboard-grid-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-  align-items: start;
+  align-items: flex-start;
+
+  >*:first-child {
+    flex: 2 1 400px;
+  }
+
+  >*:last-child {
+    flex: 1 1 300px;
+  }
 }
 
 .platform-dashboard-revenue {
-  margin-bottom: 0;
 
   .platform-card-header {
     align-items: flex-start;
@@ -725,7 +759,8 @@
   .platform-company-row,
   .platform-plan-row {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: .75rem;
     align-items: center;
     min-height: 58px;
   }
@@ -745,6 +780,7 @@
 // Company view banner (admin variant)
 .admin-company-view-banner {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1.5rem;
   align-items: center;
@@ -758,11 +794,22 @@
 
 /* ─── Company & User Cells ──────────────────────────────────────────────── */
 .platform-company-cell,
-.admin-user-cell,
-.platform-company-row {
+.admin-user-cell {
   display: flex;
   align-items: center;
   gap: .75rem;
+}
+
+.platform-company-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
+}
+
+.platform-company-info {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .platform-company-avatar,
@@ -782,6 +829,9 @@
 .platform-company-name {
   font-weight: 900;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-user-name {
@@ -793,20 +843,29 @@
 .admin-user-code {
   font-size: .78rem;
   color: var(--platform-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ─── Two Column Layout ─────────────────────────────────────────────────── */
 .platform-two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
+
+  >* {
+    flex: 1 1 320px;
+  }
 }
 
 /* ─── Card Components ───────────────────────────────────────────────────── */
 .platform-card-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: .5rem;
   padding: 1rem 1.1rem;
   border-bottom: 1px solid var(--platform-border);
 
@@ -921,14 +980,19 @@
 
 /* ─── Stats Grid ────────────────────────────────────────────────────────── */
 .platform-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1rem;
+
+  >* {
+    flex: 1 1 200px;
+  }
 }
 
 .platform-stat-card {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
   padding: 1.15rem;

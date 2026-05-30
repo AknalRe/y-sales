@@ -37,13 +37,13 @@ export function PlatformMobileSidebar({
             />
             <div
                 className="relative flex w-4/5 max-w-xs flex-col h-full shadow-2xl animate-in slide-in-from-left"
-                style={{ background: "var(--platform-surface)" }}
+                style={{ background: "rgba(2, 6, 23, 0.92)", backdropFilter: "blur(22px)" }}
             >
                 <div
                     className="flex items-center justify-between p-4"
                     style={{ borderBottom: "1px solid var(--platform-border)" }}
                 >
-                    <h2 className="text-lg font-bold" style={{ color: "var(--platform-foreground)" }}>
+                    <h2 className="text-lg font-bold" style={{ color: "#fff" }}>
                         Yuksales
                     </h2>
                     <button
@@ -73,11 +73,11 @@ export function PlatformMobileSidebar({
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
                                         style={{
-                                            color: active ? "#ffffff" : "var(--platform-text)",
-                                            background: active ? "var(--platform-accent)" : "transparent",
+                                            color: active ? "#ffffff" : "var(--platform-subtle)",
+                                            background: active ? "linear-gradient(135deg, rgba(139, 92, 246, .32), rgba(6, 182, 212, .18))" : "transparent",
                                         }}
                                     >
-                                        <Icon size={18} style={{ color: active ? "#ffffff" : "var(--platform-muted)" }} />
+                                        <Icon size={18} style={{ color: active ? "#ffffff" : "var(--platform-subtle)" }} />
                                         {item.label}
                                     </Link>
                                 </li>
@@ -93,8 +93,8 @@ export function PlatformMobileSidebar({
                     <div className="flex items-center gap-3 mb-3">
                         <div className="platform-avatar">{initials}</div>
                         <div>
-                            <strong className="text-sm" style={{ color: "var(--platform-foreground)" }}>{userName}</strong>
-                            <span className="block text-xs" style={{ color: "var(--platform-muted)" }}>{userEmail}</span>
+                            <strong className="text-sm" style={{ color: "#fff" }}>{userName}</strong>
+                            <span className="block text-xs" style={{ color: "var(--platform-subtle)" }}>{userEmail}</span>
                         </div>
                     </div>
                     <div className="space-y-1">

@@ -17,6 +17,7 @@
   background: rgba(2, 6, 23, 0.72);
   backdrop-filter: blur(22px);
   transition: width .25s ease;
+  will-change: width;
 }
 
 .platform-sidebar-open {
@@ -59,7 +60,7 @@
 .admin-role-icon {
   display: grid;
   place-items: center;
-  flex: 0 0 auto;
+  flex-shrink: 0;
   border-radius: 18px;
   background: linear-gradient(135deg, var(--platform-primary), var(--platform-primary-2));
   color: #fff;
@@ -69,12 +70,15 @@
 .platform-brand-icon {
   width: 44px;
   height: 44px;
+  flex-shrink: 0;
 }
 
 .platform-brand-text {
   display: flex;
   flex-direction: column;
   line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .platform-brand-name {
@@ -132,7 +136,17 @@
   border-radius: 16px;
   color: var(--platform-subtle);
   text-decoration: none;
-  transition: .2s ease;
+  transition: color .2s ease, background .2s ease;
+  white-space: nowrap;
+}
+
+.platform-nav-link svg {
+  flex-shrink: 0;
+}
+
+.platform-nav-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .platform-sidebar-closed .platform-nav-link {
@@ -189,6 +203,13 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.platform-user-info strong {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .platform-user-info span {
@@ -246,6 +267,7 @@
   min-height: 100vh;
   padding: 2rem;
   transition: padding-left .25s ease;
+  will-change: padding-left;
 }
 
 .platform-main-open {
@@ -254,6 +276,46 @@
 
 .platform-main-closed {
   padding-left: 124px;
+}
+
+/* ─── Mobile Topbar ──────────────────────────────────────────────────── */
+.platform-topbar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 0 0 1rem;
+}
+
+.platform-topbar .platform-brand-name {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .platform-main {
+    padding: 1rem;
+  }
+
+  .platform-main-open,
+  .platform-main-closed {
+    padding-left: 1rem;
+  }
+
+  .platform-sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+  }
+
+  .platform-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .platform-brand {
+    padding: .85rem;
+  }
+
+  .platform-brand-text {
+    display: none;
+  }
 }
 
 .platform-page {

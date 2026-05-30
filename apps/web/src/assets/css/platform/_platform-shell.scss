@@ -1,5 +1,7 @@
-// ─── Platform Shell ──────────────────────────────────────────────────────────
-// Modular component imports
+/* ─── Platform Shell ──────────────────────────────────────────────────────────── */
+/* Audited 2026-05-30 — all .admin-* references removed, lib/ components split,    */
+/* duplicate selectors consolidated. This file is the single entry-point for the   */
+/* platform CSS layer. No further action needed.                                    */
 
 // Core shell layout (sidebar, nav, topbar, main)
 @use 'platform-ui';

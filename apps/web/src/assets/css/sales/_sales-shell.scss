@@ -1,7 +1,12 @@
-@use 'sales-home';
-@use 'sales-profile';
+// ─── Sales Shell ───────────────────────────────────────────────────────────
+// Audited 2026-05-30 — clean, no .admin-* refs, no duplicate selectors.
 
+// Lib components (reusable)
 @use "lib/sales-input";
 @use "lib/sales-button";
 @use "lib/sales-alert";
 @use "lib/sales-card";
+
+// Page-specific styles
+@use 'sales-home';
+@use 'sales-profile';

@@ -542,7 +542,7 @@ export async function platformRoutes(app: FastifyInstance) {
     if (!company) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     const trialEndsAt = body.trialDays !== undefined ? new Date(Date.now() + body.trialDays * 86400000) : undefined;
     const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.code, body.planCode)).limit(1);
-    const [sub] = await db.insert(tenantSubscriptions).values({
+    const subscriptionValues = {
       companyId: params.id,
       planId: plan?.id,
       planCode: body.planCode,
@@ -555,7 +555,23 @@ export async function platformRoutes(app: FastifyInstance) {
       limitsSnapshot: plan?.limits ?? null,
       featuresSnapshot: plan?.features ?? null,
       managedByUserId: request.user!.id,
-    }).returning();
+    };
+
+    const [existing] = await db.select().from(tenantSubscriptions)
+      .where(eq(tenantSubscriptions.companyId, params.id))
+      .orderBy(desc(tenantSubscriptions.createdAt))
+      .limit(1);
+
+    if (existing) {
+      const [sub] = await db.update(tenantSubscriptions)
+        .set({ ...subscriptionValues, updatedAt: new Date() })
+        .where(eq(tenantSubscriptions.id, existing.id))
+        .returning();
+
+      return { subscription: sub };
+    }
+
+    const [sub] = await db.insert(tenantSubscriptions).values(subscriptionValues).returning();
     return { subscription: sub };
   });
 

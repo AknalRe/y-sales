@@ -19,6 +19,19 @@ export type VisitSchedule = {
   createdAt: string;
 };
 
+export type TodayVisitSchedule = VisitSchedule & {
+  outlet: {
+    id: string;
+    code: string;
+    name: string;
+    address: string;
+    latitude: string;
+    longitude: string;
+    geofenceRadiusM?: number | null;
+    status: Outlet['status'];
+  };
+};
+
 export type VisitSession = {
   id: string;
   companyId: string;
@@ -214,6 +227,12 @@ export function getVisitSessions(token: string, params?: { date?: string; salesU
   if (params?.date) q.set('date', params.date);
   if (params?.salesUserId) q.set('salesUserId', params.salesUserId);
   return apiRequest<{ sessions: VisitSession[] }>(`/visits/sessions?${q}`, { headers: { Authorization: `Bearer ${token}` } });
+}
+
+export function getTodayVisitPlan(token: string) {
+  return apiRequest<{ schedules: TodayVisitSchedule[]; target: unknown | null }>('/visits/today', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
 
 // ─── Sales Transaction APIs ──────────────────────────────────────────────────

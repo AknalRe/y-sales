@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2 } from 'lucide-react';
-import { getOutlets, getProducts, createOrder } from '../../../lib/api/tenant';
+import { getProducts, createOrder, getTodayVisitPlan, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState, Spinner } from '../../../components/ui';
 
@@ -13,14 +14,16 @@ type CartItem = {
 
 export function TransactionsPage() {
   const { accessToken } = useAuth();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>([]);
-  const [outlets, setOutlets] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<TodayVisitSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState('');
+  const [activeOutletName, setActiveOutletName] = useState('');
   const [activeVisitId, setActiveVisitId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'credit' | 'consignment'>('cash');
   const [submitting, setSubmitting] = useState(false);
@@ -31,9 +34,10 @@ export function TransactionsPage() {
     const raw = localStorage.getItem(activeVisitStorageKey);
     if (raw) {
       try {
-        const activeVisit = JSON.parse(raw) as { id: string; outletId: string };
+        const activeVisit = JSON.parse(raw) as { id: string; outletId: string; outletName?: string };
         setActiveVisitId(activeVisit.id);
         setSelectedOutlet(activeVisit.outletId);
+        setActiveOutletName(activeVisit.outletName ?? '');
       } catch {
         localStorage.removeItem(activeVisitStorageKey);
       }
@@ -42,13 +46,17 @@ export function TransactionsPage() {
     if (accessToken) {
       Promise.all([
         getProducts(accessToken),
-        getOutlets(accessToken)
-      ]).then(([pRes, oRes]) => {
+        getTodayVisitPlan(accessToken)
+      ]).then(([pRes, visitPlan]) => {
         setProducts(pRes.products);
-        setOutlets(oRes.outlets);
+        setSchedules(visitPlan.schedules);
+        if (!activeOutletName && selectedOutlet) {
+          const activeSchedule = visitPlan.schedules.find((schedule) => schedule.outletId === selectedOutlet);
+          setActiveOutletName(activeSchedule?.outlet.name ?? '');
+        }
       }).finally(() => setLoading(false));
     }
-  }, [accessToken]);
+  }, [accessToken, activeOutletName, selectedOutlet]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
@@ -110,6 +118,9 @@ export function TransactionsPage() {
           <CheckCircle2 size={64} color="#34d399" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ fontSize: '1.5rem', marginBottom: '.5rem' }}>Transaksi Terkirim!</h2>
           <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Order telah dikirim ke admin untuk verifikasi. Lanjutkan perjalanan Anda.</p>
+          <button onClick={() => navigate('/sales/invoices')} className="sales-btn sales-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', marginBottom: '.75rem' }}>
+            Upload Foto Nota
+          </button>
           <button onClick={() => setSuccess(false)} className="sales-btn sales-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
             Buat Transaksi Lagi
           </button>
@@ -182,7 +193,11 @@ export function TransactionsPage() {
           <div style={{ display: 'grid', gap: '.5rem', gridTemplateColumns: '1fr', marginBottom: '1rem' }}>
             <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} disabled={!!activeVisitId} className="sales-select" style={{ width: '100%', fontSize: '.85rem' }}>
               <option value="">-- Pilih Outlet Tujuan --</option>
-              {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+              {activeVisitId && selectedOutlet ? (
+                <option value={selectedOutlet}>{activeOutletName || 'Outlet visit aktif'}</option>
+              ) : schedules.map(schedule => (
+                <option key={schedule.outlet.id} value={schedule.outlet.id}>{schedule.outlet.name}</option>
+              ))}
             </select>
             <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} className="sales-select" style={{ width: '100%', fontSize: '.85rem' }}>
               <option value="cash">Tunai (Cash)</option>

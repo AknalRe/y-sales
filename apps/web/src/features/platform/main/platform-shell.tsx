@@ -27,12 +27,12 @@ export function PlatformShell() {
     if (!isMobile) setMobileMenuOpen(false);
   }, [isMobile]);
 
-  if (!isSuperAdmin) return <Navigate to="/admin" replace />;
-
   const initials = useMemo(() =>
     user?.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() ?? 'SA',
     [user]
   );
+
+  if (!isSuperAdmin) return <Navigate to="/admin" replace />;
 
   return (
     <div className="platform-shell">

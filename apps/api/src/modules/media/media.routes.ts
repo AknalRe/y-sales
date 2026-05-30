@@ -1,9 +1,9 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { mediaFiles, salesTransactions, transactionNotePhotos, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
-import { requirePermission } from '../auth/auth.service.js';
+import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 import { createObjectKey, createUploadUrl, deleteObject, getPublicUrl, getStorageConfig } from './storage.service.js';
@@ -46,17 +46,53 @@ async function getTenantMedia(companyId: string, mediaId: string) {
   return row?.media ?? null;
 }
 
+async function assertCanCreateMedia(request: FastifyRequest, companyId: string, ownerType: z.infer<typeof ownerTypeSchema>, ownerId?: string) {
+  const user = request.user!;
+  if (user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('media.manage')) return null;
+
+  if (ownerType === 'transaction' && ownerId && user.permissions.includes('sales.order.create')) {
+    const [transaction] = await db.select().from(salesTransactions).where(and(
+      eq(salesTransactions.companyId, companyId),
+      eq(salesTransactions.id, ownerId),
+      eq(salesTransactions.salesUserId, user.id),
+    ));
+    if (transaction) {
+      if (transaction.status !== 'pending_approval') {
+        throw Object.assign(new Error('Bukti transaksi hanya bisa diunggah saat transaksi menunggu approval.'), { statusCode: 400 });
+      }
+      return transaction;
+    }
+  }
+
+  throw Object.assign(new Error('Tidak punya akses untuk mengunggah media ini.'), { statusCode: 403 });
+}
+
+async function getTransactionForMedia(companyId: string, ownerId?: string) {
+  if (!ownerId) throw Object.assign(new Error('Transaksi wajib dipilih untuk upload bukti transaksi.'), { statusCode: 400 });
+  const [transaction] = await db.select().from(salesTransactions).where(and(
+    eq(salesTransactions.companyId, companyId),
+    eq(salesTransactions.id, ownerId),
+  ));
+  if (!transaction) throw Object.assign(new Error('Transaksi tidak ditemukan untuk company ini.'), { statusCode: 404 });
+  return transaction;
+}
+
 export async function mediaRoutes(app: FastifyInstance) {
-  app.post('/media/upload-url', { preHandler: requirePermission('media.manage') }, async (request) => {
+  app.post('/media/upload-url', { preHandler: authenticate }, async (request) => {
     const companyId = requireTenantId(request);
     const body = uploadUrlSchema.parse(request.body);
+    if (body.ownerType === 'transaction') await getTransactionForMedia(companyId, body.ownerId);
+    await assertCanCreateMedia(request, companyId, body.ownerType, body.ownerId);
     const objectKey = createObjectKey({ companyId, ownerType: body.ownerType, ownerId: body.ownerId, fileName: body.fileName, mimeType: body.mimeType });
     return await createUploadUrl({ companyId, objectKey, mimeType: body.mimeType });
   });
 
-  app.post('/media/complete', { preHandler: requirePermission('media.manage') }, async (request, reply) => {
+  app.post('/media/complete', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
     const body = completeSchema.parse(request.body);
+    const transaction = body.ownerType === 'transaction' ? await getTransactionForMedia(companyId, body.ownerId) : null;
+    await assertCanCreateMedia(request, companyId, body.ownerType, body.ownerId);
+
     const [media] = await db.insert(mediaFiles).values({
       ownerType: body.ownerType,
       ownerId: body.ownerId,
@@ -68,12 +104,7 @@ export async function mediaRoutes(app: FastifyInstance) {
       uploadedByUserId: request.user?.id,
     }).returning();
 
-    if (body.ownerType === 'transaction' && body.ownerId) {
-      const [transaction] = await db.select().from(salesTransactions).where(and(
-        eq(salesTransactions.companyId, companyId),
-        eq(salesTransactions.id, body.ownerId),
-      ));
-      if (!transaction) throw Object.assign(new Error('Transaksi tidak ditemukan untuk company ini.'), { statusCode: 404 });
+    if (body.ownerType === 'transaction' && transaction) {
       await db.insert(transactionNotePhotos).values({
         companyId,
         transactionId: transaction.id,

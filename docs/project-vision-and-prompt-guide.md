@@ -1,12 +1,12 @@
 # YukTrackingSales / Sales Tracking - Project Vision and Prompt Guide
 
-Dokumen ini adalah pegangan bersama untuk user dan Codex setiap kali melanjutkan pekerjaan di project `sales-tracking`. Tujuannya agar visi produk, alur bisnis, dan keputusan yang sudah disepakati tidak hilang saat membuat prompt baru.
+Dokumen ini adalah pegangan bersama untuk user dan Codex setiap kali melanjutkan pekerjaan di project `sales-tracking`. Tujuannya agar visi produk, alur bisnis, keputusan teknis, dan arah implementasi tetap konsisten walaupun percakapan sudah panjang.
 
 ## Identitas Project
 
 Nama kerja project: YukTrackingSales / Yuk Tracking Sales Management System.
 
-Project ini adalah platform multi-company untuk mengelola aktivitas sales lapangan dari jadwal kunjungan outlet sampai transaksi, stok, approval, dan laporan. Sistem harus mendukung kerja operasional harian admin/company owner dan sales, bukan hanya dashboard statis.
+Project ini adalah platform multi-company untuk mengelola aktivitas sales lapangan dari jadwal kunjungan outlet sampai check-in/check-out, transaksi, bukti foto, stok sales, approval admin, piutang, invoice, dan laporan. Sistem harus terasa seperti aplikasi operasional harian untuk admin/company owner dan sales, bukan hanya dashboard tampilan.
 
 ## Visi Produk
 
@@ -14,101 +14,219 @@ YukTrackingSales harus menjadi sistem operasional sales lapangan yang:
 
 - memastikan sales benar-benar hadir dan melakukan visit ke outlet yang tepat;
 - membantu admin/company owner menjadwalkan outlet yang harus dikunjungi sales;
-- mencatat check-in dan check-out sales ( karyawan );
+- mencatat check-in dan check-out sales/karyawan secara umum;
 - mencatat check-in dan check-out outlet dengan GPS, radius outlet, waktu, dan bukti foto bila diwajibkan;
-- mencatat in out stok dan management stok oleh non-sales;
-- menjaga stok sales agar berkurang hanya melalui proses transaksi yang valid dan dapat diaudit;
-- mendukung transaksi langsung maupun piutang;
+- mencatat in/out stok dan manajemen stok oleh admin/non-sales;
+- menjaga stok sales agar berkurang hanya melalui transaksi yang valid dan bisa diaudit;
+- mendukung transaksi langsung, piutang, dan konsinyasi;
 - mewajibkan atau mengizinkan bukti foto transaksi sesuai setting company;
-- menyediakan approval admin untuk transaksi, stok, bukti foto, dan proses penting lain;
+- menyediakan approval admin untuk transaksi, stok, bukti foto, outlet, dan proses penting lain;
 - memisahkan invoice outlet dari invoice platform;
-- bisa dikembangkan menjadi produk SaaS yang company setting-nya dapat dikendalikan dari admin platform.
+- bisa dikembangkan sebagai SaaS yang setting company dan akses platform-nya dikelola dari admin platform.
 
-## Prinsip Bisnis Yang Sudah Disepakati
+## Prinsip Utama
 
-### 1. Visit Outlet
+- Backend adalah sumber kebenaran flow bisnis, permission, tenant boundary, status entity, dan validasi.
+- Frontend wajib mengikuti flow backend, bukan membuat aturan bisnis sendiri yang berbeda.
+- Setiap data operasional harus tenant-aware: data company A tidak boleh terlihat oleh company B.
+- Fitur yang belum wajib sekarang tetap dirancang agar bisa diaktifkan melalui setting.
+- Approval harus meninggalkan audit trail.
+- Sales mobile harus sederhana, cepat, dan hanya menampilkan pekerjaan sales tersebut.
+- Admin company harus bisa review, filter, approve/reject, dan melihat dampak stok/laporan.
+- Admin platform harus mengelola company, subscription, billing, dan setting platform tanpa mencampur domain transaksi outlet.
 
-Sales melakukan kunjungan ke outlet dengan flow:
+## Flow Bisnis Yang Disepakati
 
-1. Admin/company owner membuat atau mengatur jadwal outlet untuk sales.
-2. Sales melihat daftar outlet yang dijadwalkan.
-3. Sales boleh memilih urutan kunjungan sendiri, tetapi outlet tetap harus sesuai list jadwal.
-4. Saat sampai outlet, sales melakukan check-in.
-5. Sistem validasi lokasi sales terhadap titik outlet dan radius outlet.
-6. Sales melakukan aktivitas visit, order, atau pencatatan lain.
-7. Sales melakukan check-out.
-8. Visit menjadi bukti aktivitas lapangan.
+### 1. Absensi Sales/Karyawan
 
-### 2. Jadwal Sales
+Absensi adalah kehadiran kerja umum, berbeda dari visit outlet.
 
-Jadwal sales adalah rencana kerja yang dibuat admin/company owner.
+Flow:
 
-Yang harus dijaga:
+1. User melakukan check-in kerja.
+2. Sistem menyimpan waktu, lokasi, dan foto wajah bila setting mewajibkan.
+3. User melakukan check-out kerja.
+4. Admin bisa review absensi.
 
-- daftar outlet untuk sales sudah ditentukan oleh admin/company owner;
-- sales tidak harus mengikuti urutan outlet secara kaku;
-- sales tetap harus mengunjungi outlet dari daftar yang dijadwalkan;
-- admin perlu halaman untuk membuat, mengubah, menyetujui, membatalkan, dan melihat realisasi jadwal;
-- performa sales dihitung dari target outlet, outlet dikunjungi, durasi, closing, dan omzet.
+Catatan:
 
-### 3. Outlet Management
+- Absensi tidak sama dengan visit outlet.
+- Visit outlet tetap butuh schedule/outlet/radius sendiri.
+
+### 2. Management Outlet
 
 Outlet adalah master customer/toko/agen yang dikunjungi sales.
 
 Fitur outlet harus mencakup:
 
 - CRUD outlet;
-- status outlet, seperti pending, active, rejected, inactive;
+- status outlet: `draft`, `pending_verification`, `active`, `rejected`, `inactive`;
 - foto outlet;
 - titik lokasi outlet;
 - radius geofence outlet;
 - verifikasi atau reject outlet oleh admin;
 - pemilihan titik lokasi lewat maps, bukan hanya input latitude/longitude manual.
 
-Radius prioritas:
+Aturan:
 
-1. radius khusus outlet;
-2. fallback ke setting default company/system.
+- Outlet harus milik company yang sama dengan user.
+- Hanya outlet `active` yang boleh dipakai untuk jadwal visit.
+- Radius prioritas: radius khusus outlet, lalu fallback ke default radius company.
 
-### 4. Check-In dan Check-Out
+### 3. Jadwal Sales
 
-Check-in/check-out outlet adalah bukti kehadiran sales di outlet.
+Jadwal sales adalah rencana kerja yang dibuat admin/company owner.
 
-Validasi yang diharapkan:
+Flow:
 
-- outlet aktif dan berada di tenant/company yang sama;
-- outlet termasuk jadwal sales jika ada jadwal pada hari tersebut;
-- GPS sales berada dalam radius outlet;
-- akurasi GPS masuk batas toleransi;
-- foto wajah atau bukti lain bisa diwajibkan sesuai setting;
-- check-out menutup visit session dan menghitung durasi.
+1. Admin/company owner memilih sales aktif.
+2. Admin memilih outlet aktif.
+3. Sistem membuat schedule per outlet untuk tanggal tertentu.
+4. Admin bisa approve atau cancel schedule.
+5. Sales melihat daftar outlet yang dijadwalkan hari ini.
+6. Sales boleh menentukan urutan visit sendiri, tetapi tetap dari list jadwal.
+
+Aturan backend:
+
+- Schedule tidak boleh dibuat untuk user yang tidak aktif.
+- Schedule tidak boleh dibuat untuk outlet non-active.
+- Outlet yang sama tidak boleh dijadwalkan dua kali untuk sales dan tanggal yang sama, kecuali schedule sebelumnya sudah `cancelled`.
+- `GET /visits/today` harus menjadi sumber daftar outlet sales hari ini.
+
+Status schedule:
+
+- `assigned`: jadwal dibuat dan bisa dimulai.
+- `approved`: jadwal disetujui dan bisa dimulai.
+- `in_progress`: sales sudah check-in pada schedule tersebut.
+- `completed`: sales sudah check-out.
+- `cancelled`: jadwal dibatalkan.
+- `missed`: jadwal terlewat.
+
+### 4. Visit Outlet
+
+Visit outlet adalah bukti sales benar-benar mengunjungi outlet.
+
+Flow:
+
+1. Sales membuka halaman visit.
+2. Frontend mengambil list dari `/visits/today`.
+3. Sales memilih salah satu schedule/outlet.
+4. Sales mengambil foto wajah dan lokasi GPS.
+5. Sales check-in.
+6. Backend validasi outlet, schedule, tenant, radius, GPS accuracy, dan face setting.
+7. Sales melakukan aktivitas di outlet.
+8. Sales check-out dengan outcome kunjungan.
+9. Schedule berubah menjadi `completed`.
+
+Aturan:
+
+- Frontend sales tidak boleh mengambil semua outlet dari `/outlets` untuk visit.
+- Check-in harus mengirim `scheduleId` jika schedule tersedia.
+- Outlet check-in harus sama dengan outlet pada schedule.
+- Check-in hanya boleh untuk schedule `assigned` atau `approved`.
+- Outlet harus `active`.
+- Retry check-in dengan `clientRequestId` yang sama harus idempotent dan tidak membuat media/face capture duplikat.
+
+Status visit session:
+
+- `open`: sales sedang berada dalam sesi visit.
+- `completed`: visit selesai.
+- `invalid_location`: visit perlu review karena lokasi tidak valid.
+- `synced`: data offline sudah tersinkron.
+
+Outcome visit:
+
+- `closed_order`;
+- `no_order`;
+- `follow_up`;
+- `outlet_closed`;
+- `rejected`;
+- `invalid_location`.
 
 ### 5. Transaksi Outlet
 
-Transaksi outlet dibuat oleh sales saat atau setelah visit.
+Transaksi outlet dibuat oleh sales saat masih berada dalam visit yang aktif.
 
-Aturan utama:
+Flow:
 
-- transaksi terhubung ke sales, outlet, dan idealnya visit session;
-- transaksi bisa pembayaran langsung atau menjadi piutang;
-- sales wajib upload foto bukti jika setting company mewajibkan;
-- jika setting bukti foto optional, transaksi tetap bisa dibuat tanpa foto;
-- transaksi masuk ke status approval/review admin;
-- stok sales berkurang setelah transaksi valid sesuai proses approval yang disepakati;
-- dokumen foto transaksi menjadi bukti keabsahan transaksi outlet.
+1. Sales check-in outlet.
+2. Sales membuat transaksi dari produk yang tersedia.
+3. Backend memastikan visit masih `open` dan outlet transaksi sama dengan outlet visit.
+4. Backend mencari warehouse sales milik user tersebut.
+5. Saat transaksi dibuat, stok sales tidak langsung dipotong dari quantity, tetapi masuk `reservedQuantity`.
+6. Status transaksi menjadi `pending_approval`.
+7. Sales diarahkan upload foto nota/bukti.
+8. Admin review transaksi.
+9. Jika approved, stok sales benar-benar berkurang dan transaksi menjadi `closed`.
+10. Jika rejected, reserved stock dikembalikan.
 
-### 6. Stok Sales
+Aturan:
 
-Stok sales adalah stok yang dibawa atau dimiliki sales untuk aktivitas lapangan.
+- Transaksi wajib terhubung ke `visitSessionId`.
+- Transaksi outlet harus menggunakan outlet yang sama dengan visit.
+- Sales biasa hanya boleh melihat transaksi miliknya sendiri.
+- Admin/reviewer boleh melihat transaksi company sesuai permission.
+- `GET /sales/orders` harus mendukung filter status, periode, dan sales.
 
-Prinsipnya:
+Status transaksi penting:
 
-- stok sales tidak boleh berkurang diam-diam tanpa transaksi atau approval yang jelas;
-- transaksi outlet mengurangi stok sales setelah validasi/approval admin;
-- admin harus bisa melihat perubahan stok, sumber transaksi, dan status approval;
-- stok perlu bisa diaudit dari warehouse pusat, stok sales, dan outlet jika ada konsinyasi.
+- `pending_approval`: transaksi menunggu review admin.
+- `closed`: transaksi sudah diapprove, stok sudah release/berkurang.
+- `rejected`: transaksi ditolak, reserved stock dikembalikan.
+- Status lain seperti `draft`, `submitted`, `approved`, `validated`, `cancelled` boleh ada untuk kompatibilitas/phase lanjutan, tetapi flow saat ini memakai `pending_approval -> closed/rejected`.
 
-### 7. Approval Admin
+### 6. Bukti Foto Transaksi
+
+Bukti foto transaksi adalah dokumen keabsahan transaksi outlet.
+
+Flow:
+
+1. Setelah transaksi dibuat, sales upload foto nota/bukti.
+2. Media dicatat sebagai owner type `transaction`.
+3. Backend membuat relasi `transaction_note_photos`.
+4. Admin melihat foto di halaman verifikasi nota.
+5. Jika setting `requireTransactionProofPhoto` aktif, admin tidak boleh approve transaksi tanpa foto.
+
+Aturan:
+
+- Sales hanya boleh upload foto untuk transaksi miliknya.
+- Sales hanya boleh upload foto saat transaksi masih `pending_approval`.
+- Admin dengan permission `media.manage` boleh mengelola media.
+- Media/foto harus tenant-aware.
+
+### 7. Stok Sales dan Inventory
+
+Stok sales adalah stok di warehouse tipe `sales_van` yang dimiliki user sales.
+
+Flow stok transaksi:
+
+1. Admin/non-sales mengelola stok dan transfer ke warehouse sales.
+2. Sales membuat transaksi dari stok miliknya.
+3. Saat order dibuat, quantity tidak langsung berkurang, tetapi `reservedQuantity` naik.
+4. Saat admin approve, quantity berkurang dan reserved turun.
+5. Saat admin reject, reserved turun tanpa mengurangi quantity.
+
+Aturan:
+
+- Stok sales tidak boleh berkurang diam-diam tanpa transaksi atau movement.
+- Transfer/adjustment tidak boleh membuat quantity lebih kecil dari reserved stock.
+- Movement stok harus tercatat pada `inventory_movements`.
+- Approval transaksi harus mencatat audit log.
+
+### 8. Piutang dan Konsinyasi
+
+Jika transaksi menggunakan payment method:
+
+- `cash` atau `qris`: payment status awal `paid`.
+- `credit`: saat approve, sistem membuat receivable/piutang.
+- `consignment`: saat approve, sistem membuat consignment dan consignment items.
+
+Aturan:
+
+- Piutang dan konsinyasi dibuat setelah transaksi valid/approved.
+- Piutang dan konsinyasi tetap harus tenant-aware.
+
+### 9. Approval Admin
 
 Approval adalah guardrail bisnis.
 
@@ -121,41 +239,115 @@ Area yang perlu approval atau review:
 - jadwal sales jika flow company mengharuskan;
 - setoran atau deposit jika modul dipakai.
 
-Approval harus meninggalkan audit trail: siapa yang approve/reject, kapan, alasan, dan status akhir.
+Audit trail minimal:
 
-### 8. Invoice
+- siapa actor-nya;
+- action;
+- entity type dan entity id;
+- old values bila ada;
+- new values;
+- waktu kejadian.
+
+### 10. Invoice
 
 Ada dua jenis invoice yang tidak boleh dicampur:
 
-- Invoice outlet: invoice untuk transaksi penjualan sales ke outlet/customer.
-- Invoice platform: invoice untuk pembelian akun, akses company, subscription, atau penggunaan platform secara digital.
+- Invoice outlet: invoice/nota untuk transaksi penjualan sales ke outlet/customer.
+- Invoice platform: invoice untuk pembelian akun, akses company, subscription, atau penggunaan platform digital.
 
-Invoice outlet mengikuti flow transaksi outlet.
+Aturan:
 
-Invoice platform otomatis dibuat saat user/company membeli akses platform atau paket layanan secara digital.
+- Invoice outlet mengikuti flow transaksi outlet dan bukti foto nota.
+- Invoice platform dikelola oleh admin platform pada modul billing/subscription.
+- Jangan membuat endpoint atau UI yang mencampur invoice outlet dan invoice platform.
 
-### 9. Setting Company dan Platform
+### 11. Setting Company dan Platform
 
-Beberapa aturan tidak harus selalu aktif dari awal, tetapi harus dirancang agar bisa diaktifkan lewat setting.
+Setting company yang penting:
 
-Setting yang penting:
-
-- radius default outlet;
+- default radius outlet;
+- max GPS accuracy;
 - apakah bukti foto transaksi wajib;
 - apakah foto wajah visit wajib;
-- apakah face recognition aktif;
-- apakah approval jadwal wajib;
-- apakah transaksi wajib terkait visit session;
-- fitur company/subscription/platform access.
+- apakah face identity match aktif;
+- face match threshold;
+- liveness check;
+- reject visit on face mismatch;
+- integration face provider.
 
-Halaman admin platform harus dapat mengatur setting yang bersifat SaaS/platform. Halaman admin company mengatur operasional company masing-masing.
+Setting platform yang penting:
 
-## Role Utama
+- company/subscription/plan;
+- feature catalog;
+- billing dan invoice platform;
+- limit user/outlet/visit sesuai plan.
+
+## Mapping Backend dan Frontend
+
+### Backend Source of Truth
+
+- `/visits/today`: list schedule dan outlet yang boleh dikunjungi sales hari ini.
+- `/visits/check-in`: validasi schedule, outlet, GPS/radius, face, dan idempotency.
+- `/visits/check-out`: menutup visit dan mengubah schedule menjadi completed.
+- `/sales/orders`: list transaksi dengan access control sales vs admin.
+- `/sales/orders/:id/approve`: approval transaksi, release stok, create receivable/consignment bila perlu.
+- `/sales/orders/:id/reject`: reject transaksi dan release reserved stock.
+- `/media/upload-url` dan `/media/complete`: upload bukti transaksi dengan guard ownership.
+- `/inventory/*`: manajemen warehouse, balance, transfer, movement, adjustment.
+- `/settings/general`: setting operasional company.
+- `/platform/*`: company, subscription, plans, billing platform.
+
+### Frontend Yang Harus Mengikuti Backend
+
+Sales:
+
+- Home sales membaca summary dan visit milik sales tersebut.
+- Visit page mengambil outlet dari `/visits/today`, bukan `/outlets`.
+- Visit check-in mengirim `scheduleId`.
+- Transaksi hanya bisa dibuat setelah active visit.
+- Setelah transaksi dibuat, user diarahkan upload Foto Nota.
+- Foto Nota hanya upload untuk transaksi `pending_approval`.
+
+Admin company:
+
+- Management Outlet memakai `/outlets`.
+- Jadwalkan Sales memakai outlet `active` dan user sales aktif.
+- Verifikasi Nota default filter ke `pending_approval`.
+- Approve transaksi berarti stok langsung release/berkurang.
+- Stock page harus menampilkan quantity, reserved, available, dan movement.
+- Settings page mengatur radius, GPS, foto, dan face policy.
+
+Admin platform:
+
+- Company, plan, feature, billing, dan invoice platform berada di route `/platform`.
+- Admin platform bisa masuk company view dengan tenant context yang jelas.
+
+## Role dan Permission
+
+Role utama:
 
 - Super Admin Platform: mengelola platform, company, paket, akses, invoice platform, dan setting global.
 - Admin/Owner Company: mengelola user, sales, outlet, jadwal, produk, stok, transaksi, approval, dan laporan company.
-- Supervisor: membantu review jadwal, visit, outlet, dan approval sesuai permission.
-- Sales: melihat jadwal, visit outlet, check-in/check-out, membuat transaksi, upload bukti, dan melihat stoknya.
+- Supervisor: review jadwal, visit, outlet, dan transaksi sesuai permission.
+- Sales: melihat jadwal, visit outlet, check-in/check-out, membuat transaksi, upload bukti, dan melihat datanya sendiri.
+
+Permission penting:
+
+- `visits.execute`: sales menjalankan visit.
+- `visits.review`: admin/supervisor review visit dan jadwal.
+- `outlets.manage`: admin mengelola outlet.
+- `sales.view`: melihat transaksi sales.
+- `sales.order.create`: sales membuat order.
+- `sales.order.review`: admin/supervisor approve/reject order.
+- `inventory.manage`: admin mengelola stok.
+- `media.manage`: admin mengelola media.
+- `settings.manage`: admin mengelola setting company.
+- `invoice.review`: admin review nota/transaksi.
+
+Catatan seed:
+
+- Perubahan permission di seed hanya otomatis berlaku setelah seed/migration dijalankan.
+- Database existing mungkin perlu cleanup role permission manual jika role lama sudah telanjur punya permission yang tidak sesuai, misalnya sales lama masih punya `outlets.manage`.
 
 ## Arah UI/UX
 
@@ -164,30 +356,42 @@ UI harus terasa seperti aplikasi operasional modern:
 - rapi, padat, dan mudah discan;
 - cocok untuk admin yang bekerja berulang setiap hari;
 - tidak seperti landing page marketing;
-- sidebar harus mencerminkan modul bisnis utama;
-- tabel, filter, status badge, drawer/modal, dan action button harus jelas;
-- action penting harus memberi feedback, loading state, error state, dan success state;
-- halaman sales harus nyaman untuk mobile/PWA;
+- sidebar mencerminkan modul bisnis utama;
+- tabel, filter, status badge, drawer/modal, dan action button jelas;
+- action penting punya loading, empty, error, success state;
+- halaman sales nyaman untuk mobile/PWA;
 - visual boleh mengikuti referensi style dari project `sistem-mahasura`, tetapi tetap disesuaikan dengan domain sales tracking.
 
-Menu admin company yang perlu ada atau diarahkan:
+Menu admin company yang perlu ada:
 
 - Dashboard;
 - Management Outlet;
 - Jadwalkan Sales;
-- Visit Review;
-- Sales Transactions;
-- Approval;
-- Inventory/Stok;
-- Products;
-- Reports;
-- Settings.
+- Tracking/Visit Review;
+- Verifikasi Nota;
+- Manajemen Stok;
+- Piutang;
+- Laporan;
+- Sales Accounts;
+- Users/Roles;
+- Subscription;
+- Pengaturan Operasional.
+
+Menu sales yang perlu ada:
+
+- Home;
+- Visit;
+- Transaksi;
+- Foto Nota;
+- Profil;
+- Absensi.
 
 ## Aturan Teknis Saat Melanjutkan Project
 
 Saat Codex bekerja di project ini:
 
-- baca struktur dan file terkait dulu sebelum mengubah;
+- baca dokumen ini dulu;
+- baca file terkait sebelum mengubah;
 - jangan reset atau revert perubahan user yang belum commit;
 - jaga perubahan tetap scoped;
 - gunakan pattern yang sudah ada di repo;
@@ -195,10 +399,27 @@ Saat Codex bekerja di project ini:
 - jika pull dari git, simpan perubahan lokal lebih dulu dengan cara aman;
 - jangan mencampur invoice outlet dan invoice platform;
 - jangan hardcode base API URL jika sudah bisa dari env;
-- jangan menghapus setting yang sudah dibuat untuk membuat fitur optional;
+- jangan menghapus setting yang membuat fitur optional;
 - jangan mengabaikan tenant/company boundary;
 - setiap endpoint admin harus menghormati permission dan tenant;
-- media/foto harus dilindungi agar tidak bocor lintas tenant.
+- media/foto harus dilindungi agar tidak bocor lintas tenant;
+- backend harus menjadi sumber validasi final, frontend hanya membantu UX.
+
+## Checklist Audit Flow
+
+Gunakan checklist ini sebelum menganggap fitur selesai:
+
+- Apakah endpoint backend tenant-aware?
+- Apakah permission sesuai role?
+- Apakah sales hanya melihat data miliknya sendiri?
+- Apakah admin/reviewer melihat data company sesuai permission?
+- Apakah frontend memakai endpoint yang benar untuk role tersebut?
+- Apakah status backend dan label/status frontend konsisten?
+- Apakah flow stok memperhitungkan reserved stock?
+- Apakah approval menulis audit log?
+- Apakah bukti foto transaksi mengikuti setting company?
+- Apakah error dari backend bisa dipahami user frontend?
+- Apakah typecheck/build/lint sudah dijalankan?
 
 ## Prompt Ulang Yang Disarankan
 
@@ -211,44 +432,38 @@ Baca dulu docs/project-vision-and-prompt-guide.md agar visi bisnis dan keputusan
 Fokus project:
 - sales visit outlet dengan check-in/check-out;
 - jadwal outlet dibuat admin/company owner, sales boleh pilih urutan tapi harus dari list jadwal;
-- validasi radius outlet/GPS;
-- transaksi outlet langsung atau piutang;
+- sales frontend harus memakai /visits/today untuk outlet visit;
+- validasi radius outlet/GPS dilakukan backend;
+- transaksi outlet dibuat saat visit open;
+- transaksi masuk pending_approval, stok sales masuk reserved, lalu stok berkurang setelah admin approve;
 - bukti foto transaksi bisa wajib/optional via setting company;
-- stok sales berkurang setelah transaksi valid dan approval admin;
+- sales hanya boleh upload foto transaksi miliknya yang masih pending_approval;
 - invoice outlet dipisah dari invoice platform;
-- admin platform dapat mengatur setting SaaS/company.
+- admin platform mengatur company, subscription, billing, dan akses platform.
 
 Tolong lanjutkan pekerjaan pada area: [isi area yang ingin dikerjakan].
-Sebelum edit, audit file terkait dulu. Jangan reset/revert perubahan lokal yang belum commit. Setelah selesai, verifikasi dengan typecheck/build/test yang relevan dan jelaskan ringkas.
+Sebelum edit, audit backend flow dan cek apakah frontend sudah mengikuti backend.
+Jangan reset/revert perubahan lokal yang belum commit.
+Setelah selesai, verifikasi dengan typecheck/build/lint yang relevan dan jelaskan ringkas.
 ```
 
-## Checklist Saat Menambah Fitur Baru
+## Backlog dan Risiko Yang Perlu Diingat
 
-Sebelum implementasi:
+- Bersihkan warning lint lama secara bertahap, terutama missing dependency React hooks.
+- Tambahkan test integration untuk flow visit -> transaksi -> upload foto -> approve -> stok release.
+- Tambahkan migrasi/utility untuk sinkronisasi permission role existing jika seed berubah.
+- Audit e2e dengan user sales asli dan admin asli, bukan hanya super admin.
+- Perjelas UI untuk available stock vs reserved stock di halaman transaksi sales.
+- Buat laporan lebih lengkap: achievement visit, closing rate, revenue, piutang, konsinyasi.
+- Pastikan invoice platform tetap terpisah dari invoice outlet.
 
-- apakah fitur ini milik platform admin, company admin, supervisor, atau sales?
-- apakah harus tenant-aware?
-- apakah butuh permission baru?
-- apakah butuh setting agar optional?
-- apakah ada dampak ke stok, transaksi, invoice, atau approval?
-- apakah perlu audit trail?
-- apakah UI sudah sesuai workflow harian user?
-
-Sesudah implementasi:
-
-- route/menu tersedia bila user memang perlu mengaksesnya;
-- loading, empty, error, dan success state tersedia;
-- validasi frontend dan backend konsisten;
-- typecheck/build berjalan;
-- perubahan tidak merusak flow login, tenant, dan auth.
-
-## Keputusan Penting Yang Perlu Diingat
+## Keputusan Penting Yang Tidak Boleh Hilang
 
 - Sales boleh menentukan urutan visit sendiri, tetapi tetap dari outlet yang dijadwalkan.
 - Bukti foto transaksi harus bisa diwajibkan atau dibuat optional lewat setting.
-- Radius outlet sudah menjadi bagian penting dari validasi check-in/check-out.
+- Radius outlet adalah validasi utama check-in/check-out outlet.
 - Penentuan titik outlet harus bisa lewat maps.
-- Stok sales berkurang setelah transaksi valid melalui proses yang bisa direview admin.
+- Stok sales berkurang setelah transaksi valid dan admin approval.
+- Saat transaksi dibuat, stok masuk reserved dulu, bukan langsung berkurang.
 - Invoice outlet dan invoice platform adalah dua domain berbeda.
 - Fitur yang belum wajib sekarang sebaiknya tetap dirancang agar bisa diaktifkan melalui setting.
-

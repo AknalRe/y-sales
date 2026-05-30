@@ -8,6 +8,7 @@ import { EmptyState, Spinner } from '../../../components/ui';
 const orderStatusLabel: Record<string, string> = {
   draft: 'Draft',
   submitted: 'Menunggu Review',
+  pending_approval: 'Menunggu Approval',
   approved: 'Disetujui',
   rejected: 'Ditolak',
   closed: 'Selesai',
@@ -28,7 +29,7 @@ export function InvoicesPage() {
       const res = await apiRequest<{ orders: any[] }>('/sales/orders', {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      setOrders(res.orders);
+      setOrders(res.orders.map(order => ({ ...order, hasInvoice: Boolean(order.photoUrl) })));
     } catch (e: any) {
       console.error(e);
     } finally {
@@ -114,6 +115,10 @@ export function InvoicesPage() {
                 {order.hasInvoice ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '.3rem', color: '#4fa87e', fontSize: '.8rem', fontWeight: 700 }}>
                     <CheckCircle2 size={16} /> Nota Terkirim
+                  </span>
+                ) : order.status !== 'pending_approval' ? (
+                  <span style={{ color: '#94a3b8', fontSize: '.8rem', fontWeight: 700 }}>
+                    Tidak bisa upload
                   </span>
                 ) : (
                   <label style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', padding: '.5rem 1rem', borderRadius: '.75rem', fontSize: '.8rem', fontWeight: 800, cursor: uploadingFor === order.id ? 'not-allowed' : 'pointer', opacity: uploadingFor === order.id ? 0.7 : 1 }}>

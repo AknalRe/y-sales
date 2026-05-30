@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle } from 'lucide-react';
 import { checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
-import { getOutlets } from '../../../lib/api/tenant';
+import { getTodayVisitPlan, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
 import { useAuth } from '../../auth/auth-provider';
@@ -18,8 +18,10 @@ export function VisitPage() {
   const [message, setMessage] = useState('');
 
   // Data
-  const [outlets, setOutlets] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<TodayVisitSchedule[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState('');
+  const [selectedScheduleId, setSelectedScheduleId] = useState('');
+  const [activeOutletName, setActiveOutletName] = useState('');
   const [activeVisitId, setActiveVisitId] = useState<string | null>(null);
 
   // Check-out fields
@@ -32,9 +34,11 @@ export function VisitPage() {
     const raw = localStorage.getItem(activeVisitStorageKey);
     if (!raw) return;
     try {
-      const activeVisit = JSON.parse(raw) as { id: string; outletId: string };
+      const activeVisit = JSON.parse(raw) as { id: string; outletId: string; scheduleId?: string; outletName?: string };
       setActiveVisitId(activeVisit.id);
       setSelectedOutlet(activeVisit.outletId);
+      setSelectedScheduleId(activeVisit.scheduleId ?? '');
+      setActiveOutletName(activeVisit.outletName ?? '');
     } catch {
       localStorage.removeItem(activeVisitStorageKey);
     }
@@ -42,9 +46,12 @@ export function VisitPage() {
 
   useEffect(() => {
     if (accessToken) {
-      getOutlets(accessToken).then(res => setOutlets(res.outlets)).catch(e => console.error(e));
+      getTodayVisitPlan(accessToken).then(res => setSchedules(res.schedules)).catch(e => console.error(e));
     }
   }, [accessToken]);
+
+  const availableSchedules = schedules.filter((schedule) => ['assigned', 'approved'].includes(schedule.status));
+  const selectedSchedule = schedules.find((schedule) => schedule.id === selectedScheduleId);
 
   async function handleStartCamera() {
     if (!videoRef.current) return;
@@ -71,6 +78,7 @@ export function VisitPage() {
     const payload: VisitPayload = {
       clientRequestId: crypto.randomUUID(),
       outletId: selectedOutlet,
+      scheduleId: selectedScheduleId || undefined,
       latitude: location.latitude,
       longitude: location.longitude,
       accuracyM: location.accuracyM,
@@ -88,7 +96,13 @@ export function VisitPage() {
       const result = await checkInVisit(accessToken, payload);
       setMessage(`Check-in berhasil!`);
       setActiveVisitId(result.visit.id);
-      localStorage.setItem(activeVisitStorageKey, JSON.stringify({ id: result.visit.id, outletId: result.visit.outletId }));
+      setActiveOutletName(selectedSchedule?.outlet.name ?? '');
+      localStorage.setItem(activeVisitStorageKey, JSON.stringify({
+        id: result.visit.id,
+        outletId: result.visit.outletId,
+        scheduleId: selectedScheduleId,
+        outletName: selectedSchedule?.outlet.name,
+      }));
       setImage(null); // Reset image for check-out
     } catch (error: any) {
       setMessage(`Check-in gagal: ${error.message}`);
@@ -125,6 +139,8 @@ export function VisitPage() {
       setActiveVisitId(null);
       localStorage.removeItem(activeVisitStorageKey);
       setSelectedOutlet('');
+      setSelectedScheduleId('');
+      setActiveOutletName('');
       setImage(null);
       setNotes('');
     } catch (error: any) {
@@ -146,18 +162,36 @@ export function VisitPage() {
       <div className="sales-step-card">
         <h2>{!activeVisitId ? '1. Pilih Outlet Tujuan' : 'Sesi Kunjungan Aktif'}</h2>
         {!activeVisitId ? (
-          <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} className="sales-select" style={{ width: '100%' }}>
-            <option value="">-- Pilih Outlet --</option>
-            {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+          <select
+            value={selectedScheduleId}
+            onChange={e => {
+              const schedule = schedules.find((item) => item.id === e.target.value);
+              setSelectedScheduleId(e.target.value);
+              setSelectedOutlet(schedule?.outletId ?? '');
+            }}
+            className="sales-select"
+            style={{ width: '100%' }}
+          >
+            <option value="">-- Pilih Outlet dari Jadwal Hari Ini --</option>
+            {availableSchedules.map(schedule => (
+              <option key={schedule.id} value={schedule.id}>
+                {schedule.outlet.code} - {schedule.outlet.name}
+              </option>
+            ))}
           </select>
         ) : (
           <div className="sales-attendance-banner checked-in">
             <Store size={20} />
             <div>
               <strong>Sedang Visit</strong>
-              <span>{outlets.find(o => o.id === selectedOutlet)?.name}</span>
+              <span>{activeOutletName || selectedSchedule?.outlet.name || selectedOutlet}</span>
             </div>
           </div>
+        )}
+        {!activeVisitId && !availableSchedules.length && (
+          <p style={{ marginTop: '.75rem', fontSize: '.8rem', color: '#94a3b8' }}>
+            Belum ada jadwal outlet yang bisa dimulai hari ini. Hubungi admin untuk membuat atau mengaktifkan jadwal sales.
+          </p>
         )}
       </div>
 

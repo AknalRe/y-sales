@@ -39,7 +39,7 @@ export function InvoiceReviewPage() {
   const [transactions, setTransactions] = useState<ExtendedTransaction[]>([]);
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('submitted');
+  const [statusFilter, setStatusFilter] = useState('pending_approval');
   const [saving, setSaving] = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<ExtendedTransaction | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -146,8 +146,8 @@ export function InvoiceReviewPage() {
             style={{ width: 'auto', minWidth: 180, borderRadius: 12 }}
           >
             <option value="">Semua Status</option>
-            <option value="submitted">Submitted (Baru)</option>
             <option value="pending_approval">Pending Approval</option>
+            <option value="submitted">Submitted (Legacy)</option>
             <option value="approved">Approved</option>
             <option value="closed">Closed (Selesai)</option>
             <option value="rejected">Rejected</option>

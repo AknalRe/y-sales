@@ -44,7 +44,7 @@ export function PlatformInvoicePrintPage() {
           <div className="invoice-brand">
             <div className="invoice-logo"><ReceiptText size={28} /></div>
             <div>
-              <h1>Mahasura</h1>
+              <h1>Yuksales</h1>
               <p>Platform SaaS Subscription Billing</p>
             </div>
           </div>
@@ -100,7 +100,7 @@ export function PlatformInvoicePrintPage() {
         <section className="invoice-summary-row">
           <div className="invoice-notes-box">
             <span>Catatan</span>
-            <p>{invoice.notes || 'Terima kasih telah menggunakan Mahasura.'}</p>
+            <p>{invoice.notes || 'Terima kasih telah menggunakan Yuksales.'}</p>
           </div>
           <div className="invoice-total-box">
             <div><span>Subtotal</span><strong>{money(invoice.subtotalAmount)}</strong></div>
@@ -125,8 +125,8 @@ export function PlatformInvoicePrintPage() {
         )}
 
         <footer className="invoice-print-footer">
-          <p>Invoice ini dibuat secara otomatis oleh Mahasura Platform Billing.</p>
-          <strong>mahasura.id</strong>
+          <p>Invoice ini dibuat secara otomatis oleh Yuksales Platform Billing.</p>
+          <strong>yuksales.id</strong>
         </footer>
       </main>
     </div>

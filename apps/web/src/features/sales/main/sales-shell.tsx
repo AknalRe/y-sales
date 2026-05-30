@@ -21,7 +21,7 @@ export function SalesShell() {
         {/* <header className="sticky top-0 z-20 bg-[#4A2922] p-4 text-white shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-black">Mahasura Sales</h1>
+              <h1 className="text-lg font-black">Yuksales Sales</h1>
               <p className="text-xs text-[#d8b6aa]">{user?.name ?? 'Sales'} - Area operasional</p>
             </div>
             <div className="grid h-11 w-11 place-items-center rounded-full border-2 border-white/20 bg-[#B55925] font-black text-white">

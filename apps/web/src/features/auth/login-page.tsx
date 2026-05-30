@@ -38,8 +38,8 @@ export function LoginPage() {
       <section className="relative z-10 w-full max-w-md animate-float-in">
         <div className="brand-glass rounded-3xl p-8">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-white/15 text-3xl font-black text-white shadow-2xl ring-1 ring-white/20">M</div>
-            <h1 className="text-4xl font-black tracking-tight text-white">Mahasura</h1>
+            <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-white/15 text-3xl font-black text-white shadow-2xl ring-1 ring-white/20">Y</div>
+            <h1 className="text-4xl font-black tracking-tight text-white">Yuksales</h1>
             <p className="mt-2 text-sm font-medium text-brand-secondary">Sales Management System</p>
           </div>
 
@@ -57,7 +57,7 @@ export function LoginPage() {
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/40"
                 value={identifier}
                 onChange={(event) => setIdentifier(event.target.value)}
-                placeholder="admin / sales@mahasura.com"
+                placeholder="admin / sales@yuksales.com"
                 required
               />
             </label>
@@ -90,7 +90,7 @@ export function LoginPage() {
             </button>
           </form>
         </div>
-        <p className="mt-8 text-center text-xs text-white/50">© {new Date().getFullYear()} Mahasura. All rights reserved.</p>
+        <p className="mt-8 text-center text-xs text-white/50">© {new Date().getFullYear()} Yuksales. All rights reserved.</p>
       </section>
     </main>
   );

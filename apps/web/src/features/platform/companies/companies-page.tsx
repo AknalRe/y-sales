@@ -183,7 +183,7 @@ export function PlatformCompaniesPage() {
             <Building2 size={24} />
             Companies
           </h1>
-          <p className="platform-page-subtitle">Kelola semua tenant yang terdaftar di platform Mahasura.</p>
+          <p className="platform-page-subtitle">Kelola semua tenant yang terdaftar di platform Yuksales.</p>
         </div>
         <div className="platform-page-actions">
           <button id="platform-refresh-btn" onClick={load} className="platform-btn platform-btn-ghost" type="button">

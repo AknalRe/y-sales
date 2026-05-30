@@ -272,7 +272,7 @@ export function SubscriptionPage() {
             {/* Contact */}
             <div className="admin-card p-4">
               <p className="mb-2.5 text-admin-muted text-[0.82rem]">Ingin upgrade atau ada pertanyaan?</p>
-              <a href="mailto:support@mahasura.id" className="flex items-center gap-1.5 bg-brand-cream border border-brand-border text-brand-accent rounded-[10px] py-2.5 px-4 text-[0.82rem] font-bold no-underline justify-center">
+              <a href="mailto:support@yuksales.id" className="flex items-center gap-1.5 bg-brand-cream border border-brand-border text-brand-accent rounded-[10px] py-2.5 px-4 text-[0.82rem] font-bold no-underline justify-center">
                 <Mail size={15} /> Hubungi Tim Kami
               </a>
             </div>

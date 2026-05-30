@@ -30,7 +30,7 @@ export function PlatformShell() {
           </div>
           {sidebarOpen && (
             <div className="platform-brand-text">
-              <span className="platform-brand-name">Mahasura</span>
+              <span className="platform-brand-name">Yuksales</span>
               <span className="platform-brand-role">Platform Admin</span>
             </div>
           )}

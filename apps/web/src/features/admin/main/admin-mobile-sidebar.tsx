@@ -7,9 +7,10 @@ interface AdminMobileSidebarProps {
     title: string;
     items: any[];
   }[];
+  companyName?: string;
 }
 
-export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSections }: AdminMobileSidebarProps) {
+export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSections, companyName = 'Company' }: AdminMobileSidebarProps) {
   const location = useLocation();
 
   if (!mobileMenuOpen) return null;
@@ -25,7 +26,7 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
           className="flex items-center justify-between p-4"
           style={{ borderBottom: '1px solid var(--admin-border)' }}
         >
-          <h2 className="text-lg font-bold" style={{ color: 'var(--admin-foreground)' }}>Mahasura</h2>
+          <h2 className="text-lg font-bold" style={{ color: 'var(--admin-foreground)' }}>{companyName}</h2>
           <button
             onClick={() => setMobileMenuOpen(false)}
             className="p-2 rounded-full"

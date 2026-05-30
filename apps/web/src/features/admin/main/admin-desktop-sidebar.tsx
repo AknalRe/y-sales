@@ -8,15 +8,16 @@ interface AdminDesktopSidebarProps {
     title: string;
     items: any[];
   }[];
+  companyName?: string;
 }
 
-export function AdminDesktopSidebar({ open, setOpen, navSections }: AdminDesktopSidebarProps) {
+export function AdminDesktopSidebar({ open, setOpen, navSections, companyName = 'Company' }: AdminDesktopSidebarProps) {
   const location = useLocation();
 
   return (
     <aside className={`${open ? 'admin-workspace-open' : 'admin-workspace-closed'} admin-workspace`}>
       <div className="admin-sidebar-brand">
-        <h2>Mahasura</h2>
+        <h2>{companyName}</h2>
         <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="admin-icon-button" type="button">
           <Menu size={18} />
         </button>

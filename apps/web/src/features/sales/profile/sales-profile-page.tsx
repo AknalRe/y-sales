@@ -180,7 +180,7 @@ export function SalesProfilePage() {
       </button>
 
       <p style={{ textAlign: 'center', color: '#334155', fontSize: '.72rem', marginTop: '.75rem' }}>
-        Mahasura v1.0 · {new Date().getFullYear()}
+        Yuksales v1.0 · {new Date().getFullYear()}
       </p>
     </div>
   );

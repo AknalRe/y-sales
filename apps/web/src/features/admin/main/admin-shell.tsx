@@ -13,6 +13,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
+import { getPlatformCompanyView } from '@/lib/api/client';
 import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-view-banner';
 import { AdminDesktopSidebar } from './admin-desktop-sidebar';
 import { AdminMobileSidebar } from './admin-mobile-sidebar';
@@ -59,6 +60,12 @@ export function AdminShell() {
 
   const navSections = useMemo(() => getNavSections(permissions, user, isSuperAdmin), [permissions, user, isSuperAdmin]);
 
+  const resolvedCompanyName = useMemo(() => {
+    if (user?.company?.name) return user.company.name;
+    const cv = getPlatformCompanyView();
+    return cv?.name ?? 'Company';
+  }, [user]);
+
   const currentTitle = useMemo(() => {
     const allRoutes = [...mainRoutes, ...playgroundRoutes];
     // Special check for index route
@@ -71,8 +78,8 @@ export function AdminShell() {
   return (
     <div className="admin-command-shell">
 
-      {/* Sidebar Mobile */}
-      {!isMobile && <AdminDesktopSidebar open={open} setOpen={setOpen} navSections={navSections} />}
+      {/* Sidebar Desktop */}
+      {!isMobile && <AdminDesktopSidebar open={open} setOpen={setOpen} navSections={navSections} companyName={resolvedCompanyName} />}
 
       <main className={`admin-main ${open ? 'admin-main-open' : 'admin-main-closed'}`}>
         <header className="admin-topbar">
@@ -132,6 +139,7 @@ export function AdminShell() {
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
           navSections={navSections}
+          companyName={resolvedCompanyName}
         />
       )}
     </div>

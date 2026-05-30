@@ -227,117 +227,119 @@ export function PlatformCompaniesPage() {
             <span>Memuat data...</span>
           </div>
         ) : (
-          <table className="platform-table">
-            <thead>
-              <tr>
-                <th>Company</th>
-                <th>Status</th>
-                <th>Subscription</th>
-                <th>Berakhir</th>
-                <th>Kota</th>
-                <th>Dibuat</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(company => {
-                const status = statusConfig[company.status] ?? statusConfig.active;
-                const StatusIcon = status.icon;
-                return (
-                  <tr key={company.id}>
-                    <td>
-                      <div className="platform-company-cell">
-                        <div className="platform-company-avatar">
-                          {company.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="platform-company-name">{company.name}</div>
-                          <div className="platform-company-slug">@{company.slug}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="platform-status-badge" style={{ color: status.color }}>
-                        <StatusIcon size={13} />
-                        {status.label}
-                      </span>
-                    </td>
-                    <td>
-                      {company.subscriptionSummary ? (
-                        <div className="platform-subscription-cell">
-                          <span className="platform-subscription-plan">
-                            {company.subscriptionSummary.planName}
-                          </span>
-                          <span className="platform-subscription-meta">
-                            Level {company.subscriptionSummary.planLevel ?? '—'} · {company.subscriptionSummary.billingCycle} · {company.subscriptionSummary.status}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="platform-muted">—</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className="platform-subscription-end">
-                        {formatSubscriptionEnd(company)}
-                      </span>
-                    </td>
-                    <td className="platform-muted">{company.city ?? '—'}</td>
-                    <td className="platform-muted">
-                      {new Date(company.createdAt).toLocaleDateString('id-ID')}
-                    </td>
-                    <td>
-                      <div className="platform-row-actions">
-                        <button
-                          id={`platform-edit-company-${company.id}`}
-                          onClick={() => openEdit(company)}
-                          className="platform-btn-sm platform-btn-ghost"
-                          type="button"
-                        >
-                          <Edit2 size={13} /> Edit
-                        </button>
-                        {company.status === 'active' || company.status === 'trialing' ? (
-                          <button
-                            id={`platform-suspend-${company.id}`}
-                            onClick={() => setSuspendDialog({ company, reason: '' })}
-                            className="platform-btn-sm platform-btn-danger"
-                            type="button"
-                          >
-                            Suspend
-                          </button>
-                        ) : company.status === 'suspended' ? (
-                          <button
-                            id={`platform-activate-${company.id}`}
-                            onClick={() => handleActivate(company)}
-                            className="platform-btn-sm platform-btn-success"
-                            type="button"
-                          >
-                            Aktifkan
-                          </button>
-                        ) : null}
-                        <button
-                          id={`platform-open-company-${company.id}`}
-                          onClick={() => {
-                            setPlatformCompanyView({ id: company.id, name: company.name, slug: company.slug });
-                            navigate('/admin');
-                          }}
-                          className="platform-btn-sm platform-btn-ghost"
-                          type="button"
-                          title="Buka dashboard sisi company"
-                        >
-                          <ChevronRight size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {filtered.length === 0 && !loading && (
+          <div className="platform-table-wrap">
+            <table className="platform-table">
+              <thead>
                 <tr>
-                  <td colSpan={7} className="platform-empty">Tidak ada company ditemukan.</td>
+                  <th>Company</th>
+                  <th>Status</th>
+                  <th>Subscription</th>
+                  <th>Berakhir</th>
+                  <th>Kota</th>
+                  <th>Dibuat</th>
+                  <th>Aksi</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map(company => {
+                  const status = statusConfig[company.status] ?? statusConfig.active;
+                  const StatusIcon = status.icon;
+                  return (
+                    <tr key={company.id}>
+                      <td>
+                        <div className="platform-company-cell">
+                          <div className="platform-company-avatar">
+                            {company.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="platform-company-info">
+                            <div className="platform-company-name">{company.name}</div>
+                            <div className="platform-company-slug">@{company.slug}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="platform-status-badge" style={{ color: status.color }}>
+                          <StatusIcon size={13} />
+                          {status.label}
+                        </span>
+                      </td>
+                      <td>
+                        {company.subscriptionSummary ? (
+                          <div className="platform-subscription-cell">
+                            <span className="platform-subscription-plan">
+                              {company.subscriptionSummary.planName}
+                            </span>
+                            <span className="platform-subscription-meta">
+                              Level {company.subscriptionSummary.planLevel ?? '—'} · {company.subscriptionSummary.billingCycle} · {company.subscriptionSummary.status}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="platform-muted">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="platform-subscription-end">
+                          {formatSubscriptionEnd(company)}
+                        </span>
+                      </td>
+                      <td className="platform-muted">{company.city ?? '—'}</td>
+                      <td className="platform-muted">
+                        {new Date(company.createdAt).toLocaleDateString('id-ID')}
+                      </td>
+                      <td>
+                        <div className="platform-row-actions">
+                          <button
+                            id={`platform-edit-company-${company.id}`}
+                            onClick={() => openEdit(company)}
+                            className="platform-btn-sm platform-btn-ghost"
+                            type="button"
+                          >
+                            <Edit2 size={13} /> Edit
+                          </button>
+                          {company.status === 'active' || company.status === 'trialing' ? (
+                            <button
+                              id={`platform-suspend-${company.id}`}
+                              onClick={() => setSuspendDialog({ company, reason: '' })}
+                              className="platform-btn-sm platform-btn-danger"
+                              type="button"
+                            >
+                              Suspend
+                            </button>
+                          ) : company.status === 'suspended' ? (
+                            <button
+                              id={`platform-activate-${company.id}`}
+                              onClick={() => handleActivate(company)}
+                              className="platform-btn-sm platform-btn-success"
+                              type="button"
+                            >
+                              Aktifkan
+                            </button>
+                          ) : null}
+                          <button
+                            id={`platform-open-company-${company.id}`}
+                            onClick={() => {
+                              setPlatformCompanyView({ id: company.id, name: company.name, slug: company.slug });
+                              navigate('/admin');
+                            }}
+                            className="platform-btn-sm platform-btn-ghost"
+                            type="button"
+                            title="Buka dashboard sisi company"
+                          >
+                            <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filtered.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan={7} className="platform-empty">Tidak ada company ditemukan.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

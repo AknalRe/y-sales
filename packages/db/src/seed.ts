@@ -105,58 +105,85 @@ for (const [code, name, module] of permissionSeeds) {
   });
 }
 
-const [administrator] = await db.select().from(roles).where(and(eq(roles.companyId, defaultCompany.id), eq(roles.code, 'ADMINISTRATOR')));
 const allPermissions = await db.select().from(permissions);
+const permissionMap = new Map(allPermissions.map((p) => [p.code, p.id]));
+const seededCompanyRoles = await db.select().from(roles).where(eq(roles.companyId, defaultCompany.id));
+const roleMap = new Map(seededCompanyRoles.map((r) => [r.code, r.id]));
 
-if (administrator) {
-  for (const permission of allPermissions) {
-    await db.insert(rolePermissions).values({
-      roleId: administrator.id,
-      permissionId: permission.id,
-    }).onConflictDoNothing();
+// ─── Default permissions per role ──────────────────────────────────────────
+const rolePermissionSeeds: Record<string, string[]> = {
+  ADMINISTRATOR: allPermissions.map((p) => p.code), // all permissions
+  OWNER: [
+    'sales.view', 'sales.order.create', 'sales.order.review',
+    'attendance.execute', 'attendance.review',
+    'visits.execute', 'visits.review',
+    'transactions.execute', 'transactions.approve',
+    'deposits.execute', 'deposits.reconcile',
+    'outlets.manage', 'outlets.verify',
+    'products.manage', 'inventory.manage',
+    'users.manage', 'roles.manage',
+    'reports.view', 'receivables.view', 'invoice.review',
+    'settings.manage',
+  ],
+  OPERATIONAL_MANAGER: [
+    'attendance.execute', 'attendance.review',
+    'visits.execute', 'visits.review',
+    'transactions.execute', 'transactions.approve',
+    'deposits.execute', 'deposits.reconcile',
+    'outlets.manage', 'outlets.verify',
+    'products.manage', 'inventory.manage',
+    'reports.view', 'sales.view', 'sales.order.review',
+    'receivables.view', 'invoice.review',
+  ],
+  SUPERVISOR: [
+    'attendance.execute', 'attendance.review',
+    'visits.execute', 'visits.review',
+    'transactions.approve',
+    'deposits.execute', 'deposits.reconcile',
+    'outlets.manage',
+    'reports.view', 'sales.view',
+    'receivables.view', 'invoice.review',
+  ],
+  ADMIN: [
+    'users.manage', 'roles.manage',
+    'outlets.manage', 'outlets.verify',
+    'products.manage', 'inventory.manage',
+    'attendance.review', 'visits.review',
+    'reports.view', 'sales.view',
+    'receivables.view', 'invoice.review',
+  ],
+  SALES_AGENT: [
+    'attendance.execute',
+    'visits.execute',
+    'transactions.execute',
+    'sales.view', 'sales.order.create',
+    'deposits.execute',
+    'reports.view',
+    'outlets.manage',
+  ],
+};
+
+console.log('\n  ── Default Permissions per Role ─────────────────────────');
+for (const [roleCode, permCodes] of Object.entries(rolePermissionSeeds)) {
+  const roleId = roleMap.get(roleCode);
+  if (!roleId) {
+    console.log(`  [SKIP] Role "${roleCode}" not found.`);
+    continue;
   }
-
-  if (process.env.ADMIN_PASSWORD) {
-    const adminName = process.env.ADMIN_NAME ?? 'Administrator YukSales';
-    const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@yuksales.local';
-    const adminPhone = process.env.ADMIN_PHONE ?? '080000000000';
-    const adminEmployeeCode = process.env.ADMIN_EMPLOYEE_CODE ?? 'ADM-001';
-    const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
-
-    await db.update(users).set({
-      companyId: defaultCompany.id,
-      roleId: administrator.id,
-      name: adminName,
-      email: adminEmail,
-      employeeCode: adminEmployeeCode,
-      passwordHash,
-      status: 'active',
-      updatedAt: new Date(),
-    }).where(eq(users.phone, adminPhone));
-    await db.insert(users).values({
-      companyId: defaultCompany.id,
-      roleId: administrator.id,
-      name: adminName,
-      email: adminEmail,
-      phone: adminPhone,
-      employeeCode: adminEmployeeCode,
-      passwordHash,
-      status: 'active',
-    }).onConflictDoUpdate({
-      target: users.email,
-      set: {
-        companyId: defaultCompany.id,
-        roleId: administrator.id,
-        name: adminName,
-        phone: adminPhone,
-        employeeCode: adminEmployeeCode,
-        passwordHash,
-        status: 'active',
-        updatedAt: new Date(),
-      },
-    });
+  let seeded = 0;
+  for (const permCode of permCodes) {
+    const permissionId = permissionMap.get(permCode);
+    if (!permissionId) {
+      console.log(`  [WARN] Permission "${permCode}" not found for role "${roleCode}".`);
+      continue;
+    }
+    await db.insert(rolePermissions).values({ roleId, permissionId }).onConflictDoNothing();
+    seeded++;
   }
+  console.log(`  [OK] ${roleCode.padEnd(22)} ${seeded}/${permCodes.length} permissions`);
 }
+console.log('  ─────────────────────────────────────────────────────────');
+console.log('Role permissions seeded.\n');
 
 for (const setting of settingSeeds) {
   await db.insert(appSettings).values(setting).onConflictDoUpdate({
@@ -339,6 +366,76 @@ if (superAdminRole && process.env.SUPER_ADMIN_PASSWORD) {
   });
 
   console.log(`Super Admin created: ${superAdminEmail}`);
+}
+
+// ─── Sales Agent User ─────────────────────────────────────────────────────
+const [salesAgentRole] = await db.select().from(roles).where(and(eq(roles.companyId, defaultCompany.id), eq(roles.code, 'SALES_AGENT')));
+if (salesAgentRole && process.env.SALES_PASSWORD) {
+  const salesEmail = process.env.SALES_EMAIL ?? 'sales@yuksales.local';
+  const salesName = process.env.SALES_NAME ?? 'Sales Agent YukSales';
+  const salesPhone = process.env.SALES_PHONE ?? '089999999999';
+  const salesEmployeeCode = process.env.SALES_EMPLOYEE_CODE ?? 'SA-001';
+  const passwordHash = await bcrypt.hash(process.env.SALES_PASSWORD, 12);
+
+  await db.insert(users).values({
+    companyId: defaultCompany.id,
+    roleId: salesAgentRole.id,
+    name: salesName,
+    email: salesEmail,
+    phone: salesPhone,
+    employeeCode: salesEmployeeCode,
+    passwordHash,
+    status: 'active',
+  }).onConflictDoUpdate({
+    target: users.email,
+    set: {
+      companyId: defaultCompany.id,
+      roleId: salesAgentRole.id,
+      name: salesName,
+      phone: salesPhone,
+      employeeCode: salesEmployeeCode,
+      passwordHash,
+      status: 'active',
+      updatedAt: new Date(),
+    },
+  });
+
+  console.log(`Sales Agent created: ${salesEmail}`);
+}
+
+// ─── Administrator User ───────────────────────────────────────────────────
+const [administrator] = await db.select().from(roles).where(and(eq(roles.companyId, defaultCompany.id), eq(roles.code, 'ADMINISTRATOR')));
+if (administrator && process.env.ADMIN_PASSWORD) {
+  const adminName = process.env.ADMIN_NAME ?? 'Administrator YukSales';
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@yuksales.local';
+  const adminPhone = process.env.ADMIN_PHONE ?? '080000000000';
+  const adminEmployeeCode = process.env.ADMIN_EMPLOYEE_CODE ?? 'ADM-001';
+  const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+
+  await db.insert(users).values({
+    companyId: defaultCompany.id,
+    roleId: administrator.id,
+    name: adminName,
+    email: adminEmail,
+    phone: adminPhone,
+    employeeCode: adminEmployeeCode,
+    passwordHash,
+    status: 'active',
+  }).onConflictDoUpdate({
+    target: users.email,
+    set: {
+      companyId: defaultCompany.id,
+      roleId: administrator.id,
+      name: adminName,
+      phone: adminPhone,
+      employeeCode: adminEmployeeCode,
+      passwordHash,
+      status: 'active',
+      updatedAt: new Date(),
+    },
+  });
+
+  console.log(`Administrator created: ${adminEmail}`);
 }
 
 console.log('Seed completed');

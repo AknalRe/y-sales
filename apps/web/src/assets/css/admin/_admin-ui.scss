@@ -1,0 +1,40 @@
+// ─── Admin Shell Layout ────────────────────────────────────────────────────
+// Wraps sidebar + topbar + main content. Mirrors platform-ui.scss pattern.
+
+.admin-command-shell {
+    min-height: 100vh;
+    color: var(--admin-text);
+    background: var(--admin-bg);
+}
+
+.admin-content {
+    padding: 1.25rem;
+}
+
+// ─── Main Area ─────────────────────────────────────────────────────────────
+.admin-main {
+    min-height: 100vh;
+    transition: padding-left 260ms ease;
+}
+
+.admin-main-open {
+    padding-left: 21.5rem;
+}
+
+.admin-main-closed {
+    padding-left: 5.2rem;
+}
+
+// ─── Responsive ────────────────────────────────────────────────────────────
+@media (max-width: 820px) {
+
+    .admin-main,
+    .admin-main-open,
+    .admin-main-closed {
+        padding-left: 0;
+    }
+
+    .admin-command-shell {
+        display: block;
+    }
+}

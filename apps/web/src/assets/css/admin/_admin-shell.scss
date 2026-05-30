@@ -2,7 +2,8 @@
 // Audited 2026-05-30 — _admin-ops deleted (dead CSS), _admin-pages merged in.
 // This file is the single entry-point for the admin CSS layer.
 
-// Core shell layout (sidebar, topbar)
+// Core shell layout (sidebar, topbar, main)
+@use "admin-ui";
 @use "admin-sidebar";
 @use "admin-topbar";
 
@@ -26,34 +27,10 @@
 @use "admin-page-settings" as _ps;
 @use "admin-page-role" as _pr;
 
-.admin-command-shell {
-  min-height: 100vh;
-  color: var(--admin-text);
-  background: var(--admin-bg);
-
-  .admin-content {
-    padding: 1.25rem;
-  }
-}
-
-.admin-main {
-  min-height: 100vh;
-  transition: padding-left 260ms ease;
-
-  .admin-page {
-    color: var(--admin-text);
-    @include _pd.dashboard();
-    @include _pt.tracking();
-    @include _pu.users();
-    @include _ps.settings();
-    @include _pr.role();
-  }
-
-  &-open {
-    padding-left: 21.5rem;
-  }
-
-  &-closed {
-    padding-left: 5.2rem;
-  }
+.admin-page {
+  @include _pd.dashboard();
+  @include _pt.tracking();
+  @include _pu.users();
+  @include _ps.settings();
+  @include _pr.role();
 }

@@ -1,0 +1,359 @@
+/* ─── Admin Sidebar / Workspace ──────────────────────────────────────────────── */
+
+.admin-workspace {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden auto;
+    background: var(--admin-sidebar-bg);
+    padding: 0;
+    transition: width 260ms ease;
+
+    &-open {
+        width: 21.5rem;
+    }
+
+    &-closed {
+        width: 5.2rem;
+        padding: 1rem 0;
+
+        .admin-sidebar-brand h2,
+        .admin-company-card div,
+        .admin-search-mini,
+        .admin-nav-section p,
+        .admin-nav-text,
+        .admin-nav-badge,
+        .admin-sync-card {
+            display: none;
+        }
+
+        .admin-sidebar-brand {
+            padding: 0.5rem 0 1.25rem 0;
+            justify-content: center;
+            border-bottom: 1px solid var(--admin-sidebar-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-nav-link {
+            justify-content: center;
+            padding: 0.2rem 0;
+            margin-bottom: 0;
+
+            &:hover {
+                transform: none;
+                background: transparent;
+                color: var(--admin-sidebar-text-hover);
+
+                .admin-nav-icon {
+                    background: var(--admin-sidebar-icon-bg-active);
+                }
+            }
+        }
+
+        .admin-nav-section {
+            margin-top: 0;
+        }
+
+        .admin-nav-icon {
+            height: 2.8rem;
+            width: 2.8rem;
+            border-radius: 1rem;
+            background: var(--admin-sidebar-icon-bg);
+        }
+
+        .admin-nav-active {
+            background: transparent;
+            box-shadow: none;
+
+            .admin-nav-icon {
+                background: var(--admin-sidebar-active-bg);
+                color: #ffffff;
+            }
+        }
+    }
+}
+
+.admin-sidebar-brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.25rem 1.25rem;
+    border-bottom: 1px solid var(--admin-sidebar-border);
+    margin-bottom: 1rem;
+
+    h2 {
+        margin: 0;
+        color: var(--admin-sidebar-brand-text);
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+}
+
+#admin-sidebar-toggle {
+    color: var(--admin-sidebar-toggle-text);
+    background: var(--admin-sidebar-toggle-bg);
+    border: 1px solid var(--admin-sidebar-toggle-border);
+    border-radius: 0.85rem;
+    backdrop-filter: blur(8px);
+    transition: all 200ms ease;
+
+    &:hover {
+        color: var(--admin-sidebar-text-hover);
+        background: var(--admin-sidebar-toggle-hover-bg);
+        border-color: var(--admin-sidebar-toggle-hover-border);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+        background: var(--admin-sidebar-hover);
+    }
+}
+
+// ─── Company Card ────────────────────────────────────────────────────────
+.admin-company-card {
+    display: flex;
+    min-height: 7.2rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    border-radius: 1.5rem;
+    padding: 1rem;
+
+    h2 {
+        margin: 0;
+        color: var(--admin-foreground);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 1.25rem;
+    }
+
+    span {
+        color: var(--admin-muted);
+        font-size: 0.78rem;
+    }
+}
+
+.admin-kicker {
+    margin: 0 0 0.2rem;
+    color: var(--admin-accent-teal);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+}
+
+// ─── Search ──────────────────────────────────────────────────────────────
+.admin-search-mini,
+.admin-command-search {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--admin-muted);
+    background: var(--admin-surface);
+}
+
+.admin-search-mini {
+    margin: 1rem 0;
+    border-radius: 1.1rem;
+    padding: 0.82rem 0.9rem;
+    box-shadow: inset 0 0 0 1px var(--admin-border-subtle);
+    font-size: 0.82rem;
+}
+
+.admin-command-search {
+    min-height: 2.5rem;
+    border-radius: 1.2rem;
+    padding: 0 0.95rem;
+    box-shadow: var(--admin-shadow-card), inset 0 0 0 1px var(--admin-border-subtle);
+
+    input {
+        min-width: 0;
+        flex: 1;
+        border: 0;
+        outline: 0;
+        color: var(--admin-foreground);
+        background: transparent;
+    }
+
+    kbd {
+        border-radius: 0.55rem;
+        background: var(--admin-surface-hover);
+        padding: 0.25rem 0.45rem;
+        color: var(--admin-muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+    }
+}
+
+// ─── Navigation ──────────────────────────────────────────────────────────
+.admin-nav {
+    padding: 0 1rem;
+}
+
+.admin-nav-section {
+    margin-top: 0;
+
+    p {
+        margin: 1.1rem 0 0.55rem 0.65rem;
+        color: var(--admin-sidebar-label);
+        font-size: 0.7rem;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+}
+
+.admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.4rem;
+    border-radius: 1.15rem;
+    padding: 0.8rem;
+    color: var(--admin-sidebar-text);
+    text-decoration: none;
+    transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease, color 180ms ease;
+
+    &:hover {
+        transform: translateX(3px);
+        background: var(--admin-sidebar-hover);
+        color: var(--admin-sidebar-text-hover);
+    }
+}
+
+.admin-nav-active {
+    color: var(--admin-sidebar-text-hover);
+    background: var(--admin-sidebar-active-bg);
+
+    &:hover {
+        background: var(--admin-sidebar-active-hover);
+    }
+
+    .admin-nav-icon {
+        background: var(--admin-sidebar-icon-bg-active);
+    }
+
+    .admin-nav-badge {
+        background: var(--admin-sidebar-active-badge);
+    }
+}
+
+.admin-nav-icon {
+    display: grid;
+    height: 2rem;
+    width: 2rem;
+    place-items: center;
+    border-radius: 0.8rem;
+    background: var(--admin-sidebar-icon-bg);
+}
+
+.admin-nav-text {
+    flex: 1;
+    font-weight: 800;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-nav-badge {
+    border-radius: 999px;
+    background: var(--admin-sidebar-badge-bg);
+    padding: 0.22rem 0.48rem;
+    font-size: 0.66rem;
+    font-weight: 900;
+    color: var(--admin-sidebar-badge-text);
+}
+
+.admin-nav-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--admin-sidebar-divider);
+}
+
+.admin-nav-danger {
+    color: var(--admin-sidebar-danger) !important;
+
+    .admin-nav-icon {
+        background: var(--admin-sidebar-danger-bg);
+        color: var(--admin-sidebar-danger);
+    }
+
+    &:hover {
+        background: var(--admin-sidebar-danger-bg) !important;
+        color: var(--admin-sidebar-danger) !important;
+    }
+}
+
+// ─── Sync Card ───────────────────────────────────────────────────────────
+.admin-sync-card {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 1.25rem;
+    border-radius: 1.3rem;
+    padding: 0.95rem;
+
+    strong {
+        display: block;
+        color: var(--admin-foreground);
+        font-size: 0.86rem;
+    }
+
+    span {
+        color: var(--admin-muted);
+        font-size: 0.78rem;
+    }
+}
+
+.admin-sync-orb {
+    display: grid;
+    height: 2.4rem;
+    width: 2.4rem;
+    place-items: center;
+    border-radius: 0.95rem;
+    color: var(--admin-accent-teal);
+    background: var(--admin-accent-teal-bg);
+}
+
+// ─── Shared card surfaces ────────────────────────────────────────────────
+// NOTE: .admin-alert-card excluded — it defines its own background/color.
+.admin-company-card,
+.admin-sync-card,
+.admin-outlet-surface {
+    border: 1px solid var(--admin-border);
+    background: var(--admin-bg-card);
+    box-shadow: var(--admin-shadow-card);
+    backdrop-filter: blur(18px);
+}
+
+// ─── Scrollbar ───────────────────────────────────────────────────────────
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--admin-scrollbar);
+    border-radius: 999px;
+}
+
+// ─── Responsive (sidebar) ────────────────────────────────────────────────
+@media (max-width: 820px) {
+    .admin-rail {
+        display: none;
+    }
+
+    .admin-workspace {
+        position: static;
+        width: auto;
+    }
+}

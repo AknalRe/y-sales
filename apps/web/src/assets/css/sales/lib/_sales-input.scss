@@ -1,0 +1,28 @@
+// ─── Form Controls ────────────────────────────────────────────────────
+
+.sales-input {
+    background: var(--sales-surface) !important;
+    border: 1px solid var(--sales-border-strong) !important;
+    border-radius: 10px;
+    color: var(--sales-foreground) !important;
+    padding: .42rem .75rem;
+    font-size: .875rem;
+    outline: none;
+    min-width: 140px;
+
+    &:focus {
+        border-color: var(--sales-accent) !important;
+    }
+}
+
+.sales-select {
+    background: var(--sales-surface) !important;
+    border: 1px solid var(--sales-border-strong) !important;
+    border-radius: 10px;
+    color: var(--sales-foreground) !important;
+    padding: .42rem .75rem;
+    font-size: .875rem;
+    outline: none;
+    cursor: pointer;
+    min-width: 160px;
+}

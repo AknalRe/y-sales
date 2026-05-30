@@ -106,11 +106,11 @@ export function TransactionsPage() {
   if (success) {
     return (
       <main className="sales-home" >
-        <div className="admin-card" style={{ padding: '3rem 2rem', textAlign: 'center', marginTop: '2rem' }}>
+        <div className="sales-card" style={{ padding: '3rem 2rem', textAlign: 'center', marginTop: '2rem' }}>
           <CheckCircle2 size={64} color="#34d399" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ fontSize: '1.5rem', marginBottom: '.5rem' }}>Transaksi Terkirim!</h2>
           <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Order telah dikirim ke admin untuk verifikasi. Lanjutkan perjalanan Anda.</p>
-          <button onClick={() => setSuccess(false)} className="admin-btn admin-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
+          <button onClick={() => setSuccess(false)} className="sales-btn sales-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
             Buat Transaksi Lagi
           </button>
         </div>
@@ -127,7 +127,7 @@ export function TransactionsPage() {
         </div>
       </div>
 
-      <div className="admin-card" style={{ margin: 0, padding: 0, borderRadius: 15 }}>
+      <div className="sales-card" style={{ margin: 0, padding: 0, borderRadius: 15 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: '#ffffff', border: '1px solid rgba(74, 41, 34, .14)', padding: '.65rem 1rem', borderRadius: '1rem' }}>
           <Search size={18} color="#966556" />
           <input
@@ -143,7 +143,7 @@ export function TransactionsPage() {
       <div className='grid grid-cols-3 gap-1'>
         {loading ? <div style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}><Spinner /></div> :
           filteredProducts.map(p => (
-            <div key={p.id} className="admin-card" style={{ margin: 0, borderRadius: 15, padding: '.75rem', display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+            <div key={p.id} className="sales-card" style={{ margin: 0, borderRadius: 15, padding: '.75rem', display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
               <div style={{ width: '100%', aspectRatio: '1', background: '#fff7ed', borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Package size={32} color="#B55925" />
               </div>
@@ -176,15 +176,15 @@ export function TransactionsPage() {
             <strong style={{ fontSize: '1.25rem', color: '#B55925' }}>Rp {totalAmount.toLocaleString('id-ID')}</strong>
           </div>
 
-          {error && <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>{error}</div>}
-          {!activeVisitId && <div className="admin-alert admin-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>Check-in outlet terlebih dahulu sebelum membuat transaksi.</div>}
+          {error && <div className="sales-alert sales-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>{error}</div>}
+          {!activeVisitId && <div className="sales-alert sales-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>Check-in outlet terlebih dahulu sebelum membuat transaksi.</div>}
 
           <div style={{ display: 'grid', gap: '.5rem', gridTemplateColumns: '1fr', marginBottom: '1rem' }}>
-            <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} disabled={!!activeVisitId} className="admin-select" style={{ width: '100%', fontSize: '.85rem' }}>
+            <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} disabled={!!activeVisitId} className="sales-select" style={{ width: '100%', fontSize: '.85rem' }}>
               <option value="">-- Pilih Outlet Tujuan --</option>
               {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
-            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} className="admin-select" style={{ width: '100%', fontSize: '.85rem' }}>
+            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} className="sales-select" style={{ width: '100%', fontSize: '.85rem' }}>
               <option value="cash">Tunai (Cash)</option>
               <option value="qris">QRIS</option>
               <option value="credit">Tempo (Kredit)</option>
@@ -192,10 +192,10 @@ export function TransactionsPage() {
             </select>
           </div>
 
-          <button onClick={handleSubmit} disabled={submitting || !selectedOutlet || !activeVisitId} className="admin-btn admin-btn-primary" style={{ width: '100%', padding: '1rem', justifyContent: 'center', borderRadius: '1rem', fontSize: '1rem' }}>
+          <button onClick={handleSubmit} disabled={submitting || !selectedOutlet || !activeVisitId} className="sales-btn sales-btn-primary" style={{ width: '100%', padding: '1rem', justifyContent: 'center', borderRadius: '1rem', fontSize: '1rem' }}>
             {submitting ? <Spinner size={20} /> : <Send size={20} />} {submitting ? 'Mengirim...' : 'Kirim Order Sekarang'}
           </button>
-          <button onClick={handleBatal} className="admin-btn admin-btn-primary mt-2.5" style={{ width: '100%', padding: '1rem', justifyContent: 'center', borderRadius: '1rem', fontSize: '1rem' }}>
+          <button onClick={handleBatal} className="sales-btn sales-btn-primary mt-2.5" style={{ width: '100%', padding: '1rem', justifyContent: 'center', borderRadius: '1rem', fontSize: '1rem' }}>
             <Trash2 size={20} /> Batal
           </button>
 

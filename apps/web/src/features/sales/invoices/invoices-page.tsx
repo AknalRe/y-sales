@@ -89,7 +89,7 @@ export function InvoicesPage() {
         <p style={{ margin: 0, fontSize: '.85rem', color: '#6b7280', lineHeight: 1.5 }}>
           Daftar transaksi Anda. Gunakan tombol kamera untuk langsung menjepret bukti nota fisik agar diverifikasi oleh Admin.
         </p>
-        {error && <div className="admin-alert admin-alert-error" style={{ marginTop: '1rem' }}>{error}</div>}
+        {error && <div className="sales-alert sales-alert-error" style={{ marginTop: '1rem' }}>{error}</div>}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem', marginTop: '1rem' }}>

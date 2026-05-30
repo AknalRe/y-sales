@@ -146,7 +146,7 @@ export function VisitPage() {
       <div className="sales-step-card">
         <h2>{!activeVisitId ? '1. Pilih Outlet Tujuan' : 'Sesi Kunjungan Aktif'}</h2>
         {!activeVisitId ? (
-          <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} className="admin-select" style={{ width: '100%' }}>
+          <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} className="sales-select" style={{ width: '100%' }}>
             <option value="">-- Pilih Outlet --</option>
             {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
@@ -170,12 +170,12 @@ export function VisitPage() {
         </div>
 
         <div style={{ display: 'grid', gap: '.5rem', gridTemplateColumns: '1fr 1fr' }}>
-          <button onClick={handleStartCamera} className="admin-btn admin-btn-ghost" type="button" style={{ justifyContent: 'center' }}><Video size={16} /> Buka Kamera</button>
-          <button onClick={handleCapture} disabled={!stream} className="admin-btn admin-btn-primary" type="button" style={{ justifyContent: 'center' }}><Camera size={16} /> Jepret Wajah</button>
+          <button onClick={handleStartCamera} className="sales-btn sales-btn-ghost" type="button" style={{ justifyContent: 'center' }}><Video size={16} /> Buka Kamera</button>
+          <button onClick={handleCapture} disabled={!stream} className="sales-btn sales-btn-primary" type="button" style={{ justifyContent: 'center' }}><Camera size={16} /> Jepret Wajah</button>
         </div>
 
         <div style={{ marginTop: '1rem' }}>
-          <button onClick={handleLocation} className="admin-btn admin-btn-ghost" type="button" style={{ width: '100%', justifyContent: 'center' }}>
+          <button onClick={handleLocation} className="sales-btn sales-btn-ghost" type="button" style={{ width: '100%', justifyContent: 'center' }}>
             <MapPin size={16} /> Ambil Lokasi GPS
           </button>
           {location && <p style={{ fontSize: '.75rem', color: '#94a3b8', textAlign: 'center', marginTop: '.5rem' }}>Akurasi: ±{Math.round(location.accuracyM ?? 0)}m</p>}
@@ -186,14 +186,14 @@ export function VisitPage() {
         <div className="sales-step-card">
           <h2>3. Hasil Kunjungan (Check-Out)</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
-            <select value={outcome} onChange={e => setOutcome(e.target.value as any)} className="admin-select">
+            <select value={outcome} onChange={e => setOutcome(e.target.value as any)} className="sales-select">
               <option value="closed_order">Closed Order (Berhasil Jual)</option>
               <option value="follow_up">Follow Up (Prospek Lanjutan)</option>
               <option value="no_order">No Order (Tidak Beli)</option>
               <option value="outlet_closed">Toko Tutup</option>
               <option value="rejected">Ditolak</option>
             </select>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Catatan kunjungan (opsional)..." className="admin-input" rows={2} />
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Catatan kunjungan (opsional)..." className="sales-input" rows={2} />
           </div>
         </div>
       )}
@@ -205,7 +205,7 @@ export function VisitPage() {
       )}
 
       {!activeVisitId ? (
-        <button onClick={handleCheckIn} disabled={!image || !location || !selectedOutlet || loading} className="admin-btn admin-btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1rem', borderRadius: '1rem', justifyContent: 'center' }}>
+        <button onClick={handleCheckIn} disabled={!image || !location || !selectedOutlet || loading} className="sales-btn sales-btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1rem', borderRadius: '1rem', justifyContent: 'center' }}>
           {loading ? <Loader2 className="animate-spin" /> : <CheckCircle2 />} Check-In Visit
         </button>
       ) : (

@@ -12,9 +12,5 @@
 @use 'brand/index';
 
 @use 'admin/admin-shell';
-
-@use './sales/sales-home';
-@use './sales/sales-profile';
-
-@use './platform/platform-ui';
-@use './platform/platform-page';
+@use 'sales/sales-shell';
+// @use 'platform/platform-shell';

@@ -55,9 +55,7 @@
 .platform-company-avatar,
 .platform-company-avatar-sm,
 .platform-stat-icon,
-.platform-plan-icon,
-.admin-user-avatar,
-.admin-role-icon {
+.platform-plan-icon {
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -95,8 +93,7 @@
 }
 
 .platform-toggle-btn,
-.platform-btn-icon,
-.admin-btn-icon-sm {
+.platform-btn-icon {
   border: 1px solid var(--platform-border);
   background: rgba(255, 255, 255, .06);
   color: inherit;
@@ -114,8 +111,7 @@
 }
 
 .platform-toggle-btn:hover,
-.platform-btn-icon:hover,
-.admin-btn-icon-sm:hover {
+.platform-btn-icon:hover {
   transform: translateY(-1px);
   background: rgba(255, 255, 255, .12);
 }

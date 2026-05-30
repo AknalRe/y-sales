@@ -1,44 +1,26 @@
-/* ─── Roles & Plans Grid ────────────────────────────────────────────────── */
-.admin-roles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
-.admin-role-card {
-  padding: 1.1rem;
-}
-
-.admin-role-card-header {
+/* ─── Plans Grid ────────────────────────────────────────────────────────── */
+.platform-plan-card-header {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .75rem;
 }
 
 .platform-plan-card-name {
   margin: 0;
   font-size: 1.2rem;
+  font-weight: 900;
+  color: #fff;
 }
 
-.admin-role-card-name {
-  margin: 0;
-  font-size: 1.2rem;
-  color: var(--admin-foreground);
-  font-weight: 700;
+.platform-plan-inactive {
+  opacity: .55;
 }
 
 .platform-plan-card-code {
   color: #93c5fd;
   background: rgba(59, 130, 246, .12);
-  border-radius: 999px;
-  padding: .15rem .45rem;
-  font-size: .72rem;
-}
-
-.admin-role-card-code {
-  color: var(--admin-muted);
-  background: var(--admin-surface-hover);
   border-radius: 999px;
   padding: .15rem .45rem;
   font-size: .72rem;
@@ -65,8 +47,7 @@
   border: 1px solid rgba(245, 158, 11, .22);
 }
 
-.platform-plan-card-desc,
-.admin-role-desc {
+.platform-plan-card-desc {
   color: var(--platform-subtle);
   min-height: 42px;
 }
@@ -207,15 +188,6 @@
   font-size: .74rem;
   background: rgba(255, 255, 255, .08);
   color: #dbeafe;
-}
-
-.admin-role-badge {
-  border-radius: 999px;
-  padding: .28rem .55rem;
-  font-size: .74rem;
-  background: var(--admin-surface-hover);
-  color: var(--admin-muted);
-  border: 1px solid var(--admin-border);
 }
 
 .platform-plan-card-footer {

@@ -1,4 +1,4 @@
-/* ─── Admin Platform Styles ──────────────────────────────────────────────── */
+/* ─── Platform Page Styles ──────────────────────────────────────────────── */
 // Platform page layout
 .platform-page-header {
   display: flex;
@@ -21,54 +21,12 @@
   color: #fff;
 }
 
-.admin-page-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.admin-page-title {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: .7rem;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--admin-foreground);
-}
-
-.admin-page-subtitle {
-  margin: .25rem 0 0;
-  color: var(--admin-muted);
-  font-size: .95rem;
-}
-
-.admin-page-hero-title {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: .7rem;
-  font-size: clamp(1.8rem, 3vw, 2.75rem);
-  line-height: 1;
-  letter-spacing: -.05em;
-  color: var(--admin-foreground);
-}
-
 .platform-page-subtitle {
   margin: .65rem 0 0;
   color: var(--platform-subtle);
 }
 
-.admin-page-hero-subtitle {
-  margin: .65rem 0 0;
-  color: var(--admin-muted);
-}
-
-.platform-page-actions,
-.admin-page-hero-actions {
+.platform-page-actions {
   display: flex;
   flex-wrap: wrap;
   gap: .7rem;
@@ -91,8 +49,7 @@
   transition: .2s ease;
 }
 
-.platform-btn-primary,
-.admin-btn-primary {
+.platform-btn-primary {
   color: #fff;
   background: linear-gradient(135deg, var(--platform-primary), var(--platform-primary-2));
   border-color: transparent;
@@ -104,15 +61,7 @@
   background: rgba(255, 255, 255, .06);
 }
 
-.admin-btn-ghost {
-  color: #475569;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-}
-
 .platform-btn:hover,
-.admin-btn-primary:hover,
-.admin-btn-ghost:hover,
 .platform-btn-sm:hover {
   transform: translateY(-1px);
 }
@@ -240,7 +189,6 @@
   padding: 2rem !important;
 }
 
-.platform-company-slug,
 .platform-muted {
   color: var(--muted-foreground);
 }
@@ -777,32 +725,9 @@
   }
 }
 
-// Company view banner (admin variant)
-.admin-company-view-banner {
+/* ─── Company Cells ─────────────────────────────────────────────────────── */
+.platform-company-cell {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1.5rem;
-  align-items: center;
-  border: 1px solid rgba(74, 41, 34, .35);
-  border-radius: 28px;
-  padding: 1.35rem 1.6rem;
-  background: linear-gradient(135deg, #6b3a2e 0%, #4a2922 45%, #2a1510 100%);
-  box-shadow: 0 22px 55px rgba(74, 41, 34, .3), inset 0 1px 0 rgba(255, 255, 255, .08);
-}
-
-
-/* ─── Company & User Cells ──────────────────────────────────────────────── */
-.platform-company-cell,
-.admin-user-cell {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-}
-
-.platform-company-row {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: .75rem;
 }
@@ -812,8 +737,7 @@
   overflow: hidden;
 }
 
-.platform-company-avatar,
-.admin-user-avatar {
+.platform-company-avatar {
   width: 42px;
   height: 42px;
   font-weight: 900;
@@ -834,15 +758,9 @@
   text-overflow: ellipsis;
 }
 
-.admin-user-name {
-  font-weight: 900;
-  color: var(--admin-foreground);
-}
-
-.platform-company-slug,
-.admin-user-code {
+.platform-company-slug {
   font-size: .78rem;
-  color: var(--platform-subtle);
+  color: var(--muted-foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -902,6 +820,10 @@
 
 .platform-company-row,
 .platform-plan-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem;
   padding: .75rem;
   border-radius: 16px;
   background: rgba(255, 255, 255, .045);
@@ -966,15 +888,13 @@
   background: rgba(239, 68, 68, .12);
 }
 
-.platform-plans-grid,
-.admin-roles-grid {
+.platform-plans-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
 }
 
-.platform-plan-card,
-.admin-role-card {
+.platform-plan-card {
   padding: 1.1rem;
 }
 

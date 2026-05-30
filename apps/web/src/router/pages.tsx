@@ -34,6 +34,7 @@ import { RolesPage } from '@/features/admin/roles/roles-page';
 import { OperationalSettingsPage } from '@/features/admin/settings/operational-settings-page';
 import { SalesSchedulePage } from '@/features/admin/schedule/sales-schedule-page';
 import { OutletsPage } from '@/features/admin/outlets/outlets-page';
+import { SalesAccountsPage } from '@/features/admin/sales-accounts/sales-accounts-page';
 import { type RouteConfig } from './types';
 
 // --- ADMIN ROUTES ---
@@ -135,6 +136,17 @@ export const mainRoutes: RouteConfig[] = [
       permission: 'attendance.review',
       section: 'Compliance',
       badge: 'HR'
+    }
+  },
+  {
+    path: 'sales-accounts',
+    element: <SalesAccountsPage />,
+    handle: {
+      label: 'Manajemen Akun Sales',
+      icon: Users,
+      permission: 'users.manage',
+      section: 'Sales Ops',
+      badge: 'Sales'
     }
   },
   {

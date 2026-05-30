@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from '@/hooks/use-theme';
 import {
   Bell,
   LogOut,
@@ -8,7 +9,7 @@ import {
   Sun,
   UserCircle,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
@@ -49,26 +50,7 @@ export function AdminShell() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
-
-  const toggleTheme = useCallback(() => {
-    const next = !document.documentElement.classList.contains('dark');
-    document.documentElement.classList.toggle('dark', next);
-    localStorage.setItem('theme', next ? 'dark' : 'light');
-    setIsDark(next);
-  }, []);
-
-  // Sync on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-      document.documentElement.classList.add('dark');
-      setIsDark(true);
-    } else if (saved === 'light') {
-      document.documentElement.classList.remove('dark');
-      setIsDark(false);
-    }
-  }, []);
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     setOpen(!isMobile);

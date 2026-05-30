@@ -3,49 +3,115 @@
    ──────────────────────────────────────────────────────────────────────── */
 
 :root {
+    /* Brand UI — Light Mode */
     --brand-primary: #4A2922;
-    --brand-secondary: #966556;
-    --brand-accent: #B55925;
+    --brand-secondary: #d8b6aa;
+    --brand-accent: #f09a63;
+    --brand-accent-hover: #e88a50;
+    --brand-accent-light: #f5b07a;
+    --brand-accent-shadow: rgba(240, 154, 99, .2);
     --brand-dark: #40231E;
     --brand-darker: #542F25;
-    --brand-muted: #59252D;
+    --brand-muted: #966556;
+    --brand-muted-dim: #7a5244;
+    --brand-subtle: #d8b6aa;
     --brand-cream: #fff7ed;
     --brand-surface: #ffffff;
+    --brand-bg-card: #ffffff;
+    --brand-surface-hover: #fdf2e9;
     --brand-page: #f5f5f5;
     --brand-soft: #fff7ed;
     --brand-border: rgba(74, 41, 34, .14);
+    --brand-border-strong: rgba(74, 41, 34, .28);
+    --brand-border-subtle: rgba(74, 41, 34, .06);
     --brand-foreground: #1a0e0b;
     --brand-text: #3d1f18;
+    --brand-danger: #ef4444;
+    --brand-danger-light: #f87171;
+    --brand-danger-bg: #fef2f2;
+    --brand-danger-soft: rgba(239, 68, 68, .15);
+    --brand-success: #4ade80;
+    --brand-success-soft: rgba(34, 197, 94, .15);
+    --brand-focus-ring: #B55925;
+    --brand-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, .05);
+    --brand-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -4px rgba(0, 0, 0, .1);
+    --brand-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, .1), 0 8px 10px -6px rgba(0, 0, 0, .1);
+    --brand-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, .25);
+    --brand-shadow-card: 0 24px 70px rgba(15, 23, 42, 0.08);
 }
 
 .dark {
+    /* Brand UI — Dark Mode */
     --brand-primary: #d4a89c;
     --brand-secondary: #c49a8c;
     --brand-accent: #d97b4a;
+    --brand-accent-hover: #e08a5c;
+    --brand-accent-light: #e69a6e;
+    --brand-accent-shadow: rgba(217, 123, 74, .2);
     --brand-dark: #1a0e0b;
     --brand-darker: #0f0806;
     --brand-muted: #2a1216;
+    --brand-muted-dim: #3d1f18;
+    --brand-subtle: #5a3a30;
     --brand-cream: #1a0e0b;
     --brand-surface: #241410;
+    --brand-bg-card: #1a0e0b;
+    --brand-surface-hover: #2e1a14;
     --brand-page: #1a0e0b;
     --brand-soft: #241410;
     --brand-border: rgba(212, 168, 156, .16);
+    --brand-border-strong: rgba(212, 168, 156, .3);
+    --brand-border-subtle: rgba(212, 168, 156, .08);
     --brand-foreground: #fff7ed;
     --brand-text: #e8d5cc;
+    --brand-danger: #f87171;
+    --brand-danger-light: #fca5a5;
+    --brand-danger-bg: #451a1a;
+    --brand-danger-soft: rgba(248, 113, 113, .18);
+    --brand-success: #86efac;
+    --brand-success-soft: rgba(134, 239, 172, .15);
+    --brand-focus-ring: #e08a5c;
+    --brand-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, .2);
+    --brand-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .3), 0 4px 6px -4px rgba(0, 0, 0, .3);
+    --brand-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, .3), 0 8px 10px -6px rgba(0, 0, 0, .3);
+    --brand-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, .4);
+    --brand-shadow-card: 0 24px 70px rgba(0, 0, 0, 0.2);
 }
 
 @theme inline {
+    /* Brand */
     --color-brand-primary: var(--brand-primary);
     --color-brand-secondary: var(--brand-secondary);
     --color-brand-accent: var(--brand-accent);
+    --color-brand-accent-hover: var(--brand-accent-hover);
+    --color-brand-accent-light: var(--brand-accent-light);
+    --color-brand-accent-shadow: var(--brand-accent-shadow);
     --color-brand-dark: var(--brand-dark);
     --color-brand-darker: var(--brand-darker);
     --color-brand-muted: var(--brand-muted);
+    --color-brand-muted-dim: var(--brand-muted-dim);
+    --color-brand-subtle: var(--brand-subtle);
     --color-brand-cream: var(--brand-cream);
     --color-brand-surface: var(--brand-surface);
+    --color-brand-bg-card: var(--brand-bg-card);
+    --color-brand-surface-hover: var(--brand-surface-hover);
     --color-brand-page: var(--brand-page);
     --color-brand-soft: var(--brand-soft);
     --color-brand-border: var(--brand-border);
+    --color-brand-border-strong: var(--brand-border-strong);
+    --color-brand-border-subtle: var(--brand-border-subtle);
     --color-brand-foreground: var(--brand-foreground);
     --color-brand-text: var(--brand-text);
+    --color-brand-danger: var(--brand-danger);
+    --color-brand-danger-light: var(--brand-danger-light);
+    --color-brand-danger-bg: var(--brand-danger-bg);
+    --color-brand-danger-soft: var(--brand-danger-soft);
+    --color-brand-success: var(--brand-success);
+    --color-brand-success-soft: var(--brand-success-soft);
+    --color-brand-focus-ring: var(--brand-focus-ring);
+    --color-brand-shadow-sm: var(--brand-shadow-sm);
+    --color-brand-shadow-lg: var(--brand-shadow-lg);
+    --color-brand-shadow-xl: var(--brand-shadow-xl);
+    --color-brand-shadow-2xl: var(--brand-shadow-2xl);
+    --color-brand-shadow-card: var(--brand-shadow-card);
 }

@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Loader2, LockKeyhole, MapPin } from 'lucide-react';
+import { Camera, Loader2, LockKeyhole, MapPin, Moon, Sun } from 'lucide-react';
 import { useAuth } from './auth-provider';
+import { useTheme } from '@/hooks/use-theme';
 import { getHomePathForRole } from '@yuksales/shared';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
@@ -29,13 +31,16 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative grid min-h-screen place-items-center overflow-hidden bg-[#4A2922] px-5 py-10 text-white">
+    <main className="relative grid min-h-screen place-items-center overflow-hidden bg-brand-primary px-5 py-10 text-white">
+      <button onClick={toggleTheme} className="absolute right-4 top-4 z-20 rounded-full bg-white/15 p-2.5 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/25" type="button" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+        {isDark ? <Moon size={18} /> : <Sun size={18} />}
+      </button>
       <section className="relative z-10 w-full max-w-md animate-float-in">
         <div className="brand-glass rounded-3xl p-8">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-white/15 text-3xl font-black text-white shadow-2xl ring-1 ring-white/20">M</div>
             <h1 className="text-4xl font-black tracking-tight text-white">Mahasura</h1>
-            <p className="mt-2 text-sm font-medium text-[#d8b6aa]">Sales Management System</p>
+            <p className="mt-2 text-sm font-medium text-brand-secondary">Sales Management System</p>
           </div>
 
           <div className="mb-6 grid grid-cols-3 gap-3 text-center text-xs font-bold text-white/75">
@@ -49,7 +54,7 @@ export function LoginPage() {
               <span className="ml-1 text-sm font-medium text-white/80">Email / HP / Kode Karyawan</span>
               <input
                 id="login-identifier-input"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-[#B55925] focus:ring-2 focus:ring-[#B55925]/40"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/40"
                 value={identifier}
                 onChange={(event) => setIdentifier(event.target.value)}
                 placeholder="admin / sales@mahasura.com"
@@ -60,7 +65,7 @@ export function LoginPage() {
               <span className="ml-1 text-sm font-medium text-white/80">Password</span>
               <input
                 id="login-password-input"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-[#B55925] focus:ring-2 focus:ring-[#B55925]/40"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/40"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -71,10 +76,10 @@ export function LoginPage() {
 
             <div className="flex items-center justify-between text-sm">
               <label className="flex cursor-pointer items-center gap-2 text-white/70 transition hover:text-white">
-                <input id="login-remember-checkbox" type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="h-4 w-4 rounded border-white/20 bg-white/10 accent-[#B55925]" />
+                <input id="login-remember-checkbox" type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="h-4 w-4 rounded border-white/20 bg-white/10 accent-brand-accent" />
                 Ingat saya
               </label>
-              <button id="login-forgot-button" type="button" className="text-[#f09a63] transition hover:text-white">Lupa sandi?</button>
+              <button id="login-forgot-button" type="button" className="text-brand-accent transition hover:text-white">Lupa sandi?</button>
             </div>
 
             {error && <p className="rounded-2xl border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</p>}

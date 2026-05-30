@@ -159,8 +159,10 @@ async function applyInventoryDelta(tx: Tx, input: { companyId: string; warehouse
   ));
 
   const currentQty = Number(existing?.quantity ?? 0);
+  const reservedQty = Number(existing?.reservedQuantity ?? 0);
   const nextQty = currentQty + input.quantityDelta;
   if (nextQty < 0) throw Object.assign(new Error('Operasi membuat stok negatif.'), { statusCode: 400 });
+  if (nextQty < reservedQty) throw Object.assign(new Error('Operasi membuat stok lebih kecil dari stok yang sudah reserved.'), { statusCode: 400 });
 
   const [balance] = existing
     ? await tx.update(inventoryBalances).set({ quantity: toQty(nextQty), updatedAt: new Date() }).where(eq(inventoryBalances.id, existing.id)).returning()
@@ -358,7 +360,8 @@ export async function inventoryRoutes(app: FastifyInstance) {
       for (const item of body.items) {
         const qty = parseQuantity(item.quantity, 'Quantity transfer', { positive: true });
         const [source] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, body.fromWarehouseId), eq(inventoryBalances.productId, item.productId)));
-        if (!source || Number(source.quantity) < qty) throw Object.assign(new Error(`Stok source tidak cukup untuk produk ${item.productId}.`), { statusCode: 400 });
+        const availableQty = Number(source?.quantity ?? 0) - Number(source?.reservedQuantity ?? 0);
+        if (!source || availableQty < qty) throw Object.assign(new Error(`Stok source tidak cukup untuk produk ${item.productId}.`), { statusCode: 400 });
         await applyInventoryDelta(tx, { companyId, warehouseId: body.fromWarehouseId, productId: item.productId, quantityDelta: qty * -1 });
         await applyInventoryDelta(tx, { companyId, warehouseId: body.toWarehouseId, productId: item.productId, quantityDelta: qty });
         await tx.insert(inventoryMovements).values({ companyId, warehouseId: body.fromWarehouseId, productId: item.productId, movementType: 'transfer_out', quantityDelta: toQty(qty * -1), referenceType: 'stock_transfer', referenceId: transferReferenceId, notes: body.notes, createdByUserId: request.user?.id });

@@ -32,32 +32,32 @@ export function LoginPage() {
 
   return (
     <main className="relative grid min-h-screen place-items-center overflow-hidden bg-brand-primary px-5 py-10 text-white">
-      <button onClick={toggleTheme} className="absolute right-4 top-4 z-20 rounded-full bg-white/15 p-2.5 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/25" type="button" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+      <button onClick={toggleTheme} className="absolute right-4 top-4 z-20 rounded-full bg-white/15 p-2.5 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/25" type="button" title={isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}>
         {isDark ? <Moon size={18} /> : <Sun size={18} />}
       </button>
       <section className="relative z-10 w-full max-w-md animate-float-in">
         <div className="brand-glass rounded-3xl p-8">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-white/15 text-3xl font-black text-white shadow-2xl ring-1 ring-white/20">Y</div>
-            <h1 className="text-4xl font-black tracking-tight text-white">Yuksales</h1>
-            <p className="mt-2 text-sm font-medium text-brand-secondary">Sales Management System</p>
+            <h1 className="text-4xl font-black tracking-tight text-white">YukTrackingSales</h1>
+            {/* <p className="mt-2 text-sm font-medium text-brand-secondary">Sistem operasional sales lapangan multi-company</p> */}
           </div>
 
           <div className="mb-6 grid grid-cols-3 gap-3 text-center text-xs font-bold text-white/75">
-            <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10"><Camera className="mx-auto mb-1 text-orange-200" />Wajah</div>
-            <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10"><MapPin className="mx-auto mb-1 text-amber-200" />GPS</div>
-            <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10"><LockKeyhole className="mx-auto mb-1 text-rose-200" />RBAC</div>
+            <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10"><Camera className="mx-auto mb-1 text-orange-200" />Bukti Foto</div>
+            <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10"><MapPin className="mx-auto mb-1 text-amber-200" />GPS Radius</div>
+            <div className="rounded-2xl bg-white/8 p-3 ring-1 ring-white/10"><LockKeyhole className="mx-auto mb-1 text-rose-200" />Approval</div>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <label className="block space-y-2">
-              <span className="ml-1 text-sm font-medium text-white/80">Email / HP / Kode Karyawan</span>
+              <span className="ml-1 text-sm font-medium text-white/80">Email / HP / Kode</span>
               <input
                 id="login-identifier-input"
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/40"
                 value={identifier}
                 onChange={(event) => setIdentifier(event.target.value)}
-                placeholder="admin / sales@yuksales.com"
+                placeholder="••••••••"
                 required
               />
             </label>
@@ -86,11 +86,11 @@ export function LoginPage() {
 
             <button id="login-submit-button" className="brand-button flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 font-bold disabled:cursor-not-allowed disabled:opacity-70" disabled={loading}>
               {loading ? <Loader2 className="animate-spin" size={18} /> : null}
-              {loading ? 'Memproses...' : 'Masuk ke Sistem'}
+              {loading ? 'Memproses...' : 'Masuk ke Workspace'}
             </button>
           </form>
         </div>
-        <p className="mt-8 text-center text-xs text-white/50">© {new Date().getFullYear()} Yuksales. All rights reserved.</p>
+        <p className="mt-8 text-center text-xs text-white/50">© {new Date().getFullYear()} YukTrackingSales. Operasional sales, outlet, stok, dan approval.</p>
       </section>
     </main>
   );

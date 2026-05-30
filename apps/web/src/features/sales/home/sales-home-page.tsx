@@ -78,7 +78,7 @@ export function SalesHomePage() {
   useEffect(() => { load(); }, [accessToken]);
 
   const checkedIn = attendance?.status === 'checked_in';
-  const todayVisitsDone = visits.filter(v => v.status === 'checked_out').length;
+  const todayVisitsDone = visits.filter(v => v.status === 'completed').length;
   const todayVisitsTotal = visits.length;
 
   return (
@@ -192,7 +192,7 @@ export function SalesHomePage() {
         ) : (
           <div className="sales-visits-list">
             {visits.map(v => {
-              const isDone = v.status === 'checked_out';
+              const isDone = v.status === 'completed';
               const outcomeInfo = v.outcome ? OUTCOME_LABEL[v.outcome] : null;
               return (
                 <article key={v.id} className={`sales-visit-card ${isDone ? 'done' : 'active'}`}>

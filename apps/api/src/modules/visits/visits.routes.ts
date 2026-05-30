@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { attendanceSessions, faceCaptures, mediaFiles, outlets, salesTransactions, visitSchedules, visitSessions } from '@yuksales/db/schema';
+import { faceCaptures, mediaFiles, outlets, salesTransactions, users, visitSchedules, visitSessions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { writeAuditLog } from '../audit/audit.service.js';
@@ -111,15 +111,27 @@ export async function visitRoutes(app: FastifyInstance) {
   app.post('/visits/schedules', { preHandler: requirePermission('visits.review') }, async (request) => {
     const companyId = requireTenantId(request);
     const body = scheduleSchema.parse(request.body);
-    const targetOutletIds = body.outletIds?.length ? body.outletIds : body.outletId ? [body.outletId] : [];
+    const targetOutletIds = Array.from(new Set(body.outletIds?.length ? body.outletIds : body.outletId ? [body.outletId] : []));
     if (!targetOutletIds.length) throw Object.assign(new Error('Minimal satu outlet harus dipilih untuk jadwal.'), { statusCode: 400 });
     if (body.targetOutletCount > targetOutletIds.length) throw Object.assign(new Error('Target outlet tidak boleh lebih besar dari jumlah outlet yang dijadwalkan.'), { statusCode: 400 });
+    const [salesUser] = await db.select().from(users).where(and(eq(users.companyId, companyId), eq(users.id, body.salesUserId), eq(users.status, 'active')));
+    if (!salesUser) throw Object.assign(new Error('Sales tidak ditemukan atau tidak aktif pada company ini.'), { statusCode: 404 });
 
     const schedules = await db.transaction(async (tx) => {
       const created = [];
       for (const outletId of targetOutletIds) {
         const [outlet] = await tx.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, outletId)));
         if (!outlet) throw Object.assign(new Error(`Outlet ${outletId} tidak ditemukan.`), { statusCode: 404 });
+        if (outlet.status !== 'active') throw Object.assign(new Error(`Outlet ${outlet.code} - ${outlet.name} belum aktif.`), { statusCode: 400 });
+        const [existingSchedule] = await tx.select().from(visitSchedules).where(and(
+          eq(visitSchedules.companyId, companyId),
+          eq(visitSchedules.salesUserId, body.salesUserId),
+          eq(visitSchedules.outletId, outletId),
+          eq(visitSchedules.scheduledDate, body.scheduledDate),
+        ));
+        if (existingSchedule && existingSchedule.status !== 'cancelled') {
+          throw Object.assign(new Error(`Outlet ${outlet.code} - ${outlet.name} sudah ada di jadwal sales pada tanggal ini.`), { statusCode: 409 });
+        }
         const [schedule] = await tx.insert(visitSchedules).values({
           companyId,
           salesUserId: body.salesUserId,
@@ -190,7 +202,29 @@ export async function visitRoutes(app: FastifyInstance) {
 
   app.get('/visits/today', { preHandler: requirePermission('visits.execute') }, async (request) => {
     const companyId = requireTenantId(request);
-    const schedules = await db.select().from(visitSchedules).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.salesUserId, request.user!.id), eq(visitSchedules.scheduledDate, todayDate()))).orderBy(visitSchedules.priority);
+    const rows = await db
+      .select({
+        schedule: visitSchedules,
+        outlet: {
+          id: outlets.id,
+          code: outlets.code,
+          name: outlets.name,
+          address: outlets.address,
+          latitude: outlets.latitude,
+          longitude: outlets.longitude,
+          geofenceRadiusM: outlets.geofenceRadiusM,
+          status: outlets.status,
+        },
+      })
+      .from(visitSchedules)
+      .innerJoin(outlets, eq(visitSchedules.outletId, outlets.id))
+      .where(and(
+        eq(visitSchedules.companyId, companyId),
+        eq(visitSchedules.salesUserId, request.user!.id),
+        eq(visitSchedules.scheduledDate, todayDate()),
+      ))
+      .orderBy(visitSchedules.priority);
+    const schedules = rows.map(({ schedule, outlet }) => ({ ...schedule, outlet }));
     if (schedules.length) return { schedules, target: { outletCount: schedules[0].targetOutletCount, scheduledOutletCount: schedules.length, targetDurationMinutes: schedules[0].targetDurationMinutes, targetClosingCount: schedules[0].targetClosingCount, targetRevenueAmount: schedules[0].targetRevenueAmount } };
     return { schedules: [], target: null };
   });
@@ -248,8 +282,12 @@ export async function visitRoutes(app: FastifyInstance) {
     // Feature gate: only plans with 'visits' feature can use visit check-in
     await requireFeature(request, 'visits');
     const body = checkInSchema.parse(request.body);
+    const [existing] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.clientRequestId, body.clientRequestId)));
+    if (existing) return { visit: existing, idempotent: true };
+
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, body.outletId)));
     if (!outlet) return { message: 'Outlet tidak ditemukan' };
+    if (outlet.status !== 'active') throw Object.assign(new Error('Outlet belum aktif dan tidak bisa dikunjungi.'), { statusCode: 400 });
 
     let schedule: typeof visitSchedules.$inferSelect | undefined;
     if (body.scheduleId) {
@@ -298,9 +336,6 @@ export async function visitRoutes(app: FastifyInstance) {
     if (settings.rejectVisitOnFaceMismatch && identity.status === 'not_matched') throw Object.assign(new Error('Identitas wajah tidak cocok dengan user login.'), { statusCode: 403 });
     const identityValid = !settings.requireFaceIdentityMatchForVisit || identity.status === 'matched';
     const validationStatus = !hasValidFace ? 'face_not_detected' : geofence.valid && identityValid ? 'valid' : 'manual_review';
-
-    const [existing] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.clientRequestId, body.clientRequestId)));
-    if (existing) return { visit: existing, idempotent: true };
 
     const [visit] = await db.insert(visitSessions).values({
       companyId,

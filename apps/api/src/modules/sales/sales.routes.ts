@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   consignments,
@@ -19,6 +19,7 @@ import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { getGeneralSettings } from '../../utils/settings.js';
+import { writeAuditLog } from '../audit/audit.service.js';
 
 const itemSchema = z.object({
   productId: z.string().uuid(),
@@ -41,6 +42,13 @@ const rejectOrderSchema = z.object({
   reason: z.string().min(3).optional(),
 });
 
+const orderListQuerySchema = z.object({
+  status: z.enum(['draft', 'submitted', 'pending_approval', 'approved', 'validated', 'rejected', 'cancelled', 'closed']).optional(),
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+  salesUserId: z.string().uuid().optional(),
+});
+
 function addDays(date: Date, days: number) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
@@ -50,24 +58,55 @@ function addDays(date: Date, days: number) {
 export async function salesRoutes(app: FastifyInstance) {
   app.get('/sales/orders', { preHandler: requirePermission('sales.view') }, async (request) => {
     const companyId = requireTenantId(request);
+    const query = orderListQuerySchema.parse(request.query);
+    const user = request.user!;
+    const canReview = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('sales.order.review') || user.permissions.includes('invoice.review');
+    const conditions = [eq(salesTransactions.companyId, companyId)];
+    if (query.status) conditions.push(eq(salesTransactions.status, query.status));
+    if (query.from) conditions.push(gte(salesTransactions.createdAt, new Date(`${query.from}T00:00:00.000Z`)));
+    if (query.to) conditions.push(lte(salesTransactions.createdAt, new Date(`${query.to}T23:59:59.999Z`)));
+    if (canReview && query.salesUserId) {
+      conditions.push(eq(salesTransactions.salesUserId, query.salesUserId));
+    } else if (!canReview) {
+      conditions.push(eq(salesTransactions.salesUserId, user.id));
+    }
+
+    const photoStats = db
+      .select({
+        transactionId: transactionNotePhotos.transactionId,
+        proofPhotoCount: sql<number>`count(${transactionNotePhotos.id})::int`.as('proof_photo_count'),
+        photoUrl: sql<string | null>`max(${mediaFiles.fileUrl})`.as('photo_url'),
+      })
+      .from(transactionNotePhotos)
+      .leftJoin(mediaFiles, eq(transactionNotePhotos.mediaFileId, mediaFiles.id))
+      .where(eq(transactionNotePhotos.companyId, companyId))
+      .groupBy(transactionNotePhotos.transactionId)
+      .as('photo_stats');
 
     const rows = await db
       .select({
         id: salesTransactions.id,
+        companyId: salesTransactions.companyId,
         transactionNo: salesTransactions.transactionNo,
         salesUserId: salesTransactions.salesUserId,
         outletId: salesTransactions.outletId,
+        visitSessionId: salesTransactions.visitSessionId,
         customerType: salesTransactions.customerType,
         paymentMethod: salesTransactions.paymentMethod,
+        subtotalAmount: salesTransactions.subtotalAmount,
+        discountAmount: salesTransactions.discountAmount,
         totalAmount: salesTransactions.totalAmount,
         status: salesTransactions.status,
+        paymentStatus: salesTransactions.paymentStatus,
+        submittedAt: salesTransactions.submittedAt,
+        approvedAt: salesTransactions.approvedAt,
         createdAt: salesTransactions.createdAt,
-        photoUrl: mediaFiles.fileUrl,
+        photoUrl: photoStats.photoUrl,
+        proofPhotoCount: sql<number>`coalesce(${photoStats.proofPhotoCount}, 0)::int`,
       })
       .from(salesTransactions)
-      .leftJoin(transactionNotePhotos, eq(salesTransactions.id, transactionNotePhotos.transactionId))
-      .leftJoin(mediaFiles, eq(transactionNotePhotos.mediaFileId, mediaFiles.id))
-      .where(eq(salesTransactions.companyId, companyId))
+      .leftJoin(photoStats, eq(salesTransactions.id, photoStats.transactionId))
+      .where(and(...conditions))
       .orderBy(desc(salesTransactions.createdAt))
       .limit(100);
 
@@ -140,6 +179,7 @@ export async function salesRoutes(app: FastifyInstance) {
       return created;
     });
 
+    await writeAuditLog({ request, action: 'sales.order.created', entityType: 'sales_transaction', entityId: order.id, newValues: order });
     return { order };
   });
 
@@ -163,7 +203,7 @@ export async function salesRoutes(app: FastifyInstance) {
 
     const items = await db.select().from(salesTransactionItems).where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));
 
-    await db.transaction(async (tx) => {
+    const updated = await db.transaction(async (tx) => {
       for (const item of items) {
         const [balance] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, stockWarehouse.id), eq(inventoryBalances.productId, item.productId)));
         if (!balance || Number(balance.quantity) < Number(item.quantity)) {
@@ -221,7 +261,7 @@ export async function salesRoutes(app: FastifyInstance) {
         }
       }
 
-      await tx.update(salesTransactions).set({
+      const [approved] = await tx.update(salesTransactions).set({
         status: 'closed',
         approvedByUserId: request.user!.id,
         approvedAt: new Date(),
@@ -229,10 +269,12 @@ export async function salesRoutes(app: FastifyInstance) {
         closedByUserId: request.user!.id,
         closedAt: new Date(),
         updatedAt: new Date(),
-      }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id)));
+      }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id))).returning();
+      return approved;
     });
 
-    return { success: true };
+    await writeAuditLog({ request, action: 'sales.order.approved', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    return { transaction: updated };
   });
 
   app.post('/sales/orders/:id/reject', { preHandler: requirePermission('sales.order.review') }, async (request) => {
@@ -246,7 +288,7 @@ export async function salesRoutes(app: FastifyInstance) {
 
     const items = await db.select().from(salesTransactionItems).where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));
 
-    await db.transaction(async (tx) => {
+    const updated = await db.transaction(async (tx) => {
       for (const item of items) {
         const [balance] = await tx.select().from(inventoryBalances).where(and(
           eq(inventoryBalances.companyId, companyId),
@@ -261,13 +303,15 @@ export async function salesRoutes(app: FastifyInstance) {
         }
       }
 
-      await tx.update(salesTransactions).set({
+      const [rejected] = await tx.update(salesTransactions).set({
         status: 'rejected',
         rejectionReason: body.reason,
         updatedAt: new Date(),
-      }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id)));
+      }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id))).returning();
+      return rejected;
     });
 
-    return { success: true };
+    await writeAuditLog({ request, action: 'sales.order.rejected', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    return { transaction: updated };
   });
 }

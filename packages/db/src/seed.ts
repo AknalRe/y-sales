@@ -69,6 +69,7 @@ const permissionSeeds = [
   ['sales.order.create', 'Create Sales Orders', 'sales'],
   ['sales.order.review', 'Review Sales Orders', 'sales'],
   ['products.manage', 'Manage Products', 'products'],
+  ['media.manage', 'Manage Media', 'media'],
   ['receivables.view', 'View Receivables', 'receivables'],
   ['invoice.review', 'Review Invoices', 'invoices'],
   ['visits.review', 'Review Visits', 'visits'],
@@ -121,6 +122,7 @@ const rolePermissionSeeds: Record<string, string[]> = {
     'deposits.execute', 'deposits.reconcile',
     'outlets.manage', 'outlets.verify',
     'products.manage', 'inventory.manage',
+    'media.manage',
     'users.manage', 'roles.manage',
     'reports.view', 'receivables.view', 'invoice.review',
     'settings.manage',
@@ -131,7 +133,7 @@ const rolePermissionSeeds: Record<string, string[]> = {
     'transactions.execute', 'transactions.approve',
     'deposits.execute', 'deposits.reconcile',
     'outlets.manage', 'outlets.verify',
-    'products.manage', 'inventory.manage',
+    'products.manage', 'inventory.manage', 'media.manage',
     'reports.view', 'sales.view', 'sales.order.review',
     'receivables.view', 'invoice.review',
   ],
@@ -147,7 +149,7 @@ const rolePermissionSeeds: Record<string, string[]> = {
   ADMIN: [
     'users.manage', 'roles.manage',
     'outlets.manage', 'outlets.verify',
-    'products.manage', 'inventory.manage',
+    'products.manage', 'inventory.manage', 'media.manage',
     'attendance.review', 'visits.review',
     'reports.view', 'sales.view',
     'receivables.view', 'invoice.review',
@@ -159,7 +161,6 @@ const rolePermissionSeeds: Record<string, string[]> = {
     'sales.view', 'sales.order.create',
     'deposits.execute',
     'reports.view',
-    'outlets.manage',
   ],
 };
 

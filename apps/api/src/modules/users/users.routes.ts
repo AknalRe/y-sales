@@ -3,7 +3,7 @@ import { and, desc, eq, isNull, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { roles, tenantSubscriptions, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
-import { hashPassword, requirePermission } from '../auth/auth.service.js';
+import { authenticate, hashPassword, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId, requireLimit } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
@@ -34,8 +34,14 @@ const resetPasswordSchema = z.object({
 export async function usersRoutes(app: FastifyInstance) {
 
   // ─── List Users ────────────────────────────────────────────────────────────
-  app.get('/users', { preHandler: requirePermission('users.manage') }, async (request) => {
+  app.get('/users', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
+    const user = request.user!;
+    const canReadDirectory = user.isSuperAdmin
+      || user.roleCode === 'ADMINISTRATOR'
+      || ['users.manage', 'visits.review', 'sales.order.review', 'invoice.review', 'reports.view'].some((permission) => user.permissions.includes(permission));
+    if (!canReadDirectory) return reply.status(403).send({ message: 'Permission denied', permission: 'users.manage' });
+
     const query = z.object({ status: z.string().optional() }).parse(request.query);
 
     const conditions: Parameters<typeof and>[0][] = [

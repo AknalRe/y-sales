@@ -14,21 +14,29 @@ function todayStart() {
 export async function reportRoutes(app: FastifyInstance) {
   app.get('/reports/summary', { preHandler: requirePermission('reports.view') }, async (request) => {
     const companyId = requireTenantId(request);
+    const user = request.user!;
+    const canReview = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('sales.order.review') || user.permissions.includes('visits.review');
     const today = todayStart();
+    const salesConditions = [eq(salesTransactions.companyId, companyId)];
+    const visitsConditions = [eq(visitSessions.companyId, companyId)];
+    if (!canReview) {
+      salesConditions.push(eq(salesTransactions.salesUserId, user.id));
+      visitsConditions.push(eq(visitSessions.salesUserId, user.id));
+    }
 
     const [sales] = await db.select({ total: sum(salesTransactions.totalAmount), count: count() })
-      .from(salesTransactions).where(eq(salesTransactions.companyId, companyId));
+      .from(salesTransactions).where(and(...salesConditions));
 
     const [salesToday] = await db.select({ total: sum(salesTransactions.totalAmount), count: count() })
       .from(salesTransactions)
-      .where(and(eq(salesTransactions.companyId, companyId), gte(salesTransactions.createdAt, today)));
+      .where(and(...salesConditions, gte(salesTransactions.createdAt, today)));
 
     const [visits] = await db.select({ count: count() })
-      .from(visitSessions).where(eq(visitSessions.companyId, companyId));
+      .from(visitSessions).where(and(...visitsConditions));
 
     const [visitsToday] = await db.select({ count: count() })
       .from(visitSessions)
-      .where(and(eq(visitSessions.companyId, companyId), gte(visitSessions.createdAt, today)));
+      .where(and(...visitsConditions, gte(visitSessions.createdAt, today)));
 
     const [productCount] = await db.select({ count: count() })
       .from(products).where(eq(products.companyId, companyId));
@@ -38,7 +46,7 @@ export async function reportRoutes(app: FastifyInstance) {
 
     const [pending] = await db.select({ count: count() })
       .from(salesTransactions)
-      .where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.status, 'pending_approval')));
+      .where(and(...salesConditions, eq(salesTransactions.status, 'pending_approval')));
 
     return {
       summary: {
@@ -55,5 +63,4 @@ export async function reportRoutes(app: FastifyInstance) {
     };
   });
 }
-
 

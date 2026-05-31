@@ -49,9 +49,10 @@ export async function companyRoutes(app: FastifyInstance) {
   app.put('/company/profile', { preHandler: requirePermission('settings.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const body = companyProfileSchema.parse(request.body);
-    const [oldCompany] = await db.select().from(companies).where(eq(companies.id, companyId));
+    const [existing] = await db.select().from(companies).where(eq(companies.id, companyId));
+    if (!existing) throw Object.assign(new Error('Company tidak ditemukan.'), { statusCode: 404 });
     const [company] = await db.update(companies).set(toCompanyUpdate(body)).where(eq(companies.id, companyId)).returning();
-    await writeAuditLog({ request, action: 'company.profile.updated', entityType: 'company', entityId: companyId, oldValues: oldCompany, newValues: company });
+    await writeAuditLog({ request, action: 'company.profile.updated', entityType: 'company', entityId: companyId, oldValues: existing, newValues: company });
     return { company };
   });
 }

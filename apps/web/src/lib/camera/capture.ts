@@ -24,8 +24,8 @@ export async function captureFromVideo(video: HTMLVideoElement): Promise<Capture
     mimeType: 'image/jpeg',
     sizeBytes,
     capturedAt: new Date().toISOString(),
-    faceDetected: true,
-    faceConfidence: 0.8,
+    faceDetected: false,
+    faceConfidence: 0,
   };
 }
 

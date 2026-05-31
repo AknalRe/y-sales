@@ -628,8 +628,17 @@ export function updateCompanyIntegration(token: string, id: string, payload: Par
   });
 }
 
-export function createOrder(token: string, payload: any) {
-  return apiRequest<{ order: any }>('/sales/orders', {
+export type CreateOrderPayload = {
+  clientRequestId: string;
+  outletId: string;
+  visitSessionId: string;
+  customerType: 'store' | 'agent' | 'end_user';
+  paymentMethod: 'cash' | 'qris' | 'credit' | 'consignment';
+  items: Array<{ productId: string; quantity: string; unitPrice: string }>;
+};
+
+export function createOrder(token: string, payload: CreateOrderPayload) {
+  return apiRequest<{ order: { id: string; transactionNo: string; status: string } }>('/sales/orders', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

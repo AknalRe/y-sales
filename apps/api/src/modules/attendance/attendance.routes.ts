@@ -75,10 +75,11 @@ export async function attendanceRoutes(app: FastifyInstance) {
 
   app.get('/attendance/history', { preHandler: requirePermission('attendance.execute') }, async (request) => {
     const authUser = request.user!;
+    const companyId = requireTenantId(request);
     const rows = await db
       .select()
       .from(attendanceSessions)
-      .where(eq(attendanceSessions.userId, authUser.id))
+      .where(and(eq(attendanceSessions.userId, authUser.id), eq(attendanceSessions.companyId, companyId)))
       .orderBy(desc(attendanceSessions.createdAt))
       .limit(30);
 

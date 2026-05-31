@@ -93,8 +93,8 @@ export function InvoicesPage() {
         ...order,
         hasInvoice: Boolean(order.photoUrl) || Number(order.proofPhotoCount ?? 0) > 0,
       })));
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setError(e.message || 'Gagal memuat data.');
     } finally {
       setLoading(false);
     }

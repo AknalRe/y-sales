@@ -43,6 +43,7 @@ export function AttendancePageSales(props: AttendanceState) {
   const [canCheckIn, setCanCheckIn] = useState(true);
   const [checkInBlockedReason, setCheckInBlockedReason] = useState<string | null>(null);
   const [allowMultipleSessions, setAllowMultipleSessions] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   const loadData = useCallback(async () => {
     if (!accessToken) return;
@@ -73,7 +74,7 @@ export function AttendancePageSales(props: AttendanceState) {
       if (recordsRes.status === 'fulfilled') {
         setRecords(recordsRes.value.attendance ?? []);
       }
-    } catch { /* ignore */ }
+    } catch { setLoadError('Gagal memuat data absensi.'); }
     finally { setLoadingData(false); }
   }, [accessToken]);
 
@@ -211,13 +212,17 @@ export function AttendancePageSales(props: AttendanceState) {
           <h3 className="text-sales-text-heading" style={{ fontSize: '.9rem', fontWeight: 800 }}>Riwayat Absensi</h3>
         </div>
 
+        {loadError && (
+          <div className="text-center py-4 text-sales-red" style={{ fontSize: '.8rem' }}>{loadError}</div>
+        )}
+
         {loadingData ? (
           <div className="flex justify-center py-8">
             <Loader2 className="animate-spin text-sales-muted" size={24} />
           </div>
         ) : records.length === 0 ? (
           <div className="text-center py-8 text-sales-muted" style={{ fontSize: '.85rem' }}>
-            Belum ada riwayat absensi.
+            {loadError || 'Belum ada riwayat absensi.'}
           </div>
         ) : (
           <div className="flex flex-col gap-2">

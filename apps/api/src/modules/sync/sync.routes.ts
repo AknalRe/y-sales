@@ -3,7 +3,6 @@ import type { FastifyInstance } from 'fastify';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import {
-  appSettings,
   inventoryBalances,
   outlets,
   products,
@@ -61,8 +60,7 @@ export async function syncRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const query = z.object({ scope: z.string().default('sales-mobile'), date: z.string().date().optional() }).parse(request.query);
     const date = query.date ?? todayDate();
-    const [settingsRows, productRows, scheduleRows, warehouseRows] = await Promise.all([
-      db.select().from(appSettings),
+    const [productRows, scheduleRows, warehouseRows] = await Promise.all([
       db.select().from(products).where(and(eq(products.companyId, companyId), eq(products.status, 'active'))),
       db.select().from(visitSchedules).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.salesUserId, request.user!.id), eq(visitSchedules.scheduledDate, date))),
       db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.status, 'active'))),
@@ -86,7 +84,6 @@ export async function syncRoutes(app: FastifyInstance) {
       scope: query.scope,
       date,
       entities: {
-        settings: settingsRows,
         products: productRows,
         visitSchedules: scheduleRows,
         outlets: outletRows,

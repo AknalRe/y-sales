@@ -13,7 +13,10 @@ export async function syncAttendanceQueue() {
       await markQueueItemSyncing(item.id);
       if (item.type === 'check-in') {
         await checkInAttendance(item.accessToken, item.payload);
-      } else if (item.type === 'check-out' && item.payload.attendanceSessionId) {
+      } else if (item.type === 'check-out') {
+        if (!item.payload.attendanceSessionId) {
+          throw new Error('attendanceSessionId tidak ditemukan pada data check-out offline.');
+        }
         await checkOutAttendance(item.accessToken, {
           ...item.payload,
           attendanceSessionId: item.payload.attendanceSessionId,

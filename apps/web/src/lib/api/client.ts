@@ -157,13 +157,13 @@ export type AttendancePayload = {
 };
 
 export function getTodayAttendance(accessToken: string) {
-  return apiRequest<{ session: unknown | null }>('/attendance/today', {
+  return apiRequest<{ session: { id: string; status: string; workDate: string } | null }>('/attendance/today', {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 }
 
 export function checkInAttendance(accessToken: string, payload: AttendancePayload) {
-  return apiRequest<{ session: unknown; geofence: unknown }>('/attendance/check-in', {
+  return apiRequest<{ session: { id: string; status: string }; geofence: { valid: boolean; distanceM: number | null } }>('/attendance/check-in', {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(payload),
@@ -171,7 +171,7 @@ export function checkInAttendance(accessToken: string, payload: AttendancePayloa
 }
 
 export function checkOutAttendance(accessToken: string, payload: AttendancePayload & { attendanceSessionId: string }) {
-  return apiRequest<{ session: unknown }>('/attendance/check-out', {
+  return apiRequest<{ session: { id: string; status: string } }>('/attendance/check-out', {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(payload),
@@ -220,7 +220,7 @@ export type VisitPayload = {
 };
 
 export function checkInVisit(accessToken: string, payload: VisitPayload) {
-  return apiRequest<{ visit: { id: string; outletId: string }; geofence: unknown }>('/visits/check-in', {
+  return apiRequest<{ visit: { id: string; outletId: string; status: string }; geofence: { valid: boolean; distanceM: number | null } }>('/visits/check-in', {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify(payload),

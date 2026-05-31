@@ -165,11 +165,14 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
       setPreview(false);
       setReloadKey(k => k + 1);
     } catch (error) {
-      await enqueueAttendance({ type: 'check-in', accessToken, payload });
-      await refreshQueueCount();
-      setMessage(error instanceof Error && error.message !== 'offline'
-        ? `Absensi disimpan offline karena gagal terkirim: ${error.message}`
-        : 'Absensi disimpan offline dan akan tersinkron saat online.');
+      const isNetworkError = !navigator.onLine || (error instanceof Error && error.message.includes('Failed to fetch'));
+      if (isNetworkError) {
+        await enqueueAttendance({ type: 'check-in', accessToken, payload });
+        await refreshQueueCount();
+        setMessage('Absensi disimpan offline dan akan tersinkron saat online.');
+      } else {
+        setMessage(error instanceof Error ? error.message : 'Gagal mengirim absensi.');
+      }
       setPreview(false);
       setReloadKey(k => k + 1);
     } finally {
@@ -203,11 +206,14 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
       setPreview(false);
       setReloadKey(k => k + 1);
     } catch (error) {
-      await enqueueAttendance({ type: 'check-out', accessToken, payload });
-      await refreshQueueCount();
-      setMessage(error instanceof Error && error.message !== 'offline'
-        ? `Absensi keluar disimpan offline karena gagal terkirim: ${error.message}`
-        : 'Absensi keluar disimpan offline dan akan tersinkron saat online.');
+      const isNetworkError = !navigator.onLine || (error instanceof Error && error.message.includes('Failed to fetch'));
+      if (isNetworkError) {
+        await enqueueAttendance({ type: 'check-out', accessToken, payload });
+        await refreshQueueCount();
+        setMessage('Absensi keluar disimpan offline dan akan tersinkron saat online.');
+      } else {
+        setMessage(error instanceof Error ? error.message : 'Gagal mengirim absensi keluar.');
+      }
       setPreview(false);
       setReloadKey(k => k + 1);
     } finally {
@@ -238,11 +244,14 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
       const result = await checkInAttendance(accessToken, payload);
       setMessage('Absensi berhasil terkirim!');
     } catch (error) {
-      await enqueueAttendance({ type: 'check-in', accessToken, payload });
-      await refreshQueueCount();
-      setMessage(error instanceof Error && error.message !== 'offline'
-        ? `Absensi disimpan offline karena gagal terkirim: ${error.message}`
-        : 'Absensi disimpan offline dan akan tersinkron saat online.');
+      const isNetworkError = !navigator.onLine || (error instanceof Error && error.message.includes('Failed to fetch'));
+      if (isNetworkError) {
+        await enqueueAttendance({ type: 'check-in', accessToken, payload });
+        await refreshQueueCount();
+        setMessage('Absensi disimpan offline dan akan tersinkron saat online.');
+      } else {
+        setMessage(error instanceof Error ? error.message : 'Gagal mengirim absensi.');
+      }
     } finally {
       setLoading(false);
     }

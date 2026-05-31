@@ -79,7 +79,7 @@ export async function usersRoutes(app: FastifyInstance) {
     if (body.phone) identifiers.push(eq(users.phone, body.phone));
     if (body.employeeCode) identifiers.push(eq(users.employeeCode, body.employeeCode));
     if (identifiers.length) {
-      const [dup] = await db.select({ id: users.id }).from(users).where(or(...identifiers));
+      const [dup] = await db.select({ id: users.id }).from(users).where(and(eq(users.companyId, companyId), or(...identifiers)));
       if (dup) return reply.status(409).send({ message: 'Email, nomor HP, atau kode karyawan sudah digunakan.' });
     }
 

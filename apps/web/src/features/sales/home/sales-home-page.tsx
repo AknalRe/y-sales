@@ -61,6 +61,7 @@ export function SalesHomePage() {
   const [canCheckInAttendance, setCanCheckInAttendance] = useState(true);
   const [attendanceBlockedReason, setAttendanceBlockedReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   async function load() {
     if (!accessToken) return;
@@ -80,6 +81,8 @@ export function SalesHomePage() {
         setCanCheckInAttendance(attRes.value.canCheckIn);
         setAttendanceBlockedReason(attRes.value.checkInBlockedReason ?? null);
       }
+      const firstError = [visitRes, sumRes, attRes].find(r => r.status === 'rejected');
+      if (firstError) setError((firstError as PromiseRejectedResult).reason?.message || 'Gagal memuat data.');
     } finally {
       setLoading(false);
     }
@@ -108,6 +111,8 @@ export function SalesHomePage() {
           </Link>
         </div>
       </div>
+
+      {error && <div className="sales-alert sales-alert-error">{error}</div>}
 
       {/* Attendance Status Banner */}
       <div className={`sales-attendance-banner ${checkedIn ? 'checked-in' : 'not-checked-in'}`}>

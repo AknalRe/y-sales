@@ -65,7 +65,7 @@ export async function accessRoutes(app: FastifyInstance) {
     if (!existing) return reply.status(404).send({ message: 'Role tidak ditemukan.' });
     if (existing.isSystemRole) return reply.status(403).send({ message: 'System role tidak dapat diubah.' });
 
-    const [updated] = await db.update(roles).set({ ...body, updatedAt: new Date() }).where(eq(roles.id, params.roleId)).returning();
+    const [updated] = await db.update(roles).set({ ...body, updatedAt: new Date() }).where(and(eq(roles.id, params.roleId), eq(roles.companyId, companyId))).returning();
     await writeAuditLog({ request, action: 'role.updated', entityType: 'role', entityId: updated.id, oldValues: existing, newValues: updated });
     return { role: updated };
   });
@@ -79,7 +79,7 @@ export async function accessRoutes(app: FastifyInstance) {
     if (existing.isSystemRole) return reply.status(403).send({ message: 'System role tidak dapat dihapus.' });
 
     // Check if any users still have this role
-    const [userWithRole] = await db.select({ id: users.id }).from(users).where(and(eq(users.roleId, params.roleId), isNull(users.deletedAt)));
+    const [userWithRole] = await db.select({ id: users.id }).from(users).where(and(eq(users.roleId, params.roleId), eq(users.companyId, companyId), isNull(users.deletedAt)));
     if (userWithRole) return reply.status(400).send({ message: 'Role tidak dapat dihapus karena masih digunakan oleh user.' });
 
     // Remove all permissions first, then delete role

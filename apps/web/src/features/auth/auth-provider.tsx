@@ -51,17 +51,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const deviceId = getDeviceId();
       const result = await login({ identifier, password, deviceId });
       if (result.refreshToken) storeRefreshToken(result.refreshToken);
-      const me = await getMe(result.accessToken);
-      const session = {
-        accessToken: result.accessToken,
-        user: me.user,
-        permissions: me.permissions,
-      };
-      localStorage.setItem(profileStorageKey, JSON.stringify({ user: session.user, permissions: session.permissions }));
-      setAccessToken(session.accessToken);
-      setUser(session.user);
-      setPermissions(session.permissions);
-      return session.user;
+      try {
+        const me = await getMe(result.accessToken);
+        const session = {
+          accessToken: result.accessToken,
+          user: me.user,
+          permissions: me.permissions,
+        };
+        localStorage.setItem(profileStorageKey, JSON.stringify({ user: session.user, permissions: session.permissions }));
+        setAccessToken(session.accessToken);
+        setUser(session.user);
+        setPermissions(session.permissions);
+        return session.user;
+      } catch (meError) {
+        clearStoredRefreshToken();
+        throw meError;
+      }
     },
     signOut() {
       void logout().finally(clearSession);

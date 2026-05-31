@@ -510,6 +510,7 @@ export async function platformRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(subscriptionFeatures).where(eq(subscriptionFeatures.id, params.id)).limit(1);
     if (!existing) return reply.status(404).send({ message: 'Feature tidak ditemukan.' });
     await db.update(subscriptionFeatures).set({ status: 'inactive', updatedAt: new Date() }).where(eq(subscriptionFeatures.id, params.id));
+    await writeAuditLog({ request, action: 'feature.deleted', entityType: 'subscription_feature', entityId: params.id, oldValues: existing });
     return { success: true };
   });
 

@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { appSettings, auditLogs, inventoryBalances, inventoryMovements, products, warehouses } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -189,7 +189,7 @@ async function applyInventoryDelta(tx: Tx, input: { companyId: string; warehouse
     eq(inventoryBalances.companyId, input.companyId),
     eq(inventoryBalances.warehouseId, input.warehouseId),
     eq(inventoryBalances.productId, input.productId),
-  ));
+  )).for('update');
 
   const currentQty = Number(existing?.quantity ?? 0);
   const reservedQty = Number(existing?.reservedQuantity ?? 0);
@@ -353,7 +353,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     const targetQuantity = parseQuantity(body.targetQuantity, 'Target quantity', { nonNegative: true });
 
     const result = await db.transaction(async (tx) => {
-      const [existing] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, body.warehouseId), eq(inventoryBalances.productId, body.productId)));
+      const [existing] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, body.warehouseId), eq(inventoryBalances.productId, body.productId))).for('update');
       const currentQty = Number(existing?.quantity ?? 0);
       const delta = targetQuantity - currentQty;
       const balance = await applyInventoryDelta(tx, { companyId, warehouseId: body.warehouseId, productId: body.productId, quantityDelta: delta });
@@ -397,7 +397,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     await db.transaction(async (tx) => {
       for (const item of body.items) {
         const qty = parseQuantity(item.quantity, 'Quantity transfer', { positive: true });
-        const [source] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, body.fromWarehouseId), eq(inventoryBalances.productId, item.productId)));
+        const [source] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, body.fromWarehouseId), eq(inventoryBalances.productId, item.productId))).for('update');
         const availableQty = Number(source?.quantity ?? 0) - Number(source?.reservedQuantity ?? 0);
         if (!source || availableQty < qty) throw Object.assign(new Error(`Stok source tidak cukup untuk produk ${item.productId}.`), { statusCode: 400 });
         await applyInventoryDelta(tx, { companyId, warehouseId: body.fromWarehouseId, productId: item.productId, quantityDelta: qty * -1 });

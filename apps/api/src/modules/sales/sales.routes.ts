@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -251,7 +252,7 @@ export async function salesRoutes(app: FastifyInstance) {
     const order = await db.transaction(async (tx) => {
       const [created] = await tx.insert(salesTransactions).values({
         companyId,
-        transactionNo: `SO-${Date.now()}`,
+        transactionNo: `SO-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
         salesUserId: request.user!.id,
         outletId: visit.outletId,
         visitSessionId: body.visitSessionId,
@@ -305,7 +306,7 @@ export async function salesRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
-    if (!order) return { message: 'Order tidak ditemukan' };
+    if (!order) throw Object.assign(new Error('Order tidak ditemukan.'), { statusCode: 404 });
     if (order.status !== 'pending_approval') throw Object.assign(new Error('Order tidak dalam status pending approval.'), { statusCode: 400 });
 
     const settings = await getGeneralSettings(companyId);
@@ -438,7 +439,7 @@ export async function salesRoutes(app: FastifyInstance) {
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = rejectOrderSchema.parse(request.body ?? {});
     const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
-    if (!order) return { message: 'Order tidak ditemukan' };
+    if (!order) throw Object.assign(new Error('Order tidak ditemukan.'), { statusCode: 404 });
     if (order.status !== 'pending_approval') throw Object.assign(new Error('Order tidak dalam status pending approval.'), { statusCode: 400 });
     if (!order.sourceWarehouseId) throw Object.assign(new Error('Gudang sumber stok order tidak ditemukan.'), { statusCode: 400 });
 

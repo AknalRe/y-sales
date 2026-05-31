@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone } from 'lucide-react';
 import { apiRequest, checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
 import { getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, type Consignment, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
@@ -95,7 +95,7 @@ export function VisitPage() {
       setSchedulesLoading(true);
       getTodayVisitPlan(accessToken)
         .then(res => setSchedules(res.schedules))
-        .catch(e => console.error(e))
+        .catch(e => setMessage(e.message || 'Gagal memuat jadwal.'))
         .finally(() => setSchedulesLoading(false));
     }
   }, [accessToken]);

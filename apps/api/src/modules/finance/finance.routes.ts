@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { consignmentActions, consignmentItems, consignments, inventoryBalances, inventoryMovements, products, receivablePayments, receivables, salesTransactions, warehouses } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -69,7 +69,7 @@ async function applyDelta(tx: Tx, input: { companyId: string; warehouseId: strin
     eq(inventoryBalances.companyId, input.companyId),
     eq(inventoryBalances.warehouseId, input.warehouseId),
     eq(inventoryBalances.productId, input.productId),
-  ));
+  )).for('update');
   const nextQty = Number(existing?.quantity ?? 0) + input.quantityDelta;
   const reserved = Number(existing?.reservedQuantity ?? 0);
   if (nextQty < 0 || nextQty < reserved) throw Object.assign(new Error('Stok konsinyasi tidak cukup untuk aksi ini.'), { statusCode: 400 });
@@ -122,12 +122,18 @@ export async function financeRoutes(app: FastifyInstance) {
     const receivable = joined?.receivables;
     if (!receivable) throw Object.assign(new Error('Piutang tidak ditemukan.'), { statusCode: 404 });
     const amount = Number(body.amount);
-    const nextPaid = Number(receivable.paidAmount) + amount;
-    const outstanding = Math.max(0, Number(receivable.principalAmount) - nextPaid);
-    const status = outstanding <= 0 ? 'paid' : 'partial';
     const result = await db.transaction(async (tx) => {
-      const [payment] = await tx.insert(receivablePayments).values({ receivableId: receivable.id, amount: body.amount, paymentMethod: body.paymentMethod, paidAt: body.paidAt ? new Date(body.paidAt) : new Date(), receivedByUserId: request.user?.id, notes: body.notes }).returning();
-      const [updated] = await tx.update(receivables).set({ paidAmount: nextPaid.toFixed(2), outstandingAmount: outstanding.toFixed(2), status, updatedAt: new Date() }).where(eq(receivables.id, receivable.id)).returning();
+      const [locked] = await tx.select().from(receivables)
+        .innerJoin(salesTransactions, eq(receivables.transactionId, salesTransactions.id))
+        .where(and(eq(receivables.id, params.id), eq(salesTransactions.companyId, companyId)))
+        .for('update');
+      const lockedReceivable = locked?.receivables;
+      if (!lockedReceivable) throw Object.assign(new Error('Piutang tidak ditemukan.'), { statusCode: 404 });
+      const nextPaid = Number(lockedReceivable.paidAmount) + amount;
+      const outstanding = Math.max(0, Number(lockedReceivable.principalAmount) - nextPaid);
+      const status = outstanding <= 0 ? 'paid' : 'partial';
+      const [payment] = await tx.insert(receivablePayments).values({ receivableId: lockedReceivable.id, amount: body.amount, paymentMethod: body.paymentMethod, paidAt: body.paidAt ? new Date(body.paidAt) : new Date(), receivedByUserId: request.user?.id, notes: body.notes }).returning();
+      const [updated] = await tx.update(receivables).set({ paidAmount: nextPaid.toFixed(2), outstandingAmount: outstanding.toFixed(2), status, updatedAt: new Date() }).where(eq(receivables.id, lockedReceivable.id)).returning();
       return { payment, receivable: updated };
     });
     await writeAuditLog({ request, action: 'receivable.payment_created', entityType: 'receivable_payment', entityId: result.payment.id, newValues: result.payment });
@@ -149,19 +155,22 @@ export async function financeRoutes(app: FastifyInstance) {
       .orderBy(desc(consignments.createdAt))
       .limit(200);
     const consignmentRows = rows.map(r => r.consignments);
-    const result = [];
-    for (const consignment of consignmentRows) {
-      const items = await db.select({
+    const consignmentIds = consignmentRows.map(c => c.id);
+    const allItems = consignmentIds.length
+      ? await db.select({
         id: consignmentItems.id,
+        consignmentId: consignmentItems.consignmentId,
         productId: consignmentItems.productId,
         productSku: products.sku,
         productName: products.name,
         quantity: consignmentItems.quantity,
         paidQuantity: consignmentItems.paidQuantity,
         remainingQuantity: consignmentItems.remainingQuantity,
-      }).from(consignmentItems).innerJoin(products, eq(consignmentItems.productId, products.id)).where(eq(consignmentItems.consignmentId, consignment.id));
-      result.push({ ...consignment, items });
-    }
+      }).from(consignmentItems).innerJoin(products, eq(consignmentItems.productId, products.id)).where(inArray(consignmentItems.consignmentId, consignmentIds))
+      : [];
+    const grouped = new Map(allItems.map(i => [i.consignmentId, [] as typeof allItems]));
+    for (const item of allItems) grouped.get(item.consignmentId)!.push(item);
+    const result = consignmentRows.map(c => ({ ...c, items: grouped.get(c.id) ?? [] }));
     return { consignments: result };
   });
 
@@ -174,19 +183,25 @@ export async function financeRoutes(app: FastifyInstance) {
       eq(consignments.outletId, query.outletId),
       eq(consignments.status, 'active'),
     )).orderBy(desc(consignments.createdAt));
-    const result = [];
-    for (const row of rows) {
-      const items = await db.select({
+    const consignmentIds = rows.map(r => r.consignments.id);
+    const allItems = consignmentIds.length
+      ? await db.select({
         id: consignmentItems.id,
+        consignmentId: consignmentItems.consignmentId,
         productId: consignmentItems.productId,
         productSku: products.sku,
         productName: products.name,
         quantity: consignmentItems.quantity,
         paidQuantity: consignmentItems.paidQuantity,
         remainingQuantity: consignmentItems.remainingQuantity,
-      }).from(consignmentItems).innerJoin(products, eq(consignmentItems.productId, products.id)).where(eq(consignmentItems.consignmentId, row.consignments.id));
-      result.push({ ...row.consignments, items: items.filter((item) => Number(item.remainingQuantity) > 0) });
-    }
+      }).from(consignmentItems).innerJoin(products, eq(consignmentItems.productId, products.id)).where(inArray(consignmentItems.consignmentId, consignmentIds))
+      : [];
+    const grouped = new Map(allItems.map(i => [i.consignmentId, [] as typeof allItems]));
+    for (const item of allItems) grouped.get(item.consignmentId)!.push(item);
+    const result = rows.map(r => ({
+      ...r.consignments,
+      items: (grouped.get(r.consignments.id) ?? []).filter((item) => Number(item.remainingQuantity) > 0),
+    }));
     return { consignments: result.filter((item) => item.items.length > 0) };
   });
 
@@ -311,7 +326,9 @@ export async function financeRoutes(app: FastifyInstance) {
       const nextStatus = row.action.actionType === 'extend' ? 'extended' : settled ? (row.action.actionType === 'withdraw' ? 'withdrawn' : 'paid') : row.consignment.status;
       const [consignment] = await tx.update(consignments).set({
         status: nextStatus,
-        extendedUntil: row.action.actionType === 'extend' ? row.consignment.dueDate : row.consignment.extendedUntil,
+        extendedUntil: row.action.actionType === 'extend'
+          ? new Date(new Date(row.consignment.dueDate).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+          : row.consignment.extendedUntil,
         updatedAt: new Date(),
       }).where(eq(consignments.id, row.consignment.id)).returning();
       const [action] = await tx.update(consignmentActions).set({

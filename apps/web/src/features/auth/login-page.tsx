@@ -12,7 +12,6 @@ export function LoginPage() {
   const { isDark, toggleTheme } = useTheme();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -74,11 +73,7 @@ export function LoginPage() {
               />
             </label>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex cursor-pointer items-center gap-2 text-white/70 transition hover:text-white">
-                <input id="login-remember-checkbox" type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} className="h-4 w-4 rounded border-white/20 bg-white/10 accent-brand-accent" />
-                Ingat saya
-              </label>
+            <div className="flex items-center justify-end text-sm">
               <button id="login-forgot-button" type="button" className="text-brand-accent transition hover:text-white">Lupa sandi?</button>
             </div>
 

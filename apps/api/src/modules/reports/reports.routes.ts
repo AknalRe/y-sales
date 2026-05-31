@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, count, eq, gte, sum } from 'drizzle-orm';
+import { and, count, eq, gte, isNull, sum } from 'drizzle-orm';
 import { products, salesTransactions, users, visitSessions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
@@ -39,10 +39,10 @@ export async function reportRoutes(app: FastifyInstance) {
       .where(and(...visitsConditions, gte(visitSessions.createdAt, today)));
 
     const [productCount] = await db.select({ count: count() })
-      .from(products).where(eq(products.companyId, companyId));
+      .from(products).where(and(eq(products.companyId, companyId), eq(products.status, 'active')));
 
     const [activeUserCount] = await db.select({ count: count() })
-      .from(users).where(eq(users.companyId, companyId));
+      .from(users).where(and(eq(users.companyId, companyId), eq(users.status, 'active'), isNull(users.deletedAt)));
 
     const [pending] = await db.select({ count: count() })
       .from(salesTransactions)

@@ -98,6 +98,7 @@ export function TransactionsPage() {
     if (accessToken) {
       getProducts(accessToken)
         .then(res => setProducts(res.products))
+        .catch(e => setError(e.message || 'Gagal memuat produk.'))
         .finally(() => setLoading(false));
     }
   }, [accessToken]);

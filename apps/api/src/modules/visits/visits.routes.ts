@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { attendanceSessions, faceCaptures, mediaFiles, outlets, salesTransactions, users, visitSchedules, visitSessions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -303,7 +303,7 @@ export async function visitRoutes(app: FastifyInstance) {
     if (!attendanceToday) throw Object.assign(new Error('Anda harus absensi (check-in kehadiran) terlebih dahulu sebelum bisa visit outlet.'), { statusCode: 400 });
 
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, body.outletId)));
-    if (!outlet) return { message: 'Outlet tidak ditemukan' };
+    if (!outlet) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
     if (outlet.status !== 'active') throw Object.assign(new Error('Outlet belum aktif dan tidak bisa dikunjungi.'), { statusCode: 400 });
 
     let schedule: typeof visitSchedules.$inferSelect | undefined;
@@ -457,10 +457,9 @@ export async function visitRoutes(app: FastifyInstance) {
     const sessions = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), gte(sql`date(${visitSessions.checkInAt})`, from), lte(sql`date(${visitSessions.checkInAt})`, to)));
     const sessionIds = sessions.map((session) => session.id);
     const orders = sessionIds.length
-      ? await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.status, 'closed')))
+      ? await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.status, 'closed'), inArray(salesTransactions.visitSessionId, sessionIds)))
       : [];
-    const visitOrderIds = new Set(sessionIds);
-    const closingOrders = orders.filter((order) => order.visitSessionId && visitOrderIds.has(order.visitSessionId));
+    const closingOrders = orders;
     const completed = schedules.filter((schedule) => schedule.status === 'completed').length;
     const targetOutletCount = Math.max(...schedules.map((schedule) => schedule.targetOutletCount), schedules.length, 0);
     const targetClosingCount = Math.max(...schedules.map((schedule) => schedule.targetClosingCount), 0);

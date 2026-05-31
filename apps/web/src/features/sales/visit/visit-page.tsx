@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle, RefreshCw, WifiOff } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff } from 'lucide-react';
 import { checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
 import { getTodayVisitPlan, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
@@ -23,19 +23,34 @@ export function VisitPage() {
   const [message, setMessage] = useState('');
   const [queueCount, setQueueCount] = useState(0);
   const [online, setOnline] = useState(navigator.onLine);
+  const [preview, setPreview] = useState(false);
 
-  // Data
   const [schedules, setSchedules] = useState<TodayVisitSchedule[]>([]);
   const [selectedOutlet, setSelectedOutlet] = useState('');
   const [selectedScheduleId, setSelectedScheduleId] = useState('');
   const [activeOutletName, setActiveOutletName] = useState('');
   const [activeVisitId, setActiveVisitId] = useState<string | null>(null);
 
-  // Check-out fields
   const [outcome, setOutcome] = useState<'closed_order' | 'no_order' | 'follow_up' | 'outlet_closed' | 'rejected' | 'invalid_location'>('closed_order');
   const [notes, setNotes] = useState('');
 
   useEffect(() => () => stopCamera(stream), [stream]);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        if (videoRef.current) {
+          const nextStream = await startFrontCamera(videoRef.current);
+          setStream(nextStream);
+        }
+      } catch { /* camera permission denied */ }
+      try {
+        const current = await getCurrentLocation();
+        setLocation(current);
+      } catch { /* geolocation denied */ }
+    };
+    init();
+  }, []);
 
   useEffect(() => {
     refreshQueueCount();
@@ -93,21 +108,16 @@ export function VisitPage() {
     }
   }
 
-  async function handleStartCamera() {
-    if (!videoRef.current) return;
-    const nextStream = await startFrontCamera(videoRef.current);
-    setStream(nextStream);
-  }
-
-  async function handleCapture() {
+  async function handleCaptureAndPreview() {
     if (!videoRef.current) return;
     const captured = await captureFromVideo(videoRef.current);
     setImage(captured);
+    setPreview(true);
   }
 
-  async function handleLocation() {
-    const current = await getCurrentLocation();
-    setLocation(current);
+  function handleRetake() {
+    setPreview(false);
+    setImage(null);
   }
 
   async function handleCheckIn() {
@@ -144,12 +154,15 @@ export function VisitPage() {
         scheduleId: selectedScheduleId,
         outletName: selectedSchedule?.outlet.name,
       }));
-      setImage(null); // Reset image for check-out
+      setPreview(false);
+      setImage(null);
     } catch (error: any) {
       if (!navigator.onLine || error.message === 'offline') {
         await enqueueVisit({ type: 'check-in', accessToken, payload });
         await refreshQueueCount();
         setMessage('Check-in disimpan offline dan akan tersinkron saat online.');
+        setPreview(false);
+        setImage(null);
       } else {
         setMessage(`Check-in gagal: ${error.message}`);
       }
@@ -191,6 +204,7 @@ export function VisitPage() {
       setActiveOutletName('');
       setImage(null);
       setNotes('');
+      setPreview(false);
     } catch (error: any) {
       if (!navigator.onLine || error.message === 'offline') {
         await enqueueVisit({ type: 'check-out', accessToken, payload });
@@ -202,6 +216,7 @@ export function VisitPage() {
         setActiveOutletName('');
         setImage(null);
         setNotes('');
+        setPreview(false);
         setMessage('Check-out disimpan offline dan akan tersinkron saat online.');
       } else {
         setMessage(`Check-out gagal: ${error.message}`);
@@ -210,6 +225,9 @@ export function VisitPage() {
       setLoading(false);
     }
   }
+
+  const canCheckIn = !!image && !!location && !!selectedOutlet;
+  const canCheckOut = !!image && !!location && !!activeVisitId;
 
   return (
     <main className="sales-home" style={{ paddingBottom: '6rem' }}>
@@ -267,23 +285,45 @@ export function VisitPage() {
       </div>
 
       <div className="sales-step-card">
-        <h2>2. Verifikasi Wajah & GPS</h2>
+        <h2>{!activeVisitId ? '2. Verifikasi Wajah & GPS' : 'Verifikasi Wajah & GPS'}</h2>
 
-        <div className="sales-camera-frame">
-          <video ref={videoRef} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover' }} playsInline muted />
-          {image && <img src={image.dataUrl} alt="Captured" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div className="relative">
+          <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
+          {location && (
+            <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
+              <MapPin size={13} className="shrink-0 text-sales-emerald" />
+              <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
+              <span className="ml-auto text-sales-emerald">±{Math.round(location.accuracyM ?? 0)}m</span>
+            </div>
+          )}
+          {!location && (
+            <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sales-amber backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
+              <MapPin size={13} />
+              <span>Mengambil lokasi GPS...</span>
+            </div>
+          )}
         </div>
 
-        <div style={{ display: 'grid', gap: '.5rem', gridTemplateColumns: '1fr 1fr' }}>
-          <button onClick={handleStartCamera} className="sales-btn sales-btn-ghost" type="button" style={{ justifyContent: 'center' }}><Video size={16} /> Buka Kamera</button>
-          <button onClick={handleCapture} disabled={!stream} className="sales-btn sales-btn-primary" type="button" style={{ justifyContent: 'center' }}><Camera size={16} /> Jepret Wajah</button>
-        </div>
-
-        <div style={{ marginTop: '1rem' }}>
-          <button onClick={handleLocation} className="sales-btn sales-btn-ghost" type="button" style={{ width: '100%', justifyContent: 'center' }}>
-            <MapPin size={16} /> Ambil Lokasi GPS
-          </button>
-          {location && <p className="text-center text-sales-muted mt-2" style={{ fontSize: '.75rem' }}>Akurasi: ±{Math.round(location.accuracyM ?? 0)}m</p>}
+        <div className="mt-3">
+          {!activeVisitId ? (
+            <button
+              onClick={handleCaptureAndPreview}
+              disabled={!stream}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sales-accent text-sales-surface border-none"
+              style={{ padding: '.85rem', fontSize: '.95rem', fontWeight: 800, cursor: stream ? 'pointer' : 'not-allowed', opacity: stream ? 1 : 0.5, transition: 'all .2s' }}
+            >
+              <Camera size={20} /> Jepret & Check-In
+            </button>
+          ) : (
+            <button
+              onClick={handleCaptureAndPreview}
+              disabled={!stream}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sales-danger-light text-sales-surface border-none"
+              style={{ padding: '.85rem', fontSize: '.95rem', fontWeight: 800, cursor: stream ? 'pointer' : 'not-allowed', opacity: stream ? 1 : 0.5, transition: 'all .2s' }}
+            >
+              <Camera size={20} /> Jepret & Check-Out
+            </button>
+          )}
         </div>
       </div>
 
@@ -309,16 +349,48 @@ export function VisitPage() {
         </div>
       )}
 
-      {!activeVisitId ? (
-        <button onClick={handleCheckIn} disabled={!image || !location || !selectedOutlet || loading} className="sales-btn sales-btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1rem', borderRadius: '1rem', justifyContent: 'center' }}>
-          {loading ? <Loader2 className="animate-spin" /> : <CheckCircle2 />} Check-In Visit
-        </button>
-      ) : (
-        <button onClick={handleCheckOut} disabled={!image || !location || loading} className="sales-danger-btn">
-          {loading ? <Loader2 className="animate-spin" /> : <XCircle />} Check-Out & Selesai
-        </button>
+      {/* Preview Modal */}
+      {preview && image && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm p-6" style={{ background: 'var(--sales-overlay-dark)' }}>
+          <div className="w-full max-w-[360px] bg-sales-surface rounded-3xl p-5" style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+            <p className="text-center text-sales-text-heading font-extrabold mb-3" style={{ fontSize: '.9rem' }}>
+              Preview {activeVisitId ? 'Check-Out' : 'Check-In'}
+            </p>
+            <img src={image.dataUrl} alt="Preview" className="w-full rounded-2xl object-cover" style={{ aspectRatio: '3/4' }} />
+            {location && (
+              <div className="flex items-center gap-1.5 mt-2 text-sales-muted" style={{ fontSize: '.7rem' }}>
+                <MapPin size={12} className="text-sales-emerald-dark" />
+                <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)} · ±{Math.round(location.accuracyM ?? 0)}m</span>
+              </div>
+            )}
+            {selectedSchedule && (
+              <div className="flex items-center gap-1.5 mt-1 text-sales-muted" style={{ fontSize: '.7rem' }}>
+                <Store size={12} className="text-sales-accent" />
+                <span>{selectedSchedule.outlet.name}</span>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <button
+                onClick={handleRetake}
+                disabled={loading}
+                className="flex items-center justify-center gap-1.5 rounded-2xl border border-gray-200 bg-sales-surface text-sales-text-label"
+                style={{ padding: '.7rem', fontSize: '.8rem', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer' }}
+              >
+                <RotateCcw size={15} /> Ulangi
+              </button>
+              <button
+                onClick={activeVisitId ? handleCheckOut : handleCheckIn}
+                disabled={loading || (!activeVisitId ? !canCheckIn : !canCheckOut)}
+                className="flex items-center justify-center gap-1.5 rounded-2xl bg-sales-accent text-sales-surface border-none"
+                style={{ padding: '.7rem', fontSize: '.8rem', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
+              >
+                {loading ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />}
+                {loading ? 'Mengirim...' : activeVisitId ? 'Check-Out' : 'Check-In Visit'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-
     </main>
   );
 }

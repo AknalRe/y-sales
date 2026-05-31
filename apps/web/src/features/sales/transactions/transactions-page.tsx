@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff } from 'lucide-react';
-import { getProducts, createOrder, getTodayVisitPlan, type TodayVisitSchedule } from '../../../lib/api/tenant';
+import { ChevronDown, ChevronUp, ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff, Store, X, XCircle } from 'lucide-react';
+import { getProducts, createOrder } from '../../../lib/api/tenant';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState, Spinner } from '../../../components/ui';
 import { enqueueTransaction, getTransactionQueueCount } from '../../../lib/offline/transaction-queue';
@@ -9,26 +9,39 @@ import { syncTransactionQueue } from '../../../lib/offline/sync-transactions';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
+const transactionDraftStorageKey = 'yuksales.sales.transactionDraft';
 
 type CartItem = {
   product: any;
   quantity: number;
 };
 
+type ActiveVisit = {
+  id: string;
+  outletId: string;
+  outletName?: string;
+  scheduleId?: string;
+};
+
+type TransactionDraft = {
+  visitId: string;
+  outletId: string;
+  paymentMethod: 'cash' | 'qris' | 'credit' | 'consignment';
+  cart: CartItem[];
+};
+
 export function TransactionsPage() {
   useScrollToTop();
   const { accessToken } = useAuth();
   const navigate = useNavigate();
+  const cartSheetRef = useRef<HTMLDivElement | null>(null);
+  const productGridRef = useRef<HTMLDivElement | null>(null);
   const [products, setProducts] = useState<any[]>([]);
-  const [schedules, setSchedules] = useState<TodayVisitSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  // Cart state
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedOutlet, setSelectedOutlet] = useState('');
-  const [activeOutletName, setActiveOutletName] = useState('');
-  const [activeVisitId, setActiveVisitId] = useState('');
+  const [activeVisit, setActiveVisit] = useState<ActiveVisit | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'credit' | 'consignment'>('cash');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -37,6 +50,10 @@ export function TransactionsPage() {
   const [queueCount, setQueueCount] = useState(0);
   const [online, setOnline] = useState(navigator.onLine);
   const [offlineMessage, setOfflineMessage] = useState('');
+  const [cartExpanded, setCartExpanded] = useState(false);
+  const [cartSheetHeight, setCartSheetHeight] = useState(0);
+  const [productGridMaxHeight, setProductGridMaxHeight] = useState<number | null>(null);
+  const [draftReady, setDraftReady] = useState(false);
 
   useEffect(() => {
     refreshQueueCount();
@@ -57,29 +74,82 @@ export function TransactionsPage() {
     const raw = localStorage.getItem(activeVisitStorageKey);
     if (raw) {
       try {
-        const activeVisit = JSON.parse(raw) as { id: string; outletId: string; outletName?: string };
-        setActiveVisitId(activeVisit.id);
-        setSelectedOutlet(activeVisit.outletId);
-        setActiveOutletName(activeVisit.outletName ?? '');
+        const visit = JSON.parse(raw) as ActiveVisit;
+        setActiveVisit(visit);
+        const draftRaw = localStorage.getItem(transactionDraftStorageKey);
+        if (draftRaw) {
+          const draft = JSON.parse(draftRaw) as TransactionDraft;
+          if (draft.visitId === visit.id && draft.outletId === visit.outletId) {
+            setCart(draft.cart ?? []);
+            setPaymentMethod(draft.paymentMethod ?? 'cash');
+          } else {
+            localStorage.removeItem(transactionDraftStorageKey);
+          }
+        }
       } catch {
         localStorage.removeItem(activeVisitStorageKey);
+        localStorage.removeItem(transactionDraftStorageKey);
       }
+    } else {
+      localStorage.removeItem(transactionDraftStorageKey);
     }
+    setDraftReady(true);
 
     if (accessToken) {
-      Promise.all([
-        getProducts(accessToken),
-        getTodayVisitPlan(accessToken)
-      ]).then(([pRes, visitPlan]) => {
-        setProducts(pRes.products);
-        setSchedules(visitPlan.schedules);
-        if (!activeOutletName && selectedOutlet) {
-          const activeSchedule = visitPlan.schedules.find((schedule) => schedule.outletId === selectedOutlet);
-          setActiveOutletName(activeSchedule?.outlet.name ?? '');
-        }
-      }).finally(() => setLoading(false));
+      getProducts(accessToken)
+        .then(res => setProducts(res.products))
+        .finally(() => setLoading(false));
     }
-  }, [accessToken, activeOutletName, selectedOutlet]);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    if (!activeVisit || cart.length === 0) {
+      localStorage.removeItem(transactionDraftStorageKey);
+      return;
+    }
+    const draft: TransactionDraft = {
+      visitId: activeVisit.id,
+      outletId: activeVisit.outletId,
+      paymentMethod,
+      cart,
+    };
+    localStorage.setItem(transactionDraftStorageKey, JSON.stringify(draft));
+  }, [activeVisit, cart, draftReady, paymentMethod]);
+
+  useEffect(() => {
+    if (!cartSheetRef.current) {
+      setCartSheetHeight(0);
+      return;
+    }
+    const element = cartSheetRef.current;
+    const updateHeight = () => setCartSheetHeight(element.getBoundingClientRect().height);
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [cart.length, cartExpanded, error, paymentMethod, submitting]);
+
+  useEffect(() => {
+    const updateGridHeight = () => {
+      if (!productGridRef.current || cart.length === 0 || cartSheetHeight <= 0) {
+        setProductGridMaxHeight(null);
+        return;
+      }
+      const gridTop = productGridRef.current.getBoundingClientRect().top;
+      const cartTop = window.innerHeight - 64 - cartSheetHeight;
+      const nextHeight = Math.max(160, Math.floor(cartTop - gridTop - 8));
+      setProductGridMaxHeight(nextHeight);
+    };
+
+    updateGridHeight();
+    window.addEventListener('resize', updateGridHeight);
+    window.visualViewport?.addEventListener('resize', updateGridHeight);
+    return () => {
+      window.removeEventListener('resize', updateGridHeight);
+      window.visualViewport?.removeEventListener('resize', updateGridHeight);
+    };
+  }, [cart.length, cartSheetHeight, cartExpanded, products.length, search]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
@@ -88,6 +158,15 @@ export function TransactionsPage() {
   const totalAmount = useMemo(() => {
     return cart.reduce((sum, item) => sum + (Number(item.product.priceDefault) * item.quantity), 0);
   }, [cart]);
+
+  const productGridStyle = cart.length > 0
+    ? {
+        maxHeight: productGridMaxHeight ? `${productGridMaxHeight}px` : undefined,
+        overflowY: 'auto' as const,
+        paddingBottom: '.5rem',
+        overscrollBehavior: 'contain' as const,
+      }
+    : undefined;
 
   async function refreshQueueCount() {
     const count = await getTransactionQueueCount();
@@ -117,15 +196,23 @@ export function TransactionsPage() {
     });
   }
 
+  function updateQty(productId: string, delta: number) {
+    setCart(prev => prev.map(i => {
+      if (i.product.id !== productId) return i;
+      const newQty = i.quantity + delta;
+      return newQty <= 0 ? null : { ...i, quantity: newQty };
+    }).filter(Boolean) as CartItem[]);
+  }
+
   async function handleSubmit() {
-    if (!accessToken || !selectedOutlet || !activeVisitId || cart.length === 0) return;
+    if (!accessToken || !activeVisit || cart.length === 0) return;
     setSubmitting(true);
     setError('');
 
     const orderPayload = {
       clientRequestId: crypto.randomUUID(),
-      outletId: selectedOutlet,
-      visitSessionId: activeVisitId,
+      outletId: activeVisit.outletId,
+      visitSessionId: activeVisit.id,
       customerType: 'store' as const,
       paymentMethod,
       items: cart.map(i => ({
@@ -138,12 +225,14 @@ export function TransactionsPage() {
     try {
       if (!navigator.onLine) throw new Error('offline');
       await createOrder(accessToken, orderPayload);
+      localStorage.removeItem(transactionDraftStorageKey);
       setSuccess(true);
       setCart([]);
     } catch (e: any) {
       if (!navigator.onLine || e.message === 'offline') {
         await enqueueTransaction({ type: 'create-order', accessToken, payload: orderPayload });
         await refreshQueueCount();
+        localStorage.removeItem(transactionDraftStorageKey);
         setSuccess(true);
         setCart([]);
         setOfflineMessage('Transaksi disimpan offline dan akan tersinkron saat online.');
@@ -155,10 +244,9 @@ export function TransactionsPage() {
     }
   }
 
-  // Cancel checkout and reset state
   function handleBatal() {
+    localStorage.removeItem(transactionDraftStorageKey);
     setCart([]);
-    setSelectedOutlet('');
     setPaymentMethod('cash');
     setError('');
     setOfflineMessage('');
@@ -166,7 +254,7 @@ export function TransactionsPage() {
 
   if (success) {
     return (
-      <main className="sales-home" >
+      <main className="sales-home">
         <div className="sales-card" style={{ padding: '3rem 2rem', textAlign: 'center', marginTop: '2rem' }}>
           <CheckCircle2 size={64} className="text-sales-emerald" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ fontSize: '1.5rem', marginBottom: '.5rem' }}>Transaksi Terkirim!</h2>
@@ -184,14 +272,84 @@ export function TransactionsPage() {
     );
   }
 
+  // No active visit → show gate popup
+  if (!activeVisit) {
+    return (
+      <main className="sales-home">
+        <div className="sales-home-greeting">
+          <div>
+            <p className="sales-greeting-label">Order Taking</p>
+            <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Buat Transaksi</h1>
+          </div>
+          {!online && <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}><WifiOff size={14} /> Offline</span>}
+        </div>
+
+        <div className="sales-step-card">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sales-amber-bg text-sales-amber-deep">
+              <XCircle size={20} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong className="text-sales-text-heading" style={{ fontSize: '.85rem' }}>Belum Ada Visit Aktif</strong>
+              <p className="text-sales-muted" style={{ fontSize: '.75rem', marginTop: 2 }}>
+                Anda harus check-in visit outlet terlebih dahulu sebelum bisa membuat transaksi.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/sales/visit')}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-sales-accent text-sales-surface border-none"
+            style={{ marginTop: '.75rem', padding: '.7rem', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Buka Halaman Visit
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <div className="sales-home" style={{ paddingBottom: cart.length > 0 ? '12rem' : '6rem', position: "relative" }}>
+    <div className="sales-home" style={{ paddingBottom: '6rem', position: 'relative' }}>
+      <style>{`
+        .sales-modern-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(181, 89, 37, .45) transparent;
+        }
+        .sales-modern-scrollbar::-webkit-scrollbar {
+          width: 4px;
+          height: 4px;
+        }
+        .sales-modern-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .sales-modern-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(181, 89, 37, .42);
+          border-radius: 999px;
+        }
+        .sales-modern-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(181, 89, 37, .68);
+        }
+      `}</style>
+      {/* Header */}
       <div className="sales-home-greeting">
         <div>
           <p className="sales-greeting-label">Order Taking</p>
           <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Buat Transaksi</h1>
         </div>
         {!online && <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}><WifiOff size={14} /> Offline</span>}
+      </div>
+
+      {/* Active Outlet Card */}
+      <div className="flex items-center gap-3 rounded-2xl border border-sales-accent-bg bg-sales-bg p-3 mb-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sales-accent text-sales-surface">
+          <Store size={20} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p className="text-sales-muted" style={{ fontSize: '.65rem', margin: 0 }}>Outlet Aktif</p>
+          <p className="font-extrabold text-sales-text-heading truncate" style={{ fontSize: '.85rem', margin: 0 }}>
+            {activeVisit.outletName || 'Outlet Kunjungan'}
+          </p>
+        </div>
       </div>
 
       {queueCount > 0 && (
@@ -207,6 +365,7 @@ export function TransactionsPage() {
         <div className="sales-message" style={{ marginBottom: '.5rem' }}>{offlineMessage}</div>
       )}
 
+      {/* Search */}
       <div className="sales-card" style={{ margin: 0, padding: 0, borderRadius: 15 }}>
         <div className="flex items-center gap-2 border border-sales-border-brand bg-sales-surface-input px-4 py-2.5 rounded-2xl">
           <Search size={18} className="text-sales-brand-muted" />
@@ -218,10 +377,22 @@ export function TransactionsPage() {
             className="bg-transparent border-none text-sales-foreground outline-none w-full"
             style={{ fontSize: '.9rem' }}
           />
+          {search && (
+            <button
+              type="button"
+              aria-label="Bersihkan pencarian"
+              onClick={() => setSearch('')}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-none bg-sales-surface-muted text-sales-muted"
+              style={{ cursor: 'pointer' }}
+            >
+              <X size={15} />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className='grid grid-cols-3 gap-1'>
+      {/* Product Grid */}
+      <div ref={productGridRef} className="sales-modern-scrollbar grid grid-cols-3 gap-1" style={productGridStyle}>
         {loading ? <div style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}><Spinner /></div> :
           filteredProducts.map(p => (
             <div key={p.id} className="sales-card" style={{ margin: 0, borderRadius: 15, padding: '.75rem', display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
@@ -250,40 +421,70 @@ export function TransactionsPage() {
         )}
       </div>
 
+      {/* Cart Bottom Sheet */}
       {cart.length > 0 && (
-        <div className="fixed left-0 right-0 mx-auto border-t border-sales-border-brand bg-sales-surface z-50" style={{ maxWidth: '28rem', bottom: 64, padding: '1rem', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', boxShadow: '0 -10px 28px var(--sales-shadow-cart)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sales-text-muted" style={{ fontSize: '.9rem' }}><ShoppingCart size={16} className="inline mr-1" /> {cart.reduce((s, i) => s + i.quantity, 0)} Items</span>
-            <strong className="text-sales-accent" style={{ fontSize: '1.25rem' }}>Rp {totalAmount.toLocaleString('id-ID')}</strong>
-          </div>
+        <div ref={cartSheetRef} className="fixed left-0 right-0 mx-auto border-t border-sales-border-brand bg-sales-surface z-50" style={{ maxWidth: '28rem', bottom: 64, borderTopLeftRadius: '24px', borderTopRightRadius: '24px', boxShadow: '0 -10px 28px var(--sales-shadow-cart)' }}>
+          <button
+            type="button"
+            onClick={() => setCartExpanded((value) => !value)}
+            className="flex w-full items-center justify-between border-none bg-transparent"
+            style={{ padding: '.8rem 1rem .65rem', cursor: 'pointer' }}
+            aria-expanded={cartExpanded}
+          >
+            <span className="flex items-center gap-2 text-sales-muted" style={{ fontSize: '.82rem', fontWeight: 700 }}>
+              <ShoppingCart size={15} /> {cart.reduce((s, i) => s + i.quantity, 0)} Items
+            </span>
+            <span className="flex items-center gap-2">
+              <strong className="text-sales-accent" style={{ fontSize: '1rem' }}>Rp {totalAmount.toLocaleString('id-ID')}</strong>
+              {cartExpanded ? <ChevronDown size={18} className="text-sales-muted" /> : <ChevronUp size={18} className="text-sales-muted" />}
+            </span>
+          </button>
 
-          {error && <div className="sales-alert sales-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>{error}</div>}
-          {!activeVisitId && <div className="sales-alert sales-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>Check-in outlet terlebih dahulu sebelum membuat transaksi.</div>}
-
-          <div style={{ display: 'grid', gap: '.5rem', gridTemplateColumns: '1fr', marginBottom: '1rem' }}>
-            <select value={selectedOutlet} onChange={e => setSelectedOutlet(e.target.value)} disabled={!!activeVisitId} className="sales-select" style={{ width: '100%', fontSize: '.85rem' }}>
-              <option value="">-- Pilih Outlet Tujuan --</option>
-              {activeVisitId && selectedOutlet ? (
-                <option value={selectedOutlet}>{activeOutletName || 'Outlet visit aktif'}</option>
-              ) : schedules.map(schedule => (
-                <option key={schedule.outlet.id} value={schedule.outlet.id}>{schedule.outlet.name}</option>
+          {cartExpanded && (
+            <div className="sales-modern-scrollbar" style={{ maxHeight: 'clamp(132px, 28vh, 210px)', overflowY: 'auto', padding: '0 1rem', overscrollBehavior: 'contain' }}>
+              {cart.map(item => (
+                <div key={item.product.id} className="flex items-center gap-3" style={{ padding: '.45rem 0', borderBottom: '1px solid var(--sales-border, #f1f5f9)' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p className="text-sales-text-heading truncate" style={{ fontSize: '.8rem', fontWeight: 600, margin: 0 }}>{item.product.name}</p>
+                    <p className="text-sales-muted" style={{ fontSize: '.7rem', margin: 0 }}>Rp {Number(item.product.priceDefault).toLocaleString('id-ID')}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => updateQty(item.product.id, -1)} className="flex items-center justify-center w-6 h-6 rounded-md bg-sales-surface-muted text-sales-text-label border-none" style={{ cursor: 'pointer', fontSize: '.9rem', fontWeight: 700 }}>-</button>
+                    <span className="text-sales-text-heading" style={{ fontSize: '.85rem', fontWeight: 700, minWidth: 20, textAlign: 'center' }}>{item.quantity}</span>
+                    <button onClick={() => updateQty(item.product.id, 1)} className="flex items-center justify-center w-6 h-6 rounded-md bg-sales-accent text-sales-surface border-none" style={{ cursor: 'pointer', fontSize: '.9rem', fontWeight: 700 }}>+</button>
+                  </div>
+                  <span className="text-sales-accent" style={{ fontSize: '.8rem', fontWeight: 700, minWidth: 70, textAlign: 'right' }}>
+                    Rp {(Number(item.product.priceDefault) * item.quantity).toLocaleString('id-ID')}
+                  </span>
+                </div>
               ))}
-            </select>
-            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} className="sales-select" style={{ width: '100%', fontSize: '.85rem' }}>
-              <option value="cash">Tunai (Cash)</option>
-              <option value="qris">QRIS</option>
-              <option value="credit">Tempo (Kredit)</option>
-              <option value="consignment">Titip Jual (Konsinyasi)</option>
-            </select>
+            </div>
+          )}
+
+          {/* Cart Footer */}
+          <div style={{ padding: cartExpanded ? '.75rem 1rem 1rem' : '0 1rem 1rem' }}>
+            {/* Payment Method */}
+            {cartExpanded && (
+              <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} className="sales-select" style={{ width: '100%', fontSize: '.85rem', marginBottom: '.75rem' }}>
+                <option value="cash">Tunai (Cash)</option>
+                <option value="qris">QRIS</option>
+                <option value="credit">Tempo (Kredit)</option>
+                <option value="consignment">Titip Jual (Konsinyasi)</option>
+              </select>
+            )}
+
+            {error && <div className="sales-alert sales-alert-error" style={{ marginBottom: '.75rem', padding: '.5rem', fontSize: '.8rem' }}>{error}</div>}
+
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={handleBatal} className="flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-sales-surface text-sales-text-label" style={{ padding: '.7rem', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}>
+                <Trash2 size={16} /> Batal
+              </button>
+              <button onClick={handleSubmit} disabled={submitting} className="flex items-center justify-center gap-1.5 rounded-xl bg-sales-accent text-sales-surface border-none" style={{ padding: '.7rem', fontSize: '.85rem', fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.5 : 1 }}>
+                {submitting ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
+                {submitting ? 'Mengirim...' : 'Kirim Order'}
+              </button>
+            </div>
           </div>
-
-          <button onClick={handleSubmit} disabled={submitting || !selectedOutlet || !activeVisitId} className="sales-btn sales-btn-primary" style={{ width: '100%', padding: '1rem', justifyContent: 'center', borderRadius: '1rem', fontSize: '1rem' }}>
-            {submitting ? <Spinner size={20} /> : <Send size={20} />} {submitting ? 'Mengirim...' : 'Kirim Order Sekarang'}
-          </button>
-          <button onClick={handleBatal} className="sales-btn sales-btn-primary mt-2.5" style={{ width: '100%', padding: '1rem', justifyContent: 'center', borderRadius: '1rem', fontSize: '1rem' }}>
-            <Trash2 size={20} /> Batal
-          </button>
-
         </div>
       )}
     </div>

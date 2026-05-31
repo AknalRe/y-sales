@@ -1,5 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Shield, Zap, Users, Package, Boxes, Clock, Mail } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  AlertCircle,
+  Boxes,
+  CheckCircle2,
+  Clock,
+  Cloud,
+  CreditCard,
+  Mail,
+  Package,
+  RefreshCw,
+  Satellite,
+  Server,
+  Shield,
+  Smartphone,
+  TrendingUp,
+  Users,
+  Warehouse,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { getMySubscription, type TenantSubscriptionInfo } from '@/lib/api/tenant';
 import { apiRequest } from '@/lib/api/client';
@@ -16,33 +35,34 @@ type PlanDetails = {
   features?: string[] | null;
 };
 
-const PLAN_COLORS: Record<string, { bg: string; text: string; border: string; icon: string }> = {
-  starter: { bg: 'rgba(100,116,139,.12)', text: '#94a3b8', border: 'rgba(100,116,139,.25)', icon: '🌱' },
-  basic: { bg: 'rgba(59,130,246,.12)', text: '#60a5fa', border: 'rgba(59,130,246,.25)', icon: '⚡' },
-  pro: { bg: 'rgba(139,92,246,.15)', text: '#a78bfa', border: 'rgba(139,92,246,.3)', icon: '🚀' },
-  enterprise: { bg: 'rgba(250,204,21,.12)', text: '#fde047', border: 'rgba(250,204,21,.25)', icon: '👑' },
+const PLAN_COLORS: Record<string, { tone: string; icon: LucideIcon }> = {
+  starter: { tone: 'starter', icon: Shield },
+  basic: { tone: 'basic', icon: Zap },
+  pro: { tone: 'pro', icon: TrendingUp },
+  enterprise: { tone: 'enterprise', icon: Server },
 };
 
-const STATUS_COLOR: Record<string, { bg: string; text: string; label: string }> = {
-  trialing: { bg: 'rgba(96,165,250,.15)', text: '#60a5fa', label: 'Masa Trial' },
-  active: { bg: 'rgba(52,211,153,.15)', text: '#34d399', label: 'Aktif' },
-  past_due: { bg: 'rgba(249,115,22,.15)', text: '#fb923c', label: 'Jatuh Tempo' },
-  suspended: { bg: 'rgba(239,68,68,.12)', text: '#f87171', label: 'Suspended' },
-  cancelled: { bg: 'rgba(107,114,128,.12)', text: '#6b7280', label: 'Dibatalkan' },
-  expired: { bg: 'rgba(239,68,68,.12)', text: '#f87171', label: 'Expired' },
+const STATUS_COLOR: Record<string, { tone: string; label: string }> = {
+  trialing: { tone: 'info', label: 'Masa Trial' },
+  active: { tone: 'success', label: 'Aktif' },
+  past_due: { tone: 'warning', label: 'Jatuh Tempo' },
+  suspended: { tone: 'danger', label: 'Suspended' },
+  cancelled: { tone: 'muted', label: 'Dibatalkan' },
+  expired: { tone: 'danger', label: 'Expired' },
 };
 
-const FEATURE_LABELS: Record<string, { icon: string; label: string }> = {
-  visits: { icon: '📍', label: 'Visit Outlet (Geofence)' },
-  attendance: { icon: '🤳', label: 'Absensi Wajah' },
-  face_recognition: { icon: '👁️', label: 'Face Recognition AI' },
-  reports: { icon: '📊', label: 'Laporan & Ekspor' },
-  offline_sync: { icon: '🔄', label: 'Offline Sync' },
-  api_access: { icon: '🔌', label: 'API Access' },
-  multi_warehouse: { icon: '🏭', label: 'Multi Gudang' },
-  consignment: { icon: '📦', label: 'Konsinyasi' },
-  receivables: { icon: '💳', label: 'Piutang Usaha' },
-  gps_tracking: { icon: '🛰️', label: 'GPS Tracking' },
+const FEATURE_LABELS: Record<string, { icon: LucideIcon; label: string }> = {
+  visits: { icon: Satellite, label: 'Visit Outlet (Geofence)' },
+  attendance: { icon: Smartphone, label: 'Absensi Wajah' },
+  face_recognition: { icon: Shield, label: 'Face Recognition AI' },
+  reports: { icon: TrendingUp, label: 'Laporan & Ekspor' },
+  offline_sync: { icon: RefreshCw, label: 'Offline Sync' },
+  api_access: { icon: Server, label: 'API Access' },
+  multi_warehouse: { icon: Warehouse, label: 'Multi Gudang' },
+  consignment: { icon: Package, label: 'Konsinyasi' },
+  receivables: { icon: CreditCard, label: 'Piutang Usaha' },
+  gps_tracking: { icon: Satellite, label: 'GPS Tracking' },
+  r2_storage: { icon: Cloud, label: 'Cloud Storage' },
 };
 
 const LIMIT_ICONS: Record<string, React.ReactNode> = {
@@ -119,164 +139,145 @@ export function SubscriptionPage() {
   const daysLeft = daysRemaining(sub?.currentPeriodEnd ?? sub?.trialEndsAt);
   const limits = (sub?.limitsSnapshot ?? plan?.limits) as Record<string, number> | null;
   const features = (sub?.featuresSnapshot ?? plan?.features) as string[] | null;
+  const PlanIcon = planStyle.icon;
+  const usageCards = useMemo(() => limits ? Object.entries(limits) : [], [limits]);
+  const periodRows = [
+    { label: 'Billing Cycle', value: sub?.billingCycle === 'monthly' ? 'Bulanan' : sub?.billingCycle === 'yearly' ? 'Tahunan' : 'Seumur Hidup' },
+    { label: 'Mulai Periode', value: formatDate(sub?.currentPeriodStart) },
+    { label: 'Akhir Periode', value: formatDate(sub?.currentPeriodEnd) },
+    { label: 'Trial Hingga', value: formatDate(sub?.trialEndsAt) },
+    { label: 'Dibayar Pada', value: formatDate(sub?.paidAt) },
+    { label: 'Nominal Bayar', value: sub?.amountPaid ? formatRp(sub.amountPaid) : '—' },
+  ].filter((row) => row.value !== '—');
 
   return (
-    <div className="admin-page">
+    <div className="admin-page admin-subscription-page">
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title"><CreditCard size={22} /> Subscription Saya</h1>
           <p className="admin-page-subtitle">Informasi plan aktif, batas penggunaan, dan fitur yang tersedia untuk perusahaan Anda.</p>
         </div>
-        <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
-
+        <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
+          <RefreshCw size={15} className={loading ? 'spin' : ''} />
+          Refresh
+        </button>
       </div>
 
       {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}
 
       {loading ? (
-        <div className="admin-loading">Memuat info subscription...</div>
+        <div className="admin-loading"><RefreshCw size={18} className="spin" /> Memuat info subscription...</div>
       ) : !sub ? (
-        <div className="admin-card text-center" style={{ padding: '3rem' }}>
-          <CreditCard size={40} style={{ color: 'var(--admin-text)', margin: '0 auto .75rem' }} />
-          <h2 style={{ color: 'var(--admin-muted)', marginBottom: '.5rem' }}>Tidak ada subscription aktif</h2>
-          <p style={{ color: 'var(--admin-muted-dim)', fontSize: '.875rem' }}>Hubungi admin platform untuk mengaktifkan subscription Anda.</p>
+        <div className="subscription-empty">
+          <span><CreditCard size={34} /></span>
+          <h2>Tidak ada subscription aktif</h2>
+          <p>Hubungi admin platform untuk mengaktifkan subscription perusahaan Anda.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 items-start">
-          {/* Main Info */}
-          <div className="flex flex-col gap-4">
-            {/* Plan Header */}
-            <div className="admin-card" style={{ borderColor: planStyle.border, background: planStyle.bg, padding: '1.5rem' }}>
-              <div className="flex items-center gap-4 flex-wrap">
-                <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>{planStyle.icon}</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2.5 flex-wrap mb-1">
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: planStyle.text, textTransform: 'uppercase', letterSpacing: '-.02em' }}>
-                      Plan {plan?.name ?? sub.planCode}
-                    </h2>
-                    <span className="admin-badge" style={{ background: statusInfo.bg, color: statusInfo.text, border: `1px solid ${statusInfo.text}40` }}>
-                      {statusInfo.label}
-                    </span>
-                  </div>
-                  {plan?.description && (
-                    <p className="m-0 text-sm text-admin-muted">{plan.description}</p>
-                  )}
+        <div className="subscription-layout">
+          <div className="subscription-main">
+            <section className={`subscription-hero ${planStyle.tone}`}>
+              <div className="subscription-plan-icon"><PlanIcon size={26} /></div>
+              <div className="subscription-hero-copy">
+                <span className="admin-kicker">Plan Aktif</span>
+                <div className="subscription-title-row">
+                  <h2>{plan?.name ?? sub.planCode}</h2>
+                  <span className={`subscription-status ${statusInfo.tone}`}>{statusInfo.label}</span>
                 </div>
-                {plan && (
-                  <div className="text-right">
-                    <div className="text-[0.72rem] uppercase tracking-[0.06em] text-admin-muted">Harga Bulanan</div>
-                    <div style={{ color: planStyle.text }} className="text-[1.35rem] font-extrabold">{formatRp(plan.priceMonthly)}</div>
-                  </div>
-                )}
+                <p>{plan?.description ?? 'Paket berlangganan aktif untuk operasional perusahaan saat ini.'}</p>
               </div>
-            </div>
-
-            {/* Limits */}
-            {limits && Object.keys(limits).length > 0 && (
-              <div className="admin-card">
-                <div className="admin-card-header">
-                  <h2>Batas Penggunaan</h2>
+              {plan ? (
+                <div className="subscription-price">
+                  <small>Harga bulanan</small>
+                  <strong>{formatRp(plan.priceMonthly)}</strong>
+                  <span>Tahunan {formatRp(plan.priceYearly)}</span>
                 </div>
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2.5">
-                  {Object.entries(limits).map(([key, val]) => (
-                    <div key={key} className="bg-admin-surface-hover border border-admin-border rounded-[14px] p-3.5 px-4">
-                      <div className="flex items-center gap-1.5 text-admin-muted text-[0.73rem] uppercase tracking-[0.07em] mb-1.5">
+              ) : null}
+            </section>
+
+            {/* {usageCards.length > 0 ? (
+              <section className="subscription-panel">
+                <div className="subscription-panel-header">
+                  <div>
+                    <span className="admin-kicker">Limit Company</span>
+                    <h2>Batas Penggunaan</h2>
+                  </div>
+                  <Shield size={18} />
+                </div>
+                <div className="subscription-limit-grid">
+                  {usageCards.map(([key, val]) => (
+                    <div key={key} className="subscription-limit-card">
+                      <span>
                         {LIMIT_ICONS[key] ?? <Shield size={14} />}
                         {LIMIT_LABELS[key] ?? key}
-                      </div>
-                      <div className="text-[1.5rem] font-extrabold text-admin-foreground">
-                        {val === -1 ? '∞' : val.toLocaleString('id-ID')}
-                      </div>
+                      </span>
+                      <strong>{val === -1 ? '∞' : val.toLocaleString('id-ID')}</strong>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              </section>
+            ) : null} */}
 
-            {/* Features */}
-            {features && features.length > 0 && (
-              <div className="admin-card">
-                <div className="admin-card-header">
-                  <h2>Fitur Tersedia</h2>
+            {features && features.length > 0 ? (
+              <section className="subscription-panel">
+                <div className="subscription-panel-header">
+                  <div>
+                    <span className="admin-kicker">Fitur Aktif</span>
+                    <h2>Fitur Tersedia</h2>
+                  </div>
+                  <CheckCircle2 size={18} />
                 </div>
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2">
-                  {features.map(f => {
-                    const info = FEATURE_LABELS[f];
+                <div className="subscription-feature-grid">
+                  {features.map((feature) => {
+                    const info = FEATURE_LABELS[feature];
+                    const Icon = info?.icon ?? CheckCircle2;
                     return (
-                      <div key={f} className="flex items-center gap-2.5 py-2.5 px-3.5 bg-admin-success-soft border border-admin-success-soft rounded-xl">
-                        <CheckCircle2 size={16} className="text-admin-success shrink-0" />
-                        <span className="text-sm text-admin-text">
-                          {info ? `${info.icon} ${info.label}` : f}
-                        </span>
+                      <div key={feature} className="subscription-feature-card">
+                        <span><Icon size={16} /></span>
+                        <strong>{info?.label ?? feature}</strong>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              </section>
+            ) : null}
           </div>
 
-          {/* Side Panel */}
-          <div className="flex flex-col gap-3">
-            {/* Period Info */}
-            <div className="admin-card">
-              <div className="admin-card-header mb-3 pb-2.5">
-                <h2>Info Periode</h2>
-                <Clock size={15} className="text-admin-muted" />
+          <aside className="subscription-side">
+            <section className="subscription-panel compact">
+              <div className="subscription-panel-header">
+                <div>
+                  <span className="admin-kicker">Periode</span>
+                  <h2>Info Billing</h2>
+                </div>
+                <Clock size={18} />
               </div>
-              <div className="flex flex-col gap-2.5">
-                {[
-                  { label: 'Billing Cycle', value: sub.billingCycle === 'monthly' ? 'Bulanan' : sub.billingCycle === 'yearly' ? 'Tahunan' : 'Seumur Hidup' },
-                  { label: 'Mulai Periode', value: formatDate(sub.currentPeriodStart) },
-                  { label: 'Akhir Periode', value: formatDate(sub.currentPeriodEnd) },
-                  { label: 'Trial Hingga', value: formatDate(sub.trialEndsAt) },
-                  { label: 'Dibayar Pada', value: formatDate(sub.paidAt) },
-                  { label: 'Nominal Bayar', value: sub.amountPaid ? formatRp(sub.amountPaid) : '—' },
-                ].filter(r => r.value !== '—').map(({ label, value }) => (
-                  <div key={label} className="flex justify-between items-center text-[0.82rem]">
-                    <span className="text-admin-muted">{label}</span>
-                    <span className="text-admin-text font-semibold">{value}</span>
+              <div className="subscription-meta-list">
+                {periodRows.map(({ label, value }) => (
+                  <div key={label}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            {/* Days Remaining */}
-            {daysLeft !== null && (
-              <div
-                className="admin-card text-center p-5"
-                style={{
-                  background: daysLeft <= 7 ? 'var(--admin-danger-soft)' : 'var(--admin-success-soft)',
-                  borderColor: daysLeft <= 7 ? 'var(--admin-danger-soft)' : 'var(--admin-success-soft)',
-                }}
-              >
-                <div style={{ color: daysLeft <= 7 ? 'var(--admin-danger-light)' : 'var(--admin-success)' }} className="text-[2.5rem] font-black leading-none">
-                  {daysLeft}
-                </div>
-                <div className="text-admin-muted text-[0.78rem] mt-1">hari tersisa</div>
-                {daysLeft <= 7 && daysLeft > 0 && (
-                  <div className="mt-3 text-admin-danger-light text-[0.78rem] bg-admin-danger-soft rounded-lg p-2">
-                    <AlertCircle size={14} className="inline mr-1 align-[-2px]" />
-                    Subscription Anda segera habis. Hubungi admin untuk perpanjangan.
-                  </div>
-                )}
-                {daysLeft <= 0 && (
-                  <div className="mt-3 text-admin-danger-light text-[0.78rem] bg-admin-danger-soft rounded-lg p-2">
-                    <AlertCircle size={14} className="inline mr-1 align-[-2px]" />
-                    Subscription telah berakhir. Akses akan dibatasi.
-                  </div>
-                )}
-              </div>
-            )}
+            {daysLeft !== null ? (
+              <section className={`subscription-days ${daysLeft <= 7 ? 'urgent' : 'safe'}`}>
+                <strong>{daysLeft}</strong>
+                <span>hari tersisa</span>
+                {daysLeft <= 7 && daysLeft > 0 ? <p>Subscription segera habis. Hubungi admin untuk perpanjangan.</p> : null}
+                {daysLeft <= 0 ? <p>Subscription telah berakhir. Akses akan dibatasi.</p> : null}
+              </section>
+            ) : null}
 
-            {/* Contact */}
-            <div className="admin-card p-4">
-              <p className="mb-2.5 text-admin-muted text-[0.82rem]">Ingin upgrade atau ada pertanyaan?</p>
-              <a href="mailto:support@yuksales.id" className="flex items-center gap-1.5 bg-brand-cream border border-brand-border text-brand-accent rounded-[10px] py-2.5 px-4 text-[0.82rem] font-bold no-underline justify-center">
+            <section className="subscription-contact">
+              <p>Ingin upgrade atau ada pertanyaan?</p>
+              <a href="mailto:support@yuksales.id">
                 <Mail size={15} /> Hubungi Tim Kami
               </a>
-            </div>
-          </div>
+            </section>
+          </aside>
         </div>
       )}
     </div>

@@ -4,14 +4,43 @@
     align-items: center;
     gap: .55rem;
     padding: .85rem 1rem;
-    border-radius: 16px;
+    border-radius: 14px;
     margin-bottom: 1rem;
     border: 1px solid var(--platform-border);
+    color: var(--platform-text);
+    background: var(--platform-panel-strong);
+    font-size: .9rem;
+    font-weight: 750;
+    line-height: 1.45;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .08);
+
+    svg {
+        flex: 0 0 auto;
+        color: currentColor;
+    }
 
     &-error {
         color: var(--platform-danger-text);
-        background: var(--platform-danger-shadow);
+        background: var(--platform-danger-bg);
         border-color: var(--platform-danger-shadow-lg);
+    }
+
+    &-success {
+        color: var(--platform-success-text);
+        background: var(--platform-success-bg);
+        border-color: var(--platform-success-bg-light);
+    }
+
+    &-info {
+        color: var(--platform-info-text);
+        background: var(--platform-info-bg);
+        border-color: var(--platform-info-bg-deep);
+    }
+
+    &-warning {
+        color: var(--platform-warning-text);
+        background: var(--platform-warning-bg);
+        border-color: var(--platform-warning-subtle);
     }
 }
 

@@ -52,15 +52,17 @@ export function AdminShell() {
   const { user, permissions, isSuperAdmin, signOut } = useAuth();
   const isMobile = useIsMobile(820);
 
-  const [open, setOpen] = useState(!isMobile);
+  const [open, setOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
-    setOpen(!isMobile);
-    if (!isMobile) setMobileMenuOpen(false);
+    if (isMobile) {
+      setOpen(false);
+      setMobileMenuOpen(false);
+    }
   }, [isMobile]);
 
   const navSections = useMemo(() => getNavSections(permissions, user, isSuperAdmin), [permissions, user, isSuperAdmin]);

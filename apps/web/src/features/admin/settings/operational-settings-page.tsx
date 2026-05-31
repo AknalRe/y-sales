@@ -32,10 +32,12 @@ import {
   type GeneralSettings,
 } from '@/lib/api/tenant';
 import { Spinner } from '@/components/ui';
+import { OutletMapPicker } from '../outlets/outlet-map-picker';
 
 type ToggleKey =
   | 'requireFaceForAttendance'
   | 'allowMultipleAttendanceSessionsPerDay'
+  | 'requireAttendanceAtOffice'
   | 'requireFaceForVisit'
   | 'requireTransactionProofPhoto'
   | 'requireFaceIdentityMatchForVisit'
@@ -139,9 +141,9 @@ const sections: SettingsSection[] = [
   },
   {
     key: 'visit',
-    title: 'Visit & Radius Outlet',
+    title: 'Visit, Absensi & Radius',
     eyebrow: 'Kunjungan sales',
-    description: 'Mengatur validasi lokasi ketika sales check-in dan check-out ke outlet.',
+    description: 'Mengatur validasi lokasi untuk visit outlet dan fallback radius absensi berbasis kantor/outlet.',
     icon: Navigation,
     metrics: [
       {
@@ -172,9 +174,9 @@ const sections: SettingsSection[] = [
   },
   {
     key: 'attendance',
-    title: 'Absensi Sales',
+    title: 'Aturan Absensi Sales',
     eyebrow: 'Kehadiran harian',
-    description: 'Membatasi sesi absensi harian dan bukti yang harus diambil sales.',
+    description: 'Membatasi sesi absensi harian, bukti wajah, dan apakah absensi harus dilakukan di titik kantor.',
     icon: Clock3,
     toggles: [
       {
@@ -182,6 +184,12 @@ const sections: SettingsSection[] = [
         title: 'Absensi lebih dari sekali sehari',
         description: 'Sales boleh memulai sesi absensi baru setelah sesi sebelumnya check-out.',
         icon: CheckCircle2,
+      },
+      {
+        key: 'requireAttendanceAtOffice',
+        title: 'Absensi wajib di kantor',
+        description: 'Check-in absensi kerja harus berada dalam radius titik kantor company yang diatur di Data Company.',
+        icon: MapPin,
       },
       {
         key: 'requireFaceForAttendance',
@@ -406,52 +414,54 @@ export function OperationalSettingsPage() {
 
   return (
     <main className="admin-page">
-      <div className="admin-page-header">
-        <div>
-          <h1 className="admin-page-title">
-            <SlidersHorizontal size={24} />
-            Pengaturan Operasional
-          </h1>
-          <p className="admin-page-subtitle">Pusat aturan company untuk absensi, visit outlet, transaksi, dan face verification sales.</p>
+      <div className="settings-sticky-header">
+        <div className="admin-page-header">
+          <div>
+            <h1 className="admin-page-title">
+              <SlidersHorizontal size={24} />
+              Pengaturan Operasional
+            </h1>
+            <p className="admin-page-subtitle">Pusat aturan company untuk absensi, visit outlet, transaksi, dan face verification sales.</p>
+          </div>
+          <button onClick={handleSave} disabled={saving} className="admin-btn-primary" type="button">
+            {saving ? <Spinner size={16} /> : <Save size={16} />} Simpan
+          </button>
         </div>
-        <button onClick={handleSave} disabled={saving} className="admin-btn-primary" type="button">
-          {saving ? <Spinner size={16} /> : <Save size={16} />} Simpan
-        </button>
+
+        {message && (
+          <div className="admin-alert admin-alert-success">
+            <CheckCircle2 size={15} /> {message}
+          </div>
+        )}
+        {error && (
+          <div className="admin-alert admin-alert-error">
+            <AlertTriangle size={15} /> {error}
+          </div>
+        )}
+
+        <section className="settings-summary-grid">
+          <div className="settings-summary-card accent">
+            <span><MapPin size={17} /> Radius Default</span>
+            <strong>{settings.defaultGeofenceRadiusM} m</strong>
+            <small>Fallback radius outlet</small>
+          </div>
+          <div className="settings-summary-card">
+            <span><Gauge size={17} /> Akurasi GPS</span>
+            <strong>{settings.maxGpsAccuracyM} m</strong>
+            <small>Batas manual review</small>
+          </div>
+          <div className="settings-summary-card">
+            <span><ShieldCheck size={17} /> Face Match</span>
+            <strong>{settings.faceMatchThreshold}</strong>
+            <small>Threshold provider</small>
+          </div>
+          <div className="settings-summary-card">
+            <span><Radar size={17} /> Face Provider</span>
+            <strong>{settings.faceIntegration.enabled ? 'Aktif' : 'Nonaktif'}</strong>
+            <small>{settings.faceIntegration.provider}</small>
+          </div>
+        </section>
       </div>
-
-      {message && (
-        <div className="admin-alert admin-alert-success">
-          <CheckCircle2 size={15} /> {message}
-        </div>
-      )}
-      {error && (
-        <div className="admin-alert admin-alert-error">
-          <AlertTriangle size={15} /> {error}
-        </div>
-      )}
-
-      <section className="settings-summary-grid">
-        <div className="settings-summary-card accent">
-          <span><MapPin size={17} /> Radius Default</span>
-          <strong>{settings.defaultGeofenceRadiusM} m</strong>
-          <small>Fallback radius outlet</small>
-        </div>
-        <div className="settings-summary-card">
-          <span><Gauge size={17} /> Akurasi GPS</span>
-          <strong>{settings.maxGpsAccuracyM} m</strong>
-          <small>Batas manual review</small>
-        </div>
-        <div className="settings-summary-card">
-          <span><ShieldCheck size={17} /> Face Match</span>
-          <strong>{settings.faceMatchThreshold}</strong>
-          <small>Threshold provider</small>
-        </div>
-        <div className="settings-summary-card">
-          <span><Radar size={17} /> Face Provider</span>
-          <strong>{settings.faceIntegration.enabled ? 'Aktif' : 'Nonaktif'}</strong>
-          <small>{settings.faceIntegration.provider}</small>
-        </div>
-      </section>
 
       <section className="settings-layout">
         <aside className="settings-side-nav" aria-label="Kategori pengaturan operasional">
@@ -530,6 +540,19 @@ export function OperationalSettingsPage() {
                 <span>Negara</span>
                 <input value={company.country ?? ''} onChange={(e) => patchCompany('country', e.target.value)} />
               </label>
+              <div className="settings-map-field">
+                <OutletMapPicker
+                  latitude={Number.isFinite(Number(company.latitude)) ? Number(company.latitude) : null}
+                  longitude={Number.isFinite(Number(company.longitude)) ? Number(company.longitude) : null}
+                  title="Pilih Titik Kantor"
+                  description="Klik peta atau geser marker untuk mengisi koordinat kantor company."
+                  onChange={(position) => setCompany((current) => current ? {
+                    ...current,
+                    latitude: String(position.latitude),
+                    longitude: String(position.longitude),
+                  } : current)}
+                />
+              </div>
               <label className="settings-field">
                 <span>Latitude kantor</span>
                 <input type="number" step="0.0000001" value={company.latitude ?? ''} onChange={(e) => patchCompany('latitude', e.target.value)} />

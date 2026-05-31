@@ -64,9 +64,15 @@
     --admin-alert-danger-text: #991b1b;
     --admin-alert-danger-bg: #fee2e2;
     --admin-alert-danger-bg-light: #fef2f2;
-    --admin-alert-success-light: #bbf7d0;
-    --admin-alert-success-shadow: rgba(34, 197, 94, .12);
-    --admin-alert-success-shadow-lg: rgba(34, 197, 94, .24);
+    --admin-alert-success-text: #166534;
+    --admin-alert-success-bg: #dcfce7;
+    --admin-alert-success-border: #86efac;
+    --admin-alert-info-text: #075985;
+    --admin-alert-info-bg: #e0f2fe;
+    --admin-alert-info-border: #7dd3fc;
+    --admin-alert-warning-text: #92400e;
+    --admin-alert-warning-bg: #fef3c7;
+    --admin-alert-warning-border: #fbbf24;
 
     /* Admin Settings */
     --admin-settings-overlay: rgba(15, 23, 42, .2);
@@ -174,9 +180,15 @@
     --admin-alert-danger-text: #fca5a5;
     --admin-alert-danger-bg: rgba(239, 68, 68, .15);
     --admin-alert-danger-bg-light: rgba(239, 68, 68, .1);
-    --admin-alert-success-light: #bbf7d0;
-    --admin-alert-success-shadow: rgba(34, 197, 94, .12);
-    --admin-alert-success-shadow-lg: rgba(34, 197, 94, .24);
+    --admin-alert-success-text: #bbf7d0;
+    --admin-alert-success-bg: rgba(34, 197, 94, .14);
+    --admin-alert-success-border: rgba(134, 239, 172, .34);
+    --admin-alert-info-text: #bae6fd;
+    --admin-alert-info-bg: rgba(14, 165, 233, .14);
+    --admin-alert-info-border: rgba(125, 211, 252, .34);
+    --admin-alert-warning-text: #fde68a;
+    --admin-alert-warning-bg: rgba(245, 158, 11, .15);
+    --admin-alert-warning-border: rgba(251, 191, 36, .36);
 
     /* Admin Settings */
     --admin-settings-overlay: rgba(15, 23, 42, .2);
@@ -289,9 +301,15 @@
     --color-admin-alert-danger-text: var(--admin-alert-danger-text);
     --color-admin-alert-danger-bg: var(--admin-alert-danger-bg);
     --color-admin-alert-danger-bg-light: var(--admin-alert-danger-bg-light);
-    --color-admin-alert-success-light: var(--admin-alert-success-light);
-    --color-admin-alert-success-shadow: var(--admin-alert-success-shadow);
-    --color-admin-alert-success-shadow-lg: var(--admin-alert-success-shadow-lg);
+    --color-admin-alert-success-text: var(--admin-alert-success-text);
+    --color-admin-alert-success-bg: var(--admin-alert-success-bg);
+    --color-admin-alert-success-border: var(--admin-alert-success-border);
+    --color-admin-alert-info-text: var(--admin-alert-info-text);
+    --color-admin-alert-info-bg: var(--admin-alert-info-bg);
+    --color-admin-alert-info-border: var(--admin-alert-info-border);
+    --color-admin-alert-warning-text: var(--admin-alert-warning-text);
+    --color-admin-alert-warning-bg: var(--admin-alert-warning-bg);
+    --color-admin-alert-warning-border: var(--admin-alert-warning-border);
 
     /* Admin Settings */
     --color-admin-settings-overlay: var(--admin-settings-overlay);

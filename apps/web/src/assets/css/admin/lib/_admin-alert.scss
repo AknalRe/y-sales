@@ -5,9 +5,20 @@
      align-items: center;
      gap: .55rem;
      padding: .85rem 1rem;
-     border-radius: 16px;
+     border-radius: 14px;
      margin-bottom: 1rem;
      border: 1px solid var(--admin-border);
+     color: var(--admin-foreground);
+     background: var(--admin-surface);
+     font-size: .9rem;
+     font-weight: 750;
+     line-height: 1.45;
+     box-shadow: var(--admin-shadow-sm);
+
+     svg {
+         flex: 0 0 auto;
+         color: currentColor;
+     }
 
      &-error {
          color: var(--admin-alert-danger-text);
@@ -16,9 +27,21 @@
      }
 
      &-success {
-         color: var(--admin-alert-success-light);
-         background: var(--admin-alert-success-shadow);
-         border-color: var(--admin-alert-success-shadow-lg);
+         color: var(--admin-alert-success-text);
+         background: var(--admin-alert-success-bg);
+         border-color: var(--admin-alert-success-border);
+     }
+
+     &-info {
+         color: var(--admin-alert-info-text);
+         background: var(--admin-alert-info-bg);
+         border-color: var(--admin-alert-info-border);
+     }
+
+     &-warning {
+         color: var(--admin-alert-warning-text);
+         background: var(--admin-alert-warning-bg);
+         border-color: var(--admin-alert-warning-border);
      }
 
      &-close {

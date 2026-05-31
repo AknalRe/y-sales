@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { attendanceSessions, faceCaptures, mediaFiles, outlets } from '@yuksales/db/schema';
+import { attendanceSessions, companies, faceCaptures, mediaFiles, outlets } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId, requireFeature } from '../tenant.js';
@@ -44,6 +44,42 @@ function todayDateString() {
   }).format(new Date());
 }
 
+async function getAttendanceGeofenceTarget(input: {
+  companyId: string;
+  outletId?: string;
+  requireAttendanceAtOffice: boolean;
+}) {
+  if (input.requireAttendanceAtOffice) {
+    const [company] = await db.select().from(companies).where(eq(companies.id, input.companyId)).limit(1);
+    if (!company?.latitude || !company?.longitude) {
+      throw Object.assign(new Error('Titik kantor company belum diatur. Lengkapi latitude dan longitude kantor di Pengaturan Operasional.'), { statusCode: 400 });
+    }
+    return {
+      outlet: null,
+      target: { latitude: Number(company.latitude), longitude: Number(company.longitude) },
+      outletId: null,
+    };
+  }
+
+  const outlet = input.outletId
+    ? (await db
+      .select()
+      .from(outlets)
+      .where(and(eq(outlets.id, input.outletId), eq(outlets.companyId, input.companyId), eq(outlets.status, 'active')))
+      .limit(1))[0]
+    : null;
+
+  if (input.outletId && !outlet) {
+    throw Object.assign(new Error('Outlet aktif tidak ditemukan pada company ini.'), { statusCode: 404 });
+  }
+
+  return {
+    outlet,
+    target: outlet ? { latitude: Number(outlet.latitude), longitude: Number(outlet.longitude) } : null,
+    outletId: input.outletId,
+  };
+}
+
 export async function attendanceRoutes(app: FastifyInstance) {
   app.get('/attendance/today', { preHandler: requirePermission('attendance.execute') }, async (request) => {
     const authUser = request.user!;
@@ -65,6 +101,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
       sessions,
       canCheckIn,
       allowMultipleAttendanceSessionsPerDay: settings.allowMultipleAttendanceSessionsPerDay,
+      requireAttendanceAtOffice: settings.requireAttendanceAtOffice,
       checkInBlockedReason: canCheckIn
         ? null
         : openSession
@@ -119,22 +156,22 @@ export async function attendanceRoutes(app: FastifyInstance) {
       return reply.status(409).send({ message: 'Hanya mengizinkan satu sesi absensi dalam sehari.', session: todaySessions[0] });
     }
 
-    const outlet = body.outletId
-      ? (await db
-        .select()
-        .from(outlets)
-        .where(and(eq(outlets.id, body.outletId), eq(outlets.companyId, companyId), eq(outlets.status, 'active')))
-        .limit(1))[0]
-      : null;
-
-    if (body.outletId && !outlet) {
-      return reply.status(404).send({ message: 'Outlet aktif tidak ditemukan pada company ini.' });
+    let attendanceTarget;
+    try {
+      attendanceTarget = await getAttendanceGeofenceTarget({
+        companyId,
+        outletId: body.outletId,
+        requireAttendanceAtOffice: settings.requireAttendanceAtOffice,
+      });
+    } catch (error) {
+      const statusCode = typeof (error as any)?.statusCode === 'number' ? (error as any).statusCode : 400;
+      return reply.status(statusCode).send({ message: error instanceof Error ? error.message : 'Validasi lokasi absensi gagal.' });
     }
 
     const geofence = validateGeofence({
       current: body.location,
-      target: outlet ? { latitude: Number(outlet.latitude), longitude: Number(outlet.longitude) } : null,
-      radiusMeters: outlet?.geofenceRadiusM ?? settings.defaultGeofenceRadiusM,
+      target: attendanceTarget.target,
+      radiusMeters: attendanceTarget.outlet?.geofenceRadiusM ?? settings.defaultGeofenceRadiusM,
       accuracyMeters: body.location.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
@@ -177,7 +214,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
         checkInLongitude: String(body.location.longitude),
         checkInAccuracyM: body.location.accuracyM?.toString(),
         checkInDistanceM: geofence.distanceMeters?.toFixed(2),
-        checkInOutletId: body.outletId,
+        checkInOutletId: attendanceTarget.outletId,
         checkInFaceCaptureId: face.id,
         status: 'open',
         validationStatus,

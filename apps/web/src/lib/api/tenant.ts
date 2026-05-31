@@ -217,6 +217,7 @@ export type GeneralSettings = {
   defaultGeofenceRadiusM: number;
   maxGpsAccuracyM: number;
   allowMultipleAttendanceSessionsPerDay: boolean;
+  requireAttendanceAtOffice: boolean;
   requireFaceForAttendance: boolean;
   requireFaceForVisit: boolean;
   requireTransactionProofPhoto: boolean;

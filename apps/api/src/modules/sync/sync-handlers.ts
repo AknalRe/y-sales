@@ -2,6 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   attendanceSessions,
+  companies,
   faceCaptures,
   inventoryBalances,
   mediaFiles,
@@ -122,9 +123,18 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
       return { success: false, error: 'Hanya mengizinkan satu sesi absensi dalam sehari.' };
     }
 
+    let geofenceTarget = null;
+    if (settings.requireAttendanceAtOffice) {
+      const [company] = await db.select().from(companies).where(eq(companies.id, ctx.companyId)).limit(1);
+      if (!company?.latitude || !company?.longitude) {
+        return { success: false, error: 'Titik kantor company belum diatur. Lengkapi latitude dan longitude kantor di Pengaturan Operasional.' };
+      }
+      geofenceTarget = { latitude: Number(company.latitude), longitude: Number(company.longitude) };
+    }
+
     const geofence = validateGeofence({
       current: body.location,
-      target: null,
+      target: geofenceTarget,
       radiusMeters: settings.defaultGeofenceRadiusM,
       accuracyMeters: body.location.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,

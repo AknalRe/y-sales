@@ -26,6 +26,7 @@
 @use "admin-page-users" as _pu;
 @use "admin-page-settings" as _ps;
 @use "admin-page-role" as _pr;
+@use "admin-page-subscription" as _psub;
 
 .admin-page {
   @include _pd.dashboard();
@@ -33,4 +34,5 @@
   @include _pu.users();
   @include _ps.settings();
   @include _pr.role();
+  @include _psub.subscription();
 }

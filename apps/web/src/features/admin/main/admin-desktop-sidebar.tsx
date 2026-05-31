@@ -17,14 +17,16 @@ export function AdminDesktopSidebar({ open, setOpen, navSections, companyName = 
   return (
     <aside className={`${open ? 'admin-workspace-open' : 'admin-workspace-closed'} admin-workspace`}>
       <div className="admin-sidebar-brand">
-        <div className="admin-sidebar-logo">
-          <span><Building2 size={18} /></span>
-          <div>
-            <h2>{companyName}</h2>
-            <p>Sales Operations</p>
+        {open && (
+          <div className="admin-sidebar-logo">
+            <span><Building2 size={18} /></span>
+            <div>
+              <h2>{companyName}</h2>
+              <p>Sales Operations</p>
+            </div>
           </div>
-        </div>
-        <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="admin-icon-button" type="button">
+        )}
+        <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="admin-icon-button" type="button" title={open ? 'Collapse sidebar' : 'Expand sidebar'}>
           <Menu size={18} />
         </button>
       </div>
@@ -40,7 +42,7 @@ export function AdminDesktopSidebar({ open, setOpen, navSections, companyName = 
                 const active = location.pathname === href || (!item.index && location.pathname.startsWith(`${href}/`));
                 return (
                   <li key={href}>
-                    <Link id={`admin-nav-${item.handle.label.toLowerCase().replaceAll(' ', '-')}`} to={href} className={`admin-nav-link ${active ? 'admin-nav-active' : ''}`}>
+                    <Link id={`admin-nav-${item.handle.label.toLowerCase().replaceAll(' ', '-')}`} to={href} className={`admin-nav-link ${active ? 'admin-nav-active' : ''}`} title={!open ? item.handle.label : undefined}>
                       <span className="admin-nav-icon"><Icon size={19} /></span>
                       <span className="admin-nav-text">{item.handle.label}</span>
                       {item.handle.badge && <span className="admin-nav-badge">{item.handle.badge}</span>}

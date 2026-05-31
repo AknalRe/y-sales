@@ -172,6 +172,8 @@ Body:
 {
   "defaultGeofenceRadiusM": 100,
   "maxGpsAccuracyM": 100,
+  "allowMultipleAttendanceSessionsPerDay": false,
+  "requireAttendanceAtOffice": false,
   "requireFaceForAttendance": true,
   "requireFaceForVisit": true,
   "requireFaceIdentityMatchForVisit": true,
@@ -196,6 +198,13 @@ Body:
 > Face integration masih tersedia di general settings untuk kompatibilitas flow saat ini.
 > Untuk integrasi eksternal jangka panjang, tabel `company_integrations` sudah disiapkan.
 > Response GET memasking `faceIntegration.apiKey`. Jika frontend mengirim kembali nilai masked atau kosong saat PUT, backend mempertahankan API key lama.
+
+Attendance behavior:
+
+- `allowMultipleAttendanceSessionsPerDay=false`: user hanya boleh satu sesi absensi per hari.
+- `requireAttendanceAtOffice=true`: `/attendance/check-in` dan sync offline check-in memvalidasi lokasi user terhadap `companies.latitude` dan `companies.longitude`.
+- Radius yang dipakai untuk absensi kantor adalah `defaultGeofenceRadiusM`.
+- Jika koordinat kantor belum diatur, backend mengembalikan error dan check-in tidak dibuat.
 
 ---
 

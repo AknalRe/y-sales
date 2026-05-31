@@ -6,6 +6,7 @@ export const generalSettingsDefaults = {
   defaultGeofenceRadiusM: 100,
   maxGpsAccuracyM: 100,
   allowMultipleAttendanceSessionsPerDay: false,
+  requireAttendanceAtOffice: false,
   requireFaceForAttendance: true,
   requireFaceForVisit: true,
   requireTransactionProofPhoto: true,
@@ -40,7 +41,14 @@ export function generalSettingsKey(companyId: string) {
 export async function getGeneralSettings(companyId: string): Promise<GeneralSettings> {
   const [setting] = await db.select().from(appSettings).where(eq(appSettings.key, generalSettingsKey(companyId)));
   const value = setting?.value && typeof setting.value === 'object' && !Array.isArray(setting.value) ? setting.value as Partial<GeneralSettings> : {};
-  return { ...generalSettingsDefaults, ...value };
+  return {
+    ...generalSettingsDefaults,
+    ...value,
+    faceIntegration: {
+      ...generalSettingsDefaults.faceIntegration,
+      ...value.faceIntegration,
+    },
+  };
 }
 
 export async function getNumericSetting(key: keyof typeof legacyNumericDefaults, companyId?: string) {

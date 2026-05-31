@@ -6,6 +6,8 @@ type OutletMapPickerProps = {
   latitude?: number | null;
   longitude?: number | null;
   onChange: (position: { latitude: number; longitude: number }) => void;
+  title?: string;
+  description?: string;
 };
 
 const defaultCenter: L.LatLngExpression = [-6.2, 106.816666];
@@ -17,7 +19,13 @@ const outletMarkerIcon = L.divIcon({
   iconAnchor: [11, 11],
 });
 
-export function OutletMapPicker({ latitude, longitude, onChange }: OutletMapPickerProps) {
+export function OutletMapPicker({
+  latitude,
+  longitude,
+  onChange,
+  title = 'Pilih Titik Outlet',
+  description = 'Klik peta atau geser marker untuk mengisi koordinat.',
+}: OutletMapPickerProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -95,8 +103,8 @@ export function OutletMapPicker({ latitude, longitude, onChange }: OutletMapPick
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-black text-slate-900">Pilih Titik Outlet</p>
-          <p className="text-xs font-semibold text-slate-500">Klik peta atau geser marker untuk mengisi koordinat.</p>
+          <p className="text-sm font-black text-slate-900">{title}</p>
+          <p className="text-xs font-semibold text-slate-500">{description}</p>
         </div>
         <button className="admin-btn-ghost" type="button" onClick={useCurrentLocation}>
           Pakai Lokasi Saya

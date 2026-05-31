@@ -53,6 +53,9 @@ Catatan:
 
 - Absensi tidak sama dengan visit outlet.
 - Visit outlet tetap butuh schedule/outlet/radius sendiri.
+- Company bisa mengatur apakah absensi kerja wajib dilakukan di titik kantor.
+- Jika `requireAttendanceAtOffice` aktif, backend memvalidasi lokasi absensi terhadap latitude/longitude company dan default radius company.
+- Jika titik kantor belum diatur, backend harus menolak check-in absensi dengan pesan yang jelas.
 
 ### 2. Management Outlet
 
@@ -311,6 +314,7 @@ Aturan operasional company yang penting:
 - default radius outlet;
 - max GPS accuracy;
 - apakah absensi boleh lebih dari satu sesi per hari;
+- apakah absensi wajib berada di titik kantor company;
 - apakah bukti foto transaksi wajib;
 - apakah foto wajah absensi wajib;
 - apakah foto wajah visit wajib;

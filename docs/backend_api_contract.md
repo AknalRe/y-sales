@@ -772,9 +772,12 @@ Behavior:
 
 ```txt
 approve order
-kurangi stok
+kurangi reserved stok sales
+cash/qris: release sebagai sale
+credit: release sebagai sale dan buat receivable
+consignment: transfer stok sales ke warehouse outlet_consignment
 buat receivable jika credit
-buat consignment jika consignment
+buat consignment dan consignment_items jika consignment
 ```
 
 ---
@@ -920,6 +923,98 @@ Permission: `receivables.view`.
 ## GET `/consignments`
 
 Permission: `receivables.view`.
+
+Response memuat item konsinyasi:
+
+```json
+{
+  "consignments": [
+    {
+      "id": "uuid-consignment",
+      "outletId": "uuid-outlet",
+      "status": "active",
+      "items": [
+        {
+          "productId": "uuid-product",
+          "productName": "Produk A",
+          "quantity": "10.00",
+          "paidQuantity": "2.00",
+          "remainingQuantity": "8.00"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## GET `/sales/consignments`
+
+Permission: `visits.execute`.
+
+Query:
+
+```txt
+outletId=uuid-outlet
+```
+
+Dipakai halaman sales visit untuk melihat konsinyasi aktif outlet yang sedang dikunjungi. Tidak dibatasi sales pembuat awal karena konsinyasi melekat ke outlet/company.
+
+## POST `/sales/consignments/:id/actions`
+
+Permission: `visits.execute`.
+
+Body:
+
+```json
+{
+  "actionType": "report_sold",
+  "productId": "uuid-product",
+  "quantity": "2",
+  "amount": "50000",
+  "notes": "Outlet membayar 2 pcs"
+}
+```
+
+Action dari sales selalu dibuat sebagai `pending_approval`.
+
+Action type sales:
+
+```txt
+report_sold
+withdraw
+collect_payment
+```
+
+## GET `/consignment-actions`
+
+Permission: `receivables.view`.
+
+Query:
+
+```txt
+status=pending_approval|approved|rejected
+```
+
+## POST `/consignment-actions/:id/approve`
+
+Permission: `receivables.view`.
+
+Behavior:
+
+```txt
+report_sold: paidQuantity naik, remainingQuantity turun, stok outlet_consignment turun sebagai sale
+withdraw: remainingQuantity turun, stok outlet_consignment turun, stok sales penarik naik
+```
+
+## POST `/consignment-actions/:id/reject`
+
+Permission: `receivables.view`.
+
+```json
+{
+  "reason": "Qty tidak sesuai bukti outlet"
+}
+```
 
 ## POST `/consignments/:id/actions`
 

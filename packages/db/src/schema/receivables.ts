@@ -6,7 +6,8 @@ import { products } from './products.js';
 
 export const receivableStatusEnum = pgEnum('receivable_status', ['open', 'partial', 'paid', 'overdue', 'written_off']);
 export const consignmentStatusEnum = pgEnum('consignment_status', ['active', 'paid', 'overdue', 'withdrawal_required', 'withdrawn', 'extended', 'reset_stock']);
-export const consignmentActionTypeEnum = pgEnum('consignment_action_type', ['notify_withdrawal', 'extend', 'withdraw', 'reset_stock_zero']);
+export const consignmentActionTypeEnum = pgEnum('consignment_action_type', ['notify_withdrawal', 'extend', 'withdraw', 'reset_stock_zero', 'report_sold', 'collect_payment']);
+export const consignmentActionApprovalStatusEnum = pgEnum('consignment_action_approval_status', ['pending_approval', 'approved', 'rejected']);
 
 export const receivables = pgTable('receivables', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -60,9 +61,15 @@ export const consignmentActions = pgTable('consignment_actions', {
   id: uuid('id').defaultRandom().primaryKey(),
   consignmentId: uuid('consignment_id').notNull().references(() => consignments.id, { onDelete: 'cascade' }),
   actionType: consignmentActionTypeEnum('action_type').notNull(),
+  productId: uuid('product_id').references(() => products.id),
+  quantity: numeric('quantity', { precision: 14, scale: 2 }),
+  amount: numeric('amount', { precision: 14, scale: 2 }),
+  approvalStatus: consignmentActionApprovalStatusEnum('approval_status').default('pending_approval').notNull(),
   notes: text('notes'),
   performedByUserId: uuid('performed_by_user_id').references(() => users.id),
+  approvedByUserId: uuid('approved_by_user_id').references(() => users.id),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  rejectionReason: text('rejection_reason'),
   performedAt: timestamp('performed_at', { withTimezone: true }).defaultNow().notNull(),
 });
-
 

@@ -219,12 +219,31 @@ Jika transaksi menggunakan payment method:
 
 - `cash` atau `qris`: payment status awal `paid`.
 - `credit`: saat approve, sistem membuat receivable/piutang.
-- `consignment`: saat approve, sistem membuat consignment dan consignment items.
+- `consignment`: saat approve, sistem membuat consignment, consignment items, dan warehouse konsinyasi outlet bila belum ada.
 
 Aturan:
 
 - Piutang dan konsinyasi dibuat setelah transaksi valid/approved.
 - Piutang dan konsinyasi tetap harus tenant-aware.
+- Konsinyasi tidak boleh diperlakukan sebagai stok minus di outlet.
+- Barang konsinyasi tetap milik company sampai dilaporkan terjual/dibayar dan disetujui admin.
+- Saat transaksi konsinyasi diapprove, stok sales berkurang dan stok warehouse `outlet_consignment` milik outlet bertambah.
+- Penanda outlet memiliki konsinyasi aktif adalah `consignments.status = active`, `consignment_items.remainingQuantity > 0`, dan warehouse outlet tipe `outlet_consignment`.
+- Update paid/sold/withdraw dapat dilakukan oleh sales mana pun yang sedang visit ke outlet tersebut, tidak harus sales pembuat konsinyasi awal.
+- Update dari sales masuk sebagai `consignment_actions.approvalStatus = pending_approval`.
+- Admin wajib approve/reject action konsinyasi sebelum `paidQuantity`, `remainingQuantity`, atau stok outlet berubah final.
+
+Flow konsinyasi:
+
+1. Sales membuat transaksi dengan payment method `consignment` saat visit outlet aktif.
+2. Admin approve transaksi.
+3. Backend memindahkan stok dari warehouse sales ke warehouse konsinyasi outlet (`transfer_out` dan `transfer_in`).
+4. Backend membuat `consignments` dan `consignment_items`.
+5. Pada visit berikutnya, sales yang mengunjungi outlet melihat sisa konsinyasi outlet.
+6. Sales submit laporan `report_sold` atau `withdraw`.
+7. Admin approve/reject laporan tersebut.
+8. Jika `report_sold` approved, `paidQuantity` naik, `remainingQuantity` turun, dan stok outlet konsinyasi berkurang sebagai sale.
+9. Jika `withdraw` approved, `remainingQuantity` turun, stok outlet konsinyasi berkurang, dan stok masuk ke warehouse sales yang menarik barang.
 
 ### 9. Approval Admin
 

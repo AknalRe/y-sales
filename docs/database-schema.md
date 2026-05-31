@@ -364,6 +364,12 @@ Pembayaran piutang.
 
 Konsinyasi dan aksi terkait.
 
+- `consignments` adalah header titip jual per outlet.
+- `consignment_items` menyimpan qty awal, `paidQuantity`, dan `remainingQuantity`.
+- `consignment_actions` menyimpan laporan/aksi sales atau admin seperti `report_sold`, `withdraw`, `collect_payment`, `extend`, dan withdrawal/reset legacy.
+- `consignment_actions.approvalStatus` wajib dipakai sebagai guardrail: perubahan qty/stok final hanya terjadi setelah action diapprove admin.
+- Konsinyasi aktif harus terhubung secara inventory ke warehouse tipe `outlet_consignment`, bukan stok minus pada outlet.
+
 ### `cash_deposits`, `cash_deposit_items`
 
 Setoran kas.

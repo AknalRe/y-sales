@@ -119,34 +119,38 @@ export async function depositRoutes(app: FastifyInstance) {
     const declaredCash = Number(body.declaredCashAmount);
     const discrepancy = declaredCash - expectedCash;
 
-    const [deposit] = await db.insert(cashDeposits).values({
-      companyId,
-      salesUserId: body.salesUserId,
-      workDate: body.workDate,
-      attendanceSessionId: body.attendanceSessionId,
-      expectedCashAmount: body.expectedCashAmount,
-      declaredCashAmount: body.declaredCashAmount,
-      qrisAmount: body.qrisAmount,
-      consignmentAmount: body.consignmentAmount,
-      totalSoldQuantity: body.totalSoldQuantity,
-      discrepancyAmount: discrepancy.toFixed(2),
-      notes: body.notes,
-      status: 'submitted',
-      submittedAt: new Date(),
-      clientRequestId: body.clientRequestId,
-    }).returning();
+    const deposit = await db.transaction(async (tx) => {
+      const [dep] = await tx.insert(cashDeposits).values({
+        companyId,
+        salesUserId: body.salesUserId,
+        workDate: body.workDate,
+        attendanceSessionId: body.attendanceSessionId,
+        expectedCashAmount: body.expectedCashAmount,
+        declaredCashAmount: body.declaredCashAmount,
+        qrisAmount: body.qrisAmount,
+        consignmentAmount: body.consignmentAmount,
+        totalSoldQuantity: body.totalSoldQuantity,
+        discrepancyAmount: discrepancy.toFixed(2),
+        notes: body.notes,
+        status: 'submitted',
+        submittedAt: new Date(),
+        clientRequestId: body.clientRequestId,
+      }).returning();
 
-    if (body.items.length) {
-      await db.insert(cashDepositItems).values(
-        body.items.map((item) => ({
-          cashDepositId: deposit.id,
-          productId: item.productId,
-          soldQuantity: item.soldQuantity,
-          expectedAmount: item.expectedAmount,
-          declaredAmount: item.declaredAmount,
-        }))
-      );
-    }
+      if (body.items.length) {
+        await tx.insert(cashDepositItems).values(
+          body.items.map((item) => ({
+            cashDepositId: dep.id,
+            productId: item.productId,
+            soldQuantity: item.soldQuantity,
+            expectedAmount: item.expectedAmount,
+            declaredAmount: item.declaredAmount,
+          }))
+        );
+      }
+
+      return dep;
+    });
 
     await writeAuditLog({ request, action: 'deposit.created', entityType: 'cash_deposit', entityId: deposit.id, newValues: deposit });
     return reply.status(201).send({ deposit });
@@ -169,7 +173,7 @@ export async function depositRoutes(app: FastifyInstance) {
       reconciledByUserId: request.user!.id,
       reconciledAt: new Date(),
       updatedAt: new Date(),
-    }).where(eq(cashDeposits.id, deposit.id)).returning();
+    }).where(and(eq(cashDeposits.id, deposit.id), eq(cashDeposits.companyId, companyId))).returning();
 
     await db.insert(approvalLogs).values({
       approvableType: 'cash_deposit',

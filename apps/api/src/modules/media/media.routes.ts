@@ -93,26 +93,30 @@ export async function mediaRoutes(app: FastifyInstance) {
     const transaction = body.ownerType === 'transaction' ? await getTransactionForMedia(companyId, body.ownerId) : null;
     await assertCanCreateMedia(request, companyId, body.ownerType, body.ownerId);
 
-    const [media] = await db.insert(mediaFiles).values({
-      ownerType: body.ownerType,
-      ownerId: body.ownerId,
-      fileUrl: body.fileUrl ?? getPublicUrl(body.objectKey, await getStorageConfig(companyId)),
-      mimeType: body.mimeType,
-      sizeBytes: body.sizeBytes,
-      fileHash: body.fileHash,
-      capturedAt: body.capturedAt ? new Date(body.capturedAt) : new Date(),
-      uploadedByUserId: request.user?.id,
-    }).returning();
-
-    if (body.ownerType === 'transaction' && transaction) {
-      await db.insert(transactionNotePhotos).values({
-        companyId,
-        transactionId: transaction.id,
-        mediaFileId: media.id,
+    const media = await db.transaction(async (tx) => {
+      const [med] = await tx.insert(mediaFiles).values({
+        ownerType: body.ownerType,
+        ownerId: body.ownerId,
+        fileUrl: body.fileUrl ?? getPublicUrl(body.objectKey, await getStorageConfig(companyId)),
+        mimeType: body.mimeType,
+        sizeBytes: body.sizeBytes,
+        fileHash: body.fileHash,
         capturedAt: body.capturedAt ? new Date(body.capturedAt) : new Date(),
-        capturedByUserId: request.user?.id,
-      });
-    }
+        uploadedByUserId: request.user?.id,
+      }).returning();
+
+      if (body.ownerType === 'transaction' && transaction) {
+        await tx.insert(transactionNotePhotos).values({
+          companyId,
+          transactionId: transaction.id,
+          mediaFileId: med.id,
+          capturedAt: body.capturedAt ? new Date(body.capturedAt) : new Date(),
+          capturedByUserId: request.user?.id,
+        });
+      }
+
+      return med;
+    });
 
     await writeAuditLog({ request, action: 'media.completed', entityType: 'media_file', entityId: media.id, newValues: media });
     return reply.status(201).send({ media });

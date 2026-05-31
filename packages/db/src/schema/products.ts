@@ -1,4 +1,4 @@
-import { numeric, pgEnum, pgTable, text, timestamp, uuid, varchar, uniqueIndex } from 'drizzle-orm/pg-core';
+import { index, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar, uniqueIndex } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
 import { companies } from './companies.js';
 import { outlets } from './outlets.js';
@@ -60,6 +60,8 @@ export const inventoryMovements = pgTable('inventory_movements', {
   notes: text('notes'),
   createdByUserId: uuid('created_by_user_id').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('inventory_movements_warehouse_product_idx').on(table.warehouseId, table.productId),
+]);
 
 

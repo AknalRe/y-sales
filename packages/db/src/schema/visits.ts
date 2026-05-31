@@ -1,4 +1,4 @@
-import { date, integer, numeric, pgEnum, pgTable, text, time, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { date, index, integer, numeric, pgEnum, pgTable, text, time, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
 import { attendanceSessions, faceCaptures, validationStatusEnum } from './attendance.js';
 import { companies } from './companies.js';
@@ -28,7 +28,10 @@ export const visitSchedules = pgTable('visit_schedules', {
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('visit_schedules_company_user_date_idx').on(table.companyId, table.salesUserId, table.scheduledDate),
+  index('visit_schedules_status_idx').on(table.status),
+]);
 
 export const visitSessions = pgTable('visit_sessions', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -57,4 +60,8 @@ export const visitSessions = pgTable('visit_sessions', {
   clientRequestId: uuid('client_request_id').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('visit_sessions_company_user_idx').on(table.companyId, table.salesUserId),
+  index('visit_sessions_outlet_idx').on(table.outletId),
+  index('visit_sessions_status_idx').on(table.status),
+]);

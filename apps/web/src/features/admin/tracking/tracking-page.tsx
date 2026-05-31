@@ -33,6 +33,7 @@ export function TrackingPage() {
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [selectedUserId, setSelectedUserId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [tab, setTab] = useState<'schedules' | 'sessions'>('sessions');
 
   async function load() {
@@ -51,8 +52,10 @@ export function TrackingPage() {
       setSchedules(schRes.schedules ?? []);
       setSessions(sesRes.sessions ?? []);
       setUsers(userRes.users ?? []);
-    } catch (e) {
+      setError('');
+    } catch (e: any) {
       console.error(e);
+      setError(e.message ?? 'Gagal memuat data');
     } finally {
       setLoading(false);
     }
@@ -95,6 +98,8 @@ export function TrackingPage() {
           <RefreshCw size={16} className={loading ? 'spin' : ''} />
         </button>
       </div>
+
+      {error && <div className="dashboard-error"><AlertCircle size={15} /> {error}</div>}
 
       {/* Stats Cards */}
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4">

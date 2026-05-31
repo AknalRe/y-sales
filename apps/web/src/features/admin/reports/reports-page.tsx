@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, Download, RefreshCw, TrendingUp, ShoppingCart, MapPin, Users } from 'lucide-react';
+import { BarChart3, Download, RefreshCw, TrendingUp, ShoppingCart, MapPin, Users, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { getSalesTransactions, getTenantUsers, type SalesTransaction, type TenantUser } from '@/lib/api/tenant';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -49,6 +49,7 @@ export function ReportsPage() {
   const [transactions, setTransactions] = useState<SalesTransaction[]>([]);
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const range = thisMonthRange();
   const [from, setFrom] = useState(range.from);
   const [to, setTo] = useState(range.to);
@@ -64,8 +65,10 @@ export function ReportsPage() {
       ]);
       setTransactions(txRes.orders ?? []);
       setUsers(userRes.users ?? []);
-    } catch (e) {
+      setError('');
+    } catch (e: any) {
       console.error(e);
+      setError(e.message ?? 'Gagal memuat data');
     } finally {
       setLoading(false);
     }
@@ -115,6 +118,8 @@ export function ReportsPage() {
           <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
         </div>
       </div>
+
+      {error && <div className="dashboard-error"><AlertCircle size={15} /> {error}</div>}
 
       {/* KPI Stats */}
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4">

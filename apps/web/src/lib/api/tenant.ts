@@ -123,10 +123,20 @@ export type Product = {
   companyId: string;
   sku: string;
   name: string;
+  description?: string | null;
   unit: string;
   priceDefault: string;
   status: 'active' | 'inactive';
   createdAt: string;
+};
+
+export type ProductPayload = {
+  sku?: string;
+  name: string;
+  description?: string;
+  unit: string;
+  priceDefault: string;
+  initialStock?: string;
 };
 
 export type Warehouse = {
@@ -136,6 +146,38 @@ export type Warehouse = {
   name: string;
   type: 'main' | 'sales_van' | 'outlet_consignment';
   status: 'active' | 'inactive';
+};
+
+export type WarehousePayload = {
+  code?: string;
+  name: string;
+  address?: string;
+  type: Warehouse['type'];
+  ownerUserId?: string;
+  outletId?: string;
+};
+
+export type ConsignmentItem = {
+  id: string;
+  productId: string;
+  productSku: string;
+  productName: string;
+  quantity: string;
+  paidQuantity: string;
+  remainingQuantity: string;
+};
+
+export type Consignment = {
+  id: string;
+  transactionId: string;
+  outletId: string;
+  salesUserId: string;
+  startDate: string;
+  dueDate: string;
+  status: 'active' | 'paid' | 'overdue' | 'withdrawal_required' | 'withdrawn' | 'extended' | 'reset_stock';
+  extendedUntil?: string | null;
+  createdAt: string;
+  items?: ConsignmentItem[];
 };
 
 export type InventoryBalance = {
@@ -270,12 +312,96 @@ export function getProducts(token: string, params?: { status?: string }) {
   return apiRequest<{ products: Product[] }>(`/products?${q}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
+export function createProduct(token: string, payload: ProductPayload) {
+  return apiRequest<{ product: Product }>('/products', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateProduct(token: string, id: string, payload: Partial<ProductPayload> & { status?: Product['status'] }) {
+  return apiRequest<{ product: Product }>(`/products/${id}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteProduct(token: string, id: string) {
+  return apiRequest<{ product?: Product; success?: true }>(`/products/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export function getWarehouses(token: string) {
   return apiRequest<{ warehouses: Warehouse[] }>('/inventory/warehouses', { headers: { Authorization: `Bearer ${token}` } });
 }
 
+export function createWarehouse(token: string, payload: WarehousePayload) {
+  return apiRequest<{ warehouse: Warehouse }>('/inventory/warehouses', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateWarehouse(token: string, id: string, payload: Partial<WarehousePayload>) {
+  return apiRequest<{ warehouse: Warehouse }>(`/inventory/warehouses/${id}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteWarehouse(token: string, id: string) {
+  return apiRequest<{ warehouse: Warehouse }>(`/inventory/warehouses/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export function getInventoryBalances(token: string, warehouseId: string) {
   return apiRequest<{ balances: InventoryBalance[] }>(`/inventory/balances?warehouseId=${warehouseId}`, { headers: { Authorization: `Bearer ${token}` } });
+}
+
+export function adjustInventory(token: string, payload: { warehouseId: string; productId: string; quantityDelta: string; notes?: string }) {
+  return apiRequest<{ balance: InventoryBalance }>('/inventory/adjustments', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function resetInventory(token: string, payload: { warehouseId: string; productId: string; targetQuantity: string; notes?: string }) {
+  return apiRequest<{ balance: InventoryBalance }>('/inventory/resets', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function transferInventory(token: string, payload: { fromWarehouseId: string; toWarehouseId: string; notes?: string; items: Array<{ productId: string; quantity: string }> }) {
+  return apiRequest<{ success: true; transferReferenceId: string }>('/inventory/transfers', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getSalesConsignments(token: string, outletId: string) {
+  return apiRequest<{ consignments: Consignment[] }>(`/sales/consignments?outletId=${outletId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function submitSalesConsignmentAction(token: string, consignmentId: string, payload: { actionType: 'report_sold' | 'withdraw' | 'collect_payment'; productId?: string; quantity?: string; amount?: string; notes?: string }) {
+  return apiRequest<{ action: unknown }>(`/sales/consignments/${consignmentId}/actions`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }
 
 // ─── User APIs ────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck } from 'lucide-react';
 import { checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
-import { getTodayVisitPlan, type TodayVisitSchedule } from '../../../lib/api/tenant';
+import { getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, type Consignment, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
 import { useAuth } from '../../auth/auth-provider';
@@ -26,10 +26,13 @@ export function VisitPage() {
   const [preview, setPreview] = useState(false);
 
   const [schedules, setSchedules] = useState<TodayVisitSchedule[]>([]);
+  const [schedulesLoading, setSchedulesLoading] = useState(true);
   const [selectedOutlet, setSelectedOutlet] = useState('');
   const [selectedScheduleId, setSelectedScheduleId] = useState('');
   const [activeOutletName, setActiveOutletName] = useState('');
   const [activeVisitId, setActiveVisitId] = useState<string | null>(null);
+  const [consignments, setConsignments] = useState<Consignment[]>([]);
+  const [consignmentForm, setConsignmentForm] = useState({ consignmentId: '', productId: '', actionType: 'report_sold' as 'report_sold' | 'withdraw', quantity: '', amount: '', notes: '' });
 
   const [outcome, setOutcome] = useState<'closed_order' | 'no_order' | 'follow_up' | 'outlet_closed' | 'rejected' | 'invalid_location'>('closed_order');
   const [notes, setNotes] = useState('');
@@ -83,9 +86,21 @@ export function VisitPage() {
 
   useEffect(() => {
     if (accessToken) {
-      getTodayVisitPlan(accessToken).then(res => setSchedules(res.schedules)).catch(e => console.error(e));
+      setSchedulesLoading(true);
+      getTodayVisitPlan(accessToken)
+        .then(res => setSchedules(res.schedules))
+        .catch(e => console.error(e))
+        .finally(() => setSchedulesLoading(false));
     }
   }, [accessToken]);
+
+  useEffect(() => {
+    if (accessToken && activeVisitId && selectedOutlet) {
+      loadConsignments(selectedOutlet);
+    } else {
+      setConsignments([]);
+    }
+  }, [accessToken, activeVisitId, selectedOutlet]);
 
   const availableSchedules = schedules.filter((schedule) => ['assigned', 'approved'].includes(schedule.status));
   const selectedSchedule = schedules.find((schedule) => schedule.id === selectedScheduleId);
@@ -118,6 +133,38 @@ export function VisitPage() {
   function handleRetake() {
     setPreview(false);
     setImage(null);
+  }
+
+  async function loadConsignments(outletId: string) {
+    if (!accessToken) return;
+    try {
+      const result = await getSalesConsignments(accessToken, outletId);
+      setConsignments(result.consignments ?? []);
+    } catch {
+      setConsignments([]);
+    }
+  }
+
+  async function handleSubmitConsignmentAction() {
+    if (!accessToken || !consignmentForm.consignmentId || !consignmentForm.productId || !consignmentForm.quantity) return;
+    setLoading(true);
+    setMessage('');
+    try {
+      await submitSalesConsignmentAction(accessToken, consignmentForm.consignmentId, {
+        actionType: consignmentForm.actionType,
+        productId: consignmentForm.productId,
+        quantity: consignmentForm.quantity,
+        amount: consignmentForm.amount || undefined,
+        notes: consignmentForm.notes || undefined,
+      });
+      setMessage('Laporan konsinyasi terkirim dan menunggu approval admin.');
+      setConsignmentForm({ consignmentId: '', productId: '', actionType: 'report_sold', quantity: '', amount: '', notes: '' });
+      await loadConsignments(selectedOutlet);
+    } catch (error: any) {
+      setMessage(`Laporan konsinyasi gagal: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleCheckIn() {
@@ -250,7 +297,11 @@ export function VisitPage() {
 
       <div className="sales-step-card">
         <h2>{!activeVisitId ? '1. Pilih Outlet Tujuan' : 'Sesi Kunjungan Aktif'}</h2>
-        {!activeVisitId ? (
+        {schedulesLoading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', padding: '1.5rem 0', color: '#94a3b8', fontSize: '.85rem' }}>
+            <Loader2 size={18} className="animate-spin" /> Memuat jadwal...
+          </div>
+        ) : !activeVisitId ? (
           <select
             value={selectedScheduleId}
             onChange={e => {
@@ -339,6 +390,47 @@ export function VisitPage() {
               <option value="rejected">Ditolak</option>
             </select>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Catatan kunjungan (opsional)..." className="sales-input" rows={2} />
+          </div>
+        </div>
+      )}
+
+      {activeVisitId && consignments.length > 0 && (
+        <div className="sales-step-card">
+          <h2><PackageCheck size={17} style={{ display: 'inline', marginRight: 6 }} /> Konsinyasi Outlet</h2>
+          <div style={{ display: 'grid', gap: '.75rem' }}>
+            {consignments.map((consignment) => (
+              <div key={consignment.id} style={{ border: '1px solid rgba(74, 41, 34, .12)', borderRadius: 14, padding: '.75rem', background: '#fff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '.75rem', marginBottom: '.5rem' }}>
+                  <strong style={{ fontSize: '.85rem' }}>Konsinyasi aktif</strong>
+                  <span style={{ fontSize: '.72rem', color: '#B55925', fontWeight: 800 }}>Due {new Date(consignment.dueDate).toLocaleDateString('id-ID')}</span>
+                </div>
+                {(consignment.items ?? []).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setConsignmentForm((current) => ({ ...current, consignmentId: consignment.id, productId: item.productId }))}
+                    style={{ width: '100%', border: consignmentForm.productId === item.productId ? '1px solid #B55925' : '1px solid #f1e5df', borderRadius: 12, padding: '.55rem', background: '#fffaf7', textAlign: 'left', marginTop: '.35rem' }}
+                  >
+                    <strong style={{ display: 'block', fontSize: '.8rem' }}>{item.productName}</strong>
+                    <span style={{ fontSize: '.72rem', color: '#64748b' }}>Sisa {Number(item.remainingQuantity).toLocaleString('id-ID')} dari {Number(item.quantity).toLocaleString('id-ID')}</span>
+                  </button>
+                ))}
+              </div>
+            ))}
+            <div style={{ display: 'grid', gap: '.55rem' }}>
+              <select className="sales-select" value={consignmentForm.actionType} onChange={(e) => setConsignmentForm((current) => ({ ...current, actionType: e.target.value as 'report_sold' | 'withdraw' }))}>
+                <option value="report_sold">Laporkan Terjual / Dibayar</option>
+                <option value="withdraw">Tarik Barang</option>
+              </select>
+              <input className="sales-input" type="number" min="0" placeholder="Qty" value={consignmentForm.quantity} onChange={(e) => setConsignmentForm((current) => ({ ...current, quantity: e.target.value }))} />
+              {consignmentForm.actionType === 'report_sold' && (
+                <input className="sales-input" type="number" min="0" placeholder="Nominal diterima (opsional)" value={consignmentForm.amount} onChange={(e) => setConsignmentForm((current) => ({ ...current, amount: e.target.value }))} />
+              )}
+              <textarea className="sales-input" rows={2} placeholder="Catatan / bukti singkat" value={consignmentForm.notes} onChange={(e) => setConsignmentForm((current) => ({ ...current, notes: e.target.value }))} />
+              <button className="sales-btn sales-btn-primary" type="button" disabled={loading || !consignmentForm.consignmentId || !consignmentForm.productId || !consignmentForm.quantity} onClick={handleSubmitConsignmentAction} style={{ justifyContent: 'center' }}>
+                {loading ? <Loader2 className="animate-spin" /> : <Send size={16} />} Kirim Approval Konsinyasi
+              </button>
+            </div>
           </div>
         </div>
       )}

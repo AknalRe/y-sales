@@ -119,7 +119,7 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
     }
 
     if (!settings.allowMultipleAttendanceSessionsPerDay && todaySessions.length > 0) {
-      return { success: false, error: 'Company hanya mengizinkan satu sesi absensi dalam sehari.' };
+      return { success: false, error: 'Hanya mengizinkan satu sesi absensi dalam sehari.' };
     }
 
     const geofence = validateGeofence({

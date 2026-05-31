@@ -94,7 +94,7 @@ export async function outletRoutes(app: FastifyInstance) {
     const body = outletPatchSchema.parse(request.body);
     const [oldOutlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, params.id)));
     if (!oldOutlet || oldOutlet.deletedAt) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
-    const [outlet] = await db.update(outlets).set(toOutletValues(body)).where(eq(outlets.id, params.id)).returning();
+    const [outlet] = await db.update(outlets).set(toOutletValues(body)).where(and(eq(outlets.id, params.id), eq(outlets.companyId, companyId))).returning();
     await writeAuditLog({ request, action: 'outlet.updated', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
     return { outlet };
   });
@@ -104,7 +104,7 @@ export async function outletRoutes(app: FastifyInstance) {
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [oldOutlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, params.id)));
     if (!oldOutlet || oldOutlet.deletedAt) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
-    const [outlet] = await db.update(outlets).set({ status: 'inactive', deletedAt: new Date(), updatedAt: new Date() }).where(eq(outlets.id, params.id)).returning();
+    const [outlet] = await db.update(outlets).set({ status: 'inactive', deletedAt: new Date(), updatedAt: new Date() }).where(and(eq(outlets.id, params.id), eq(outlets.companyId, companyId))).returning();
     await writeAuditLog({ request, action: 'outlet.deleted', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
     return { outlet };
   });
@@ -146,7 +146,7 @@ export async function outletRoutes(app: FastifyInstance) {
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [oldOutlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, params.id)));
     if (!oldOutlet || oldOutlet.deletedAt) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
-    const [outlet] = await db.update(outlets).set({ status: 'active', verifiedByUserId: request.user?.id, verifiedAt: new Date(), rejectionReason: null, updatedAt: new Date() }).where(eq(outlets.id, params.id)).returning();
+    const [outlet] = await db.update(outlets).set({ status: 'active', verifiedByUserId: request.user?.id, verifiedAt: new Date(), rejectionReason: null, updatedAt: new Date() }).where(and(eq(outlets.id, params.id), eq(outlets.companyId, companyId))).returning();
     await writeAuditLog({ request, action: 'outlet.verified', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
     return { outlet };
   });
@@ -157,7 +157,7 @@ export async function outletRoutes(app: FastifyInstance) {
     const body = rejectSchema.parse(request.body);
     const [oldOutlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, params.id)));
     if (!oldOutlet || oldOutlet.deletedAt) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
-    const [outlet] = await db.update(outlets).set({ status: 'rejected', rejectionReason: body.reason, updatedAt: new Date() }).where(eq(outlets.id, params.id)).returning();
+    const [outlet] = await db.update(outlets).set({ status: 'rejected', rejectionReason: body.reason, updatedAt: new Date() }).where(and(eq(outlets.id, params.id), eq(outlets.companyId, companyId))).returning();
     await writeAuditLog({ request, action: 'outlet.rejected', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
     return { outlet };
   });

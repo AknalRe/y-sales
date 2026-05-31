@@ -137,7 +137,7 @@ export async function usersRoutes(app: FastifyInstance) {
       if (!role) return reply.status(400).send({ message: 'Role tidak valid untuk company ini.' });
     }
 
-    const [updated] = await db.update(users).set({ ...body, updatedAt: new Date() }).where(eq(users.id, params.id)).returning();
+    const [updated] = await db.update(users).set({ ...body, updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId))).returning();
     await writeAuditLog({ request, action: 'user.updated', entityType: 'user', entityId: updated.id, oldValues: existing, newValues: body });
     return { user: updated };
   });
@@ -153,7 +153,7 @@ export async function usersRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(users).where(and(eq(users.id, params.id), eq(users.companyId, companyId), isNull(users.deletedAt)));
     if (!existing) return reply.status(404).send({ message: 'User tidak ditemukan.' });
 
-    await db.update(users).set({ status: 'inactive', deletedAt: new Date(), updatedAt: new Date() }).where(eq(users.id, params.id));
+    await db.update(users).set({ status: 'inactive', deletedAt: new Date(), updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId)));
     await writeAuditLog({ request, action: 'user.deleted', entityType: 'user', entityId: params.id, oldValues: { name: existing.name } });
     return { success: true };
   });
@@ -168,7 +168,7 @@ export async function usersRoutes(app: FastifyInstance) {
     if (!existing) return reply.status(404).send({ message: 'User tidak ditemukan.' });
 
     const passwordHash = await hashPassword(body.newPassword);
-    await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, params.id));
+    await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId)));
     await writeAuditLog({ request, action: 'user.password_reset', entityType: 'user', entityId: params.id });
     return { success: true };
   });

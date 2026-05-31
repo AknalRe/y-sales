@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Camera, ReceiptText, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
-import { API_BASE_URL } from '../../../lib/api/client';
+import { apiRequest } from '../../../lib/api/client';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 
 type VisitSession = {
@@ -34,11 +34,6 @@ type AttendanceTodayResponse = {
   canCheckIn: boolean;
   checkInBlockedReason?: string | null;
 };
-
-function apiGet<T>(path: string, token: string): Promise<T> {
-  return fetch(`${API_BASE_URL}${path}`, { headers: { Authorization: `Bearer ${token}` } })
-    .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message ?? 'Error') }));
-}
 
 function formatRp(v: string | number) {
   const n = Number(v || 0);
@@ -73,9 +68,9 @@ export function SalesHomePage() {
     try {
       const today = new Date().toISOString().slice(0, 10);
       const [visitRes, sumRes, attRes] = await Promise.allSettled([
-        apiGet<{ sessions: VisitSession[] }>(`/visits/sessions?date=${today}`, accessToken),
-        apiGet<{ summary: TodaySummary }>('/reports/summary', accessToken),
-        apiGet<AttendanceTodayResponse>('/attendance/today', accessToken),
+        apiRequest<{ sessions: VisitSession[] }>(`/visits/sessions?date=${today}`, { headers: { Authorization: `Bearer ${accessToken}` } }),
+        apiRequest<{ summary: TodaySummary }>('/reports/summary', { headers: { Authorization: `Bearer ${accessToken}` } }),
+        apiRequest<AttendanceTodayResponse>('/attendance/today', { headers: { Authorization: `Bearer ${accessToken}` } }),
       ]);
 
       if (visitRes.status === 'fulfilled') setVisits(visitRes.value.sessions ?? []);
@@ -134,7 +129,7 @@ export function SalesHomePage() {
               <CheckCircle2 size={18} />
               <div>
                 <strong>Absensi Hari Ini Selesai</strong>
-                <span>{attendanceBlockedReason ?? 'Company hanya mengizinkan satu sesi absensi dalam sehari.'}</span>
+                <span>{attendanceBlockedReason ?? 'Hanya mengizinkan satu sesi absensi dalam sehari.'}</span>
               </div>
             </>
           ) : (

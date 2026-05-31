@@ -1,4 +1,4 @@
-import { numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { index, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
 import { companies } from './companies.js';
 import { outlets } from './outlets.js';
@@ -41,7 +41,11 @@ export const salesTransactions = pgTable('sales_transactions', {
   clientRequestId: uuid('client_request_id').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('sales_transactions_company_user_idx').on(table.companyId, table.salesUserId),
+  index('sales_transactions_outlet_idx').on(table.outletId),
+  index('sales_transactions_status_idx').on(table.status),
+]);
 
 export const salesTransactionItems = pgTable('sales_transaction_items', {
   id: uuid('id').defaultRandom().primaryKey(),

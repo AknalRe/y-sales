@@ -38,7 +38,7 @@ const inventoryLabelsSchema = z.object({
 type InventoryLabels = z.infer<typeof inventoryLabelsSchema> & typeof defaultInventoryLabels;
 
 const warehouseSchema = z.object({
-  code: z.string().min(2),
+  code: z.string().min(2).optional(),
   name: z.string().min(2),
   address: z.string().optional(),
   type: z.enum(['main', 'sales_van', 'outlet_consignment']).default('main'),
@@ -116,6 +116,29 @@ function parseQuantity(value: string | number, label: string, options: { positiv
 
 function toQty(value: number) {
   return value.toFixed(2);
+}
+
+function warehouseTypeCode(type: z.infer<typeof warehouseSchema>['type']) {
+  if (type === 'sales_van') return 'GS';
+  if (type === 'outlet_consignment') return 'KO';
+  return 'GD';
+}
+
+function generateWarehouseCode(input: { type: z.infer<typeof warehouseSchema>['type'] }) {
+  return `WH-${warehouseTypeCode(input.type)}`;
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function nextSequentialCode(prefix: string, existingCodes: string[]) {
+  const matcher = new RegExp(`^${escapeRegExp(prefix)}-(\\d+)$`);
+  const max = existingCodes.reduce((currentMax, code) => {
+    const match = matcher.exec(code);
+    return match ? Math.max(currentMax, Number(match[1])) : currentMax;
+  }, 0);
+  return `${prefix}-${String(max + 1).padStart(3, '0')}`;
 }
 
 async function writeAudit(request: FastifyRequest, input: {
@@ -212,7 +235,12 @@ export async function inventoryRoutes(app: FastifyInstance) {
   app.post('/inventory/warehouses', { preHandler: requirePermission('inventory.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const body = warehouseSchema.parse(request.body);
-    const [warehouse] = await db.insert(warehouses).values({ companyId, ...body, status: 'active' }).onConflictDoUpdate({
+    const codePrefix = generateWarehouseCode({ type: body.type });
+    const existingWarehouseCodes = body.code?.trim()
+      ? []
+      : (await db.select({ code: warehouses.code }).from(warehouses).where(eq(warehouses.companyId, companyId))).map((warehouse) => warehouse.code);
+    const code = body.code?.trim() || nextSequentialCode(codePrefix, existingWarehouseCodes);
+    const [warehouse] = await db.insert(warehouses).values({ companyId, ...body, code, status: 'active' }).onConflictDoUpdate({
       target: [warehouses.companyId, warehouses.code],
       set: { ...body, status: 'active' },
     }).returning();

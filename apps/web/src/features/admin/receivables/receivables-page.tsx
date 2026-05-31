@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, TrendingDown, Banknote } from 'lucide-react';
+import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, TrendingDown, Banknote, XCircle } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState } from '@/components/ui';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -29,6 +29,32 @@ type Consignment = {
   status: 'active' | 'paid' | 'overdue' | 'withdrawal_required' | 'withdrawn' | 'extended' | 'reset_stock';
   extendedUntil?: string | null;
   createdAt: string;
+  items?: Array<{
+    id: string;
+    productId: string;
+    productSku: string;
+    productName: string;
+    quantity: string;
+    paidQuantity: string;
+    remainingQuantity: string;
+  }>;
+};
+
+type ConsignmentAction = {
+  id: string;
+  consignmentId: string;
+  outletId: string;
+  actionType: 'notify_withdrawal' | 'extend' | 'withdraw' | 'reset_stock_zero' | 'report_sold' | 'collect_payment';
+  productId?: string | null;
+  productSku?: string | null;
+  productName?: string | null;
+  quantity?: string | null;
+  amount?: string | null;
+  approvalStatus: 'pending_approval' | 'approved' | 'rejected';
+  notes?: string | null;
+  performedByUserId?: string | null;
+  performedAt: string;
+  dueDate: string;
 };
 
 function getReceivableStatusStyle(status: string) {
@@ -78,6 +104,7 @@ function apiReq<T>(path: string, token: string, options?: RequestInit): Promise<
     ...options,
     headers: {
       Authorization: `Bearer ${token}`,
+      ...(options?.body ? { 'Content-Type': 'application/json' } : {}),
       ...(options?.headers as any ?? {})
     }
   });
@@ -87,6 +114,7 @@ export function ReceivablesPage() {
   const { accessToken } = useAuth();
   const [receivables, setReceivables] = useState<Receivable[]>([]);
   const [consignments, setConsignments] = useState<Consignment[]>([]);
+  const [consignmentActions, setConsignmentActions] = useState<ConsignmentAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'receivables' | 'consignments'>('receivables');
   const [statusFilter, setStatusFilter] = useState('');
@@ -101,12 +129,14 @@ export function ReceivablesPage() {
     setLoading(true);
     setError('');
     try {
-      const [recRes, conRes] = await Promise.all([
+      const [recRes, conRes, actionRes] = await Promise.all([
         apiReq<{ receivables: Receivable[] }>('/receivables', accessToken),
         apiReq<{ consignments: Consignment[] }>('/consignments', accessToken),
+        apiReq<{ actions: ConsignmentAction[] }>('/consignment-actions?status=pending_approval', accessToken),
       ]);
       setReceivables(recRes.receivables ?? []);
       setConsignments(conRes.consignments ?? []);
+      setConsignmentActions(actionRes.actions ?? []);
     } catch (e: any) {
       setError(e.message ?? 'Gagal memuat data piutang.');
     } finally {
@@ -148,6 +178,39 @@ export function ReceivablesPage() {
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Gagal merekam pembayaran.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleApproveConsignmentAction(action: ConsignmentAction) {
+    if (!accessToken) return;
+    setSaving(true);
+    setError('');
+    try {
+      await apiReq(`/consignment-actions/${action.id}/approve`, accessToken, { method: 'POST' });
+      await load();
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal approve action konsinyasi.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleRejectConsignmentAction(action: ConsignmentAction) {
+    if (!accessToken) return;
+    const reason = window.prompt('Alasan reject action konsinyasi?');
+    if (!reason) return;
+    setSaving(true);
+    setError('');
+    try {
+      await apiReq(`/consignment-actions/${action.id}/reject`, accessToken, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      });
+      await load();
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal reject action konsinyasi.');
     } finally {
       setSaving(false);
     }
@@ -301,11 +364,40 @@ export function ReceivablesPage() {
           </div>
         ) : (
           <div className="admin-table-wrap">
+            <div style={{ padding: '1rem', borderBottom: '1px solid var(--admin-border-subtle)' }}>
+              <h3 className="text-admin-foreground font-extrabold mb-3">Approval Update Konsinyasi</h3>
+              {consignmentActions.length ? (
+                <div className="grid gap-2">
+                  {consignmentActions.map((action) => (
+                    <div key={action.id} className="bg-admin-bg border border-admin-border-subtle rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <strong className="text-admin-foreground text-sm">{action.actionType.replace(/_/g, ' ')}</strong>
+                        <p className="text-admin-muted text-xs mt-1">
+                          {action.productName ?? 'Tanpa produk'} {action.quantity ? `- Qty ${Number(action.quantity).toLocaleString('id-ID')}` : ''} {action.amount ? `- ${formatRp(action.amount)}` : ''}
+                        </p>
+                        {action.notes && <p className="text-admin-subtle text-xs mt-1">{action.notes}</p>}
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="admin-btn-sm admin-btn-success" type="button" disabled={saving} onClick={() => handleApproveConsignmentAction(action)}>
+                          <CheckCircle2 size={13} /> Approve
+                        </button>
+                        <button className="admin-btn-sm admin-btn-danger" type="button" disabled={saving} onClick={() => handleRejectConsignmentAction(action)}>
+                          <XCircle size={13} /> Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-admin-muted text-sm">Tidak ada update konsinyasi yang menunggu approval.</p>
+              )}
+            </div>
             <Table className="admin-table">
               <TableHeader>
                 <TableRow>
                   <TableHead>Start</TableHead>
                   <TableHead>Jatuh Tempo</TableHead>
+                  <TableHead>Item</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Diperpanjang s/d</TableHead>
                   <TableHead>Dibuat</TableHead>
@@ -322,6 +414,15 @@ export function ReceivablesPage() {
                       </span>
                     </TableCell>
                     <TableCell>
+                      <div className="grid gap-1">
+                        {(c.items ?? []).map((item) => (
+                          <span key={item.id} className="text-admin-muted" style={{ fontSize: '.78rem' }}>
+                            {item.productName}: sisa {Number(item.remainingQuantity).toLocaleString('id-ID')} / {Number(item.quantity).toLocaleString('id-ID')}
+                          </span>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getConsignmentStatusStyle(c.status)}`}>
                         {c.status.replace(/_/g, ' ')}
                       </span>
@@ -333,7 +434,7 @@ export function ReceivablesPage() {
                   </TableRow>
                 ))}
                 {!filteredCons.length && (
-                  <EmptyState colSpan={5} icon="📦" title="Tidak ada konsinyasi" description="Belum ada data konsinyasi dengan filter yang dipilih." />
+                  <EmptyState colSpan={6} icon="📦" title="Tidak ada konsinyasi" description="Belum ada data konsinyasi dengan filter yang dipilih." />
                 )}
               </TableBody>
             </Table>

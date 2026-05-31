@@ -93,26 +93,30 @@ export async function settingsRoutes(app: FastifyInstance) {
     const [user] = await db.select().from(users).where(and(eq(users.companyId, companyId), eq(users.id, body.userId), eq(users.status, 'active')));
     if (!user) throw Object.assign(new Error('User tidak ditemukan pada company ini.'), { statusCode: 404 });
 
-    const [media] = await db.insert(mediaFiles).values({
-      ownerType: 'face_template',
-      fileUrl: body.dataUrl,
-      mimeType: body.mimeType,
-      sizeBytes: body.sizeBytes,
-      capturedAt: new Date(),
-      uploadedByUserId: request.user?.id,
-    }).returning();
+    const template = await db.transaction(async (tx) => {
+      const [media] = await tx.insert(mediaFiles).values({
+        ownerType: 'face_template',
+        fileUrl: body.dataUrl,
+        mimeType: body.mimeType,
+        sizeBytes: body.sizeBytes,
+        capturedAt: new Date(),
+        uploadedByUserId: request.user?.id,
+      }).returning();
 
-    await db.update(userFaceTemplates).set({ status: 'inactive', updatedAt: new Date() }).where(and(eq(userFaceTemplates.companyId, companyId), eq(userFaceTemplates.userId, user.id), eq(userFaceTemplates.status, 'active')));
-    const [template] = await db.insert(userFaceTemplates).values({
-      companyId,
-      userId: user.id,
-      roleId: user.roleId,
-      mediaFileId: media.id,
-      embeddingRef: body.embeddingRef,
-      templateHash: crypto.createHash('sha256').update(body.dataUrl).digest('hex'),
-      status: 'active',
-      createdByUserId: request.user?.id,
-    }).returning();
+      await tx.update(userFaceTemplates).set({ status: 'inactive', updatedAt: new Date() }).where(and(eq(userFaceTemplates.companyId, companyId), eq(userFaceTemplates.userId, user.id), eq(userFaceTemplates.status, 'active')));
+      const [tmpl] = await tx.insert(userFaceTemplates).values({
+        companyId,
+        userId: user.id,
+        roleId: user.roleId,
+        mediaFileId: media.id,
+        embeddingRef: body.embeddingRef,
+        templateHash: crypto.createHash('sha256').update(body.dataUrl).digest('hex'),
+        status: 'active',
+        createdByUserId: request.user?.id,
+      }).returning();
+
+      return tmpl;
+    });
     await writeAuditLog({ request, action: 'settings.face_template.enrolled', entityType: 'user_face_template', entityId: template.id, newValues: template });
     return { template };
   });

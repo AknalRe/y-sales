@@ -65,14 +65,18 @@ async function createVisitFaceCapture({
   context,
   location,
   faceCapture,
+  tx,
 }: {
   userId: string;
   context: 'visit_check_in' | 'visit_check_out';
   location: { latitude: number; longitude: number };
   faceCapture: z.infer<typeof faceCaptureSchema>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tx?: any;
 }) {
+  const executor = tx ?? db;
   const capturedAt = new Date(faceCapture.capturedAt ?? new Date().toISOString());
-  const [media] = await db.insert(mediaFiles).values({
+  const [media] = await executor.insert(mediaFiles).values({
     ownerType: 'visit',
     fileUrl: faceCapture.dataUrl,
     mimeType: faceCapture.mimeType,
@@ -81,7 +85,7 @@ async function createVisitFaceCapture({
     uploadedByUserId: userId,
   }).returning();
 
-  const [face] = await db.insert(faceCaptures).values({
+  const [face] = await executor.insert(faceCaptures).values({
     userId,
     mediaFileId: media.id,
     captureContext: context,
@@ -316,46 +320,53 @@ export async function visitRoutes(app: FastifyInstance) {
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-in kunjungan.'), { statusCode: 400 });
-    const face = await createVisitFaceCapture({
-      userId: request.user!.id,
-      context: 'visit_check_in',
-      location: { latitude: body.latitude, longitude: body.longitude },
-      faceCapture: body.faceCapture,
-    });
     const hasValidFace = body.faceCapture.faceDetected;
-    const identity = settings.requireFaceIdentityMatchForVisit
-      ? await verifyFaceIdentity({
-        companyId,
-        userId: request.user!.id,
-        faceCaptureId: face.id,
-        faceDetected: hasValidFace,
-        faceConfidence: body.faceCapture.faceConfidence,
-        settings,
-      })
-      : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
-    if (settings.rejectVisitOnFaceMismatch && identity.status === 'not_matched') throw Object.assign(new Error('Identitas wajah tidak cocok dengan user login.'), { statusCode: 403 });
-    const identityValid = !settings.requireFaceIdentityMatchForVisit || identity.status === 'matched';
-    const validationStatus = !hasValidFace ? 'face_not_detected' : geofence.valid && identityValid ? 'valid' : 'manual_review';
-
-    const [visit] = await db.insert(visitSessions).values({
-      companyId,
-      salesUserId: request.user!.id,
-      outletId: outlet.id,
-      scheduleId: schedule.id,
-      checkInAt: new Date(),
-      checkInLatitude: String(body.latitude),
-      checkInLongitude: String(body.longitude),
-      checkInAccuracyM: body.accuracyM ? String(body.accuracyM) : undefined,
-      checkInDistanceM: geofence.distanceMeters?.toFixed(2),
-      checkInFaceCaptureId: face.id,
-      geofenceRadiusMUsed: radius,
-      status: 'open',
-      validationStatus,
-      clientRequestId: body.clientRequestId,
-    }).returning();
-
     const gpsAccuracy = { valid: geofence.accuracyValid, accuracyM: body.accuracyM ?? null, maxAccuracyM: settings.maxGpsAccuracyM };
-    await db.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, schedule.id));
+
+    const { visit, face, identity } = await db.transaction(async (tx) => {
+      const faceResult = await createVisitFaceCapture({
+        userId: request.user!.id,
+        context: 'visit_check_in',
+        location: { latitude: body.latitude, longitude: body.longitude },
+        faceCapture: body.faceCapture,
+        tx,
+      });
+      const identityResult = settings.requireFaceIdentityMatchForVisit
+        ? await verifyFaceIdentity({
+          companyId,
+          userId: request.user!.id,
+          faceCaptureId: faceResult.id,
+          faceDetected: hasValidFace,
+          faceConfidence: body.faceCapture.faceConfidence,
+          settings,
+        })
+        : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
+      if (settings.rejectVisitOnFaceMismatch && identityResult.status === 'not_matched') throw Object.assign(new Error('Identitas wajah tidak cocok dengan user login.'), { statusCode: 403 });
+      const identityValid = !settings.requireFaceIdentityMatchForVisit || identityResult.status === 'matched';
+      const validationStatus = !hasValidFace ? 'face_not_detected' : geofence.valid && identityValid ? 'valid' : 'manual_review';
+
+      const [visitResult] = await tx.insert(visitSessions).values({
+        companyId,
+        salesUserId: request.user!.id,
+        outletId: outlet.id,
+        scheduleId: schedule.id,
+        checkInAt: new Date(),
+        checkInLatitude: String(body.latitude),
+        checkInLongitude: String(body.longitude),
+        checkInAccuracyM: body.accuracyM ? String(body.accuracyM) : undefined,
+        checkInDistanceM: geofence.distanceMeters?.toFixed(2),
+        checkInFaceCaptureId: faceResult.id,
+        geofenceRadiusMUsed: radius,
+        status: 'open',
+        validationStatus,
+        clientRequestId: body.clientRequestId,
+      }).returning();
+
+      await tx.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, schedule.id));
+
+      return { visit: visitResult, face: faceResult, identity: identityResult };
+    });
+
     await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
 
     return { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
@@ -370,12 +381,6 @@ export async function visitRoutes(app: FastifyInstance) {
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, visit.outletId)));
     if (!outlet) throw Object.assign(new Error('Outlet visit tidak ditemukan.'), { statusCode: 404 });
 
-    const face = await createVisitFaceCapture({
-      userId: request.user!.id,
-      context: 'visit_check_out',
-      location: { latitude: body.latitude, longitude: body.longitude },
-      faceCapture: body.faceCapture,
-    });
     const settings = await getGeneralSettings(companyId);
     const radius = visit.geofenceRadiusMUsed ?? outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
     const geofence = validateGeofence({
@@ -386,30 +391,43 @@ export async function visitRoutes(app: FastifyInstance) {
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-out kunjungan.'), { statusCode: 400 });
-    const identity = settings.requireFaceIdentityMatchForVisit
-      ? await verifyFaceIdentity({ companyId, userId: request.user!.id, faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence, settings })
-      : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
-    if (settings.rejectVisitOnFaceMismatch && identity.status === 'not_matched') throw Object.assign(new Error('Identitas wajah check-out tidak cocok dengan user login.'), { statusCode: 403 });
-    const identityValid = !settings.requireFaceIdentityMatchForVisit || identity.status === 'matched';
-    const validationStatus = visit.validationStatus === 'valid' && geofence.valid && body.faceCapture.faceDetected && identityValid ? 'valid' : 'manual_review';
 
-    const now = new Date();
-    const durationSeconds = Math.max(0, Math.round((now.getTime() - new Date(visit.checkInAt).getTime()) / 1000));
-    const [updated] = await db.update(visitSessions).set({
-      checkOutAt: now,
-      checkOutLatitude: String(body.latitude),
-      checkOutLongitude: String(body.longitude),
-      checkOutAccuracyM: body.accuracyM ? String(body.accuracyM) : undefined,
-      checkOutFaceCaptureId: face.id,
-      durationSeconds,
-      outcome: body.outcome,
-      closingNotes: body.closingNotes,
-      status: 'completed',
-      validationStatus,
-      updatedAt: now,
-    }).where(eq(visitSessions.id, visit.id)).returning();
+    const { updated, face, identity, durationSeconds } = await db.transaction(async (tx) => {
+      const faceResult = await createVisitFaceCapture({
+        userId: request.user!.id,
+        context: 'visit_check_out',
+        location: { latitude: body.latitude, longitude: body.longitude },
+        faceCapture: body.faceCapture,
+        tx,
+      });
+      const identityResult = settings.requireFaceIdentityMatchForVisit
+        ? await verifyFaceIdentity({ companyId, userId: request.user!.id, faceCaptureId: faceResult.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence, settings })
+        : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
+      if (settings.rejectVisitOnFaceMismatch && identityResult.status === 'not_matched') throw Object.assign(new Error('Identitas wajah check-out tidak cocok dengan user login.'), { statusCode: 403 });
+      const identityValid = !settings.requireFaceIdentityMatchForVisit || identityResult.status === 'matched';
+      const validationStatus = visit.validationStatus === 'valid' && geofence.valid && body.faceCapture.faceDetected && identityValid ? 'valid' : 'manual_review';
 
-    if (visit.scheduleId) await db.update(visitSchedules).set({ status: 'completed', updatedAt: now }).where(eq(visitSchedules.id, visit.scheduleId));
+      const now = new Date();
+      const durationSeconds = Math.max(0, Math.round((now.getTime() - new Date(visit.checkInAt!).getTime()) / 1000));
+      const [updatedResult] = await tx.update(visitSessions).set({
+        checkOutAt: now,
+        checkOutLatitude: String(body.latitude),
+        checkOutLongitude: String(body.longitude),
+        checkOutAccuracyM: body.accuracyM ? String(body.accuracyM) : undefined,
+        checkOutFaceCaptureId: faceResult.id,
+        durationSeconds,
+        outcome: body.outcome,
+        closingNotes: body.closingNotes,
+        status: 'completed',
+        validationStatus,
+        updatedAt: now,
+      }).where(eq(visitSessions.id, visit.id)).returning();
+
+      if (visit.scheduleId) await tx.update(visitSchedules).set({ status: 'completed', updatedAt: now }).where(eq(visitSchedules.id, visit.scheduleId));
+
+      return { updated: updatedResult, face: faceResult, identity: identityResult, durationSeconds };
+    });
+
     const [orderCount] = await db.select({ count: sql<number>`count(*)::int` }).from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.visitSessionId, visit.id)));
     await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: { ...updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
     return { visit: updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity }, result: { durationSeconds, durationMinutes: Math.round(durationSeconds / 60), hasClosingOrder: Number(orderCount?.count ?? 0) > 0 } };

@@ -1,4 +1,4 @@
-import { date, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { date, index, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
 import { companies } from './companies.js';
 import { attendanceSessions } from './attendance.js';
@@ -27,7 +27,10 @@ export const cashDeposits = pgTable('cash_deposits', {
   clientRequestId: uuid('client_request_id').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('cash_deposits_company_user_idx').on(table.companyId, table.salesUserId),
+  index('cash_deposits_status_idx').on(table.status),
+]);
 
 export const cashDepositItems = pgTable('cash_deposit_items', {
   id: uuid('id').defaultRandom().primaryKey(),

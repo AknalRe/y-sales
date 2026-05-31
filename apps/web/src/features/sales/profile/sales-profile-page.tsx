@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UserCircle, LogOut, RefreshCw, Building2, Shield, Phone, Mail, IdCard, Wifi, WifiOff } from 'lucide-react';
+import { UserCircle, LogOut, RefreshCw, Building2, Shield, Phone, Mail, IdCard, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../../lib/api/client';
@@ -49,6 +49,7 @@ export function SalesProfilePage() {
   const [canCheckInAttendance, setCanCheckInAttendance] = useState(true);
   const [attendanceBlockedReason, setAttendanceBlockedReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -67,8 +68,11 @@ export function SalesProfilePage() {
         setTodayAttendance(r.session);
         setCanCheckInAttendance(r.canCheckIn);
         setAttendanceBlockedReason(r.checkInBlockedReason ?? null);
+        setError('');
       })
-      .catch(() => { })
+      .catch((e: any) => {
+        setError(e.message ?? 'Gagal memuat data absensi');
+      })
       .finally(() => setLoading(false));
   }, [accessToken]);
 
@@ -98,6 +102,8 @@ export function SalesProfilePage() {
           <span>{isOnline ? 'Online' : 'Offline'}</span>
         </div>
       </div>
+
+      {error && <div className="dashboard-error"><AlertCircle size={15} /> {error}</div>}
 
       {/* Company Info */}
       {user?.company && (

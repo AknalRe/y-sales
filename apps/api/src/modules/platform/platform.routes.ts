@@ -6,6 +6,7 @@ import { db } from '../../plugins/db.js';
 import { authenticate } from '../auth/auth.service.js';
 import { requireSuperAdmin } from '../tenant.js';
 import { PLAN_LIMIT_KEYS } from '../subscription-catalog.js';
+import { writeAuditLog } from '../audit/audit.service.js';
 
 const companyCreateSchema = z.object({
   name: z.string().min(2),
@@ -206,6 +207,7 @@ export async function platformRoutes(app: FastifyInstance) {
       createdByUserId: (request as any).user?.id,
       paidAt: body.status === 'paid' ? new Date() : undefined,
     }).returning();
+    await writeAuditLog({ request, action: 'invoice.created', entityType: 'platform_invoice', entityId: invoice.id, newValues: invoice });
     return { invoice };
   });
 
@@ -228,6 +230,7 @@ export async function platformRoutes(app: FastifyInstance) {
       voidedAt: body.status === 'void' ? new Date() : existing.voidedAt,
       updatedAt: new Date(),
     }).where(eq(platformInvoices.id, params.id)).returning();
+    await writeAuditLog({ request, action: 'invoice.void', entityType: 'platform_invoice', entityId: invoice.id, oldValues: existing, newValues: invoice });
     return { invoice };
   });
 
@@ -298,6 +301,7 @@ export async function platformRoutes(app: FastifyInstance) {
         }
       }
     }
+    await writeAuditLog({ request, action: 'payment.recorded', entityType: 'platform_payment', entityId: payment.id, newValues: payment });
     return { payment };
   });
 
@@ -384,6 +388,8 @@ export async function platformRoutes(app: FastifyInstance) {
       managedByUserId: actorId,
     });
 
+    await writeAuditLog({ request, action: 'company.created', entityType: 'company', entityId: company.id, newValues: company });
+
     return { company };
   });
 
@@ -402,6 +408,7 @@ export async function platformRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(companies).where(eq(companies.id, params.id));
     if (!existing) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     const [updated] = await db.update(companies).set({ ...body, updatedAt: new Date() }).where(eq(companies.id, params.id)).returning();
+    await writeAuditLog({ request, action: 'company.updated', entityType: 'company', entityId: updated.id, oldValues: existing, newValues: updated });
     return { company: updated };
   });
 
@@ -410,6 +417,7 @@ export async function platformRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(companies).where(eq(companies.id, params.id));
     if (!existing) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     await db.update(companies).set({ status: 'cancelled', updatedAt: new Date() }).where(eq(companies.id, params.id));
+    await writeAuditLog({ request, action: 'company.cancelled', entityType: 'company', entityId: params.id, oldValues: existing });
     return { success: true };
   });
 
@@ -442,6 +450,7 @@ export async function platformRoutes(app: FastifyInstance) {
     if (!company) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     await db.update(companies).set({ status: 'suspended', updatedAt: new Date() }).where(eq(companies.id, params.id));
     await db.update(tenantSubscriptions).set({ status: 'suspended', suspendedAt: new Date(), suspendReason: body.reason, updatedAt: new Date() }).where(eq(tenantSubscriptions.companyId, params.id));
+    await writeAuditLog({ request, action: 'company.suspended', entityType: 'company', entityId: params.id, oldValues: company, newValues: { ...company, status: 'suspended' } });
     return { success: true, message: `Company "${company.name}" telah disuspend.` };
   });
 
@@ -451,6 +460,7 @@ export async function platformRoutes(app: FastifyInstance) {
     if (!company) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     await db.update(companies).set({ status: 'active', updatedAt: new Date() }).where(eq(companies.id, params.id));
     await db.update(tenantSubscriptions).set({ status: 'active', suspendedAt: undefined, suspendReason: undefined, updatedAt: new Date() }).where(eq(tenantSubscriptions.companyId, params.id));
+    await writeAuditLog({ request, action: 'company.activated', entityType: 'company', entityId: params.id, oldValues: company, newValues: { ...company, status: 'active' } });
     return { success: true, message: `Company "${company.name}" telah diaktifkan kembali.` };
   });
 
@@ -461,6 +471,7 @@ export async function platformRoutes(app: FastifyInstance) {
     if (!company) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     await db.update(companies).set({ status: 'cancelled', updatedAt: new Date() }).where(eq(companies.id, params.id));
     await db.update(tenantSubscriptions).set({ status: 'cancelled', cancelledAt: new Date(), cancellationReason: body.reason, updatedAt: new Date() }).where(eq(tenantSubscriptions.companyId, params.id));
+    await writeAuditLog({ request, action: 'company.cancelled', entityType: 'company', entityId: params.id, oldValues: company });
     return { success: true };
   });
 
@@ -476,6 +487,7 @@ export async function platformRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(subscriptionFeatures).where(eq(subscriptionFeatures.key, body.key)).limit(1);
     if (existing) return reply.status(409).send({ message: 'Feature key sudah digunakan.' });
     const [feature] = await db.insert(subscriptionFeatures).values(body).returning();
+    await writeAuditLog({ request, action: 'feature.created', entityType: 'subscription_feature', entityId: feature.id, newValues: feature });
     return { feature };
   });
 
@@ -489,6 +501,7 @@ export async function platformRoutes(app: FastifyInstance) {
       if (duplicate) return reply.status(409).send({ message: 'Feature key sudah digunakan.' });
     }
     const [feature] = await db.update(subscriptionFeatures).set({ ...body, updatedAt: new Date() }).where(eq(subscriptionFeatures.id, params.id)).returning();
+    await writeAuditLog({ request, action: 'feature.updated', entityType: 'subscription_feature', entityId: feature.id, oldValues: existing, newValues: feature });
     return { feature };
   });
 
@@ -516,6 +529,7 @@ export async function platformRoutes(app: FastifyInstance) {
       limits: body.limits ?? null,
       features: body.features ?? null,
     }).returning();
+    await writeAuditLog({ request, action: 'plan.created', entityType: 'subscription_plan', entityId: plan.id, newValues: plan });
     return { plan };
   });
 
@@ -530,6 +544,7 @@ export async function platformRoutes(app: FastifyInstance) {
       priceYearly: body.priceYearly !== undefined ? String(body.priceYearly) : undefined,
       updatedAt: new Date(),
     }).where(eq(subscriptionPlans.id, params.id)).returning();
+    await writeAuditLog({ request, action: 'plan.updated', entityType: 'subscription_plan', entityId: updated.id, oldValues: existing, newValues: updated });
     return { plan: updated };
   });
 
@@ -568,10 +583,12 @@ export async function platformRoutes(app: FastifyInstance) {
         .where(eq(tenantSubscriptions.id, existing.id))
         .returning();
 
+      await writeAuditLog({ request, action: 'subscription.assigned', entityType: 'tenant_subscription', entityId: sub.id, oldValues: existing, newValues: sub });
       return { subscription: sub };
     }
 
     const [sub] = await db.insert(tenantSubscriptions).values(subscriptionValues).returning();
+    await writeAuditLog({ request, action: 'subscription.assigned', entityType: 'tenant_subscription', entityId: sub.id, newValues: sub });
     return { subscription: sub };
   });
 
@@ -602,6 +619,7 @@ export async function platformRoutes(app: FastifyInstance) {
       managedByUserId: request.user!.id,
       updatedAt: new Date(),
     }).where(eq(tenantSubscriptions.id, sub.id)).returning();
+    await writeAuditLog({ request, action: 'subscription.cancelled', entityType: 'tenant_subscription', entityId: updated.id, oldValues: sub, newValues: updated });
     return { subscription: updated };
   });
 }

@@ -5,6 +5,7 @@ import { permissions, rolePermissions, roles, users } from '@yuksales/db/schema'
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
+import { writeAuditLog } from '../audit/audit.service.js';
 
 const createRoleSchema = z.object({
   code: z.string().min(2).regex(/^[A-Z0-9_]+$/, 'Role code harus huruf kapital dan underscore'),
@@ -51,6 +52,7 @@ export async function accessRoutes(app: FastifyInstance) {
       description: body.description,
       isSystemRole: false,
     }).returning();
+    await writeAuditLog({ request, action: 'role.created', entityType: 'role', entityId: role.id, newValues: role });
     return { role };
   });
 
@@ -64,6 +66,7 @@ export async function accessRoutes(app: FastifyInstance) {
     if (existing.isSystemRole) return reply.status(403).send({ message: 'System role tidak dapat diubah.' });
 
     const [updated] = await db.update(roles).set({ ...body, updatedAt: new Date() }).where(eq(roles.id, params.roleId)).returning();
+    await writeAuditLog({ request, action: 'role.updated', entityType: 'role', entityId: updated.id, oldValues: existing, newValues: updated });
     return { role: updated };
   });
 
@@ -82,6 +85,7 @@ export async function accessRoutes(app: FastifyInstance) {
     // Remove all permissions first, then delete role
     await db.delete(rolePermissions).where(eq(rolePermissions.roleId, params.roleId));
     await db.delete(roles).where(eq(roles.id, params.roleId));
+    await writeAuditLog({ request, action: 'role.deleted', entityType: 'role', entityId: params.roleId, oldValues: existing });
     return { success: true };
   });
 
@@ -95,6 +99,7 @@ export async function accessRoutes(app: FastifyInstance) {
   app.post('/permissions', { preHandler: requirePermission('permissions.manage') }, async (request) => {
     const body = createPermissionSchema.parse(request.body);
     const [permission] = await db.insert(permissions).values(body).returning();
+    await writeAuditLog({ request, action: 'permission.created', entityType: 'permission', entityId: permission.id, newValues: permission });
     return { permission };
   });
 
@@ -131,6 +136,7 @@ export async function accessRoutes(app: FastifyInstance) {
       grantedByUserId: request.user?.id,
     }).onConflictDoNothing();
 
+    await writeAuditLog({ request, action: 'role.permission_assigned', entityType: 'role_permission', entityId: params.roleId, newValues: { roleId: params.roleId, permissionId: body.permissionId } });
     return { success: true };
   });
 
@@ -142,6 +148,7 @@ export async function accessRoutes(app: FastifyInstance) {
     if (!role) return reply.status(404).send({ message: 'Role tidak ditemukan.' });
 
     await db.delete(rolePermissions).where(and(eq(rolePermissions.roleId, params.roleId), eq(rolePermissions.permissionId, params.permissionId)));
+    await writeAuditLog({ request, action: 'role.permission_removed', entityType: 'role_permission', entityId: params.roleId, oldValues: { roleId: params.roleId, permissionId: params.permissionId } });
     return { success: true };
   });
 }

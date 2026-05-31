@@ -1,4 +1,4 @@
-import { boolean, numeric, pgEnum, pgTable, timestamp, uuid, varchar, date } from 'drizzle-orm/pg-core';
+import { boolean, index, numeric, pgEnum, pgTable, timestamp, uuid, varchar, date } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
 import { companies } from './companies.js';
 import { mediaFiles } from './media.js';
@@ -47,7 +47,9 @@ export const attendanceSessions = pgTable('attendance_sessions', {
   clientRequestId: uuid('client_request_id').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('attendance_sessions_company_user_date_idx').on(table.companyId, table.userId, table.workDate),
+]); 
 
 export const gpsTrackLogs = pgTable('gps_track_logs', {
   id: uuid('id').defaultRandom().primaryKey(),

@@ -55,6 +55,35 @@ function addDays(date: Date, days: number) {
   return next.toISOString().slice(0, 10);
 }
 
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+function outletConsignmentWarehouseCode(outletId: string) {
+  return `WH-KO-${outletId.slice(0, 8).toUpperCase()}`;
+}
+
+async function ensureOutletConsignmentWarehouse(tx: Tx, input: { companyId: string; outletId: string }) {
+  const [existing] = await tx.select().from(warehouses).where(and(
+    eq(warehouses.companyId, input.companyId),
+    eq(warehouses.outletId, input.outletId),
+    eq(warehouses.type, 'outlet_consignment'),
+  ));
+  if (existing) return existing;
+
+  const code = outletConsignmentWarehouseCode(input.outletId);
+  const [warehouse] = await tx.insert(warehouses).values({
+    companyId: input.companyId,
+    code,
+    name: `Konsinyasi Outlet ${input.outletId.slice(0, 8).toUpperCase()}`,
+    type: 'outlet_consignment',
+    outletId: input.outletId,
+    status: 'active',
+  }).onConflictDoUpdate({
+    target: [warehouses.companyId, warehouses.code],
+    set: { type: 'outlet_consignment', outletId: input.outletId, status: 'active' },
+  }).returning();
+  return warehouse;
+}
+
 export async function salesRoutes(app: FastifyInstance) {
   app.get('/sales/orders', { preHandler: requirePermission('sales.view') }, async (request) => {
     const companyId = requireTenantId(request);
@@ -204,6 +233,10 @@ export async function salesRoutes(app: FastifyInstance) {
     const items = await db.select().from(salesTransactionItems).where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));
 
     const updated = await db.transaction(async (tx) => {
+      const outletConsignmentWarehouse = order.paymentMethod === 'consignment' && order.outletId
+        ? await ensureOutletConsignmentWarehouse(tx, { companyId, outletId: order.outletId })
+        : null;
+
       for (const item of items) {
         const [balance] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, stockWarehouse.id), eq(inventoryBalances.productId, item.productId)));
         if (!balance || Number(balance.quantity) < Number(item.quantity)) {
@@ -220,13 +253,46 @@ export async function salesRoutes(app: FastifyInstance) {
           companyId,
           warehouseId: stockWarehouse.id,
           productId: item.productId,
-          movementType: 'sale',
+          movementType: outletConsignmentWarehouse ? 'transfer_out' : 'sale',
           quantityDelta: `-${item.quantity}`,
-          referenceType: 'sales_transaction',
+          referenceType: outletConsignmentWarehouse ? 'consignment_transfer' : 'sales_transaction',
           referenceId: order.id,
-          notes: 'Release stok setelah approval admin',
+          notes: outletConsignmentWarehouse ? 'Transfer stok ke konsinyasi outlet setelah approval admin' : 'Release stok setelah approval admin',
           createdByUserId: request.user?.id,
         });
+
+        if (outletConsignmentWarehouse) {
+          const [outletBalance] = await tx.select().from(inventoryBalances).where(and(
+            eq(inventoryBalances.companyId, companyId),
+            eq(inventoryBalances.warehouseId, outletConsignmentWarehouse.id),
+            eq(inventoryBalances.productId, item.productId),
+          ));
+          if (outletBalance) {
+            await tx.update(inventoryBalances).set({
+              quantity: sql`${inventoryBalances.quantity} + ${item.quantity}`,
+              updatedAt: new Date(),
+            }).where(eq(inventoryBalances.id, outletBalance.id));
+          } else {
+            await tx.insert(inventoryBalances).values({
+              companyId,
+              warehouseId: outletConsignmentWarehouse.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              reservedQuantity: '0',
+            });
+          }
+          await tx.insert(inventoryMovements).values({
+            companyId,
+            warehouseId: outletConsignmentWarehouse.id,
+            productId: item.productId,
+            movementType: 'transfer_in',
+            quantityDelta: item.quantity,
+            referenceType: 'consignment_transfer',
+            referenceId: order.id,
+            notes: 'Stok titipan masuk ke outlet konsinyasi',
+            createdByUserId: request.user?.id,
+          });
+        }
       }
 
       if (order.paymentMethod === 'credit') {

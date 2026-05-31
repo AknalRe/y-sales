@@ -38,7 +38,7 @@
 }
 
 .platform-row-link {
-    color: #fff;
+    color: var(--platform-text);
 }
 
 .platform-plans-grid {
@@ -78,7 +78,7 @@
 
 .platform-company-name {
     font-weight: 900;
-    color: #fff;
+    color: var(--platform-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -125,16 +125,16 @@
 }
 
 .platform-status-active {
-    color: var(--platform-success-light);
+    color: var(--platform-success-text);
     background: var(--platform-success-shadow);
 }
 
 .platform-status-trialing {
-    color: var(--platform-warning-light);
+    color: var(--platform-warning-text);
     background: var(--platform-warning-shadow);
 }
 
 .platform-status-suspended {
-    color: var(--platform-danger-subtle);
+    color: var(--platform-danger-text);
     background: var(--platform-danger-shadow);
 }

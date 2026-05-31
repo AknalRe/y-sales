@@ -122,7 +122,7 @@
   align-items: center;
   border-radius: 16px;
   padding: .85rem;
-  background: rgba(15, 23, 42, .58);
+  background: var(--platform-panel);
   border: 1px solid var(--platform-border-overlay-lg);
 
   div {
@@ -131,7 +131,7 @@
   }
 
   strong {
-    color: #fff;
+    color: var(--platform-text);
   }
 
   span {
@@ -177,7 +177,7 @@
   }
 
   strong {
-    color: #fff;
+    color: var(--platform-text);
     font-size: 1rem;
   }
 
@@ -246,7 +246,7 @@
 
   h1 {
     margin: 0;
-    color: #fff;
+    color: var(--platform-text);
     font-size: clamp(2rem, 4vw, 3.6rem);
     line-height: .95;
     letter-spacing: -.07em;
@@ -269,7 +269,7 @@
   border: 1px solid var(--platform-cyan-glow-border-md);
   border-radius: 999px;
   padding: .38rem .7rem;
-  color: var(--platform-info-light);
+  color: var(--platform-info-text);
   background: var(--platform-info-accent-shadow);
   font-size: .78rem;
   font-weight: 900;
@@ -306,7 +306,7 @@
   }
 
   strong {
-    color: #fff;
+    color: var(--platform-text);
     font-size: clamp(1.8rem, 3vw, 2.7rem);
     line-height: 1;
     letter-spacing: -.05em;
@@ -322,7 +322,7 @@
   height: 9px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(15, 23, 42, .62);
+  background: var(--platform-panel);
   margin-top: .7rem;
 
   span {
@@ -352,7 +352,7 @@
   border: 1px solid var(--platform-border);
   border-radius: 24px;
   padding: 1rem;
-  background: rgba(15, 23, 42, .72);
+  background: var(--platform-panel);
   box-shadow: 0 18px 48px var(--platform-shadow-sm);
   transition: transform .2s ease, border-color .2s ease;
 
@@ -370,7 +370,7 @@
 
   strong {
     display: block;
-    color: #fff;
+    color: var(--platform-text);
     font-size: 2rem;
     line-height: 1;
     margin: .22rem 0;
@@ -389,7 +389,7 @@
   height: 48px;
   flex: 0 0 auto;
   border-radius: 18px;
-  color: #fff;
+  color: var(--platform-text);
   background: var(--platform-overlay-white-xl);
 }
 
@@ -464,12 +464,12 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: .7rem;
-  border: 1px solid var(--platform-border-overlay-lg);
+  border: 1px solid var(--platform-border);
   border-radius: 18px;
   padding: .86rem;
-  color: var(--platform-text-cyan);
+  color: var(--platform-text);
   text-decoration: none;
-  background: var(--platform-overlay-white-md);
+  background: var(--platform-panel);
   transition: .2s ease;
 
   &:hover {
@@ -523,7 +523,7 @@
 
   strong {
     display: block;
-    color: #fff;
+    color: var(--platform-text);
   }
 
   small {
@@ -548,14 +548,14 @@
 
   strong {
     display: block;
-    color: #fff;
+    color: var(--platform-text);
     font-weight: 900;
   }
 }
 
 // Invoice print page
 .invoice-print-page-shell {
-  background: #fff;
+  background: var(--platform-panel-strong);
   border-radius: 24px;
   padding: 2rem;
 }
@@ -606,7 +606,7 @@
   place-items: center;
   border-radius: 16px;
   background: linear-gradient(135deg, var(--platform-primary), var(--platform-primary-2));
-  color: #fff;
+  color: var(--platform-text);
 }
 
 .invoice-title-box {

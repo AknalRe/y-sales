@@ -76,11 +76,11 @@ export function PlatformMobileSidebar({
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
                                         style={{
-                                            color: active ? "#ffffff" : "var(--platform-subtle)",
+                                            color: active ? "var(--platform-text)" : "var(--platform-subtle)",
                                             background: active ? "linear-gradient(135deg, var(--platform-violet-shadow-md), var(--platform-info-shadow-glow))" : "transparent",
                                         }}
                                     >
-                                        <Icon size={18} style={{ color: active ? "#ffffff" : "var(--platform-subtle)" }} />
+                                        <Icon size={18} style={{ color: active ? "var(--platform-text)" : "var(--platform-subtle)" }} />
                                         {item.label}
                                     </Link>
                                 </li>

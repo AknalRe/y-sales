@@ -95,8 +95,8 @@
 .platform-toggle-btn,
 .platform-btn-icon {
   border: 1px solid var(--platform-border);
-  background: var(--platform-overlay-white-lg);
-  color: inherit;
+  background: transparent;
+  color: var(--platform-text);
   border-radius: 13px;
   width: 36px;
   height: 36px;
@@ -113,7 +113,7 @@
 .platform-toggle-btn:hover,
 .platform-btn-icon:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, .12);
+  background: var(--platform-hover-bg);
 }
 
 .platform-nav {
@@ -153,12 +153,12 @@
 }
 
 .platform-nav-link:hover {
-  color: #fff;
+  color: var(--platform-text);
   background: var(--platform-active-bg);
 }
 
 .platform-nav-active {
-  color: #fff;
+  color: var(--platform-text);
   background: linear-gradient(135deg, var(--platform-violet-shadow-md), var(--platform-info-shadow-glow));
   border-color: var(--platform-violet-shadow-strong);
 }
@@ -222,7 +222,7 @@
   right: 1rem;
   border: 1px solid var(--platform-border);
   border-radius: 18px;
-  background: rgba(15, 23, 42, .96);
+  background: var(--platform-panel);
   backdrop-filter: blur(18px);
   padding: .45rem;
   box-shadow: 0 24px 60px var(--platform-shadow-xl);
@@ -246,7 +246,7 @@
   border: 0;
   border-radius: 12px;
   padding: .7rem;
-  color: #fff;
+  color: var(--platform-text);
   background: transparent;
   cursor: pointer;
 }

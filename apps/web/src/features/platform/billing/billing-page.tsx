@@ -296,8 +296,8 @@ export function PlatformBillingPage() {
                     <td>
                       {invoice.planName ? (
                         <div>
-                          <strong style={{ color: '#fff' }}>{invoice.planName}</strong>
-                          <small style={{ display: 'block', color: '#93c5fd', marginTop: '2px' }}>{invoice.planCode}</small>
+                          <strong style={{ color: 'var(--platform-text)' }}>{invoice.planName}</strong>
+                          <small style={{ display: 'block', color: 'var(--platform-text-blue)', marginTop: '2px' }}>{invoice.planCode}</small>
                         </div>
                       ) : (
                         <span style={{ color: 'var(--platform-subtle)' }}>—</span>
@@ -456,7 +456,7 @@ export function PlatformBillingPage() {
                 ) : (
                   <div className="platform-field">
                     <label>Plan (Renewal)</label>
-                    <div className="platform-input" style={{ background: 'rgba(255,255,255,.03)', color: '#94a3b8', cursor: 'not-allowed' }}>
+                    <div className="platform-input" style={{ background: 'var(--platform-hover-bg)', color: 'var(--platform-subtle)', cursor: 'not-allowed' }}>
                       {companies.find(c => c.id === invoiceForm.companyId)?.subscriptionSummary?.planName ?? invoiceForm.planCode ?? '-'}
                     </div>
                     <small style={{ color: 'var(--platform-subtle)' }}>Plan tidak berubah saat renewal</small>

@@ -8,7 +8,7 @@
     border-radius: 18px;
     padding: .85rem 1rem;
     color: var(--platform-subtle);
-    background: rgba(15, 23, 42, .62);
+    background: var(--platform-panel);
     backdrop-filter: blur(16px);
     margin-bottom: 1rem;
 }
@@ -18,7 +18,7 @@
     min-width: 0;
     border: 0;
     outline: 0;
-    color: #fff;
+    color: var(--platform-text);
     background: transparent;
 
     &::placeholder {

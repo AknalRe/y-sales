@@ -17,7 +17,7 @@
     font-size: clamp(1.8rem, 3vw, 2.75rem);
     line-height: 1;
     letter-spacing: -.05em;
-    color: #fff;
+    color: var(--platform-text);
 }
 
 .platform-page-subtitle {

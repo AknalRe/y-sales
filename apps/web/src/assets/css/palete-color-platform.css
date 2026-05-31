@@ -5,12 +5,12 @@
 
 :root {
     /* Platform Base */
-    --platform-bg: #f8fafc;
-    --platform-panel: #ffffff;
+    --platform-bg: #cbd5e1;
+    --platform-panel: rgba(255, 255, 255, 0.9);
     --platform-panel-strong: #ffffff;
-    --platform-border: #e2e8f0;
+    --platform-border: rgba(148, 163, 184, 0.45);
     --platform-text: #0f172a;
-    --platform-subtle: #64748b;
+    --platform-subtle: #475569;
 
     /* Platform Primary */
     --platform-primary: #8b5cf6;
@@ -68,7 +68,7 @@
     --platform-info-shadow: rgba(6, 182, 212, .04);
     --platform-info-shadow-md: rgba(6, 182, 212, .06);
     --platform-info-shadow-glow: rgba(6, 182, 212, .08);
-    --platform-info-shadow-bright: rgba(6, 182, 212, .05);
+    --platform-info-shadow-bright: rgba(6, 182, 212, .25);
     --platform-info-accent-shadow: rgba(8, 145, 178, .06);
 
     /* Platform Violet (Primary accent) — Light Mode */
@@ -76,7 +76,7 @@
     --platform-violet-bg: rgba(139, 92, 246, .08);
     --platform-violet-shadow: rgba(139, 92, 246, .1);
     --platform-violet-shadow-md: rgba(139, 92, 246, .12);
-    --platform-violet-shadow-lg: rgba(139, 92, 246, .06);
+    --platform-violet-shadow-lg: rgba(139, 92, 246, .22);
     --platform-violet-shadow-strong: rgba(139, 92, 246, .15);
 
     /* Platform Cyan (Secondary accent) — Light Mode */
@@ -112,10 +112,10 @@
     --platform-border-overlay-xl: rgba(0, 0, 0, .12);
 
     /* Platform Shadows — Light Mode */
-    --platform-shadow-sm: 0 1px 3px rgba(0, 0, 0, .06);
-    --platform-shadow-md: 0 4px 12px rgba(0, 0, 0, .08);
-    --platform-shadow-lg: 0 8px 24px rgba(0, 0, 0, .1);
-    --platform-shadow-xl: 0 16px 48px rgba(0, 0, 0, .12);
+    --platform-shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --platform-shadow-md: 0 12px 28px rgba(15, 23, 42, 0.12);
+    --platform-shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
+    --platform-shadow-xl: 0 32px 72px rgba(15, 23, 42, 0.2);
 
     /* Platform Glow (Hero) — Light Mode */
     --platform-cyan-glow-border: rgba(6, 182, 212, .15);
@@ -125,16 +125,16 @@
     --platform-teal-glow-bg: rgba(20, 184, 166, .08);
 
     /* Platform Gradient — Light Mode */
-    --platform-gradient-from: #ffffff;
-    --platform-gradient-mid: #f8fafc;
-    --platform-gradient-to: #f1f5f9;
-    --platform-gradient-panel-from: rgba(255, 255, 255, .95);
-    --platform-gradient-panel-to: rgba(248, 250, 252, .9);
-    --platform-gradient-sidebar: rgba(255, 255, 255, .97);
-    --platform-gradient-card-from: rgba(255, 255, 255, .95);
-    --platform-gradient-card-to: rgba(248, 250, 252, .9);
-    --platform-gradient-panel-overlay: rgba(0, 0, 0, .02);
-    --platform-gradient-panel-overlay-to: rgba(0, 0, 0, .01);
+    --platform-gradient-from: #cbd5e1;
+    --platform-gradient-mid: #e2e8f0;
+    --platform-gradient-to: #94a3b8;
+    --platform-gradient-panel-from: rgba(255, 255, 255, 0.85);
+    --platform-gradient-panel-to: rgba(245, 248, 250, 0.65);
+    --platform-gradient-sidebar: rgba(255, 255, 255, 0.82);
+    --platform-gradient-card-from: rgba(255, 255, 255, 0.9);
+    --platform-gradient-card-to: rgba(248, 250, 252, 0.75);
+    --platform-gradient-panel-overlay: rgba(255, 255, 255, 0.4);
+    --platform-gradient-panel-overlay-to: rgba(255, 255, 255, 0.1);
 
     /* Platform Interactive — Light Mode */
     --platform-hover-bg: rgba(0, 0, 0, .03);

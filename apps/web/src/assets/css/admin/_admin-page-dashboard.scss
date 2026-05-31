@@ -57,23 +57,23 @@
   }
 
   .kpi-emerald .dashboard-kpi-icon-box {
-    background: #ecfdf5;
-    color: #10b981;
+    background: var(--admin-kpi-emerald-bg);
+    color: var(--admin-kpi-emerald);
   }
 
   .kpi-blue .dashboard-kpi-icon-box {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: var(--admin-kpi-blue-bg);
+    color: var(--admin-kpi-blue);
   }
 
   .kpi-orange .dashboard-kpi-icon-box {
-    background: #fff7ed;
-    color: #f97316;
+    background: var(--admin-kpi-amber-bg);
+    color: var(--admin-kpi-orange);
   }
 
   .kpi-purple .dashboard-kpi-icon-box {
-    background: #f5f3ff;
-    color: #8b5cf6;
+    background: var(--admin-kpi-violet-bg);
+    color: var(--admin-kpi-violet);
   }
 
   // Dashboard-specific
@@ -132,7 +132,7 @@
   }
 
   .dashboard-kpi-arrow {
-    color: #94a3b8;
+    color: var(--admin-muted);
   }
 
   .dashboard-skeleton-card {
@@ -234,7 +234,7 @@
 
     span {
       font-size: .85rem;
-      color: #64748b;
+      color: var(--admin-subtle);
       font-weight: 500;
     }
 
@@ -245,23 +245,23 @@
   }
 
   .summary-emerald strong {
-    color: #10b981;
+    color: var(--admin-kpi-emerald);
   }
 
   .summary-blue strong {
-    color: #3b82f6;
+    color: var(--admin-kpi-blue);
   }
 
   .summary-violet strong {
-    color: #8b5cf6;
+    color: var(--admin-kpi-violet);
   }
 
   .summary-amber strong {
-    color: #f59e0b;
+    color: var(--admin-kpi-amber);
   }
 
   .summary-red strong {
-    color: #ef4444;
+    color: var(--admin-kpi-red);
   }
 
   .dashboard-summary-skeleton {

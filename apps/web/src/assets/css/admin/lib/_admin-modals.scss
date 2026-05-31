@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--admin-settings-overlay);
   backdrop-filter: blur(4px);
 }
 
@@ -18,9 +18,9 @@
   overflow: auto;
   border: 1px solid var(--platform-border);
   border-radius: 26px;
-  background: rgba(15, 23, 42, .96);
+  background: var(--admin-modal-bg);
   color: #fff;
-  box-shadow: 0 32px 90px rgba(0, 0, 0, .42);
+  box-shadow: 0 32px 90px var(--admin-modal-overlay);
 
   &-sm {
     width: min(460px, 100%);
@@ -156,7 +156,7 @@
   outline: none;
 
   &:focus {
-    border-color: rgba(6, 182, 212, .55);
+    border-color: var(--admin-modal-cyan-shadow);
     box-shadow: 0 0 0 4px rgba(6, 182, 212, .12);
   }
 }
@@ -460,7 +460,7 @@
 
 /* ─── Invoice Subscription Info ──────────────────────────────────────────── */
 .invoice-sub-info-card {
-  border: 1px solid rgba(99, 179, 237, .25);
+  border: 1px solid var(--admin-modal-blue-light);
   border-radius: 14px;
   padding: .85rem 1rem;
   background: rgba(56, 189, 248, .06);
@@ -468,9 +468,9 @@
   gap: .65rem;
 
   &.invoice-sub-info-none {
-    background: rgba(251, 191, 36, .06);
-    border-color: rgba(251, 191, 36, .25);
-    color: #fbbf24;
+    background: var(--admin-modal-amber-bg);
+    border-color: var(--admin-modal-amber-shadow);
+    color: var(--admin-modal-amber);
     padding: .7rem 1rem;
     border-radius: 10px;
   }
@@ -493,7 +493,7 @@
   }
 
   small {
-    color: #93c5fd;
+    color: var(--admin-modal-blue-light);
     font-size: .75rem;
   }
 }
@@ -503,7 +503,7 @@
   grid-template-columns: repeat(4, 1fr);
   gap: .5rem;
   padding-top: .55rem;
-  border-top: 1px solid rgba(99, 179, 237, .15);
+  border-top: 1px solid var(--admin-modal-blue-light);
 
   div {
     display: grid;
@@ -511,14 +511,14 @@
   }
 
   span {
-    color: #64748b;
+    color: var(--admin-subtle);
     font-size: .72rem;
     text-transform: uppercase;
     letter-spacing: .07em;
   }
 
   strong {
-    color: #e2e8f0;
+    color: var(--admin-border);
     font-size: .82rem;
   }
 }

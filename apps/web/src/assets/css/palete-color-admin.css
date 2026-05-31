@@ -35,6 +35,45 @@
     --admin-accent-blue: #0ea5e9;
     --admin-accent-blue-shadow: rgba(14, 165, 233, .12);
     --admin-accent-amber-shadow: rgba(245, 158, 11, .1);
+
+    /* Admin KPI Dashboard */
+    --admin-kpi-emerald: #10b981;
+    --admin-kpi-emerald-bg: #ecfdf5;
+    --admin-kpi-blue: #3b82f6;
+    --admin-kpi-blue-bg: #eff6ff;
+    --admin-kpi-violet: #8b5cf6;
+    --admin-kpi-violet-bg: #f5f3ff;
+    --admin-kpi-amber: #f59e0b;
+    --admin-kpi-amber-bg: #fff7ed;
+    --admin-kpi-orange: #f97316;
+    --admin-kpi-red: #ef4444;
+
+    /* Admin Modals */
+    --admin-modal-overlay: rgba(0, 0, 0, .42);
+    --admin-modal-bg: rgba(15, 23, 42, .96);
+    --admin-modal-cyan: #0891b2;
+    --admin-modal-indigo: #4f46e5;
+    --admin-modal-blue-light: #93c5fd;
+    --admin-modal-blue-bg: #dbeafe;
+    --admin-modal-amber: #fbbf24;
+    --admin-modal-amber-shadow: rgba(251, 191, 36, .25);
+    --admin-modal-amber-bg: rgba(251, 191, 36, .06);
+    --admin-modal-cyan-shadow: rgba(6, 182, 212, .55);
+
+    /* Admin Alert */
+    --admin-alert-danger-text: #991b1b;
+    --admin-alert-danger-bg: #fee2e2;
+    --admin-alert-danger-bg-light: #fef2f2;
+    --admin-alert-success-light: #bbf7d0;
+    --admin-alert-success-shadow: rgba(34, 197, 94, .12);
+    --admin-alert-success-shadow-lg: rgba(34, 197, 94, .24);
+
+    /* Admin Settings */
+    --admin-settings-overlay: rgba(15, 23, 42, .2);
+    --admin-settings-subtle: rgba(43, 45, 66, .04);
+    --admin-settings-subtle-lg: rgba(43, 45, 66, .08);
+
+    /* Admin Shadows */
     --admin-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, .05);
     --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .1), 0 4px 6px -4px rgba(0, 0, 0, .1);
     --admin-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, .1), 0 8px 10px -6px rgba(0, 0, 0, .1);
@@ -106,6 +145,45 @@
     --admin-accent-blue: #38bdf8;
     --admin-accent-blue-shadow: rgba(14, 165, 233, .18);
     --admin-accent-amber-shadow: rgba(245, 158, 11, .15);
+
+    /* Admin KPI Dashboard */
+    --admin-kpi-emerald: #10b981;
+    --admin-kpi-emerald-bg: rgba(16, 185, 129, .12);
+    --admin-kpi-blue: #3b82f6;
+    --admin-kpi-blue-bg: rgba(59, 130, 246, .12);
+    --admin-kpi-violet: #8b5cf6;
+    --admin-kpi-violet-bg: rgba(139, 92, 246, .12);
+    --admin-kpi-amber: #f59e0b;
+    --admin-kpi-amber-bg: rgba(245, 158, 11, .12);
+    --admin-kpi-orange: #f97316;
+    --admin-kpi-red: #f87171;
+
+    /* Admin Modals */
+    --admin-modal-overlay: rgba(2, 6, 23, .72);
+    --admin-modal-bg: rgba(15, 23, 42, .96);
+    --admin-modal-cyan: #0891b2;
+    --admin-modal-indigo: #6366f1;
+    --admin-modal-blue-light: #93c5fd;
+    --admin-modal-blue-bg: rgba(59, 130, 246, .12);
+    --admin-modal-amber: #fbbf24;
+    --admin-modal-amber-shadow: rgba(251, 191, 36, .25);
+    --admin-modal-amber-bg: rgba(251, 191, 36, .06);
+    --admin-modal-cyan-shadow: rgba(6, 182, 212, .55);
+
+    /* Admin Alert */
+    --admin-alert-danger-text: #fca5a5;
+    --admin-alert-danger-bg: rgba(239, 68, 68, .15);
+    --admin-alert-danger-bg-light: rgba(239, 68, 68, .1);
+    --admin-alert-success-light: #bbf7d0;
+    --admin-alert-success-shadow: rgba(34, 197, 94, .12);
+    --admin-alert-success-shadow-lg: rgba(34, 197, 94, .24);
+
+    /* Admin Settings */
+    --admin-settings-overlay: rgba(15, 23, 42, .2);
+    --admin-settings-subtle: rgba(148, 163, 184, .04);
+    --admin-settings-subtle-lg: rgba(148, 163, 184, .08);
+
+    /* Admin Shadows */
     --admin-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, .2);
     --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .3), 0 4px 6px -4px rgba(0, 0, 0, .3);
     --admin-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, .3), 0 8px 10px -6px rgba(0, 0, 0, .3);
@@ -181,6 +259,44 @@
     --color-admin-accent-teal-light: var(--admin-accent-teal-light);
     --color-admin-accent-teal-bg: var(--admin-accent-teal-bg);
     --color-admin-accent-blue: var(--admin-accent-blue);
+    --color-admin-accent-amber-shadow: var(--admin-accent-amber-shadow);
+
+    /* Admin KPI */
+    --color-admin-kpi-emerald: var(--admin-kpi-emerald);
+    --color-admin-kpi-emerald-bg: var(--admin-kpi-emerald-bg);
+    --color-admin-kpi-blue: var(--admin-kpi-blue);
+    --color-admin-kpi-blue-bg: var(--admin-kpi-blue-bg);
+    --color-admin-kpi-violet: var(--admin-kpi-violet);
+    --color-admin-kpi-violet-bg: var(--admin-kpi-violet-bg);
+    --color-admin-kpi-amber: var(--admin-kpi-amber);
+    --color-admin-kpi-amber-bg: var(--admin-kpi-amber-bg);
+    --color-admin-kpi-orange: var(--admin-kpi-orange);
+    --color-admin-kpi-red: var(--admin-kpi-red);
+
+    /* Admin Modals */
+    --color-admin-modal-overlay: var(--admin-modal-overlay);
+    --color-admin-modal-bg: var(--admin-modal-bg);
+    --color-admin-modal-cyan: var(--admin-modal-cyan);
+    --color-admin-modal-indigo: var(--admin-modal-indigo);
+    --color-admin-modal-blue-light: var(--admin-modal-blue-light);
+    --color-admin-modal-blue-bg: var(--admin-modal-blue-bg);
+    --color-admin-modal-amber: var(--admin-modal-amber);
+    --color-admin-modal-amber-shadow: var(--admin-modal-amber-shadow);
+    --color-admin-modal-amber-bg: var(--admin-modal-amber-bg);
+    --color-admin-modal-cyan-shadow: var(--admin-modal-cyan-shadow);
+
+    /* Admin Alert */
+    --color-admin-alert-danger-text: var(--admin-alert-danger-text);
+    --color-admin-alert-danger-bg: var(--admin-alert-danger-bg);
+    --color-admin-alert-danger-bg-light: var(--admin-alert-danger-bg-light);
+    --color-admin-alert-success-light: var(--admin-alert-success-light);
+    --color-admin-alert-success-shadow: var(--admin-alert-success-shadow);
+    --color-admin-alert-success-shadow-lg: var(--admin-alert-success-shadow-lg);
+
+    /* Admin Settings */
+    --color-admin-settings-overlay: var(--admin-settings-overlay);
+    --color-admin-settings-subtle: var(--admin-settings-subtle);
+    --color-admin-settings-subtle-lg: var(--admin-settings-subtle-lg);
 
     /* Admin Table */
     --color-admin-table-row-hover: var(--admin-table-row-hover);

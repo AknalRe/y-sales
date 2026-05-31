@@ -7,18 +7,18 @@
      padding: .85rem 1rem;
      border-radius: 16px;
      margin-bottom: 1rem;
-     border: 1px solid #e2e8f0;
+     border: 1px solid var(--admin-border);
 
      &-error {
-         color: #991b1b;
-         background: #fef2f2;
-         border-color: #fee2e2;
+         color: var(--admin-alert-danger-text);
+         background: var(--admin-alert-danger-bg-light);
+         border-color: var(--admin-alert-danger-bg);
      }
 
      &-success {
-         color: #bbf7d0;
-         background: rgba(34, 197, 94, .12);
-         border-color: rgba(34, 197, 94, .24);
+         color: var(--admin-alert-success-light);
+         background: var(--admin-alert-success-shadow);
+         border-color: var(--admin-alert-success-shadow-lg);
      }
 
      &-close {

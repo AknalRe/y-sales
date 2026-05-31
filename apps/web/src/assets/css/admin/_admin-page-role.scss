@@ -11,7 +11,7 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: .75rem;
-    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    background: linear-gradient(135deg, var(--admin-focus-ring), var(--admin-modal-indigo));
     color: white;
     display: grid;
     place-items: center;
@@ -111,7 +111,7 @@
   .admin-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, .4);
+    background: var(--admin-settings-overlay);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;

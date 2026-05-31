@@ -89,9 +89,9 @@ export function PlatformDesktopSidebar({
                 </div>
                 {profileOpen && (
                     <div className="platform-profile-menu">
-                        <button onClick={toggleTheme} className="platform-profile-item" type="button">
-                            {isDark ? <Sun size={15} /> : <Moon size={15} />}
-                            <span>{isDark ? 'Mode Terang' : 'Mode Gelap'}</span>
+                        <button onClick={toggleTheme} className="platform-profile-item" type="button" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+                            {isDark ? <Moon size={15} /> : <Sun size={15} />}
+                            <span>{!isDark ? 'Mode Terang' : 'Mode Gelap'}</span>
                         </button>
                         <button className="platform-profile-item" type="button">
                             <UserCircle size={15} />

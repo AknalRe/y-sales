@@ -101,9 +101,9 @@ export function PlatformMobileSidebar({
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <button onClick={toggleTheme} className="platform-profile-item w-full" type="button">
-                            {isDark ? <Sun size={15} /> : <Moon size={15} />}
-                            <span>{isDark ? 'Mode Terang' : 'Mode Gelap'}</span>
+                        <button onClick={toggleTheme} className="platform-profile-item w-full" type="button" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+                            {isDark ? <Moon size={15} /> : <Sun size={15} />}
+                            <span>{!isDark ? 'Mode Terang' : 'Mode Gelap'}</span>
                         </button>
                         <button className="platform-profile-item w-full" type="button">
                             <UserCircle size={15} />

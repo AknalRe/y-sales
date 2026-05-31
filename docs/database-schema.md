@@ -15,6 +15,7 @@ Field penting:
 ```txt
 id
 name
+code
 slug
 status
 logoUrl
@@ -35,6 +36,8 @@ timezone
 createdAt
 updatedAt
 ```
+
+`code` adalah kode unik company yang digunakan sebagai awalan generator kode karyawan, contoh `YKS-001`.
 
 ### `company_subscriptions`
 

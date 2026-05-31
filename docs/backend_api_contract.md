@@ -84,6 +84,7 @@ Field tersedia:
 
 ```txt
 name
+code
 slug
 status
 logoUrl
@@ -115,6 +116,8 @@ Field nullable seperti `legalName`, `email`, `phone`, `address`, `websiteUrl`, `
 
 Catatan penggunaan:
 
+- `code` adalah kode perusahaan 2-32 karakter (`A-Z`, angka, `_`, `-`) dan harus unik antar company.
+- `code` digunakan sebagai awalan generator kode karyawan. Format otomatis saat ini: `KODE_COMPANY-urutan`, contoh `YKS-001`.
 - `latitude` dan `longitude` adalah titik kantor/company.
 - Titik ini boleh menjadi referensi absensi kantor bila flow company mengaktifkannya.
 - Titik ini tidak menggantikan titik outlet. Visit outlet tetap memakai koordinat dan radius outlet.
@@ -124,6 +127,7 @@ Body:
 ```json
 {
   "name": "PT Contoh Sales Indonesia",
+  "code": "YKS",
   "legalName": "PT Contoh Sales Indonesia",
   "email": "admin@contoh.co.id",
   "phone": "08123456789",
@@ -146,6 +150,30 @@ Audit action:
 
 ```txt
 company.profile.updated
+```
+
+---
+
+# 2.1 User Employee Code Generator
+
+## GET `/users/employee-code/suggest?roleId=uuid&excludeUserId=uuid`
+
+Permission: `users.manage`.
+
+Fungsi:
+
+- Backend memvalidasi `roleId` harus milik company aktif.
+- Backend membaca `companies.code` dari company aktif.
+- Jika `companies.code` belum diatur, backend mengembalikan error agar admin mengisi Kode Perusahaan dulu di Pengaturan Operasional > Data Company.
+- Format hasil generator: `KODE_COMPANY-urutan`, contoh `YKS-001`.
+- `excludeUserId` dipakai saat edit user agar kode user yang sedang diedit tidak ikut dihitung sebagai konflik urutan.
+
+Response:
+
+```json
+{
+  "employeeCode": "YKS-001"
+}
 ```
 
 ---

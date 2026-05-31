@@ -10,7 +10,9 @@ export type LoginPayload = {
 
 export async function apiRequest<TResponse>(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  if (options.body != null && !headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
   const companyView = getPlatformCompanyView();
   if (companyView?.companyId) headers.set('X-Company-Id', companyView.companyId);
 

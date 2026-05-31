@@ -44,7 +44,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 160 }).unique(),
   phone: varchar('phone', { length: 40 }).unique(),
   passwordHash: varchar('password_hash', { length: 255 }),
-  employeeCode: varchar('employee_code', { length: 80 }).unique(),
+  employeeCode: varchar('employee_code', { length: 80 }),
   profilePhotoUrl: text('profile_photo_url'),
   status: userStatusEnum('status').default('active').notNull(),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
@@ -55,6 +55,7 @@ export const users = pgTable('users', {
   index('users_company_idx').on(table.companyId),
   index('users_role_idx').on(table.roleId),
   index('users_status_idx').on(table.status),
+  uniqueIndex('users_company_employee_code_idx').on(table.companyId, table.employeeCode),
 ]);
 
 export const sessions = pgTable('sessions', {

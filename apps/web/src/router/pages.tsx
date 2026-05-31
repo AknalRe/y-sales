@@ -62,6 +62,28 @@ export const mainRoutes: RouteConfig[] = [
     }
   },
   {
+    path: 'receivables',
+    element: <ReceivablesPage />,
+    handle: {
+      label: 'Piutang Usaha',
+      icon: CreditCard,
+      permission: 'receivables.view',
+      section: 'Approval & Keuangan',
+      badge: 'AR'
+    }
+  },
+  {
+    path: 'invoice-review',
+    element: <InvoiceReviewPage />,
+    handle: {
+      label: 'Verifikasi Nota',
+      icon: ReceiptText,
+      permission: 'invoice.review',
+      section: 'Approval & Keuangan',
+      badge: 'Review'
+    }
+  },
+  {
     path: 'outlets',
     element: <OutletsPage />,
     handle: {
@@ -103,28 +125,6 @@ export const mainRoutes: RouteConfig[] = [
       permissions: ['products.manage', 'inventory.manage'],
       section: 'Inventory',
       badge: 'Stock'
-    }
-  },
-  {
-    path: 'receivables',
-    element: <ReceivablesPage />,
-    handle: {
-      label: 'Piutang Usaha',
-      icon: CreditCard,
-      permission: 'receivables.view',
-      section: 'Approval & Keuangan',
-      badge: 'AR'
-    }
-  },
-  {
-    path: 'invoice-review',
-    element: <InvoiceReviewPage />,
-    handle: {
-      label: 'Verifikasi Nota',
-      icon: ReceiptText,
-      permission: 'invoice.review',
-      section: 'Approval & Keuangan',
-      badge: 'Review'
     }
   },
   {

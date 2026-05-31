@@ -134,7 +134,7 @@ function storageToForm(integration?: CompanyIntegration): StorageForm {
 const sections: SettingsSection[] = [
   {
     key: 'company',
-    title: 'Data Company',
+    title: 'Data Perusahaan',
     eyebrow: 'Profil bisnis',
     description: 'Nama, alamat, koordinat kantor, dan zona waktu utama company.',
     icon: Store,
@@ -188,7 +188,7 @@ const sections: SettingsSection[] = [
       {
         key: 'requireAttendanceAtOffice',
         title: 'Absensi wajib di kantor',
-        description: 'Check-in absensi kerja harus berada dalam radius titik kantor company yang diatur di Data Company.',
+        description: 'Check-in absensi kerja harus berada dalam radius titik kantor perusahaan yang diatur di Data Perusahaan.',
         icon: MapPin,
       },
       {
@@ -336,6 +336,7 @@ export function OperationalSettingsPage() {
         updateGeneralSettings(accessToken, settings),
         company ? updateCompanyProfile(accessToken, {
           name: company.name,
+          code: company.code || null,
           legalName: company.legalName || null,
           email: company.email || null,
           phone: company.phone || null,
@@ -502,6 +503,16 @@ export function OperationalSettingsPage() {
               <label className="settings-field wide">
                 <span>Nama company</span>
                 <input value={company.name} onChange={(e) => patchCompany('name', e.target.value)} />
+              </label>
+              <label className="settings-field">
+                <span>Kode perusahaan</span>
+                <input
+                  value={company.code ?? ''}
+                  onChange={(e) => patchCompany('code', e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
+                  placeholder="YKS"
+                  maxLength={32}
+                />
+                <small>Kode ini digunakan sebagai awalan kode karyawan. Contoh: YKS-001.</small>
               </label>
               <label className="settings-field">
                 <span>Nama legal</span>

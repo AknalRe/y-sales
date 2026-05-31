@@ -1,8 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2, Settings2, Search } from 'lucide-react';
 
 import { useAuth } from '../../auth/auth-provider';
-import { getRoles, createRole, deleteRole, type Role } from '@/lib/api/platform';
+import {
+  assignRolePermission,
+  createRole,
+  deleteRole,
+  getPermissions,
+  getRolePermissions,
+  getRoles,
+  removeRolePermission,
+  type Permission,
+  type Role,
+} from '@/lib/api/platform';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,6 +26,12 @@ export function RolesPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
+  const [permissionRole, setPermissionRole] = useState<Role | null>(null);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<string>>(new Set());
+  const [selectedCreatePermissionIds, setSelectedCreatePermissionIds] = useState<Set<string>>(new Set());
+  const [permissionSearch, setPermissionSearch] = useState('');
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
 
   async function load() {
     if (!accessToken) return;
@@ -32,14 +48,40 @@ export function RolesPage() {
 
   useEffect(() => { load(); }, [accessToken]);
 
+  async function loadPermissionOptions() {
+    if (!accessToken) return;
+    setLoadingPermissions(true);
+    setError('');
+    try {
+      const data = await getPermissions(accessToken);
+      setPermissions(data.permissions);
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal memuat daftar permission.');
+    } finally {
+      setLoadingPermissions(false);
+    }
+  }
+
+  async function openCreateModal() {
+    setShowCreate(true);
+    setPermissionSearch('');
+    setSelectedCreatePermissionIds(new Set());
+    await loadPermissionOptions();
+  }
+
   async function handleCreate() {
     if (!accessToken) return;
     setSaving(true);
     setError('');
     try {
-      await createRole(accessToken, { ...form, code: form.code.toUpperCase() });
+      await createRole(accessToken, {
+        ...form,
+        code: form.code.toUpperCase(),
+        permissionIds: [...selectedCreatePermissionIds],
+      });
       setShowCreate(false);
       setForm({ code: '', name: '', description: '' });
+      setSelectedCreatePermissionIds(new Set());
       setSuccess(`Role "${form.name}" berhasil dibuat.`);
       await load();
     } catch (e: any) {
@@ -60,6 +102,65 @@ export function RolesPage() {
     }
   }
 
+  async function openPermissionEditor(role: Role) {
+    if (!accessToken) return;
+    setPermissionRole(role);
+    setPermissionSearch('');
+    setLoadingPermissions(true);
+    setError('');
+    try {
+      const [all, assigned] = await Promise.all([
+        getPermissions(accessToken),
+        getRolePermissions(accessToken, role.id),
+      ]);
+      setPermissions(all.permissions);
+      setSelectedPermissionIds(new Set(assigned.permissions.map((permission) => permission.id)));
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal memuat permission role.');
+      setPermissionRole(null);
+    } finally {
+      setLoadingPermissions(false);
+    }
+  }
+
+  async function togglePermission(permission: Permission) {
+    if (!accessToken || !permissionRole || saving) return;
+    const active = selectedPermissionIds.has(permission.id);
+    setSaving(true);
+    setError('');
+    try {
+      if (active) {
+        await removeRolePermission(accessToken, permissionRole.id, permission.id);
+        setSelectedPermissionIds((current) => {
+          const next = new Set(current);
+          next.delete(permission.id);
+          return next;
+        });
+      } else {
+        await assignRolePermission(accessToken, permissionRole.id, permission.id);
+        setSelectedPermissionIds((current) => new Set(current).add(permission.id));
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal mengubah permission role.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const groupedPermissions = useMemo(() => {
+    const q = permissionSearch.trim().toLowerCase();
+    const filtered = permissions.filter((permission) => {
+      const haystack = `${permission.module} ${permission.code} ${permission.name} ${permission.description ?? ''}`.toLowerCase();
+      return !q || haystack.includes(q);
+    });
+    return filtered.reduce<Record<string, Permission[]>>((groups, permission) => {
+      const key = permission.module || 'general';
+      groups[key] = groups[key] ?? [];
+      groups[key].push(permission);
+      return groups;
+    }, {});
+  }, [permissionSearch, permissions]);
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -72,7 +173,7 @@ export function RolesPage() {
         </div>
         <button
           id="roles-create-btn"
-          onClick={() => setShowCreate(true)}
+          onClick={openCreateModal}
           className="admin-btn-primary"
           type="button"
         >
@@ -126,6 +227,32 @@ export function RolesPage() {
                   <code className="admin-role-card-code">{role.code}</code>
                 </div>
                 {!role.isSystemRole && (
+                  <>
+                    <Button
+                      onClick={() => openPermissionEditor(role)}
+                      variant="ghost"
+                      size="icon"
+                      className="admin-btn-icon-sm"
+                      title="Edit Permission"
+                      type="button"
+                    >
+                      <Settings2 size={13} />
+                    </Button>
+                  </>
+                )}
+                {role.isSystemRole && (
+                  <Button
+                    onClick={() => openPermissionEditor(role)}
+                    variant="ghost"
+                    size="icon"
+                    className="admin-btn-icon-sm"
+                    title="Lihat Permission"
+                    type="button"
+                  >
+                    <Settings2 size={13} />
+                  </Button>
+                )}
+                {!role.isSystemRole && (
                   <Button
                     id={`roles-delete-${role.id}`}
                     onClick={() => handleDelete(role)}
@@ -159,9 +286,12 @@ export function RolesPage() {
       {/* Create Role Modal */}
       {showCreate && (
         <div className="admin-modal-overlay" onClick={() => setShowCreate(false)}>
-          <div className="admin-modal admin-modal-sm" onClick={e => e.stopPropagation()}>
+          <div className="admin-modal admin-role-create-modal" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
-              <h2>Buat Role Baru</h2>
+              <div>
+                <h2>Buat Role Baru</h2>
+                <p className="admin-modal-subtitle">Atur identitas role dan permission dalam satu langkah.</p>
+              </div>
               <button onClick={() => setShowCreate(false)} className="admin-modal-close" type="button">×</button>
             </div>
             <div className="admin-modal-body">
@@ -199,6 +329,61 @@ export function RolesPage() {
                   className="admin-input"
                 />
               </div>
+              <div className="admin-field">
+                <label>Permission Role</label>
+                <div className="admin-permission-search">
+                  <Search size={15} />
+                  <input
+                    value={permissionSearch}
+                    onChange={(event) => setPermissionSearch(event.target.value)}
+                    placeholder="Cari permission, module, atau kode..."
+                  />
+                </div>
+
+                {loadingPermissions ? (
+                  <div className="admin-loading">Memuat permission...</div>
+                ) : (
+                  <div className="admin-permission-groups admin-permission-groups-compact">
+                    {Object.entries(groupedPermissions).map(([module, rows]) => (
+                      <section key={module} className="admin-permission-group">
+                        <h3>{module}</h3>
+                        <div className="admin-permission-list">
+                          {rows.map((permission) => {
+                            const active = selectedCreatePermissionIds.has(permission.id);
+                            return (
+                              <button
+                                key={permission.id}
+                                type="button"
+                                className={`admin-permission-row ${active ? 'active' : ''}`}
+                                onClick={() => {
+                                  setSelectedCreatePermissionIds((current) => {
+                                    const next = new Set(current);
+                                    if (next.has(permission.id)) next.delete(permission.id);
+                                    else next.add(permission.id);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <span className="admin-permission-check">{active ? <CheckCircle2 size={14} /> : null}</span>
+                                <span>
+                                  <strong>{permission.name}</strong>
+                                  <small>{permission.code}</small>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ))}
+                    {!Object.keys(groupedPermissions).length ? (
+                      <p className="admin-muted">Permission tidak ditemukan.</p>
+                    ) : null}
+                  </div>
+                )}
+                <small className="admin-field-hint">
+                  Permission tetap bisa diedit kembali dari tombol pengaturan di kartu role.
+                </small>
+              </div>
             </div>
             <div className="admin-modal-footer">
               <Button onClick={() => setShowCreate(false)} variant="ghost" className="admin-btn-ghost" type="button">Batal</Button>
@@ -211,6 +396,68 @@ export function RolesPage() {
               >
                 {saving ? 'Menyimpan...' : 'Buat Role'}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {permissionRole && (
+        <div className="admin-modal-overlay" onClick={() => setPermissionRole(null)}>
+          <div className="admin-modal admin-permission-modal" onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <div>
+                <h2>Permission Role</h2>
+                <p className="admin-modal-subtitle">{permissionRole.name} · {permissionRole.code}</p>
+              </div>
+              <button onClick={() => setPermissionRole(null)} className="admin-modal-close" type="button">×</button>
+            </div>
+            <div className="admin-modal-body">
+              <div className="admin-permission-search">
+                <Search size={15} />
+                <input
+                  value={permissionSearch}
+                  onChange={(event) => setPermissionSearch(event.target.value)}
+                  placeholder="Cari permission, module, atau kode..."
+                />
+              </div>
+
+              {loadingPermissions ? (
+                <div className="admin-loading">Memuat permission...</div>
+              ) : (
+                <div className="admin-permission-groups">
+                  {Object.entries(groupedPermissions).map(([module, rows]) => (
+                    <section key={module} className="admin-permission-group">
+                      <h3>{module}</h3>
+                      <div className="admin-permission-list">
+                        {rows.map((permission) => {
+                          const active = selectedPermissionIds.has(permission.id);
+                          return (
+                            <button
+                              key={permission.id}
+                              type="button"
+                              className={`admin-permission-row ${active ? 'active' : ''}`}
+                              onClick={() => togglePermission(permission)}
+                              disabled={saving}
+                            >
+                              <span className="admin-permission-check">{active ? <CheckCircle2 size={14} /> : null}</span>
+                              <span>
+                                <strong>{permission.name}</strong>
+                                <small>{permission.code}</small>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                  {!Object.keys(groupedPermissions).length ? (
+                    <p className="admin-muted">Permission tidak ditemukan.</p>
+                  ) : null}
+                </div>
+              )}
+            </div>
+            <div className="admin-modal-footer">
+              <Button onClick={() => setPermissionRole(null)} className="admin-btn-primary" type="button">Selesai</Button>
             </div>
           </div>
         </div>

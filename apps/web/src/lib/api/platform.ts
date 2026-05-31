@@ -128,10 +128,11 @@ export type PlatformInvoiceDetail = PlatformInvoice & {
 export type TenantUser = {
   id: string;
   name: string;
-  email?: string;
-  phone?: string;
-  employeeCode?: string;
+  email?: string | null;
+  phone?: string | null;
+  employeeCode?: string | null;
   status: 'active' | 'inactive' | 'suspended';
+  roleId?: string;
   roleCode: string;
   roleName: string;
   lastLoginAt?: string;
@@ -146,6 +147,14 @@ export type Role = {
   isSystemRole: boolean;
   companyId?: string;
   createdAt: string;
+};
+
+export type Permission = {
+  id: string;
+  code: string;
+  name: string;
+  module: string;
+  description?: string | null;
 };
 
 // ─── Platform: Companies ─────────────────────────────────────────────────────
@@ -353,6 +362,15 @@ export function updateUser(token: string, id: string, data: Partial<TenantUser> 
   );
 }
 
+export function suggestEmployeeCode(token: string, roleId: string, excludeUserId?: string) {
+  const query = new URLSearchParams({ roleId });
+  if (excludeUserId) query.set('excludeUserId', excludeUserId);
+  return apiRequest<{ employeeCode: string }>(
+    `/users/employee-code/suggest?${query.toString()}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
 export function deleteUser(token: string, id: string) {
   return apiRequest<{ success: boolean }>(
     `/users/${id}`,
@@ -376,7 +394,7 @@ export function getRoles(token: string) {
   );
 }
 
-export function createRole(token: string, data: { code: string; name: string; description?: string }) {
+export function createRole(token: string, data: { code: string; name: string; description?: string; permissionIds?: string[] }) {
   return apiRequest<{ role: Role }>(
     '/roles',
     { method: 'POST', body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } }
@@ -386,6 +404,38 @@ export function createRole(token: string, data: { code: string; name: string; de
 export function deleteRole(token: string, id: string) {
   return apiRequest<{ success: boolean }>(
     `/roles/${id}`,
+    { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+export function getPermissions(token: string) {
+  return apiRequest<{ permissions: Permission[] }>(
+    '/permissions',
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+export function getRolePermissions(token: string, roleId: string) {
+  return apiRequest<{ permissions: Permission[] }>(
+    `/roles/${roleId}/permissions`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+export function assignRolePermission(token: string, roleId: string, permissionId: string) {
+  return apiRequest<{ success: boolean }>(
+    `/roles/${roleId}/permissions`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ permissionId }),
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+}
+
+export function removeRolePermission(token: string, roleId: string, permissionId: string) {
+  return apiRequest<{ success: boolean }>(
+    `/roles/${roleId}/permissions/${permissionId}`,
     { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
   );
 }

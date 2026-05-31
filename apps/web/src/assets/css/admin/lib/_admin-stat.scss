@@ -51,6 +51,35 @@
     gap: .75rem;
     flex-wrap: wrap;
     margin-bottom: 1.5rem;
+
+    .admin-search-box {
+        flex: 1 1 0;
+        max-width: none;
+        margin-bottom: 0;
+    }
+
+    .admin-select {
+        width: auto;
+        min-width: 190px;
+        flex: 0 0 auto;
+    }
+
+    .admin-count-badge {
+        flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-filter-row {
+        align-items: stretch;
+
+        .admin-search-box,
+        .admin-select,
+        .admin-count-badge {
+            width: 100%;
+            max-width: none;
+        }
+    }
 }
 
 .admin-filter-group {

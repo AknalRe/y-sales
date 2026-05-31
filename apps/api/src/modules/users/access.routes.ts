@@ -7,10 +7,14 @@ import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
-const createRoleSchema = z.object({
+const rolePayloadSchema = z.object({
   code: z.string().min(2).regex(/^[A-Z0-9_]+$/, 'Role code harus huruf kapital dan underscore'),
   name: z.string().min(2),
   description: z.string().optional(),
+});
+
+const createRoleSchema = rolePayloadSchema.extend({
+  permissionIds: z.array(z.string().uuid()).optional(),
 });
 
 const createPermissionSchema = z.object({
@@ -35,7 +39,7 @@ export async function accessRoutes(app: FastifyInstance) {
     return { roles: rows };
   });
 
-  app.post('/roles', { preHandler: requirePermission('roles.manage') }, async (request) => {
+  app.post('/roles', { preHandler: requirePermission('roles.manage') }, async (request, reply) => {
     const companyId = requireTenantId(request);
     const body = createRoleSchema.parse(request.body);
 
@@ -45,13 +49,33 @@ export async function accessRoutes(app: FastifyInstance) {
       throw Object.assign(new Error('Role code tersebut tidak dapat digunakan.'), { statusCode: 400 });
     }
 
-    const [role] = await db.insert(roles).values({
-      companyId,
-      code: body.code,
-      name: body.name,
-      description: body.description,
-      isSystemRole: false,
-    }).returning();
+    const [duplicate] = await db.select({ id: roles.id }).from(roles).where(and(eq(roles.companyId, companyId), eq(roles.code, body.code)));
+    if (duplicate) {
+      return reply.status(409).send({ message: 'Kode role sudah digunakan di company ini.' });
+    }
+
+    const role = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(roles).values({
+        companyId,
+        code: body.code,
+        name: body.name,
+        description: body.description,
+        isSystemRole: false,
+      }).returning();
+
+      if (body.permissionIds?.length) {
+        await tx.insert(rolePermissions).values(
+          [...new Set(body.permissionIds)].map((permissionId) => ({
+            roleId: created.id,
+            permissionId,
+            grantedByUserId: request.user?.id,
+          }))
+        ).onConflictDoNothing();
+      }
+
+      return created;
+    });
+
     await writeAuditLog({ request, action: 'role.created', entityType: 'role', entityId: role.id, newValues: role });
     return { role };
   });
@@ -59,7 +83,7 @@ export async function accessRoutes(app: FastifyInstance) {
   app.patch('/roles/:roleId', { preHandler: requirePermission('roles.manage') }, async (request, reply) => {
     const companyId = requireTenantId(request);
     const params = z.object({ roleId: z.string().uuid() }).parse(request.params);
-    const body = createRoleSchema.partial().parse(request.body);
+    const body = rolePayloadSchema.partial().parse(request.body);
 
     const [existing] = await db.select().from(roles).where(and(eq(roles.id, params.roleId), eq(roles.companyId, companyId)));
     if (!existing) return reply.status(404).send({ message: 'Role tidak ditemukan.' });

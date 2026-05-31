@@ -360,7 +360,7 @@ Setting platform yang penting:
 - `/media/upload-url` dan `/media/complete`: upload bukti transaksi dengan guard ownership.
 - `/inventory/*`: manajemen warehouse, balance, transfer, movement, adjustment.
 - `/settings/general`: setting operasional company.
-- `/company/profile`: profil company, alamat, koordinat kantor, timezone, dan identitas bisnis.
+- `/company/profile`: profil company, kode perusahaan, alamat, koordinat kantor, timezone, dan identitas bisnis. `code` perusahaan menjadi awalan generator kode karyawan dengan format `KODE_COMPANY-urutan`, contoh `YKS-001`.
 - `/integrations`: konfigurasi integrasi eksternal per company, seperti storage dan face provider.
 - `/platform/*`: company, subscription, plans, billing platform.
 

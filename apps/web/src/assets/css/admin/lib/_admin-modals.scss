@@ -124,7 +124,8 @@
 .platform-field,
 .admin-field {
   display: grid;
-  gap: .45rem;
+  gap: .5rem;
+  align-content: start;
 
   label {
     color: var(--admin-muted-dim);
@@ -164,17 +165,48 @@
 .admin-input,
 .admin-select {
   width: 100%;
+  min-height: 2.75rem;
   box-sizing: border-box;
   border: 1px solid var(--admin-border-strong) !important;
-  border-radius: 10px !important;
+  border-radius: .8rem !important;
   background: var(--admin-surface) !important;
   color: var(--admin-foreground) !important;
-  padding: .6rem .8rem !important;
+  padding: .72rem .85rem !important;
   outline: none;
 
   &:focus {
     border-color: var(--admin-accent) !important;
     box-shadow: 0 0 0 4px var(--admin-accent-shadow) !important;
+  }
+}
+
+.admin-password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .admin-input {
+    padding-right: 3rem !important;
+  }
+}
+
+.admin-password-toggle {
+  position: absolute;
+  right: .45rem;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid transparent;
+  border-radius: .65rem;
+  background: transparent;
+  color: var(--admin-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--admin-foreground);
+    background: var(--admin-bg);
+    border-color: var(--admin-border-subtle);
   }
 }
 

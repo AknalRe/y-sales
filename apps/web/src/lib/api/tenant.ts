@@ -241,6 +241,7 @@ export type GeneralSettings = {
 export type CompanyProfile = {
   id: string;
   name: string;
+  code?: string | null;
   slug: string;
   status: 'active' | 'trialing' | 'suspended' | 'cancelled';
   logoUrl?: string | null;
@@ -262,6 +263,7 @@ export type CompanyProfile = {
 
 export type CompanyProfilePayload = Partial<{
   name: string;
+  code: string | null;
   legalName: string | null;
   email: string | null;
   phone: string | null;

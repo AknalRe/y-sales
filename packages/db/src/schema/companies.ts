@@ -6,6 +6,7 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', ['trialing',
 export const companies = pgTable('companies', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 180 }).notNull(),
+  code: varchar('code', { length: 32 }).unique(),
   slug: varchar('slug', { length: 120 }).notNull().unique(),
   status: companyStatusEnum('status').default('active').notNull(),
   logoUrl: text('logo_url'),
@@ -45,5 +46,4 @@ export const companySubscriptions = pgTable('company_subscriptions', {
 }, (table) => ({
   uniqueCompanyPlan: uniqueIndex('company_subscriptions_company_plan_idx').on(table.companyId, table.planCode),
 }));
-
 

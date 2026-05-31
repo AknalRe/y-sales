@@ -29,6 +29,20 @@
       "when": 1780234696486,
       "tag": "0004_mushy_zarda",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780245317470,
+      "tag": "0005_typical_champions",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780246602885,
+      "tag": "0006_true_misty_knight",
+      "breakpoints": true
     }
   ]
 }

@@ -1,18 +1,28 @@
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq, isNull, or } from 'drizzle-orm';
 import { z } from 'zod';
-import { roles, tenantSubscriptions, users } from '@yuksales/db/schema';
+import { companies, roles, tenantSubscriptions, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { authenticate, hashPassword, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId, requireLimit } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
+const optionalText = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+  z.string().nullable().optional()
+);
+
+const optionalEmail = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+  z.string().email().nullable().optional()
+);
+
 const createUserSchema = z.object({
   roleId: z.string().uuid(),
   name: z.string().min(2),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  employeeCode: z.string().optional(),
+  email: optionalEmail,
+  phone: optionalText,
+  employeeCode: optionalText,
   password: z.string().min(6),
   supervisorId: z.string().uuid().optional(),
 });
@@ -20,9 +30,9 @@ const createUserSchema = z.object({
 const updateUserSchema = z.object({
   roleId: z.string().uuid().optional(),
   name: z.string().min(2).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  employeeCode: z.string().optional(),
+  email: optionalEmail,
+  phone: optionalText,
+  employeeCode: optionalText,
   supervisorId: z.string().uuid().optional(),
   status: z.enum(['active', 'inactive', 'suspended']).optional(),
 });
@@ -30,6 +40,23 @@ const updateUserSchema = z.object({
 const resetPasswordSchema = z.object({
   newPassword: z.string().min(6),
 });
+
+function sanitizeEmployeeCodePart(value: string) {
+  return value.trim().toUpperCase().replace(/[^A-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+function buildNextEmployeeCode(companyCode: string, existingCodes: Array<string | null>) {
+  const prefix = sanitizeEmployeeCodePart(companyCode);
+  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`^${escapedPrefix}-(\\d+)$`, 'i');
+  const nextNumber = existingCodes.reduce((max, code) => {
+    const match = code?.match(pattern);
+    if (!match) return max;
+    return Math.max(max, Number(match[1] ?? 0));
+  }, 0) + 1;
+
+  return `${prefix}-${String(nextNumber).padStart(3, '0')}`;
+}
 
 export async function usersRoutes(app: FastifyInstance) {
 
@@ -64,6 +91,35 @@ export async function usersRoutes(app: FastifyInstance) {
     return { users: rows };
   });
 
+  app.get('/users/employee-code/suggest', { preHandler: requirePermission('users.manage') }, async (request, reply) => {
+    const companyId = requireTenantId(request);
+    const query = z.object({
+      roleId: z.string().uuid(),
+      excludeUserId: z.string().uuid().optional(),
+    }).parse(request.query);
+
+    const [role] = await db.select().from(roles).where(and(eq(roles.id, query.roleId), eq(roles.companyId, companyId)));
+    if (!role) return reply.status(400).send({ message: 'Role tidak valid untuk company ini.' });
+    const [company] = await db.select({ code: companies.code }).from(companies).where(eq(companies.id, companyId));
+    if (!company?.code) {
+      return reply.status(400).send({ message: 'Kode perusahaan belum diatur. Isi Kode Perusahaan di Pengaturan Operasional > Data Company terlebih dahulu.' });
+    }
+
+    const rows = await db
+      .select({ id: users.id, employeeCode: users.employeeCode })
+      .from(users)
+      .where(eq(users.companyId, companyId));
+
+    return {
+      employeeCode: buildNextEmployeeCode(
+        company.code,
+        rows
+          .filter((row) => !query.excludeUserId || row.id !== query.excludeUserId)
+          .map((row) => row.employeeCode)
+      ),
+    };
+  });
+
   // ─── Create User ───────────────────────────────────────────────────────────
   app.post('/users', { preHandler: requirePermission('users.manage') }, async (request, reply) => {
     const companyId = requireTenantId(request);
@@ -77,10 +133,14 @@ export async function usersRoutes(app: FastifyInstance) {
     const identifiers = [];
     if (body.email) identifiers.push(eq(users.email, body.email));
     if (body.phone) identifiers.push(eq(users.phone, body.phone));
-    if (body.employeeCode) identifiers.push(eq(users.employeeCode, body.employeeCode));
     if (identifiers.length) {
-      const [dup] = await db.select({ id: users.id }).from(users).where(and(eq(users.companyId, companyId), or(...identifiers)));
-      if (dup) return reply.status(409).send({ message: 'Email, nomor HP, atau kode karyawan sudah digunakan.' });
+      const [dup] = await db.select({ id: users.id }).from(users).where(or(...identifiers));
+      if (dup) return reply.status(409).send({ message: 'Email atau nomor HP sudah digunakan.' });
+    }
+
+    if (body.employeeCode) {
+      const [dup] = await db.select({ id: users.id }).from(users).where(and(eq(users.companyId, companyId), eq(users.employeeCode, body.employeeCode)));
+      if (dup) return reply.status(409).send({ message: 'Kode karyawan sudah digunakan di company ini.' });
     }
 
     // Check user limit from subscription plan
@@ -135,6 +195,19 @@ export async function usersRoutes(app: FastifyInstance) {
     if (body.roleId) {
       const [role] = await db.select().from(roles).where(and(eq(roles.id, body.roleId), eq(roles.companyId, companyId)));
       if (!role) return reply.status(400).send({ message: 'Role tidak valid untuk company ini.' });
+    }
+
+    const identifiers = [];
+    if (body.email) identifiers.push(eq(users.email, body.email));
+    if (body.phone) identifiers.push(eq(users.phone, body.phone));
+    if (identifiers.length) {
+      const [dup] = await db.select({ id: users.id }).from(users).where(or(...identifiers));
+      if (dup && dup.id !== params.id) return reply.status(409).send({ message: 'Email atau nomor HP sudah digunakan.' });
+    }
+
+    if (body.employeeCode) {
+      const [dup] = await db.select({ id: users.id }).from(users).where(and(eq(users.companyId, companyId), eq(users.employeeCode, body.employeeCode)));
+      if (dup && dup.id !== params.id) return reply.status(409).send({ message: 'Kode karyawan sudah digunakan di company ini.' });
     }
 
     const [updated] = await db.update(users).set({ ...body, updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId))).returning();

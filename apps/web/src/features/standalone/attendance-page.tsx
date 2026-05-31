@@ -63,7 +63,7 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
   // Auto-start camera and location for sales mode (after permission popup dismissed)
   useEffect(() => {
     if (mode !== 'sales' || showPermissionPopup) return;
-    const init = async () => {
+    const timer = setTimeout(async () => {
       try {
         if (videoRef.current) {
           const nextStream = await startFrontCamera(videoRef.current);
@@ -74,8 +74,8 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
         const current = await getCurrentLocation();
         setLocation(current);
       } catch { /* geolocation denied */ }
-    };
-    init();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [mode, showPermissionPopup]);
 
   useEffect(() => {

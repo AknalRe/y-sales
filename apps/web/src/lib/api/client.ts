@@ -23,8 +23,8 @@ export async function apiRequest<TResponse>(path: string, options: RequestInit =
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
 
-    // 401 on non-login routes = session expired → trigger global signout
-    if (response.status === 401 && !path.includes('/auth/login')) {
+    // 401 on non-login, non-refresh routes = session expired → trigger global signout
+    if (response.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
       window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
 

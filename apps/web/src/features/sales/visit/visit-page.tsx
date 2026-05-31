@@ -43,7 +43,7 @@ export function VisitPage() {
 
   useEffect(() => {
     if (showPermissionPopup) return;
-    const init = async () => {
+    const timer = setTimeout(async () => {
       try {
         if (videoRef.current) {
           const nextStream = await startFrontCamera(videoRef.current);
@@ -54,8 +54,8 @@ export function VisitPage() {
         const current = await getCurrentLocation();
         setLocation(current);
       } catch { /* geolocation denied */ }
-    };
-    init();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [showPermissionPopup]);
 
   useEffect(() => {

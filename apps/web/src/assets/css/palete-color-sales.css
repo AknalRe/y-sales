@@ -64,7 +64,7 @@
 
 .dark {
     /* Sales UI — Dark Mode */
-    --sales-subtle: #94a3b8;
+    /* --sales-subtle: #94a3b8;
     --sales-bg: var(--brand-page);
     --sales-surface: var(--brand-surface);
     --sales-bg-card: var(--brand-surface);
@@ -77,18 +77,18 @@
     --sales-foreground: var(--brand-foreground);
     --sales-text: var(--brand-text);
     --sales-text-muted: #94a3b8;
-    --sales-muted: #94a3b8;
+    --sales-muted: #94a3b8; */
 
     /* Sales Accent */
-    --sales-accent: var(--brand-accent);
+    /* --sales-accent: var(--brand-accent);
     --sales-accent-light: #e69a6e;
     --sales-accent-dark: #c2410c;
     --sales-accent-shadow: rgba(217, 123, 74, .2);
     --sales-accent-bg: rgba(217, 123, 74, .15);
-    --sales-accent-subtle: rgba(217, 123, 74, .08);
+    --sales-accent-subtle: rgba(217, 123, 74, .08); */
 
     /* Sales Status */
-    --sales-success: #86efac;
+    /* --sales-success: #86efac;
     --sales-success-light: #4ade80;
     --sales-success-bg: rgba(34, 197, 94, .12);
     --sales-success-subtle: rgba(134, 239, 172, .15);
@@ -108,17 +108,17 @@
     --sales-danger-shadow-lg: rgba(248, 113, 113, .25);
     --sales-danger-shadow-xl: rgba(248, 113, 113, .3);
 
-    --sales-warning-bg: rgba(245, 158, 11, .12);
+    --sales-warning-bg: rgba(245, 158, 11, .12); */
 
     /* Sales Overlays */
-    --sales-overlay-white: rgba(255, 255, 255, .1);
-    --sales-overlay-subtle: rgba(148, 163, 184, .04);
+    /* --sales-overlay-white: rgba(255, 255, 255, .1);
+    --sales-overlay-subtle: rgba(148, 163, 184, .04); */
 
     /* Sales Brand Tones */
-    --sales-brand-darker: #0d1321;
+    /* --sales-brand-darker: #0d1321;
     --sales-brand-dark: #1e293b;
     --sales-brand-primary: #0f172a;
-    --sales-brand-muted: #64748b;
+    --sales-brand-muted: #64748b; */
 }
 
 @theme inline {

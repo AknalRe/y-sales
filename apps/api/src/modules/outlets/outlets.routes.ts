@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { mediaFiles, outletPhotos, outlets } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -49,12 +49,12 @@ export async function outletRoutes(app: FastifyInstance) {
   app.get('/outlets', { preHandler: requirePermission('outlets.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const query = z.object({ status: z.string().optional(), q: z.string().optional() }).parse(request.query);
-    const rows = await db.select().from(outlets).where(eq(outlets.companyId, companyId)).orderBy(desc(outlets.createdAt));
-    const filtered = rows.filter((row) => {
-      if (query.status && row.status !== query.status) return false;
-      if (query.q && !`${row.code} ${row.name} ${row.address} ${row.phone ?? ''}`.toLowerCase().includes(query.q.toLowerCase())) return false;
-      return !row.deletedAt;
-    });
+    const conditions = [eq(outlets.companyId, companyId), isNull(outlets.deletedAt)];
+    if (query.status) conditions.push(eq(outlets.status, query.status as any));
+    const rows = await db.select().from(outlets).where(and(...conditions)).orderBy(desc(outlets.createdAt));
+    const filtered = query.q
+      ? rows.filter((row) => `${row.code} ${row.name} ${row.address} ${row.phone ?? ''}`.toLowerCase().includes(query.q!.toLowerCase()))
+      : rows;
     return { outlets: filtered };
   });
 
@@ -141,7 +141,7 @@ export async function outletRoutes(app: FastifyInstance) {
     return reply.status(201).send(result);
   });
 
-  app.post('/outlets/:id/verify', { preHandler: requirePermission('outlets.manage') }, async (request) => {
+  app.post('/outlets/:id/verify', { preHandler: requirePermission('outlets.verify') }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [oldOutlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, params.id)));

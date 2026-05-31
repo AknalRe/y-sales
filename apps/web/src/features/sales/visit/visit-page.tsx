@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle, RefreshCw, WifiOff } from 'lucide-react';
 import { checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
 import { getTodayVisitPlan, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
 import { useAuth } from '../../auth/auth-provider';
+import { enqueueVisit, getVisitQueueCount } from '../../../lib/offline/visit-queue';
+import { syncVisitQueue } from '../../../lib/offline/sync-visits';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 
@@ -15,7 +17,10 @@ export function VisitPage() {
   const [image, setImage] = useState<CapturedImage | null>(null);
   const [location, setLocation] = useState<BrowserLocation | null>(null);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState('');
+  const [queueCount, setQueueCount] = useState(0);
+  const [online, setOnline] = useState(navigator.onLine);
 
   // Data
   const [schedules, setSchedules] = useState<TodayVisitSchedule[]>([]);
@@ -29,6 +34,21 @@ export function VisitPage() {
   const [notes, setNotes] = useState('');
 
   useEffect(() => () => stopCamera(stream), [stream]);
+
+  useEffect(() => {
+    refreshQueueCount();
+    const handleOnline = async () => {
+      setOnline(true);
+      await handleSyncQueue();
+    };
+    const handleOffline = () => setOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const raw = localStorage.getItem(activeVisitStorageKey);
@@ -52,6 +72,24 @@ export function VisitPage() {
 
   const availableSchedules = schedules.filter((schedule) => ['assigned', 'approved'].includes(schedule.status));
   const selectedSchedule = schedules.find((schedule) => schedule.id === selectedScheduleId);
+
+  async function refreshQueueCount() {
+    const count = await getVisitQueueCount();
+    setQueueCount(count);
+  }
+
+  async function handleSyncQueue() {
+    setSyncing(true);
+    try {
+      const result = await syncVisitQueue();
+      await refreshQueueCount();
+      if (result.synced || result.failed) {
+        setMessage(`Sync visit selesai. Berhasil: ${result.synced}, gagal: ${result.failed}`);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function handleStartCamera() {
     if (!videoRef.current) return;
@@ -93,6 +131,7 @@ export function VisitPage() {
     };
 
     try {
+      if (!navigator.onLine) throw new Error('offline');
       const result = await checkInVisit(accessToken, payload);
       setMessage(`Check-in berhasil!`);
       setActiveVisitId(result.visit.id);
@@ -105,7 +144,13 @@ export function VisitPage() {
       }));
       setImage(null); // Reset image for check-out
     } catch (error: any) {
-      setMessage(`Check-in gagal: ${error.message}`);
+      if (!navigator.onLine || error.message === 'offline') {
+        await enqueueVisit({ type: 'check-in', accessToken, payload });
+        await refreshQueueCount();
+        setMessage('Check-in disimpan offline dan akan tersinkron saat online.');
+      } else {
+        setMessage(`Check-in gagal: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -134,6 +179,7 @@ export function VisitPage() {
     };
 
     try {
+      if (!navigator.onLine) throw new Error('offline');
       await checkOutVisit(accessToken, payload);
       setMessage(`Check-out berhasil!`);
       setActiveVisitId(null);
@@ -144,7 +190,20 @@ export function VisitPage() {
       setImage(null);
       setNotes('');
     } catch (error: any) {
-      setMessage(`Check-out gagal: ${error.message}`);
+      if (!navigator.onLine || error.message === 'offline') {
+        await enqueueVisit({ type: 'check-out', accessToken, payload });
+        await refreshQueueCount();
+        setActiveVisitId(null);
+        localStorage.removeItem(activeVisitStorageKey);
+        setSelectedOutlet('');
+        setSelectedScheduleId('');
+        setActiveOutletName('');
+        setImage(null);
+        setNotes('');
+        setMessage('Check-out disimpan offline dan akan tersinkron saat online.');
+      } else {
+        setMessage(`Check-out gagal: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -157,7 +216,17 @@ export function VisitPage() {
           <p className="sales-greeting-label">Eksekusi Kunjungan</p>
           <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Visit Check-In</h1>
         </div>
+        {!online && <span style={{ fontSize: '.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: 4 }}><WifiOff size={14} /> Offline</span>}
       </div>
+
+      {queueCount > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 12, padding: '.5rem .75rem', marginBottom: '.5rem' }}>
+          <span style={{ fontSize: '.8rem', color: '#B55925' }}>{queueCount} visit menunggu sync</span>
+          <button onClick={handleSyncQueue} disabled={syncing || !navigator.onLine} style={{ background: 'none', border: 'none', color: '#B55925', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '.8rem', fontWeight: 600 }}>
+            {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Sync
+          </button>
+        </div>
+      )}
 
       <div className="sales-step-card">
         <h2>{!activeVisitId ? '1. Pilih Outlet Tujuan' : 'Sesi Kunjungan Aktif'}</h2>

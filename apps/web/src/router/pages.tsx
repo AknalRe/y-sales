@@ -14,6 +14,7 @@ import {
   SlidersHorizontal,
   CalendarPlus,
   Store,
+  Clock,
 } from 'lucide-react';
 import { DashboardPage } from '@/features/admin/dashboard/dashboard-page';
 import { AttendancePage } from '@/features/standalone/attendance-page';
@@ -212,6 +213,15 @@ export const salesRoutes: RouteConfig[] = [
     handle: {
       label: 'Home',
       icon: LayoutDashboard,
+    }
+  },
+  {
+    path: 'attendance',
+    element: <AttendancePage mode="sales" />,
+    handle: {
+      label: 'Absensi',
+      icon: Clock,
+      mobile: true
     }
   },
   {

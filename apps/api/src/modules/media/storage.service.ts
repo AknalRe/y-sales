@@ -65,6 +65,9 @@ function clientKey(config: StorageConfig) {
 }
 
 function getS3Client(config: StorageConfig) {
+  if (config.driver === 'local') {
+    throw Object.assign(new Error('Local storage driver tidak mendukung presigned URL. Gunakan R2/S3 atau upload langsung.'), { statusCode: 501 });
+  }
   const key = clientKey(config);
   const cached = s3Clients.get(key);
   if (cached) return cached;
@@ -113,6 +116,17 @@ export function getPublicUrl(objectKey: string, config: StorageConfig = envStora
 
 export async function createUploadUrl(input: { companyId?: string; objectKey: string; mimeType: string }) {
   const config = await getStorageConfig(input.companyId);
+
+  if (config.driver === 'local') {
+    return {
+      uploadUrl: `/media/local-upload?objectKey=${encodeURIComponent(input.objectKey)}`,
+      objectKey: input.objectKey,
+      publicUrl: '',
+      expiresIn: config.signedUrlExpiresSeconds,
+      provider: 'local',
+    };
+  }
+
   const command = new PutObjectCommand({
     Bucket: config.bucket,
     Key: input.objectKey,

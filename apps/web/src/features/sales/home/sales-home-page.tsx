@@ -77,7 +77,7 @@ export function SalesHomePage() {
 
   useEffect(() => { load(); }, [accessToken]);
 
-  const checkedIn = attendance?.status === 'checked_in';
+  const checkedIn = attendance?.status === 'open';
   const todayVisitsDone = visits.filter(v => v.status === 'completed').length;
   const todayVisitsTotal = visits.length;
 
@@ -121,7 +121,7 @@ export function SalesHomePage() {
                 <strong>Belum Absen</strong>
                 <span>Lakukan absensi dulu sebelum mulai kerja</span>
               </div>
-              <button onClick={() => navigate('/attendance')} className="sales-banner-btn">Check-In</button>
+              <button onClick={() => navigate('/sales/attendance')} className="sales-banner-btn">Check-In</button>
             </>
           )
         ) : (
@@ -152,7 +152,7 @@ export function SalesHomePage() {
 
       {/* Quick Actions */}
       <div className="sales-quick-actions">
-        <Link to="/attendance" className="sales-action-card sales-action-primary">
+        <Link to="/sales/attendance" className="sales-action-card sales-action-primary">
           <div className="sales-action-icon"><Camera size={22} /></div>
           <span>Absensi Wajah</span>
         </Link>

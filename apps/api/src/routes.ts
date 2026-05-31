@@ -6,6 +6,7 @@ import { platformRoutes } from './modules/platform/platform.routes.js';
 import { attendanceRoutes } from './modules/attendance/attendance.routes.js';
 import { attendanceReviewRoutes } from './modules/attendance/attendance-review.routes.js';
 import { companyRoutes } from './modules/company/company.routes.js';
+import { depositRoutes } from './modules/deposits/deposits.routes.js';
 import { financeRoutes } from './modules/finance/finance.routes.js';
 import { inventoryRoutes } from './modules/inventory/inventory.routes.js';
 import { integrationRoutes } from './modules/integrations/integrations.routes.js';
@@ -18,11 +19,6 @@ import { settingsRoutes } from './modules/settings/settings.routes.js';
 import { syncRoutes } from './modules/sync/sync.routes.js';
 import { visitRoutes } from './modules/visits/visits.routes.js';
 
-const notImplemented = (moduleName: string) => async () => ({
-  module: moduleName,
-  status: 'planned',
-});
-
 export async function registerRoutes(app: FastifyInstance) {
   await app.register(authRoutes);
   await app.register(platformRoutes);
@@ -31,6 +27,7 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(attendanceRoutes);
   await app.register(attendanceReviewRoutes);
   await app.register(companyRoutes);
+  await app.register(depositRoutes);
   await app.register(financeRoutes);
   await app.register(inventoryRoutes);
   await app.register(integrationRoutes);
@@ -42,8 +39,6 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(syncRoutes);
   await app.register(visitRoutes);
   await app.register(reportRoutes);
-
-  app.get('/transactions', notImplemented('transactions'));
 }
 
 

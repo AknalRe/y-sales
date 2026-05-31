@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { and, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
-import { permissions, rolePermissions, roles } from '@yuksales/db/schema';
+import { permissions, rolePermissions, roles, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
@@ -74,6 +74,10 @@ export async function accessRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(roles).where(and(eq(roles.id, params.roleId), eq(roles.companyId, companyId)));
     if (!existing) return reply.status(404).send({ message: 'Role tidak ditemukan.' });
     if (existing.isSystemRole) return reply.status(403).send({ message: 'System role tidak dapat dihapus.' });
+
+    // Check if any users still have this role
+    const [userWithRole] = await db.select({ id: users.id }).from(users).where(and(eq(users.roleId, params.roleId), isNull(users.deletedAt)));
+    if (userWithRole) return reply.status(400).send({ message: 'Role tidak dapat dihapus karena masih digunakan oleh user.' });
 
     // Remove all permissions first, then delete role
     await db.delete(rolePermissions).where(eq(rolePermissions.roleId, params.roleId));

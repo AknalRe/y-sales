@@ -1,18 +1,18 @@
 ﻿services:
   postgres:
     image: postgres:16-alpine
-    container_name: mahasura-sales-postgres
+    container_name: yuksales-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: mahasura_sales
-      POSTGRES_USER: mahasura
-      POSTGRES_PASSWORD: mahasura
+      POSTGRES_DB: yuksales
+      POSTGRES_USER: yuksales
+      POSTGRES_PASSWORD: yuksales
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mahasura -d mahasura_sales"]
+      test: ["CMD-SHELL", "pg_isready -U yuksales -d yuksales"]
       interval: 10s
       timeout: 5s
       retries: 5

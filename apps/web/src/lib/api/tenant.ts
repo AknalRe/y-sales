@@ -274,7 +274,7 @@ export function getWarehouses(token: string) {
 }
 
 export function getInventoryBalances(token: string, warehouseId: string) {
-  return apiRequest<{ balances: InventoryBalance[] }>(`/inventory/balances/${warehouseId}`, { headers: { Authorization: `Bearer ${token}` } });
+  return apiRequest<{ balances: InventoryBalance[] }>(`/inventory/balances?warehouseId=${warehouseId}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
 // ─── User APIs ────────────────────────────────────────────────────────────────

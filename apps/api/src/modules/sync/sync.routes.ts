@@ -14,6 +14,7 @@ import {
 import { db } from '../../plugins/db.js';
 import { authenticate } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
+import { processSyncEvent } from './sync-handlers.js';
 
 const pushEventSchema = z.object({
   clientRequestId: z.string().uuid(),
@@ -105,6 +106,12 @@ export async function syncRoutes(app: FastifyInstance) {
         results.push({ clientRequestId: event.clientRequestId, status: existing.status, syncEventId: existing.id, duplicate: true });
         continue;
       }
+
+      const handlerResult = await processSyncEvent(
+        { entityType: event.entityType, operation: event.operation, payload: event.payload },
+        { companyId, userId: request.user!.id, request }
+      );
+
       const payloadHash = event.payloadHash ?? hashPayload(event.payload);
       const [created] = await db.insert(syncEvents).values({
         companyId,
@@ -112,16 +119,17 @@ export async function syncRoutes(app: FastifyInstance) {
         deviceId: body.deviceId,
         clientRequestId: event.clientRequestId,
         entityType: event.entityType,
-        entityId: event.entityId,
+        entityId: handlerResult.entityId ?? event.entityId,
         operation: event.operation,
-        status: 'processed',
+        status: handlerResult.success ? 'processed' : 'failed',
+        errorMessage: handlerResult.error,
         payloadHash,
         payload: event.payload,
-        result: { message: 'Event diterima dan tercatat. Processing domain handler dapat ditambahkan per entity.' },
+        result: handlerResult,
         createdAtClient: event.createdAtClient ? new Date(event.createdAtClient) : undefined,
         processedAt: new Date(),
       }).returning();
-      results.push({ clientRequestId: event.clientRequestId, status: created.status, syncEventId: created.id });
+      results.push({ clientRequestId: event.clientRequestId, status: created.status, syncEventId: created.id, handlerResult });
     }
     return { results };
   });

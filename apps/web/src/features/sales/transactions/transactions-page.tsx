@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2 } from 'lucide-react';
+import { ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff } from 'lucide-react';
 import { getProducts, createOrder, getTodayVisitPlan, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState, Spinner } from '../../../components/ui';
+import { enqueueTransaction, getTransactionQueueCount } from '../../../lib/offline/transaction-queue';
+import { syncTransactionQueue } from '../../../lib/offline/sync-transactions';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 
@@ -29,6 +31,25 @@ export function TransactionsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [queueCount, setQueueCount] = useState(0);
+  const [online, setOnline] = useState(navigator.onLine);
+  const [offlineMessage, setOfflineMessage] = useState('');
+
+  useEffect(() => {
+    refreshQueueCount();
+    const handleOnline = async () => {
+      setOnline(true);
+      await handleSyncQueue();
+    };
+    const handleOffline = () => setOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const raw = localStorage.getItem(activeVisitStorageKey);
@@ -66,6 +87,24 @@ export function TransactionsPage() {
     return cart.reduce((sum, item) => sum + (Number(item.product.priceDefault) * item.quantity), 0);
   }, [cart]);
 
+  async function refreshQueueCount() {
+    const count = await getTransactionQueueCount();
+    setQueueCount(count);
+  }
+
+  async function handleSyncQueue() {
+    setSyncing(true);
+    try {
+      const result = await syncTransactionQueue();
+      await refreshQueueCount();
+      if (result.synced || result.failed) {
+        setOfflineMessage(`Sync transaksi selesai. Berhasil: ${result.synced}, gagal: ${result.failed}`);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   function addToCart(product: any) {
     setCart(prev => {
       const existing = prev.find(i => i.product.id === product.id);
@@ -81,23 +120,34 @@ export function TransactionsPage() {
     setSubmitting(true);
     setError('');
 
+    const orderPayload = {
+      clientRequestId: crypto.randomUUID(),
+      outletId: selectedOutlet,
+      visitSessionId: activeVisitId,
+      customerType: 'store' as const,
+      paymentMethod,
+      items: cart.map(i => ({
+        productId: i.product.id,
+        quantity: String(i.quantity),
+        unitPrice: String(i.product.priceDefault)
+      }))
+    };
+
     try {
-      await createOrder(accessToken, {
-        clientRequestId: crypto.randomUUID(),
-        outletId: selectedOutlet,
-        visitSessionId: activeVisitId,
-        customerType: 'store',
-        paymentMethod,
-        items: cart.map(i => ({
-          productId: i.product.id,
-          quantity: i.quantity,
-          unitPrice: i.product.priceDefault
-        }))
-      });
+      if (!navigator.onLine) throw new Error('offline');
+      await createOrder(accessToken, orderPayload);
       setSuccess(true);
       setCart([]);
     } catch (e: any) {
-      setError(e.message || 'Gagal mengirim transaksi.');
+      if (!navigator.onLine || e.message === 'offline') {
+        await enqueueTransaction({ type: 'create-order', accessToken, payload: orderPayload });
+        await refreshQueueCount();
+        setSuccess(true);
+        setCart([]);
+        setOfflineMessage('Transaksi disimpan offline dan akan tersinkron saat online.');
+      } else {
+        setError(e.message || 'Gagal mengirim transaksi.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -109,6 +159,7 @@ export function TransactionsPage() {
     setSelectedOutlet('');
     setPaymentMethod('cash');
     setError('');
+    setOfflineMessage('');
   }
 
   if (success) {
@@ -117,7 +168,9 @@ export function TransactionsPage() {
         <div className="sales-card" style={{ padding: '3rem 2rem', textAlign: 'center', marginTop: '2rem' }}>
           <CheckCircle2 size={64} color="#34d399" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ fontSize: '1.5rem', marginBottom: '.5rem' }}>Transaksi Terkirim!</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Order telah dikirim ke admin untuk verifikasi. Lanjutkan perjalanan Anda.</p>
+          <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>
+            {offlineMessage || 'Order telah dikirim ke admin untuk verifikasi. Lanjutkan perjalanan Anda.'}
+          </p>
           <button onClick={() => navigate('/sales/invoices')} className="sales-btn sales-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', marginBottom: '.75rem' }}>
             Upload Foto Nota
           </button>
@@ -136,7 +189,21 @@ export function TransactionsPage() {
           <p className="sales-greeting-label">Order Taking</p>
           <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Buat Transaksi</h1>
         </div>
+        {!online && <span style={{ fontSize: '.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: 4 }}><WifiOff size={14} /> Offline</span>}
       </div>
+
+      {queueCount > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 12, padding: '.5rem .75rem', marginBottom: '.5rem' }}>
+          <span style={{ fontSize: '.8rem', color: '#B55925' }}>{queueCount} transaksi menunggu sync</span>
+          <button onClick={handleSyncQueue} disabled={syncing || !navigator.onLine} style={{ background: 'none', border: 'none', color: '#B55925', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '.8rem', fontWeight: 600 }}>
+            {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Sync
+          </button>
+        </div>
+      )}
+
+      {offlineMessage && (
+        <div className="sales-message" style={{ marginBottom: '.5rem' }}>{offlineMessage}</div>
+      )}
 
       <div className="sales-card" style={{ margin: 0, padding: 0, borderRadius: 15 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: '#ffffff', border: '1px solid rgba(74, 41, 34, .14)', padding: '.65rem 1rem', borderRadius: '1rem' }}>

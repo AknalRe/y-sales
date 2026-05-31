@@ -22,6 +22,6 @@
     background: transparent;
 
     &::placeholder {
-        color: #64748b;
+        color: var(--platform-subtle);
     }
 }

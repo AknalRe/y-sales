@@ -33,7 +33,7 @@
 .platform-link-sm {
     font-size: .8rem;
     font-weight: 700;
-    color: #93c5fd;
+    color: var(--platform-text-blue);
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -41,6 +41,6 @@
     transition: .2s ease;
 
     &:hover {
-        color: #bfdbfe;
+        color: var(--platform-text-blue-light);
     }
 }

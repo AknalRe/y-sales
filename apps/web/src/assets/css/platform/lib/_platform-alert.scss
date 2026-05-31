@@ -9,9 +9,9 @@
     border: 1px solid var(--platform-border);
 
     &-error {
-        color: #fecaca;
-        background: rgba(239, 68, 68, .12);
-        border-color: rgba(239, 68, 68, .26);
+        color: var(--platform-danger-subtle);
+        background: var(--platform-danger-shadow);
+        border-color: var(--platform-danger-shadow-lg);
     }
 }
 
@@ -23,6 +23,6 @@
     padding: .2rem .6rem;
     border-radius: 999px;
     white-space: nowrap;
-    background: rgba(255, 255, 255, .1);
-    color: #cbd5e1;
+    background: var(--platform-overlay-white-2xl);
+    color: var(--platform-text-light);
 }

@@ -18,7 +18,7 @@
 
     th {
         text-align: left;
-        color: #cbd5e1;
+        color: var(--platform-text-light);
         font-size: .78rem;
         text-transform: uppercase;
         letter-spacing: .08em;
@@ -28,12 +28,12 @@
 
     td {
         padding: 1rem;
-        border-bottom: 1px solid rgba(148, 163, 184, .09);
+        border-bottom: 1px solid var(--platform-border-overlay);
         vertical-align: middle;
     }
 
     tr:hover td {
-        background: rgba(255, 255, 255, .04);
+        background: var(--platform-hover-bg);
     }
 }
 
@@ -60,7 +60,7 @@
 }
 
 .platform-subscription-meta {
-    color: #93c5fd;
+    color: var(--platform-text-blue);
     font-size: .78rem;
     font-weight: 700;
 }
@@ -70,9 +70,9 @@
     align-items: center;
     border-radius: 999px;
     padding: .28rem .58rem;
-    color: #fef3c7;
-    background: rgba(245, 158, 11, .13);
-    border: 1px solid rgba(245, 158, 11, .2);
+    color: var(--platform-text-amber-subtle);
+    background: var(--platform-warning-shadow-md);
+    border: 1px solid var(--platform-warning-shadow-xl);
     font-size: .8rem;
     font-weight: 800;
     white-space: nowrap;
@@ -93,9 +93,9 @@
 }
 
 .platform-btn-danger-sm {
-    color: #fecaca;
-    border-color: rgba(239, 68, 68, .28);
-    background: rgba(239, 68, 68, .12);
+    color: var(--platform-danger-subtle);
+    border-color: var(--platform-danger-shadow-xl);
+    background: var(--platform-danger-shadow);
 }
 
 // Platform loading

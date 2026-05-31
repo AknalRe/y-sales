@@ -6,10 +6,10 @@
     justify-content: space-between;
     gap: 1.5rem;
     align-items: center;
-    border: 1px solid rgba(74, 41, 34, .35);
+    border: 1px solid var(--platform-brand-border);
     border-radius: 28px;
     padding: 1.35rem 1.6rem;
-    background: linear-gradient(135deg, #6b3a2e 0%, #4a2922 45%, #2a1510 100%);
+    background: linear-gradient(135deg, var(--platform-brand-from) 0%, var(--platform-brand-mid) 45%, var(--platform-brand-to) 100%);
 }
 
 .platform-company-view-copy {
@@ -22,13 +22,13 @@
         align-items: center;
         gap: .55rem;
         margin: 0;
-        color: #fef3c7;
+        color: var(--platform-brand-text);
         font-size: clamp(1.35rem, 2vw, 2rem);
     }
 
     p {
         margin: 0;
-        color: #d4a989;
+        color: var(--platform-brand-text-muted);
     }
 }
 
@@ -36,7 +36,7 @@
     display: inline-flex;
     align-items: center;
     gap: .4rem;
-    color: #fbbf24;
+    color: var(--platform-brand-kicker);
     font-size: .78rem;
     font-weight: 900;
     text-transform: uppercase;
@@ -51,14 +51,14 @@
     flex: 1 1 200px;
 
     .platform-btn-primary {
-        background: linear-gradient(135deg, #b45309, #d97706);
-        box-shadow: 0 10px 28px rgba(180, 83, 9, .35);
+        background: linear-gradient(135deg, var(--platform-brand-accent), var(--platform-brand-accent-light));
+        box-shadow: 0 10px 28px var(--platform-brand-accent-shadow);
     }
 
     .platform-btn-ghost {
-        color: #fef3c7;
-        background: rgba(255, 255, 255, .1);
-        border-color: rgba(212, 169, 137, .28);
+        color: var(--platform-brand-text);
+        background: var(--platform-overlay-white-2xl);
+        border-color: var(--platform-brand-border-subtle);
         backdrop-filter: blur(8px);
     }
 }

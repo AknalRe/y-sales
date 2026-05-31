@@ -19,12 +19,12 @@
     color: #fff;
     background: linear-gradient(135deg, var(--platform-primary), var(--platform-primary-2));
     border-color: transparent;
-    box-shadow: 0 16px 35px rgba(139, 92, 246, .25);
+    box-shadow: 0 16px 35px var(--platform-violet-shadow);
 }
 
 .platform-btn-ghost {
     color: #fff;
-    background: rgba(255, 255, 255, .06);
+    background: var(--platform-overlay-white-lg);
 }
 
 .platform-btn:hover,
@@ -34,7 +34,7 @@
 
 .platform-btn-danger {
     color: #fff;
-    background: linear-gradient(135deg, #ef4444, #f97316);
+    background: linear-gradient(135deg, var(--platform-danger), var(--platform-danger-light));
     border-color: transparent;
 }
 

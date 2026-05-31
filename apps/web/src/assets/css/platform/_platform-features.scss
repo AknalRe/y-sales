@@ -24,10 +24,10 @@
     justify-content: space-between;
     gap: 1rem;
     align-items: flex-start;
-    border: 1px solid rgba(148, 163, 184, .16);
+    border: 1px solid var(--platform-border-overlay-xl);
     border-radius: 20px;
     padding: 1rem;
-    background: rgba(255, 255, 255, .035);
+    background: var(--platform-overlay-white-xs);
 
     div:first-child {
         display: grid;
@@ -44,7 +44,7 @@
         border-radius: 999px;
         padding: .18rem .48rem;
         background: rgba(96, 165, 250, .14);
-        color: #bfdbfe;
+        color: var(--platform-text-blue-light);
     }
 
     p {
@@ -58,5 +58,5 @@
 }
 
 .platform-feature-deprecated {
-    border-color: rgba(245, 158, 11, .28);
+    border-color: var(--platform-warning-shadow-bright);
 }

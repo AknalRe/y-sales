@@ -1,65 +1,478 @@
 /* ────────────────────────────────────────────────────────────────────────
-   Platform Colors (SaaS)
+   Platform Colors (SaaS — Super Admin)
+   Extracted from hardcoded values in platform SCSS (2026-05-31)
    ──────────────────────────────────────────────────────────────────────── */
 
 :root {
-    --platform-success: #22c55e;
-    --platform-warning: #f59e0b;
-    --platform-danger: #ef4444;
-    --platform-muted: var(--muted-foreground);
+    /* Platform Base */
     --platform-bg: #f8fafc;
     --platform-panel: #ffffff;
     --platform-panel-strong: #ffffff;
     --platform-border: #e2e8f0;
     --platform-text: #0f172a;
     --platform-subtle: #64748b;
+
+    /* Platform Primary */
     --platform-primary: #8b5cf6;
     --platform-primary-2: #06b6d4;
+
+    /* Platform Accent */
     --platform-accent-green: #059669;
     --platform-accent-blue: #2563eb;
     --platform-accent-amber: #92400e;
     --platform-accent-amber-bg: rgba(245, 158, 11, .1);
+
+    /* Platform Status */
+    --platform-success: #22c55e;
+    --platform-success-light: #86efac;
+    --platform-success-subtle: #a7f3d0;
+    --platform-success-bg: #dcfce7;
+    --platform-success-bg-light: #bbf7d0;
+    --platform-success-text: #166534;
+    --platform-success-shadow: rgba(34, 197, 94, .12);
+    --platform-success-shadow-md: rgba(34, 197, 94, .13);
+    --platform-success-shadow-lg: rgba(34, 197, 94, .14);
+    --platform-success-shadow-xl: rgba(34, 197, 94, .16);
+    --platform-success-shadow-glow: rgba(34, 197, 94, .18);
+    --platform-success-shadow-bright: rgba(99, 220, 152, .16);
+    --platform-success-shadow-glow-bright: rgba(99, 220, 152, .48);
+
+    --platform-warning: #f59e0b;
+    --platform-warning-light: #fde68a;
+    --platform-warning-subtle: #fef3c7;
+    --platform-warning-bg: #fffbeb;
+    --platform-warning-text: #92400e;
+    --platform-warning-shadow: rgba(245, 158, 11, .12);
+    --platform-warning-shadow-md: rgba(245, 158, 11, .13);
+    --platform-warning-shadow-lg: rgba(245, 158, 11, .14);
+    --platform-warning-shadow-xl: rgba(245, 158, 11, .2);
+    --platform-warning-shadow-glow: rgba(245, 158, 11, .22);
+    --platform-warning-shadow-bright: rgba(245, 158, 11, .28);
+
+    --platform-danger: #ef4444;
+    --platform-danger-light: #f97316;
+    --platform-danger-subtle: #fecaca;
+    --platform-danger-bg: #fee2e2;
+    --platform-danger-text: #991b1b;
+    --platform-danger-shadow: rgba(239, 68, 68, .12);
+    --platform-danger-shadow-md: rgba(239, 68, 68, .14);
+    --platform-danger-shadow-lg: rgba(239, 68, 68, .26);
+    --platform-danger-shadow-xl: rgba(239, 68, 68, .28);
+
+    --platform-info: #06b6d4;
+    --platform-info-light: #67e8f9;
+    --platform-info-subtle: #a5f3fc;
+    --platform-info-bg: #e0f2fe;
+    --platform-info-bg-deep: #bae6fd;
+    --platform-info-text: #0e7490;
+    --platform-info-shadow: rgba(6, 182, 212, .08);
+    --platform-info-shadow-md: rgba(6, 182, 212, .13);
+    --platform-info-shadow-glow: rgba(6, 182, 212, .18);
+    --platform-info-shadow-bright: rgba(6, 182, 212, .24);
+    --platform-info-accent-shadow: rgba(8, 145, 178, .12);
+
+    /* Platform Violet (Primary accent) */
+    --platform-violet-light: #c4b5fd;
+    --platform-violet-bg: rgba(139, 92, 246, .16);
+    --platform-violet-shadow: rgba(139, 92, 246, .25);
+    --platform-violet-shadow-md: rgba(139, 92, 246, .32);
+    --platform-violet-shadow-lg: rgba(139, 92, 246, .34);
+    --platform-violet-shadow-strong: rgba(139, 92, 246, .38);
+
+    /* Platform Cyan (Secondary accent) */
+    --platform-cyan-light: #818cf8;
+    --platform-cyan-glow: rgba(34, 211, 238, .4);
+
+    /* Platform Text Shades */
+    --platform-text-muted: #9ca3af;
+    --platform-text-light: #cbd5e1;
+    --platform-text-blue: #93c5fd;
+    --platform-text-blue-light: #bfdbfe;
+    --platform-text-blue-deep: #dbeafe;
+    --platform-text-teal: #a7f3d0;
+    --platform-text-cyan: #e0f2fe;
+    --platform-text-amber-light: #fbbf24;
+    --platform-text-amber-subtle: #fef3c7;
+
+    /* Platform Overlays */
+    --platform-overlay-white-xs: rgba(255, 255, 255, .035);
+    --platform-overlay-white-sm: rgba(255, 255, 255, .04);
+    --platform-overlay-white-md: rgba(255, 255, 255, .045);
+    --platform-overlay-white-lg: rgba(255, 255, 255, .06);
+    --platform-overlay-white-xl: rgba(255, 255, 255, .08);
+    --platform-overlay-white-2xl: rgba(255, 255, 255, .1);
+    --platform-overlay-white-3xl: rgba(255, 255, 255, .14);
+    --platform-overlay-white-4xl: rgba(255, 255, 255, .16);
+    --platform-overlay-white-5xl: rgba(255, 255, 255, .18);
+
+    /* Platform Border Overlay */
+    --platform-border-overlay: rgba(148, 163, 184, .09);
+    --platform-border-overlay-md: rgba(148, 163, 184, .13);
+    --platform-border-overlay-lg: rgba(148, 163, 184, .14);
+    --platform-border-overlay-xl: rgba(148, 163, 184, .16);
+
+    /* Platform Shadows */
+    --platform-shadow-sm: rgba(2, 6, 23, .22);
+    --platform-shadow-md: rgba(2, 6, 23, .34);
+    --platform-shadow-lg: rgba(0, 0, 0, .2);
+    --platform-shadow-xl: rgba(0, 0, 0, .35);
+
+    /* Platform Cyan Glow (Hero) */
+    --platform-cyan-glow-border: rgba(103, 232, 249, .22);
+    --platform-cyan-glow-border-md: rgba(103, 232, 249, .28);
+    --platform-cyan-glow-border-lg: rgba(103, 232, 249, .32);
+    --platform-violet-glow-border: rgba(129, 140, 248, .26);
+    --platform-teal-glow-bg: rgba(45, 212, 191, .22);
+
+    /* Platform Gradient Base */
+    --platform-gradient-from: #070a13;
+    --platform-gradient-mid: #101827;
+    --platform-gradient-to: #050712;
+    --platform-gradient-panel-from: rgba(15, 23, 42, .92);
+    --platform-gradient-panel-to: rgba(17, 24, 39, .78);
+    --platform-gradient-sidebar: rgba(2, 6, 23, 0.72);
+    --platform-gradient-card-from: rgba(15, 23, 42, .84);
+    --platform-gradient-card-to: rgba(15, 23, 42, .58);
+    --platform-gradient-panel-overlay: rgba(255, 255, 255, .14);
+    --platform-gradient-panel-overlay-to: rgba(255, 255, 255, .045);
+
+    /* Platform Interactive */
+    --platform-hover-bg: rgba(255, 255, 255, .04);
+    --platform-active-bg: rgba(255, 255, 255, .07);
+    --platform-active-border: rgba(14, 165, 233, .1);
+    --platform-active-border-cyan: rgba(103, 232, 249, .32);
+
+    /* Company View Banner (Brand tones) */
+    --platform-brand-from: #6b3a2e;
+    --platform-brand-mid: #4a2922;
+    --platform-brand-to: #2a1510;
+    --platform-brand-text: #fef3c7;
+    --platform-brand-text-muted: #d4a989;
+    --platform-brand-accent: #b45309;
+    --platform-brand-accent-light: #d97706;
+    --platform-brand-accent-shadow: rgba(180, 83, 9, .35);
+    --platform-brand-border: rgba(74, 41, 34, .35);
+    --platform-brand-border-subtle: rgba(212, 169, 137, .28);
+    --platform-brand-kicker: #fbbf24;
+
+    /* Platform Misc */
+    --platform-muted: var(--muted-foreground);
     --platform-surface-hover: rgba(0, 0, 0, .04);
     --platform-muted-dim: #9ca3af;
 }
 
 .dark {
-    --platform-success: #63dc98;
-    --platform-warning: #ffbe4a;
-    --platform-danger: #ff6363;
+    /* Platform Base */
     --platform-bg: #070a13;
     --platform-panel: rgba(15, 23, 42, 0.72);
     --platform-panel-strong: rgba(15, 23, 42, 0.92);
     --platform-border: rgba(148, 163, 184, 0.16);
     --platform-text: #f8fafc;
     --platform-subtle: #94a3b8;
+
+    /* Platform Primary */
     --platform-primary: #a78bfa;
     --platform-primary-2: #22d3ee;
+
+    /* Platform Accent */
     --platform-accent-green: #a7f3d0;
     --platform-accent-blue: #93c5fd;
     --platform-accent-amber: #fef3c7;
     --platform-accent-amber-bg: rgba(245, 158, 11, .13);
+
+    /* Platform Status */
+    --platform-success: #63dc98;
+    --platform-success-light: #86efac;
+    --platform-success-subtle: #a7f3d0;
+    --platform-success-bg: rgba(34, 197, 94, .12);
+    --platform-success-bg-light: rgba(99, 220, 152, .16);
+    --platform-success-text: #86efac;
+    --platform-success-shadow: rgba(34, 197, 94, .12);
+    --platform-success-shadow-md: rgba(34, 197, 94, .13);
+    --platform-success-shadow-lg: rgba(34, 197, 94, .14);
+    --platform-success-shadow-xl: rgba(34, 197, 94, .16);
+    --platform-success-shadow-glow: rgba(34, 197, 94, .18);
+    --platform-success-shadow-bright: rgba(99, 220, 152, .16);
+    --platform-success-shadow-glow-bright: rgba(99, 220, 152, .48);
+
+    --platform-warning: #ffbe4a;
+    --platform-warning-light: #fde68a;
+    --platform-warning-subtle: #fef3c7;
+    --platform-warning-bg: rgba(245, 158, 11, .12);
+    --platform-warning-text: #fde68a;
+    --platform-warning-shadow: rgba(245, 158, 11, .12);
+    --platform-warning-shadow-md: rgba(245, 158, 11, .13);
+    --platform-warning-shadow-lg: rgba(245, 158, 11, .14);
+    --platform-warning-shadow-xl: rgba(245, 158, 11, .2);
+    --platform-warning-shadow-glow: rgba(245, 158, 11, .22);
+    --platform-warning-shadow-bright: rgba(245, 158, 11, .28);
+
+    --platform-danger: #ff6363;
+    --platform-danger-light: #f97316;
+    --platform-danger-subtle: #fecaca;
+    --platform-danger-bg: rgba(239, 68, 68, .12);
+    --platform-danger-text: #fecaca;
+    --platform-danger-shadow: rgba(239, 68, 68, .12);
+    --platform-danger-shadow-md: rgba(239, 68, 68, .14);
+    --platform-danger-shadow-lg: rgba(239, 68, 68, .26);
+    --platform-danger-shadow-xl: rgba(239, 68, 68, .28);
+
+    --platform-info: #22d3ee;
+    --platform-info-light: #67e8f9;
+    --platform-info-subtle: #a5f3fc;
+    --platform-info-bg: rgba(6, 182, 212, .12);
+    --platform-info-bg-deep: rgba(6, 182, 212, .13);
+    --platform-info-text: #a5f3fc;
+    --platform-info-shadow: rgba(6, 182, 212, .08);
+    --platform-info-shadow-md: rgba(6, 182, 212, .13);
+    --platform-info-shadow-glow: rgba(6, 182, 212, .18);
+    --platform-info-shadow-bright: rgba(6, 182, 212, .24);
+    --platform-info-accent-shadow: rgba(8, 145, 178, .12);
+
+    /* Platform Violet (Primary accent) */
+    --platform-violet-light: #c4b5fd;
+    --platform-violet-bg: rgba(139, 92, 246, .16);
+    --platform-violet-shadow: rgba(139, 92, 246, .25);
+    --platform-violet-shadow-md: rgba(139, 92, 246, .32);
+    --platform-violet-shadow-lg: rgba(139, 92, 246, .34);
+    --platform-violet-shadow-strong: rgba(139, 92, 246, .38);
+
+    /* Platform Cyan (Secondary accent) */
+    --platform-cyan-light: #818cf8;
+    --platform-cyan-glow: rgba(34, 211, 238, .4);
+
+    /* Platform Text Shades */
+    --platform-text-muted: #9ca3af;
+    --platform-text-light: #cbd5e1;
+    --platform-text-blue: #93c5fd;
+    --platform-text-blue-light: #bfdbfe;
+    --platform-text-blue-deep: #dbeafe;
+    --platform-text-teal: #a7f3d0;
+    --platform-text-cyan: #e0f2fe;
+    --platform-text-amber-light: #fbbf24;
+    --platform-text-amber-subtle: #fef3c7;
+
+    /* Platform Overlays */
+    --platform-overlay-white-xs: rgba(255, 255, 255, .035);
+    --platform-overlay-white-sm: rgba(255, 255, 255, .04);
+    --platform-overlay-white-md: rgba(255, 255, 255, .045);
+    --platform-overlay-white-lg: rgba(255, 255, 255, .06);
+    --platform-overlay-white-xl: rgba(255, 255, 255, .08);
+    --platform-overlay-white-2xl: rgba(255, 255, 255, .1);
+    --platform-overlay-white-3xl: rgba(255, 255, 255, .14);
+    --platform-overlay-white-4xl: rgba(255, 255, 255, .16);
+    --platform-overlay-white-5xl: rgba(255, 255, 255, .18);
+
+    /* Platform Border Overlay */
+    --platform-border-overlay: rgba(148, 163, 184, .09);
+    --platform-border-overlay-md: rgba(148, 163, 184, .13);
+    --platform-border-overlay-lg: rgba(148, 163, 184, .14);
+    --platform-border-overlay-xl: rgba(148, 163, 184, .16);
+
+    /* Platform Shadows */
+    --platform-shadow-sm: rgba(2, 6, 23, .22);
+    --platform-shadow-md: rgba(2, 6, 23, .34);
+    --platform-shadow-lg: rgba(0, 0, 0, .2);
+    --platform-shadow-xl: rgba(0, 0, 0, .35);
+
+    /* Platform Cyan Glow (Hero) */
+    --platform-cyan-glow-border: rgba(103, 232, 249, .22);
+    --platform-cyan-glow-border-md: rgba(103, 232, 249, .28);
+    --platform-cyan-glow-border-lg: rgba(103, 232, 249, .32);
+    --platform-violet-glow-border: rgba(129, 140, 248, .26);
+    --platform-teal-glow-bg: rgba(45, 212, 191, .22);
+
+    /* Platform Gradient Base */
+    --platform-gradient-from: #070a13;
+    --platform-gradient-mid: #101827;
+    --platform-gradient-to: #050712;
+    --platform-gradient-panel-from: rgba(15, 23, 42, .92);
+    --platform-gradient-panel-to: rgba(17, 24, 39, .78);
+    --platform-gradient-sidebar: rgba(2, 6, 23, 0.72);
+    --platform-gradient-card-from: rgba(15, 23, 42, .84);
+    --platform-gradient-card-to: rgba(15, 23, 42, .58);
+    --platform-gradient-panel-overlay: rgba(255, 255, 255, .14);
+    --platform-gradient-panel-overlay-to: rgba(255, 255, 255, .045);
+
+    /* Platform Interactive */
+    --platform-hover-bg: rgba(255, 255, 255, .04);
+    --platform-active-bg: rgba(255, 255, 255, .07);
+    --platform-active-border: rgba(14, 165, 233, .1);
+    --platform-active-border-cyan: rgba(103, 232, 249, .32);
+
+    /* Company View Banner (Brand tones) */
+    --platform-brand-from: #6b3a2e;
+    --platform-brand-mid: #4a2922;
+    --platform-brand-to: #2a1510;
+    --platform-brand-text: #fef3c7;
+    --platform-brand-text-muted: #d4a989;
+    --platform-brand-accent: #b45309;
+    --platform-brand-accent-light: #d97706;
+    --platform-brand-accent-shadow: rgba(180, 83, 9, .35);
+    --platform-brand-border: rgba(74, 41, 34, .35);
+    --platform-brand-border-subtle: rgba(212, 169, 137, .28);
+    --platform-brand-kicker: #fbbf24;
+
+    /* Platform Misc */
+    --platform-muted: var(--muted-foreground);
     --platform-surface-hover: rgba(255, 255, 255, .04);
     --platform-muted-dim: #9ca3af;
 }
 
 @theme inline {
+    /* Platform Base */
     --color-platform-bg: var(--platform-bg);
     --color-platform-panel: var(--platform-panel);
     --color-platform-panel-strong: var(--platform-panel-strong);
     --color-platform-border: var(--platform-border);
     --color-platform-text: var(--platform-text);
     --color-platform-subtle: var(--platform-subtle);
+
+    /* Platform Primary */
     --color-platform-primary: var(--platform-primary);
     --color-platform-primary-2: var(--platform-primary-2);
-    --color-platform-danger: var(--platform-danger);
-    --color-platform-success: var(--platform-success);
-    --color-platform-warning: var(--platform-warning);
-    --color-platform-muted: var(--platform-muted);
+
+    /* Platform Accent */
     --color-platform-accent-green: var(--platform-accent-green);
     --color-platform-accent-blue: var(--platform-accent-blue);
     --color-platform-accent-amber: var(--platform-accent-amber);
     --color-platform-accent-amber-bg: var(--platform-accent-amber-bg);
+
+    /* Platform Status */
+    --color-platform-success: var(--platform-success);
+    --color-platform-success-light: var(--platform-success-light);
+    --color-platform-success-subtle: var(--platform-success-subtle);
+    --color-platform-success-bg: var(--platform-success-bg);
+    --color-platform-success-bg-light: var(--platform-success-bg-light);
+    --color-platform-success-text: var(--platform-success-text);
+    --color-platform-success-shadow: var(--platform-success-shadow);
+    --color-platform-success-shadow-md: var(--platform-success-shadow-md);
+    --color-platform-success-shadow-lg: var(--platform-success-shadow-lg);
+    --color-platform-success-shadow-xl: var(--platform-success-shadow-xl);
+    --color-platform-success-shadow-glow: var(--platform-success-shadow-glow);
+    --color-platform-success-shadow-bright: var(--platform-success-shadow-bright);
+    --color-platform-success-shadow-glow-bright: var(--platform-success-shadow-glow-bright);
+
+    --color-platform-warning: var(--platform-warning);
+    --color-platform-warning-light: var(--platform-warning-light);
+    --color-platform-warning-subtle: var(--platform-warning-subtle);
+    --color-platform-warning-bg: var(--platform-warning-bg);
+    --color-platform-warning-text: var(--platform-warning-text);
+    --color-platform-warning-shadow: var(--platform-warning-shadow);
+    --color-platform-warning-shadow-md: var(--platform-warning-shadow-md);
+    --color-platform-warning-shadow-lg: var(--platform-warning-shadow-lg);
+    --color-platform-warning-shadow-xl: var(--platform-warning-shadow-xl);
+    --color-platform-warning-shadow-glow: var(--platform-warning-shadow-glow);
+    --color-platform-warning-shadow-bright: var(--platform-warning-shadow-bright);
+
+    --color-platform-danger: var(--platform-danger);
+    --color-platform-danger-light: var(--platform-danger-light);
+    --color-platform-danger-subtle: var(--platform-danger-subtle);
+    --color-platform-danger-bg: var(--platform-danger-bg);
+    --color-platform-danger-text: var(--platform-danger-text);
+    --color-platform-danger-shadow: var(--platform-danger-shadow);
+    --color-platform-danger-shadow-md: var(--platform-danger-shadow-md);
+    --color-platform-danger-shadow-lg: var(--platform-danger-shadow-lg);
+    --color-platform-danger-shadow-xl: var(--platform-danger-shadow-xl);
+
+    --color-platform-info: var(--platform-info);
+    --color-platform-info-light: var(--platform-info-light);
+    --color-platform-info-subtle: var(--platform-info-subtle);
+    --color-platform-info-bg: var(--platform-info-bg);
+    --color-platform-info-bg-deep: var(--platform-info-bg-deep);
+    --color-platform-info-text: var(--platform-info-text);
+    --color-platform-info-shadow: var(--platform-info-shadow);
+    --color-platform-info-shadow-md: var(--platform-info-shadow-md);
+    --color-platform-info-shadow-glow: var(--platform-info-shadow-glow);
+    --color-platform-info-shadow-bright: var(--platform-info-shadow-bright);
+    --color-platform-info-accent-shadow: var(--platform-info-accent-shadow);
+
+    /* Platform Violet */
+    --color-platform-violet-light: var(--platform-violet-light);
+    --color-platform-violet-bg: var(--platform-violet-bg);
+    --color-platform-violet-shadow: var(--platform-violet-shadow);
+    --color-platform-violet-shadow-md: var(--platform-violet-shadow-md);
+    --color-platform-violet-shadow-lg: var(--platform-violet-shadow-lg);
+    --color-platform-violet-shadow-strong: var(--platform-violet-shadow-strong);
+
+    /* Platform Cyan */
+    --color-platform-cyan-light: var(--platform-cyan-light);
+    --color-platform-cyan-glow: var(--platform-cyan-glow);
+
+    /* Platform Text Shades */
+    --color-platform-text-muted: var(--platform-text-muted);
+    --color-platform-text-light: var(--platform-text-light);
+    --color-platform-text-blue: var(--platform-text-blue);
+    --color-platform-text-blue-light: var(--platform-text-blue-light);
+    --color-platform-text-blue-deep: var(--platform-text-blue-deep);
+    --color-platform-text-teal: var(--platform-text-teal);
+    --color-platform-text-cyan: var(--platform-text-cyan);
+    --color-platform-text-amber-light: var(--platform-text-amber-light);
+    --color-platform-text-amber-subtle: var(--platform-text-amber-subtle);
+
+    /* Platform Overlays */
+    --color-platform-overlay-white-xs: var(--platform-overlay-white-xs);
+    --color-platform-overlay-white-sm: var(--platform-overlay-white-sm);
+    --color-platform-overlay-white-md: var(--platform-overlay-white-md);
+    --color-platform-overlay-white-lg: var(--platform-overlay-white-lg);
+    --color-platform-overlay-white-xl: var(--platform-overlay-white-xl);
+    --color-platform-overlay-white-2xl: var(--platform-overlay-white-2xl);
+    --color-platform-overlay-white-3xl: var(--platform-overlay-white-3xl);
+    --color-platform-overlay-white-4xl: var(--platform-overlay-white-4xl);
+    --color-platform-overlay-white-5xl: var(--platform-overlay-white-5xl);
+
+    /* Platform Border Overlay */
+    --color-platform-border-overlay: var(--platform-border-overlay);
+    --color-platform-border-overlay-md: var(--platform-border-overlay-md);
+    --color-platform-border-overlay-lg: var(--platform-border-overlay-lg);
+    --color-platform-border-overlay-xl: var(--platform-border-overlay-xl);
+
+    /* Platform Shadows */
+    --color-platform-shadow-sm: var(--platform-shadow-sm);
+    --color-platform-shadow-md: var(--platform-shadow-md);
+    --color-platform-shadow-lg: var(--platform-shadow-lg);
+    --color-platform-shadow-xl: var(--platform-shadow-xl);
+
+    /* Platform Glow */
+    --color-platform-cyan-glow-border: var(--platform-cyan-glow-border);
+    --color-platform-cyan-glow-border-md: var(--platform-cyan-glow-border-md);
+    --color-platform-cyan-glow-border-lg: var(--platform-cyan-glow-border-lg);
+    --color-platform-violet-glow-border: var(--platform-violet-glow-border);
+    --color-platform-teal-glow-bg: var(--platform-teal-glow-bg);
+
+    /* Platform Gradient Base */
+    --color-platform-gradient-from: var(--platform-gradient-from);
+    --color-platform-gradient-mid: var(--platform-gradient-mid);
+    --color-platform-gradient-to: var(--platform-gradient-to);
+    --color-platform-gradient-panel-from: var(--platform-gradient-panel-from);
+    --color-platform-gradient-panel-to: var(--platform-gradient-panel-to);
+    --color-platform-gradient-sidebar: var(--platform-gradient-sidebar);
+    --color-platform-gradient-card-from: var(--platform-gradient-card-from);
+    --color-platform-gradient-card-to: var(--platform-gradient-card-to);
+    --color-platform-gradient-panel-overlay: var(--platform-gradient-panel-overlay);
+    --color-platform-gradient-panel-overlay-to: var(--platform-gradient-panel-overlay-to);
+
+    /* Platform Interactive */
+    --color-platform-hover-bg: var(--platform-hover-bg);
+    --color-platform-active-bg: var(--platform-active-bg);
+    --color-platform-active-border: var(--platform-active-border);
+    --color-platform-active-border-cyan: var(--platform-active-border-cyan);
+
+    /* Company View Banner */
+    --color-platform-brand-from: var(--platform-brand-from);
+    --color-platform-brand-mid: var(--platform-brand-mid);
+    --color-platform-brand-to: var(--platform-brand-to);
+    --color-platform-brand-text: var(--platform-brand-text);
+    --color-platform-brand-text-muted: var(--platform-brand-text-muted);
+    --color-platform-brand-accent: var(--platform-brand-accent);
+    --color-platform-brand-accent-light: var(--platform-brand-accent-light);
+    --color-platform-brand-accent-shadow: var(--platform-brand-accent-shadow);
+    --color-platform-brand-border: var(--platform-brand-border);
+    --color-platform-brand-border-subtle: var(--platform-brand-border-subtle);
+    --color-platform-brand-kicker: var(--platform-brand-kicker);
+
+    /* Platform Misc */
+    --color-platform-muted: var(--platform-muted);
     --color-platform-surface-hover: var(--platform-surface-hover);
     --color-platform-muted-dim: var(--platform-muted-dim);
 }

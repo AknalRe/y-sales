@@ -2,9 +2,9 @@
   min-height: 100vh;
   color: var(--platform-text);
   background:
-    radial-gradient(circle at 15% 0%, rgba(139, 92, 246, 0.34), transparent 34%),
-    radial-gradient(circle at 88% 15%, rgba(6, 182, 212, 0.24), transparent 31%),
-    linear-gradient(135deg, #070a13 0%, #101827 54%, #050712 100%);
+    radial-gradient(circle at 15% 0%, var(--platform-violet-shadow-lg), transparent 34%),
+    radial-gradient(circle at 88% 15%, var(--platform-info-shadow-bright), transparent 31%),
+    linear-gradient(135deg, var(--platform-gradient-from) 0%, var(--platform-gradient-mid) 54%, var(--platform-gradient-to) 100%);
 }
 
 .platform-sidebar {
@@ -14,7 +14,7 @@
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--platform-border);
-  background: rgba(2, 6, 23, 0.72);
+  background: var(--platform-gradient-sidebar);
   backdrop-filter: blur(22px);
   transition: width .25s ease;
   will-change: width;
@@ -62,7 +62,7 @@
   border-radius: 18px;
   background: linear-gradient(135deg, var(--platform-primary), var(--platform-primary-2));
   color: #fff;
-  box-shadow: 0 16px 35px rgba(6, 182, 212, .18);
+  box-shadow: 0 16px 35px var(--platform-info-shadow-glow);
 }
 
 .platform-brand-icon {
@@ -95,7 +95,7 @@
 .platform-toggle-btn,
 .platform-btn-icon {
   border: 1px solid var(--platform-border);
-  background: rgba(255, 255, 255, .06);
+  background: var(--platform-overlay-white-lg);
   color: inherit;
   border-radius: 13px;
   width: 36px;
@@ -154,13 +154,13 @@
 
 .platform-nav-link:hover {
   color: #fff;
-  background: rgba(255, 255, 255, .07);
+  background: var(--platform-active-bg);
 }
 
 .platform-nav-active {
   color: #fff;
-  background: linear-gradient(135deg, rgba(139, 92, 246, .32), rgba(6, 182, 212, .18));
-  border-color: rgba(139, 92, 246, .38);
+  background: linear-gradient(135deg, var(--platform-violet-shadow-md), var(--platform-info-shadow-glow));
+  border-color: var(--platform-violet-shadow-strong);
 }
 
 .platform-sidebar-footer {
@@ -176,7 +176,7 @@
   cursor: pointer;
   padding: .7rem;
   border-radius: 18px;
-  background: rgba(255, 255, 255, .05);
+  background: var(--platform-overlay-white-xs);
 }
 
 .platform-sidebar-closed .platform-user-area {
@@ -225,7 +225,7 @@
   background: rgba(15, 23, 42, .96);
   backdrop-filter: blur(18px);
   padding: .45rem;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  box-shadow: 0 24px 60px var(--platform-shadow-xl);
   z-index: 50;
 }
 
@@ -252,7 +252,7 @@
 }
 
 .platform-profile-item:hover {
-  background: rgba(255, 255, 255, .08);
+  background: var(--platform-overlay-white-xl);
 }
 
 .platform-profile-danger {

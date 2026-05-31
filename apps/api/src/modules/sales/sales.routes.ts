@@ -13,6 +13,7 @@ import {
   visitSessions,
   warehouses,
   mediaFiles,
+  outlets,
   transactionNotePhotos,
 } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -120,6 +121,7 @@ export async function salesRoutes(app: FastifyInstance) {
         salesUserId: salesTransactions.salesUserId,
         outletId: salesTransactions.outletId,
         visitSessionId: salesTransactions.visitSessionId,
+        outletName: outlets.name,
         customerType: salesTransactions.customerType,
         paymentMethod: salesTransactions.paymentMethod,
         subtotalAmount: salesTransactions.subtotalAmount,
@@ -135,11 +137,79 @@ export async function salesRoutes(app: FastifyInstance) {
       })
       .from(salesTransactions)
       .leftJoin(photoStats, eq(salesTransactions.id, photoStats.transactionId))
+      .leftJoin(outlets, eq(salesTransactions.outletId, outlets.id))
       .where(and(...conditions))
       .orderBy(desc(salesTransactions.createdAt))
       .limit(100);
 
     return { orders: rows };
+  });
+
+  app.get('/sales/orders/:id', { preHandler: requirePermission('sales.view') }, async (request, reply) => {
+    const companyId = requireTenantId(request);
+    const params = z.object({ id: z.string().uuid() }).parse(request.params);
+    const user = request.user!;
+    const canReview = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('sales.order.review') || user.permissions.includes('invoice.review');
+    const conditions = [eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)];
+    if (!canReview) conditions.push(eq(salesTransactions.salesUserId, user.id));
+
+    const [order] = await db
+      .select({
+        id: salesTransactions.id,
+        companyId: salesTransactions.companyId,
+        transactionNo: salesTransactions.transactionNo,
+        salesUserId: salesTransactions.salesUserId,
+        outletId: salesTransactions.outletId,
+        outletName: outlets.name,
+        visitSessionId: salesTransactions.visitSessionId,
+        customerType: salesTransactions.customerType,
+        paymentMethod: salesTransactions.paymentMethod,
+        subtotalAmount: salesTransactions.subtotalAmount,
+        discountAmount: salesTransactions.discountAmount,
+        totalAmount: salesTransactions.totalAmount,
+        status: salesTransactions.status,
+        paymentStatus: salesTransactions.paymentStatus,
+        submittedAt: salesTransactions.submittedAt,
+        approvedAt: salesTransactions.approvedAt,
+        rejectionReason: salesTransactions.rejectionReason,
+        createdAt: salesTransactions.createdAt,
+      })
+      .from(salesTransactions)
+      .leftJoin(outlets, eq(salesTransactions.outletId, outlets.id))
+      .where(and(...conditions))
+      .limit(1);
+
+    if (!order) return reply.status(404).send({ message: 'Transaksi tidak ditemukan.' });
+
+    const items = await db
+      .select({
+        id: salesTransactionItems.id,
+        productId: salesTransactionItems.productId,
+        productName: products.name,
+        productSku: products.sku,
+        quantity: salesTransactionItems.quantity,
+        unitPrice: salesTransactionItems.unitPrice,
+        discountAmount: salesTransactionItems.discountAmount,
+        lineTotal: salesTransactionItems.lineTotal,
+      })
+      .from(salesTransactionItems)
+      .innerJoin(products, eq(salesTransactionItems.productId, products.id))
+      .where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));
+
+    const photos = await db
+      .select({
+        id: transactionNotePhotos.id,
+        mediaFileId: transactionNotePhotos.mediaFileId,
+        fileUrl: mediaFiles.fileUrl,
+        verificationStatus: transactionNotePhotos.verificationStatus,
+        capturedAt: transactionNotePhotos.capturedAt,
+      })
+      .from(transactionNotePhotos)
+      .innerJoin(mediaFiles, eq(transactionNotePhotos.mediaFileId, mediaFiles.id))
+      .where(and(eq(transactionNotePhotos.companyId, companyId), eq(transactionNotePhotos.transactionId, order.id)))
+      .orderBy(desc(transactionNotePhotos.createdAt));
+
+    return { order: { ...order, items, photos } };
   });
 
   app.post('/sales/orders', { preHandler: requirePermission('sales.order.create') }, async (request) => {
@@ -228,7 +298,7 @@ export async function salesRoutes(app: FastifyInstance) {
     const [stockWarehouse] = order.sourceWarehouseId
       ? await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.id, order.sourceWarehouseId)))
       : await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.type, 'sales_van'), eq(warehouses.ownerUserId, order.salesUserId)));
-    if (!stockWarehouse) throw new Error('Gudang sumber stok belum tersedia');
+    if (!stockWarehouse) throw Object.assign(new Error('Gudang sumber stok sales belum tersedia. Hubungi admin.'), { statusCode: 400 });
 
     const items = await db.select().from(salesTransactionItems).where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));
 
@@ -241,7 +311,7 @@ export async function salesRoutes(app: FastifyInstance) {
         const [balance] = await tx.select().from(inventoryBalances).where(and(eq(inventoryBalances.companyId, companyId), eq(inventoryBalances.warehouseId, stockWarehouse.id), eq(inventoryBalances.productId, item.productId)));
         if (!balance || Number(balance.quantity) < Number(item.quantity)) {
           const [product] = await tx.select().from(products).where(and(eq(products.companyId, companyId), eq(products.id, item.productId)));
-          throw new Error(`Stok tidak cukup untuk ${product?.name ?? item.productId}`);
+          throw Object.assign(new Error(`Stok tidak cukup untuk ${product?.name ?? item.productId}. Sisa stok: ${balance?.quantity ?? 0}`), { statusCode: 400 });
         }
         await tx.update(inventoryBalances).set({
           quantity: sql`${inventoryBalances.quantity} - ${item.quantity}`,

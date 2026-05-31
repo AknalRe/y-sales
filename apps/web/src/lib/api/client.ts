@@ -29,13 +29,18 @@ export async function apiRequest<TResponse>(path: string, options: RequestInit =
     }
 
     const isDebug = String(import.meta.env.VITE_APP_DEBUG ?? '').toLowerCase() === 'true';
+    const rawMessage = String(error.message ?? '');
+
+    // Filter technical/DB error patterns that shouldn't be shown to users
+    const isTechnical = /failed query|syntax error|relation .* does not exist|column .* does not exist|duplicate key|foreign key|ZodError|ValidationError|ECONNREFUSED|ETIMEDOUT/i.test(rawMessage);
+
     const message = isDebug
-      ? (error.message ?? 'Request failed')
+      ? rawMessage
       : response.status === 401
-        ? 'Email/HP/kode karyawan atau password salah.'
-        : (error.message && !String(error.message).toLowerCase().includes('failed query'))
-          ? error.message
-          : 'Terjadi kesalahan. Silakan coba lagi.';
+        ? (rawMessage || 'Email/HP/kode karyawan atau password salah.')
+        : isTechnical
+          ? 'Terjadi kesalahan. Silakan coba lagi.'
+          : rawMessage || 'Terjadi kesalahan. Silakan coba lagi.';
     throw new Error(message);
   }
 

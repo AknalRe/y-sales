@@ -12,6 +12,8 @@ const envSchema = z.object({
   API_PORT: z.coerce.number().default(4000),
   JWT_ACCESS_SECRET: z.string().min(12).default('change-me-access'),
   JWT_REFRESH_SECRET: z.string().min(12).default('change-me-refresh'),
+  JWT_ACCESS_EXPIRES_IN: z.string().default('1d'),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
   WEB_ORIGIN: z.string().default('http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,https://localhost:5173,https://127.0.0.1:5173,https://localhost:5174,https://127.0.0.1:5174'),
   API_HTTPS_ENABLED: z.coerce.boolean().default(false),
   API_TLS_KEY_PATH: z.string().default('192.168.18.66+2-key.pem'),

@@ -1,12 +1,21 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
+import { ZodError } from 'zod';
 
 import { env } from './config/env.js';
 import { registerRoutes } from './routes.js';
 
 import fs from 'node:fs';
 import path from 'node:path';
+
+function formatZodError(error: ZodError): string {
+  const issues = error.issues.map((issue) => {
+    const path = issue.path.length > 0 ? issue.path.join('.') : 'input';
+    return `${path}: ${issue.message}`;
+  });
+  return issues.join('; ');
+}
 
 export async function buildApp() {
   const allowedOrigins = env.WEB_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
@@ -36,6 +45,14 @@ export async function buildApp() {
   app.setErrorHandler((error, request, reply) => {
     const appError = error as Error & { statusCode?: number; code?: string };
     request.log.error(appError);
+
+    // Zod validation errors → 400 with formatted message
+    if (error instanceof ZodError) {
+      const message = env.APP_DEBUG
+        ? `Validasi gagal: ${formatZodError(error)}`
+        : `Data tidak valid: ${formatZodError(error)}`;
+      return reply.status(400).send({ message });
+    }
 
     const statusCode = appError.statusCode && appError.statusCode >= 400 ? appError.statusCode : 500;
     const safeMessage = statusCode >= 500 ? 'Terjadi kesalahan server. Silakan coba lagi.' : appError.message;

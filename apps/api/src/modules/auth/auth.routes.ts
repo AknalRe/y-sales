@@ -75,13 +75,11 @@ export async function authRoutes(app: FastifyInstance) {
       .where(or(...identifierConditions));
 
     if (!user || !user.passwordHash || user.status !== 'active' || user.deletedAt) {
-      return reply.status(401).send({ message: 'Invalid credentials' });
+      return reply.status(401).send({ message: 'Email/HP/kode karyawan atau password salah.' });
     }
 
-    const validPassword = await verifyPassword(body.password, user.passwordHash);
-
-    if (!validPassword) {
-      return reply.status(401).send({ message: 'Invalid credentials' });
+    if (!await verifyPassword(body.password, user.passwordHash)) {
+      return reply.status(401).send({ message: 'Email/HP/kode karyawan atau password salah.' });
     }
 
     const accessToken = signAccessToken({ sub: user.id, companyId: user.companyId, roleCode: user.roleCode, isSuperAdmin: user.roleCode === 'SUPER_ADMIN' });
@@ -112,13 +110,13 @@ export async function authRoutes(app: FastifyInstance) {
     const body = refreshSchema.parse(request.body ?? {});
     const refreshToken = body.refreshToken ?? getCookieValue(request.headers.cookie, env.REFRESH_COOKIE_NAME);
     if (!refreshToken) {
-      return reply.status(401).send({ message: 'Invalid refresh token' });
+      return reply.status(401).send({ message: 'Sesi tidak valid atau sudah berakhir. Silakan login ulang.' });
     }
 
     const result = await findValidRefreshSession(refreshToken);
 
     if (!result) {
-      return reply.status(401).send({ message: 'Invalid refresh token' });
+      return reply.status(401).send({ message: 'Sesi tidak valid atau sudah berakhir. Silakan login ulang.' });
     }
 
     // Rotate refresh token

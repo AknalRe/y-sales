@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -40,11 +40,15 @@ export function verifyPassword(password: string, hash: string) {
 }
 
 export function signAccessToken(payload: AuthTokenPayload) {
-  return jwt.sign(sanitizeAuthPayload(payload), env.JWT_ACCESS_SECRET, { expiresIn: '15m' });
+  return jwt.sign(sanitizeAuthPayload(payload), env.JWT_ACCESS_SECRET, {
+    expiresIn: env.JWT_ACCESS_EXPIRES_IN as SignOptions['expiresIn'],
+  });
 }
 
 export function signRefreshToken(payload: AuthTokenPayload) {
-  return jwt.sign(sanitizeAuthPayload(payload), env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
+  return jwt.sign(sanitizeAuthPayload(payload), env.JWT_REFRESH_SECRET, {
+    expiresIn: env.JWT_REFRESH_EXPIRES_IN as SignOptions['expiresIn'],
+  });
 }
 
 export function verifyAccessToken(token: string) {

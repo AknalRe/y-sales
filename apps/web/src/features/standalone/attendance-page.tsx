@@ -161,7 +161,7 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
     try {
       if (!navigator.onLine) throw new Error('offline');
       const result = await checkInAttendance(accessToken, payload);
-      setMessage(`Absensi terkirim. Status: ${JSON.stringify(result.geofence)}`);
+      setMessage('Absensi berhasil terkirim!');
       setPreview(false);
       setReloadKey(k => k + 1);
     } catch (error) {
@@ -236,7 +236,7 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
     try {
       if (!navigator.onLine) throw new Error('offline');
       const result = await checkInAttendance(accessToken, payload);
-      setMessage(`Absensi terkirim. Status: ${JSON.stringify(result.geofence)}`);
+      setMessage('Absensi berhasil terkirim!');
     } catch (error) {
       await enqueueAttendance({ type: 'check-in', accessToken, payload });
       await refreshQueueCount();

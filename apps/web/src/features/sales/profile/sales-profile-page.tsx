@@ -32,12 +32,12 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 const ROLE_COLOR: Record<string, string> = {
-  SALES_AGENT: '#B55925',
-  SUPERVISOR: '#966556',
-  ADMIN: '#4A2922',
-  OPERATIONAL_MANAGER: '#22c55e',
-  OWNER: '#c2410c',
-  ADMINISTRATOR: '#B55925',
+  SALES_AGENT: 'var(--sales-accent)',
+  SUPERVISOR: 'var(--sales-brand-muted)',
+  ADMIN: 'var(--sales-brand-primary)',
+  OPERATIONAL_MANAGER: 'var(--sales-success)',
+  OWNER: 'var(--sales-accent-dark)',
+  ADMINISTRATOR: 'var(--sales-accent)',
 };
 
 export function SalesProfilePage() {
@@ -76,7 +76,7 @@ export function SalesProfilePage() {
   }
 
   const roleCode = user?.roleCode ?? '';
-  const roleColor = ROLE_COLOR[roleCode] ?? '#94a3b8';
+  const roleColor = ROLE_COLOR[roleCode] ?? 'var(--sales-muted)';
 
   return (
     <div className="sales-profile-page">
@@ -87,11 +87,11 @@ export function SalesProfilePage() {
         </div>
         <div className="sales-profile-info">
           <h1 className="sales-profile-name">{user?.name}</h1>
-          <span className="sales-profile-role" style={{ background: `${roleColor}20`, color: roleColor, border: `1px solid ${roleColor}40` }}>
+          <span className="sales-profile-role" style={{ background: `color-mix(in srgb, ${roleColor} 12%, transparent)`, color: roleColor, border: `1px solid color-mix(in srgb, ${roleColor} 25%, transparent)` }}>
             <Shield size={12} /> {ROLE_LABEL[roleCode] ?? roleCode}
           </span>
         </div>
-        <div className="sales-profile-online" style={{ color: isOnline ? '#34d399' : '#f87171' }}>
+        <div className={`sales-profile-online ${isOnline ? 'text-sales-emerald' : 'text-sales-danger-lighter'}`}>
           {isOnline ? <Wifi size={18} /> : <WifiOff size={18} />}
           <span>{isOnline ? 'Online' : 'Offline'}</span>
         </div>
@@ -145,10 +145,10 @@ export function SalesProfilePage() {
           <RefreshCw size={16} /> Absensi Hari Ini
         </div>
         {loading ? (
-          <p style={{ color: '#64748b', fontSize: '.85rem' }}>Memuat...</p>
+          <p className="text-sales-muted" style={{ fontSize: '.85rem' }}>Memuat...</p>
         ) : !todayAttendance ? (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-            <p style={{ color: '#64748b', fontSize: '.85rem', margin: 0 }}>Belum absen hari ini.</p>
+            <p className="text-sales-muted" style={{ fontSize: '.85rem', margin: 0 }}>Belum absen hari ini.</p>
             <button onClick={() => navigate('/attendance')} className="sales-profile-btn-primary" style={{ marginTop: '.75rem' }}>
               Check-In Sekarang
             </button>
@@ -157,10 +157,7 @@ export function SalesProfilePage() {
           <div>
             <div className="sales-profile-field">
               <span>Status</span>
-              <span className="sales-attendance-status" style={{
-                background: todayAttendance.status === 'open' ? 'rgba(52,211,153,.15)' : 'rgba(99,163,237,.12)',
-                color: todayAttendance.status === 'open' ? '#34d399' : '#60a5fa',
-              }}>
+              <span className={`sales-attendance-status ${todayAttendance.status === 'open' ? 'bg-sales-emerald/15 text-sales-emerald' : 'bg-sales-info-light/12 text-sales-info-light'}`}>
                 {todayAttendance.status === 'open' ? '✓ Sedang Check-In' : '✓ Sudah Check-Out'}
               </span>
             </div>
@@ -177,13 +174,13 @@ export function SalesProfilePage() {
               </div>
             )}
             {!canCheckInAttendance && todayAttendance.status !== 'open' && (
-              <p style={{ color: '#b45309', fontSize: '.8rem', marginTop: '.75rem' }}>
+              <p className="text-sales-amber-deep" style={{ fontSize: '.8rem', marginTop: '.75rem' }}>
                 {attendanceBlockedReason ?? 'Company hanya mengizinkan satu sesi absensi dalam sehari.'}
               </p>
             )}
             <div className="sales-profile-field">
               <span>Validasi</span>
-              <span style={{ fontSize: '.82rem', color: todayAttendance.validationStatus === 'validated' ? '#34d399' : '#fbbf24' }}>
+              <span className={todayAttendance.validationStatus === 'validated' ? 'text-sales-emerald' : 'text-sales-amber'} style={{ fontSize: '.82rem' }}>
                 {todayAttendance.validationStatus === 'validated' ? '✓ Tervalidasi' : '⏳ Menunggu'}
               </span>
             </div>
@@ -196,7 +193,7 @@ export function SalesProfilePage() {
         <LogOut size={18} /> Keluar dari Akun
       </button>
 
-      <p style={{ textAlign: 'center', color: '#334155', fontSize: '.72rem', marginTop: '.75rem' }}>
+      <p className="text-sales-text-body" style={{ textAlign: 'center', fontSize: '.72rem', marginTop: '.75rem' }}>
         Yuksales v1.0 · {new Date().getFullYear()}
       </p>
     </div>

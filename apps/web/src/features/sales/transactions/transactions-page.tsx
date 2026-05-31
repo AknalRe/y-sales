@@ -166,9 +166,9 @@ export function TransactionsPage() {
     return (
       <main className="sales-home" >
         <div className="sales-card" style={{ padding: '3rem 2rem', textAlign: 'center', marginTop: '2rem' }}>
-          <CheckCircle2 size={64} color="#34d399" style={{ margin: '0 auto 1rem' }} />
+          <CheckCircle2 size={64} className="text-sales-emerald" style={{ margin: '0 auto 1rem' }} />
           <h2 style={{ fontSize: '1.5rem', marginBottom: '.5rem' }}>Transaksi Terkirim!</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>
+          <p className="text-sales-muted mb-8">
             {offlineMessage || 'Order telah dikirim ke admin untuk verifikasi. Lanjutkan perjalanan Anda.'}
           </p>
           <button onClick={() => navigate('/sales/invoices')} className="sales-btn sales-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', marginBottom: '.75rem' }}>
@@ -189,13 +189,13 @@ export function TransactionsPage() {
           <p className="sales-greeting-label">Order Taking</p>
           <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Buat Transaksi</h1>
         </div>
-        {!online && <span style={{ fontSize: '.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: 4 }}><WifiOff size={14} /> Offline</span>}
+        {!online && <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}><WifiOff size={14} /> Offline</span>}
       </div>
 
       {queueCount > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 12, padding: '.5rem .75rem', marginBottom: '.5rem' }}>
-          <span style={{ fontSize: '.8rem', color: '#B55925' }}>{queueCount} transaksi menunggu sync</span>
-          <button onClick={handleSyncQueue} disabled={syncing || !navigator.onLine} style={{ background: 'none', border: 'none', color: '#B55925', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '.8rem', fontWeight: 600 }}>
+        <div className="flex items-center justify-between rounded-xl border border-sales-accent-bg bg-sales-bg px-3 py-2 mb-2">
+          <span className="text-sales-accent" style={{ fontSize: '.8rem' }}>{queueCount} transaksi menunggu sync</span>
+          <button onClick={handleSyncQueue} disabled={syncing || !navigator.onLine} className="flex items-center gap-1 text-sales-accent" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}>
             {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Sync
           </button>
         </div>
@@ -206,14 +206,15 @@ export function TransactionsPage() {
       )}
 
       <div className="sales-card" style={{ margin: 0, padding: 0, borderRadius: 15 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: '#ffffff', border: '1px solid rgba(74, 41, 34, .14)', padding: '.65rem 1rem', borderRadius: '1rem' }}>
-          <Search size={18} color="#966556" />
+        <div className="flex items-center gap-2 border border-sales-border-brand bg-sales-surface-input px-4 py-2.5 rounded-2xl">
+          <Search size={18} className="text-sales-brand-muted" />
           <input
             type="text"
             placeholder="Cari produk SKU atau nama..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ background: 'transparent', border: 'none', color: '#171717', outline: 'none', width: '100%', fontSize: '.9rem' }}
+            className="bg-transparent border-none text-sales-foreground outline-none w-full"
+            style={{ fontSize: '.9rem' }}
           />
         </div>
       </div>
@@ -222,18 +223,18 @@ export function TransactionsPage() {
         {loading ? <div style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}><Spinner /></div> :
           filteredProducts.map(p => (
             <div key={p.id} className="sales-card" style={{ margin: 0, borderRadius: 15, padding: '.75rem', display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-              <div style={{ width: '100%', aspectRatio: '1', background: '#fff7ed', borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Package size={32} color="#B55925" />
+              <div className="flex items-center justify-center rounded-2xl bg-sales-bg" style={{ width: '100%', aspectRatio: '1' }}>
+                <Package size={32} className="text-sales-accent" />
               </div>
               <div style={{ flex: 1 }}>
                 <strong style={{ display: 'block', fontSize: '.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</strong>
-                <span style={{ fontSize: '.75rem', color: '#94a3b8' }}>{p.sku}</span>
+                <span className="text-sales-muted" style={{ fontSize: '.75rem' }}>{p.sku}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                <span style={{ fontSize: '.85rem', fontWeight: 700, color: '#B55925' }}>Rp {Number(p.priceDefault).toLocaleString('id-ID')}</span>
+                <span className="text-sales-accent" style={{ fontSize: '.85rem', fontWeight: 700 }}>Rp {Number(p.priceDefault).toLocaleString('id-ID')}</span>
                 <button
                   onClick={() => addToCart(p)}
-                  style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  className="flex items-center justify-center w-7 h-7 rounded-lg border border-sales-accent-bg bg-sales-bg text-sales-accent"
                 >
                   <Plus size={16} />
                 </button>
@@ -248,10 +249,10 @@ export function TransactionsPage() {
       </div>
 
       {cart.length > 0 && (
-        <div style={{ position: 'fixed', maxWidth: "28rem", left: 0, right: 0, margin: "0 auto", bottom: 64, background: '#ffffff', borderTop: '1px solid rgba(74, 41, 34, .14)', padding: '1rem', zIndex: 50, borderTopLeftRadius: '24px', borderTopRightRadius: '24px', boxShadow: '0 -10px 28px rgba(64,35,30,.14)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '.9rem', color: '#6b7280' }}><ShoppingCart size={16} style={{ display: 'inline', marginRight: '4px' }} /> {cart.reduce((s, i) => s + i.quantity, 0)} Items</span>
-            <strong style={{ fontSize: '1.25rem', color: '#B55925' }}>Rp {totalAmount.toLocaleString('id-ID')}</strong>
+        <div className="fixed left-0 right-0 mx-auto border-t border-sales-border-brand bg-sales-surface z-50" style={{ maxWidth: '28rem', bottom: 64, padding: '1rem', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', boxShadow: '0 -10px 28px var(--sales-shadow-cart)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sales-text-muted" style={{ fontSize: '.9rem' }}><ShoppingCart size={16} className="inline mr-1" /> {cart.reduce((s, i) => s + i.quantity, 0)} Items</span>
+            <strong className="text-sales-accent" style={{ fontSize: '1.25rem' }}>Rp {totalAmount.toLocaleString('id-ID')}</strong>
           </div>
 
           {error && <div className="sales-alert sales-alert-error" style={{ marginBottom: '1rem', padding: '.5rem', fontSize: '.8rem' }}>{error}</div>}

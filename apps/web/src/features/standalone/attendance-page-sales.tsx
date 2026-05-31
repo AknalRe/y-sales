@@ -113,7 +113,7 @@ export function AttendancePageSales(props: AttendanceState) {
           </h1>
         </div>
         {!online && (
-          <span style={{ fontSize: '.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}>
             <WifiOff size={14} /> Offline
           </span>
         )}
@@ -121,34 +121,20 @@ export function AttendancePageSales(props: AttendanceState) {
 
       {/* Status Masuk / Keluar Toggle */}
       <div className="sales-step-card">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem' }}>
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setMode('check-in')}
             disabled={todaySession?.status === 'open' || !canCheckIn}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '.7rem', borderRadius: 12, fontSize: '.85rem', fontWeight: 800,
-              border: 'none', cursor: (todaySession?.status === 'open' || !canCheckIn) ? 'not-allowed' : 'pointer',
-              background: mode === 'check-in' ? '#B55925' : '#f1f5f9',
-              color: mode === 'check-in' ? '#fff' : '#94a3b8',
-              opacity: (todaySession?.status === 'open' || !canCheckIn) ? 0.5 : 1,
-              transition: 'all .2s',
-            }}
+            className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-extrabold border-none transition-all ${mode === 'check-in' ? 'bg-sales-accent text-sales-surface' : 'bg-sales-surface-muted text-sales-muted'}`}
+            style={{ cursor: (todaySession?.status === 'open' || !canCheckIn) ? 'not-allowed' : 'pointer', opacity: (todaySession?.status === 'open' || !canCheckIn) ? 0.5 : 1 }}
           >
             <LogIn size={16} /> Masuk
           </button>
           <button
             onClick={() => setMode('check-out')}
             disabled={!todaySession || todaySession.status !== 'open'}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '.7rem', borderRadius: 12, fontSize: '.85rem', fontWeight: 800,
-              border: 'none', cursor: (!todaySession || todaySession.status !== 'open') ? 'not-allowed' : 'pointer',
-              background: mode === 'check-out' ? '#B55925' : '#f1f5f9',
-              color: mode === 'check-out' ? '#fff' : '#94a3b8',
-              opacity: (!todaySession || todaySession.status !== 'open') ? 0.5 : 1,
-              transition: 'all .2s',
-            }}
+            className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-extrabold border-none transition-all ${mode === 'check-out' ? 'bg-sales-accent text-sales-surface' : 'bg-sales-surface-muted text-sales-muted'}`}
+            style={{ cursor: (!todaySession || todaySession.status !== 'open') ? 'not-allowed' : 'pointer', opacity: (!todaySession || todaySession.status !== 'open') ? 0.5 : 1 }}
           >
             <LogOut size={16} /> Keluar
           </button>
@@ -156,51 +142,41 @@ export function AttendancePageSales(props: AttendanceState) {
 
         {/* Today status info */}
         {todaySession && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '.75rem', fontSize: '.8rem', color: '#64748b' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: todaySession.status === 'open' ? '#34d399' : '#94a3b8' }} />
-              <span style={{ fontWeight: 700 }}>{todaySession.status === 'open' ? 'Sedang aktif' : 'Sesi hari ini selesai'}</span>
+          <div className="flex items-center justify-between mt-3 text-sales-muted" style={{ fontSize: '.8rem' }}>
+            <div className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${todaySession.status === 'open' ? 'bg-sales-emerald' : 'bg-sales-muted'}`} />
+              <span className="font-bold">{todaySession.status === 'open' ? 'Sedang aktif' : 'Sesi hari ini selesai'}</span>
             </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <span>Masuk: <strong style={{ color: '#1e293b' }}>{formatTime(todaySession.checkInAt)}</strong></span>
-              <span>Keluar: <strong style={{ color: '#1e293b' }}>{formatTime(todaySession.checkOutAt)}</strong></span>
+            <div className="flex gap-4">
+              <span>Masuk: <strong className="text-sales-text-heading">{formatTime(todaySession.checkInAt)}</strong></span>
+              <span>Keluar: <strong className="text-sales-text-heading">{formatTime(todaySession.checkOutAt)}</strong></span>
             </div>
           </div>
         )}
         {!todaySession && !allowMultipleSessions && (
-          <div style={{ marginTop: '.65rem', fontSize: '.75rem', color: '#64748b' }}>
+          <div className="mt-2 text-sales-muted" style={{ fontSize: '.75rem' }}>
             Company membatasi absensi menjadi satu sesi per hari.
           </div>
         )}
         {checkInBlockedReason && todaySession?.status !== 'open' && (
-          <div style={{ marginTop: '.65rem', fontSize: '.75rem', color: '#b45309' }}>
+          <div className="mt-2 text-sales-amber-deep" style={{ fontSize: '.75rem' }}>
             {checkInBlockedReason}
           </div>
         )}
       </div>
 
       {/* Live Camera */}
-      <div style={{ position: 'relative', marginTop: '.5rem' }}>
-        <video ref={videoRef} style={{ width: '100%', aspectRatio: '3/4', borderRadius: 16, background: '#000', objectFit: 'cover' }} playsInline muted />
+      <div className="relative mt-2">
+        <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
         {location && (
-          <div style={{
-            position: 'absolute', bottom: 12, left: 12, right: 12,
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-            borderRadius: 12, padding: '6px 12px', fontSize: '.75rem', color: '#fff',
-          }}>
-            <MapPin size={13} style={{ color: '#34d399', flexShrink: 0 }} />
+          <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
+            <MapPin size={13} className="shrink-0 text-sales-emerald" />
             <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
-            <span style={{ marginLeft: 'auto', color: '#34d399' }}>±{Math.round(location.accuracyM ?? 0)}m</span>
+            <span className="ml-auto text-sales-emerald">±{Math.round(location.accuracyM ?? 0)}m</span>
           </div>
         )}
         {!location && (
-          <div style={{
-            position: 'absolute', bottom: 12, left: 12, right: 12,
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-            borderRadius: 12, padding: '6px 12px', fontSize: '.75rem', color: '#fbbf24',
-          }}>
+          <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sales-amber backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
             <MapPin size={13} />
             <span>Mengambil lokasi GPS...</span>
           </div>
@@ -208,69 +184,54 @@ export function AttendancePageSales(props: AttendanceState) {
       </div>
 
       {/* Action Button */}
-      <div style={{ marginTop: '.75rem' }}>
+      <div className="mt-3">
         <button
           onClick={handleCaptureAndPreview}
           disabled={!stream || !canStartSelectedMode}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            padding: '.85rem', borderRadius: 14, fontSize: '.95rem', fontWeight: 800,
-            border: 'none', cursor: stream && canStartSelectedMode ? 'pointer' : 'not-allowed',
-            background: '#B55925', color: '#fff',
-            opacity: stream && canStartSelectedMode ? 1 : 0.5, transition: 'all .2s',
-          }}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sales-accent text-sales-surface border-none"
+          style={{ padding: '.85rem', fontSize: '.95rem', fontWeight: 800, cursor: stream && canStartSelectedMode ? 'pointer' : 'not-allowed', opacity: stream && canStartSelectedMode ? 1 : 0.5, transition: 'all .2s' }}
         >
           <CheckCircle2 size={20} />
           {mode === 'check-in' ? 'Absen Masuk' : 'Absen Keluar'}
         </button>
 
         {message && (
-          <div style={{ marginTop: '.5rem', padding: '.7rem .85rem', borderRadius: 12, background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: '.8rem', color: '#166534' }}>
+          <div className="mt-2 rounded-xl border border-green-200 bg-green-50 px-3.5 py-2.8 text-green-800" style={{ fontSize: '.8rem' }}>
             {message}
           </div>
         )}
       </div>
 
       {/* List Absensi */}
-      <div style={{ marginTop: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.5rem' }}>
-          <h3 style={{ fontSize: '.9rem', fontWeight: 800, color: '#1e293b' }}>Riwayat Absensi</h3>
+      <div className="mt-4">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sales-text-heading" style={{ fontSize: '.9rem', fontWeight: 800 }}>Riwayat Absensi</h3>
         </div>
 
         {loadingData ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-            <Loader2 className="animate-spin" style={{ color: '#94a3b8' }} size={24} />
+          <div className="flex justify-center py-8">
+            <Loader2 className="animate-spin text-sales-muted" size={24} />
           </div>
         ) : records.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8', fontSize: '.85rem' }}>
+          <div className="text-center py-8 text-sales-muted" style={{ fontSize: '.85rem' }}>
             Belum ada riwayat absensi.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+          <div className="flex flex-col gap-2">
             {records.map(r => (
-              <div key={r.id} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '.6rem .8rem', borderRadius: 12, background: '#fff',
-              }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: r.status === 'open' ? '#ecfdf5' : '#f8fafc',
-                  color: r.status === 'open' ? '#059669' : '#94a3b8',
-                }}>
+              <div key={r.id} className="flex items-center gap-3 rounded-xl bg-sales-surface px-3 py-2.5">
+                <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${r.status === 'open' ? 'bg-sales-emerald-bg text-sales-emerald-dark' : 'bg-sales-surface-muted text-sales-muted'}`}>
                   {r.status === 'open' ? <LogIn size={16} /> : <CheckCircle2 size={16} />}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '.8rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>{formatDate(r.workDate)}</p>
-                  <p style={{ fontSize: '.7rem', color: '#94a3b8', margin: 0 }}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sales-text-heading font-bold m-0" style={{ fontSize: '.8rem' }}>{formatDate(r.workDate)}</p>
+                  <p className="text-sales-muted m-0" style={{ fontSize: '.7rem' }}>
                     {r.checkInAt ? formatTime(r.checkInAt) : '--:--'} → {r.checkOutAt ? formatTime(r.checkOutAt) : '--:--'}
                   </p>
                 </div>
-                <span style={{
-                  padding: '3px 8px', borderRadius: 8, fontSize: '.65rem', fontWeight: 700,
-                  background: r.status === 'open' ? '#ecfdf5' : r.status === 'flagged' ? '#fffbeb' : '#f1f5f9',
-                  color: r.status === 'open' ? '#059669' : r.status === 'flagged' ? '#d97706' : '#94a3b8',
-                }}>
+                <span
+                  className={`rounded-lg px-2 py-0.5 text-xs font-bold ${r.status === 'open' ? 'bg-sales-emerald-bg text-sales-emerald-dark' : r.status === 'flagged' ? 'bg-sales-amber-bg text-sales-amber-dark' : 'bg-sales-surface-muted text-sales-muted'}`}
+                >
                   {r.status === 'open' ? 'Aktif' : r.status === 'closed' ? 'Selesai' : r.status}
                 </span>
               </div>
@@ -281,49 +242,32 @@ export function AttendancePageSales(props: AttendanceState) {
 
       {/* Preview Modal Popup */}
       {preview && image && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 60,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-          padding: '1.5rem',
-        }}>
-          <div style={{
-            width: '100%', maxWidth: 360, background: '#fff',
-            borderRadius: 24, padding: '1.25rem', boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
-          }}>
-            <p style={{ textAlign: 'center', fontSize: '.9rem', fontWeight: 800, color: '#1e293b', marginBottom: '.75rem' }}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm p-6" style={{ background: 'var(--sales-overlay-dark)' }}>
+          <div className="w-full max-w-[360px] bg-sales-surface rounded-3xl p-5" style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+            <p className="text-center text-sales-text-heading font-extrabold mb-3" style={{ fontSize: '.9rem' }}>
               Preview {mode === 'check-in' ? 'Masuk' : 'Keluar'}
             </p>
-            <img src={image.dataUrl} alt="Preview" style={{ width: '100%', aspectRatio: '3/4', borderRadius: 16, objectFit: 'cover' }} />
+            <img src={image.dataUrl} alt="Preview" className="w-full rounded-2xl object-cover" style={{ aspectRatio: '3/4' }} />
             {location && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: '.6rem', fontSize: '.7rem', color: '#64748b' }}>
-                <MapPin size={12} style={{ color: '#059669' }} />
+              <div className="flex items-center gap-1.5 mt-2 text-sales-muted" style={{ fontSize: '.7rem' }}>
+                <MapPin size={12} className="text-sales-emerald-dark" />
                 <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)} · ±{Math.round(location.accuracyM ?? 0)}m</span>
               </div>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem', marginTop: '.75rem' }}>
+            <div className="grid grid-cols-2 gap-2 mt-3">
               <button
                 onClick={handleRetake}
                 disabled={loading}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '.7rem', borderRadius: 14, fontSize: '.8rem', fontWeight: 700,
-                  border: '1px solid #e2e8f0', background: '#fff', color: '#475569',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                }}
+                className="flex items-center justify-center gap-1.5 rounded-2xl border border-gray-200 bg-sales-surface text-sales-text-label"
+                style={{ padding: '.7rem', fontSize: '.8rem', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer' }}
               >
                 <RotateCcw size={15} /> Ulangi Foto
               </button>
               <button
                 onClick={handleSubmitAttendance}
                 disabled={loading || !location || !canStartSelectedMode}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                  padding: '.7rem', borderRadius: 14, fontSize: '.8rem', fontWeight: 700,
-                  border: 'none', background: '#B55925', color: '#fff',
-                  cursor: (loading || !location || !canStartSelectedMode) ? 'not-allowed' : 'pointer',
-                  opacity: (loading || !location || !canStartSelectedMode) ? 0.5 : 1,
-                }}
+                className="flex items-center justify-center gap-1.5 rounded-2xl bg-sales-accent text-sales-surface border-none"
+                style={{ padding: '.7rem', fontSize: '.8rem', fontWeight: 700, cursor: (loading || !location || !canStartSelectedMode) ? 'not-allowed' : 'pointer', opacity: (loading || !location || !canStartSelectedMode) ? 0.5 : 1 }}
               >
                 {loading ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />}
                 {loading ? 'Mengirim...' : 'Kirim Absensi'}

@@ -40,10 +40,10 @@ export function SalesShell() {
             const Icon = item.icon;
             const active = location.pathname === item.href;
             return (
-              <Link key={item.href} id={`sales-nav-${item.name.toLowerCase()}`} to={item.href} className={`relative flex h-full w-16 flex-col items-center justify-center gap-1 text-[10px] font-bold transition ${active ? 'text-[#B55925]' : 'text-slate-400 hover:text-slate-700'}`}>
+              <Link key={item.href} id={`sales-nav-${item.name.toLowerCase()}`} to={item.href} className={`relative flex h-full w-16 flex-col items-center justify-center gap-1 text-[10px] font-bold transition ${active ? 'text-sales-accent' : 'text-slate-400 hover:text-slate-700'}`}>
                 <Icon size={20} />
                 {item.name}
-                {active ? <span className="absolute bottom-0 h-1 w-8 rounded-t-full bg-[#B55925]" /> : null}
+                {active ? <span className="absolute bottom-0 h-1 w-8 rounded-t-full bg-sales-accent" /> : null}
               </Link>
             );
           })}

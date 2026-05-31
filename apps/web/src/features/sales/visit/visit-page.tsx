@@ -216,13 +216,13 @@ export function VisitPage() {
           <p className="sales-greeting-label">Eksekusi Kunjungan</p>
           <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Visit Check-In</h1>
         </div>
-        {!online && <span style={{ fontSize: '.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: 4 }}><WifiOff size={14} /> Offline</span>}
+        {!online && <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}><WifiOff size={14} /> Offline</span>}
       </div>
 
       {queueCount > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 12, padding: '.5rem .75rem', marginBottom: '.5rem' }}>
-          <span style={{ fontSize: '.8rem', color: '#B55925' }}>{queueCount} visit menunggu sync</span>
-          <button onClick={handleSyncQueue} disabled={syncing || !navigator.onLine} style={{ background: 'none', border: 'none', color: '#B55925', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '.8rem', fontWeight: 600 }}>
+        <div className="flex items-center justify-between rounded-xl border border-sales-accent-bg bg-sales-bg px-3 py-2 mb-2">
+          <span className="text-sales-accent" style={{ fontSize: '.8rem' }}>{queueCount} visit menunggu sync</span>
+          <button onClick={handleSyncQueue} disabled={syncing || !navigator.onLine} className="flex items-center gap-1 text-sales-accent" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '.8rem', fontWeight: 600 }}>
             {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Sync
           </button>
         </div>
@@ -258,7 +258,7 @@ export function VisitPage() {
           </div>
         )}
         {!activeVisitId && !availableSchedules.length && (
-          <p style={{ marginTop: '.75rem', fontSize: '.8rem', color: '#94a3b8' }}>
+          <p className="mt-3 text-sales-muted" style={{ fontSize: '.8rem' }}>
             Belum ada jadwal outlet yang bisa dimulai hari ini. Hubungi admin untuk membuat atau mengaktifkan jadwal sales.
           </p>
         )}
@@ -281,7 +281,7 @@ export function VisitPage() {
           <button onClick={handleLocation} className="sales-btn sales-btn-ghost" type="button" style={{ width: '100%', justifyContent: 'center' }}>
             <MapPin size={16} /> Ambil Lokasi GPS
           </button>
-          {location && <p style={{ fontSize: '.75rem', color: '#94a3b8', textAlign: 'center', marginTop: '.5rem' }}>Akurasi: ±{Math.round(location.accuracyM ?? 0)}m</p>}
+          {location && <p className="text-center text-sales-muted mt-2" style={{ fontSize: '.75rem' }}>Akurasi: ±{Math.round(location.accuracyM ?? 0)}m</p>}
         </div>
       </div>
 

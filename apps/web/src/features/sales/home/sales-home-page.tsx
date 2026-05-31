@@ -47,12 +47,12 @@ function formatRp(v: string | number) {
 }
 
 const OUTCOME_LABEL: Record<string, { text: string; color: string }> = {
-  closed_order: { text: 'Order Closed', color: '#34d399' },
-  no_order: { text: 'Tidak Ada Order', color: '#94a3b8' },
-  follow_up: { text: 'Follow Up', color: '#fbbf24' },
-  outlet_closed: { text: 'Outlet Tutup', color: '#f87171' },
-  rejected: { text: 'Ditolak', color: '#f87171' },
-  invalid_location: { text: 'Lokasi Salah', color: '#f87171' },
+  closed_order: { text: 'Order Closed', color: 'var(--sales-emerald)' },
+  no_order: { text: 'Tidak Ada Order', color: 'var(--sales-muted)' },
+  follow_up: { text: 'Follow Up', color: 'var(--sales-amber)' },
+  outlet_closed: { text: 'Outlet Tutup', color: 'var(--sales-danger-lighter)' },
+  rejected: { text: 'Ditolak', color: 'var(--sales-danger-lighter)' },
+  invalid_location: { text: 'Lokasi Salah', color: 'var(--sales-danger-lighter)' },
 };
 
 export function SalesHomePage() {
@@ -154,17 +154,17 @@ export function SalesHomePage() {
       {summary && (
         <div className="sales-kpi-row">
           <div className="sales-kpi-card">
-            <TrendingUp size={16} style={{ color: '#34d399' }} />
+            <TrendingUp size={16} className="text-sales-emerald" />
             <strong>{formatRp(summary.todaySalesAmount)}</strong>
             <span>Omset Hari Ini</span>
           </div>
           <div className="sales-kpi-card">
-            <ShoppingCart size={16} style={{ color: '#60a5fa' }} />
+            <ShoppingCart size={16} className="text-sales-info-light" />
             <strong>{summary.todayOrders}</strong>
             <span>Order</span>
           </div>
           <div className="sales-kpi-card">
-            <MapPin size={16} style={{ color: '#a78bfa' }} />
+            <MapPin size={16} className="text-sales-violet" />
             <strong>{todayVisitsDone}/{todayVisitsTotal}</strong>
             <span>Visit</span>
           </div>

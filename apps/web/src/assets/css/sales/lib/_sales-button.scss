@@ -22,20 +22,20 @@
 .sales-btn-success {
     background: var(--sales-success-soft);
     color: var(--sales-success);
-    border-color: rgba(34, 197, 94, .3);
+    border-color: color-mix(in srgb, var(--sales-success) 30%, transparent);
 
     &:hover:not(:disabled) {
-        background: rgba(34, 197, 94, .25);
+        background: color-mix(in srgb, var(--sales-success) 25%, transparent);
     }
 }
 
 .sales-btn-danger {
     background: var(--sales-danger-soft);
     color: var(--sales-danger-light);
-    border-color: rgba(239, 68, 68, .3);
+    border-color: color-mix(in srgb, var(--sales-danger-light) 30%, transparent);
 
     &:hover:not(:disabled) {
-        background: rgba(239, 68, 68, .25);
+        background: color-mix(in srgb, var(--sales-danger-light) 25%, transparent);
     }
 }
 
@@ -61,7 +61,7 @@
 
 .sales-btn-primary {
     background: linear-gradient(135deg, var(--sales-accent), var(--sales-accent-light)) !important;
-    color: #ffffff !important;
+    color: var(--sales-surface) !important;
     border: 1px solid var(--sales-accent) !important;
     box-shadow: 0 4px 12px var(--sales-accent-shadow) !important;
     display: inline-flex;

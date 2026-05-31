@@ -87,7 +87,7 @@ export function InvoicesPage() {
       </div>
 
       <div className="sales-step-card">
-        <p style={{ margin: 0, fontSize: '.85rem', color: '#6b7280', lineHeight: 1.5 }}>
+        <p className="text-sales-text-muted" style={{ margin: 0, fontSize: '.85rem', lineHeight: 1.5 }}>
           Daftar transaksi Anda. Gunakan tombol kamera untuk langsung menjepret bukti nota fisik agar diverifikasi oleh Admin.
         </p>
         {error && <div className="sales-alert sales-alert-error" style={{ marginTop: '1rem' }}>{error}</div>}
@@ -99,8 +99,8 @@ export function InvoicesPage() {
             <div key={order.id} className="sales-note-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.5rem' }}>
                 <div>
-                  <strong style={{ display: 'block', color: '#171717' }}>{order.transactionNo}</strong>
-                  <span style={{ fontSize: '.75rem', color: '#6b7280' }}>
+                  <strong className="block text-sales-foreground">{order.transactionNo}</strong>
+                  <span className="text-sales-text-muted" style={{ fontSize: '.75rem' }}>
                     {new Date(order.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -108,20 +108,20 @@ export function InvoicesPage() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem' }}>
-                <strong style={{ color: '#B55925', fontSize: '1.1rem' }}>
+                <strong className="text-sales-accent" style={{ fontSize: '1.1rem' }}>
                   Rp {Number(order.totalAmount).toLocaleString('id-ID')}
                 </strong>
 
                 {order.hasInvoice ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '.3rem', color: '#4fa87e', fontSize: '.8rem', fontWeight: 700 }}>
+                  <span className="flex items-center gap-1 text-sales-success-light" style={{ fontSize: '.8rem', fontWeight: 700 }}>
                     <CheckCircle2 size={16} /> Nota Terkirim
                   </span>
                 ) : order.status !== 'pending_approval' ? (
-                  <span style={{ color: '#94a3b8', fontSize: '.8rem', fontWeight: 700 }}>
+                  <span className="text-sales-muted" style={{ fontSize: '.8rem', fontWeight: 700 }}>
                     Tidak bisa upload
                   </span>
                 ) : (
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', background: '#fff7ed', border: '1px solid #fed7aa', color: '#B55925', padding: '.5rem 1rem', borderRadius: '.75rem', fontSize: '.8rem', fontWeight: 800, cursor: uploadingFor === order.id ? 'not-allowed' : 'pointer', opacity: uploadingFor === order.id ? 0.7 : 1 }}>
+                  <label className="inline-flex items-center gap-1.5 border border-sales-accent-bg bg-sales-bg text-sales-accent rounded-xl px-4 py-2 cursor-pointer" style={{ fontSize: '.8rem', fontWeight: 800, opacity: uploadingFor === order.id ? 0.7 : 1 }}>
                     {uploadingFor === order.id ? <Spinner size={16} /> : <Camera size={16} />}
                     {uploadingFor === order.id ? 'Mengunggah...' : 'Jepret Nota'}
                     <input

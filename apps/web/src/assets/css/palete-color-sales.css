@@ -60,6 +60,44 @@
     --sales-brand-dark: #5a352c;
     --sales-brand-primary: #4A2922;
     --sales-brand-muted: #966556;
+
+    /* ─── Extended: KPI & Semantic Status ────────────────────────────── */
+
+    /* Info / Orders */
+    --sales-info: #3b82f6;
+    --sales-info-light: #60a5fa;
+
+    /* Emerald Success (online, active, validated) */
+    --sales-emerald: #34d399;
+    --sales-emerald-dark: #059669;
+    --sales-emerald-bg: #ecfdf5;
+
+    /* Amber Warning (follow-up, pending, waiting) */
+    --sales-amber: #fbbf24;
+    --sales-amber-dark: #d97706;
+    --sales-amber-deep: #b45309;
+    --sales-amber-bg: #fffbeb;
+
+    /* Violet Accent (visits KPI) */
+    --sales-violet: #a78bfa;
+
+    /* Danger Alt (offline, rejected, red-500) */
+    --sales-red: #ef4444;
+
+    /* ─── Extended: Text & Surface ───────────────────────────────────── */
+
+    --sales-text-heading: #1e293b;
+    --sales-text-body: #334155;
+    --sales-text-label: #475569;
+    --sales-surface-input: #ffffff;
+    --sales-surface-card: #ffffff;
+    --sales-surface-muted: #f1f5f9;
+
+    /* ─── Extended: Overlays & Shadows ───────────────────────────────── */
+
+    --sales-overlay-dark: rgba(0, 0, 0, 0.6);
+    --sales-border-brand: rgba(74, 41, 34, .14);
+    --sales-shadow-cart: rgba(64, 35, 30, .14);
 }
 
 .dark {
@@ -119,6 +157,32 @@
     --sales-brand-dark: #1e293b;
     --sales-brand-primary: #0f172a;
     --sales-brand-muted: #64748b; */
+
+    /* Extended: KPI & Semantic Status */
+    /* --sales-info: #60a5fa;
+    --sales-info-light: #93c5fd;
+    --sales-emerald: #34d399;
+    --sales-emerald-dark: #059669;
+    --sales-emerald-bg: rgba(16, 185, 129, .12);
+    --sales-amber: #fbbf24;
+    --sales-amber-dark: #d97706;
+    --sales-amber-deep: #b45309;
+    --sales-amber-bg: rgba(251, 191, 36, .12);
+    --sales-violet: #a78bfa;
+    --sales-red: #f87171; */
+
+    /* Extended: Text & Surface */
+    /* --sales-text-heading: #e2e8f0;
+    --sales-text-body: #cbd5e1;
+    --sales-text-label: #94a3b8;
+    --sales-surface-input: var(--brand-surface);
+    --sales-surface-card: var(--brand-surface);
+    --sales-surface-muted: #1e293b; */
+
+    /* Extended: Overlays & Shadows */
+    /* --sales-overlay-dark: rgba(0, 0, 0, 0.75);
+    --sales-border-brand: rgba(148, 163, 184, .14);
+    --sales-shadow-cart: rgba(0, 0, 0, .25); */
 }
 
 @theme inline {
@@ -177,4 +241,30 @@
     --color-sales-brand-dark: var(--sales-brand-dark);
     --color-sales-brand-primary: var(--sales-brand-primary);
     --color-sales-brand-muted: var(--sales-brand-muted);
+
+    /* Extended: KPI & Semantic Status */
+    --color-sales-info: var(--sales-info);
+    --color-sales-info-light: var(--sales-info-light);
+    --color-sales-emerald: var(--sales-emerald);
+    --color-sales-emerald-dark: var(--sales-emerald-dark);
+    --color-sales-emerald-bg: var(--sales-emerald-bg);
+    --color-sales-amber: var(--sales-amber);
+    --color-sales-amber-dark: var(--sales-amber-dark);
+    --color-sales-amber-deep: var(--sales-amber-deep);
+    --color-sales-amber-bg: var(--sales-amber-bg);
+    --color-sales-violet: var(--sales-violet);
+    --color-sales-red: var(--sales-red);
+
+    /* Extended: Text & Surface */
+    --color-sales-text-heading: var(--sales-text-heading);
+    --color-sales-text-body: var(--sales-text-body);
+    --color-sales-text-label: var(--sales-text-label);
+    --color-sales-surface-input: var(--sales-surface-input);
+    --color-sales-surface-card: var(--sales-surface-card);
+    --color-sales-surface-muted: var(--sales-surface-muted);
+
+    /* Extended: Overlays & Shadows */
+    --color-sales-overlay-dark: var(--sales-overlay-dark);
+    --color-sales-border-brand: var(--sales-border-brand);
+    --color-sales-shadow-cart: var(--sales-shadow-cart);
 }

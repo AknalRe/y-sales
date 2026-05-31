@@ -9,7 +9,7 @@
      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
      &:hover {
-         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+         box-shadow: 0 4px 12px var(--sales-overlay-subtle);
          border-color: var(--sales-border-strong);
          transform: translateY(-2px);
      }

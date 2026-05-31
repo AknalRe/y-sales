@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/auth-provider';
 import { apiRequest } from '../../../lib/api/client';
 import { createMediaUpload, uploadToStorageUrl, finalizeMediaUpload } from '../../../lib/api/client';
 import { EmptyState, Spinner } from '../../../components/ui';
+import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 
 const orderStatusLabel: Record<string, string> = {
   draft: 'Draft',
@@ -15,6 +16,7 @@ const orderStatusLabel: Record<string, string> = {
 };
 
 export function InvoicesPage() {
+  useScrollToTop();
   const { accessToken } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

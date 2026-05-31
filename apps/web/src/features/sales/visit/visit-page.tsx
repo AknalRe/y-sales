@@ -7,10 +7,12 @@ import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/locat
 import { useAuth } from '../../auth/auth-provider';
 import { enqueueVisit, getVisitQueueCount } from '../../../lib/offline/visit-queue';
 import { syncVisitQueue } from '../../../lib/offline/sync-visits';
+import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 
 export function VisitPage() {
+  useScrollToTop();
   const { accessToken } = useAuth();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);

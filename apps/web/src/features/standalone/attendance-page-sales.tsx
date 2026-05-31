@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { AttendanceState } from './attendance-page';
 import { useAuth } from '../auth/auth-provider';
 import { apiRequest } from '../../lib/api/client';
+import { useScrollToTop } from '../../hooks/use-scroll-to-top';
 
 type TodaySession = {
   id: string;
@@ -29,6 +30,7 @@ type TodayAttendanceResponse = {
 };
 
 export function AttendancePageSales(props: AttendanceState) {
+  useScrollToTop();
   const { accessToken } = useAuth();
   const { videoRef, location, loading, message, online, preview, image, stream, reloadKey,
     handleCaptureAndPreview, handleRetake, handleConfirmSend, handleConfirmCheckOut } = props;

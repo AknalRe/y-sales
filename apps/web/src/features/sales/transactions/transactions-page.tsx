@@ -6,6 +6,7 @@ import { useAuth } from '../../auth/auth-provider';
 import { EmptyState, Spinner } from '../../../components/ui';
 import { enqueueTransaction, getTransactionQueueCount } from '../../../lib/offline/transaction-queue';
 import { syncTransactionQueue } from '../../../lib/offline/sync-transactions';
+import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 
@@ -15,6 +16,7 @@ type CartItem = {
 };
 
 export function TransactionsPage() {
+  useScrollToTop();
   const { accessToken } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>([]);

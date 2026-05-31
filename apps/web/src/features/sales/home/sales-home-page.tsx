@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Camera, ReceiptText, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { API_BASE_URL } from '../../../lib/api/client';
+import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 
 type VisitSession = {
   id: string;
@@ -56,6 +57,7 @@ const OUTCOME_LABEL: Record<string, { text: string; color: string }> = {
 };
 
 export function SalesHomePage() {
+  useScrollToTop();
   const { accessToken, user } = useAuth();
   const navigate = useNavigate();
   const [visits, setVisits] = useState<VisitSession[]>([]);

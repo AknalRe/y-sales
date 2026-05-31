@@ -3,6 +3,7 @@ import { UserCircle, LogOut, RefreshCw, Building2, Shield, Phone, Mail, IdCard, 
 import { useAuth } from '../../auth/auth-provider';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../../lib/api/client';
+import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 
 function apiReq<T>(path: string, token: string): Promise<T> {
   return apiRequest<T>(path, { headers: { Authorization: `Bearer ${token}` } });
@@ -41,6 +42,7 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 export function SalesProfilePage() {
+  useScrollToTop();
   const { user, signOut, accessToken } = useAuth();
   const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState<AttendanceToday | null>(null);

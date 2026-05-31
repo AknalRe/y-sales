@@ -15,14 +15,14 @@
 
 .empty-state-title {
   margin: 0;
-  color: #64748b;
+  color: var(--admin-subtle);
   font-size: .95rem;
   font-weight: 600;
 }
 
 .empty-state-desc {
   margin: 0;
-  color: #475569;
+  color: var(--admin-muted-dim);
   font-size: .82rem;
   max-width: 280px;
   line-height: 1.5;
@@ -32,7 +32,7 @@
   margin-top: .5rem;
   background: rgba(167, 139, 250, .15);
   border: 1px solid rgba(167, 139, 250, .3);
-  color: #a78bfa;
+  color: var(--admin-focus-ring);
   border-radius: 12px;
   padding: .55rem 1.25rem;
   font-size: .82rem;

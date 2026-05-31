@@ -13,19 +13,19 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: #ffffff;
-  border: 1px solid rgba(74, 41, 34, .14);
+  background: var(--sales-surface);
+  border: 1px solid var(--sales-border-overlay);
   border-radius: 20px;
   padding: 1.25rem;
   flex-wrap: wrap;
-  box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
+  box-shadow: 0 8px 24px var(--sales-overlay-subtle);
 }
 
 .sales-profile-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4A2922, #B55925);
+  background: linear-gradient(135deg, var(--sales-brand-primary), var(--sales-accent));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,7 +43,7 @@
   margin: 0 0 .4rem;
   font-size: 1.15rem;
   font-weight: 800;
-  color: #171717;
+  color: var(--sales-foreground);
 }
 
 .sales-profile-role {
@@ -65,18 +65,18 @@
 }
 
 .sales-profile-card {
-  background: #ffffff;
-  border: 1px solid rgba(74, 41, 34, .14);
+  background: var(--sales-surface);
+  border: 1px solid var(--sales-border-overlay);
   border-radius: 18px;
   padding: 1rem 1.15rem;
-  box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
+  box-shadow: 0 8px 24px var(--sales-overlay-subtle);
 }
 
 .sales-profile-card-title {
   display: flex;
   align-items: center;
   gap: .4rem;
-  color: #4A2922;
+  color: var(--sales-brand-primary);
   font-size: .78rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -89,7 +89,7 @@
   align-items: center;
   justify-content: space-between;
   padding: .5rem 0;
-  border-bottom: 1px solid rgba(74, 41, 34, .10);
+  border-bottom: 1px solid var(--sales-border);
   font-size: .875rem;
 }
 
@@ -98,14 +98,14 @@
 }
 
 .sales-profile-field span {
-  color: #64748b;
+  color: var(--sales-subtle);
   display: flex;
   align-items: center;
   gap: .3rem;
 }
 
 .sales-profile-field strong {
-  color: #171717;
+  color: var(--sales-foreground);
   text-align: right;
 }
 
@@ -122,7 +122,7 @@
   justify-content: center;
   gap: .4rem;
   width: 100%;
-  background: linear-gradient(135deg, #B55925, #cf6f2e);
+  background: linear-gradient(135deg, var(--sales-accent), var(--sales-accent-light));
   color: #fff;
   border: 0;
   border-radius: 12px;
@@ -138,9 +138,9 @@
   justify-content: center;
   gap: .5rem;
   width: 100%;
-  background: rgba(239, 68, 68, .1);
-  border: 1px solid rgba(239, 68, 68, .25);
-  color: #f87171;
+  background: var(--sales-danger-shadow);
+  border: 1px solid var(--sales-danger-shadow-lg);
+  color: var(--sales-danger-lighter);
   border-radius: 14px;
   padding: .85rem;
   font-size: .9rem;
@@ -151,5 +151,5 @@
 }
 
 .sales-profile-signout:hover {
-  background: rgba(239, 68, 68, .18);
+  background: var(--sales-danger-shadow-md);
 }

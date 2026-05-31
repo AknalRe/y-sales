@@ -34,6 +34,22 @@ function publicSettings<T extends { faceIntegration?: { apiKey?: string } }>(set
   };
 }
 
+function mergeFaceIntegration(oldSettings: Awaited<ReturnType<typeof getGeneralSettings>>, patch: z.infer<typeof generalSettingsSchema>) {
+  if (!patch.faceIntegration) return patch;
+  const incoming = { ...patch.faceIntegration };
+  const currentApiKey = oldSettings.faceIntegration.apiKey;
+  if (!incoming.apiKey || incoming.apiKey.includes('...') || incoming.apiKey === '********') {
+    incoming.apiKey = currentApiKey;
+  }
+  return {
+    ...patch,
+    faceIntegration: {
+      ...oldSettings.faceIntegration,
+      ...incoming,
+    },
+  };
+}
+
 const generalSettingsSchema = z.object({
   defaultGeofenceRadiusM: z.number().positive().optional(),
   maxGpsAccuracyM: z.number().positive().optional(),
@@ -66,7 +82,7 @@ export async function settingsRoutes(app: FastifyInstance) {
   app.put('/settings/general', { preHandler: requirePermission('settings.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const oldSettings = await getGeneralSettings(companyId);
-    const patch = generalSettingsSchema.parse(request.body);
+    const patch = mergeFaceIntegration(oldSettings, generalSettingsSchema.parse(request.body));
     const settings = { ...oldSettings, ...patch };
     const [setting] = await db.insert(appSettings).values({
       key: generalSettingsKey(companyId),

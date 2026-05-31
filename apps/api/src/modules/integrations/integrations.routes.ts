@@ -33,6 +33,12 @@ function publicIntegration<T extends { secretConfig?: unknown }>(integration: T)
   return { ...integration, secretConfig };
 }
 
+function mergeRecord(oldValue: unknown, patchValue: unknown) {
+  const oldRecord = oldValue && typeof oldValue === 'object' && !Array.isArray(oldValue) ? oldValue as Record<string, unknown> : {};
+  const patchRecord = patchValue && typeof patchValue === 'object' && !Array.isArray(patchValue) ? patchValue as Record<string, unknown> : {};
+  return { ...oldRecord, ...patchRecord };
+}
+
 export async function integrationRoutes(app: FastifyInstance) {
   app.get('/integrations', { preHandler: requirePermission('settings.manage') }, async (request) => {
     const companyId = requireTenantId(request);
@@ -70,7 +76,12 @@ export async function integrationRoutes(app: FastifyInstance) {
     const body = patchIntegrationSchema.parse(request.body);
     const [oldIntegration] = await db.select().from(companyIntegrations).where(and(eq(companyIntegrations.companyId, companyId), eq(companyIntegrations.id, params.id)));
     if (!oldIntegration) throw Object.assign(new Error('Integrasi tidak ditemukan.'), { statusCode: 404 });
-    const [integration] = await db.update(companyIntegrations).set({ ...body, updatedByUserId: request.user?.id, updatedAt: new Date() }).where(eq(companyIntegrations.id, params.id)).returning();
+    const updateBody = {
+      ...body,
+      ...(body.config ? { config: mergeRecord(oldIntegration.config, body.config) } : {}),
+      ...(body.secretConfig ? { secretConfig: mergeRecord(oldIntegration.secretConfig, body.secretConfig) } : {}),
+    };
+    const [integration] = await db.update(companyIntegrations).set({ ...updateBody, updatedByUserId: request.user?.id, updatedAt: new Date() }).where(eq(companyIntegrations.id, params.id)).returning();
     await writeAuditLog({ request, action: 'integration.updated', entityType: 'company_integration', entityId: integration.id, oldValues: publicIntegration(oldIntegration), newValues: publicIntegration(integration) });
     return { integration: publicIntegration(integration) };
   });

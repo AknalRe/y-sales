@@ -111,6 +111,14 @@ Permission: `settings.manage`.
 
 Permission: `settings.manage`.
 
+Field nullable seperti `legalName`, `email`, `phone`, `address`, `websiteUrl`, `logoUrl`, dan `coverPhotoUrl` boleh dikirim `null` atau string kosong dari frontend. Backend akan menganggap string kosong sebagai `null` agar admin bisa mengosongkan data company tanpa gagal validasi.
+
+Catatan penggunaan:
+
+- `latitude` dan `longitude` adalah titik kantor/company.
+- Titik ini boleh menjadi referensi absensi kantor bila flow company mengaktifkannya.
+- Titik ini tidak menggantikan titik outlet. Visit outlet tetap memakai koordinat dan radius outlet.
+
 Body:
 
 ```json
@@ -187,6 +195,7 @@ Body:
 > [!NOTE]
 > Face integration masih tersedia di general settings untuk kompatibilitas flow saat ini.
 > Untuk integrasi eksternal jangka panjang, tabel `company_integrations` sudah disiapkan.
+> Response GET memasking `faceIntegration.apiKey`. Jika frontend mengirim kembali nilai masked atau kosong saat PUT, backend mempertahankan API key lama.
 
 ---
 
@@ -276,6 +285,13 @@ Body Cloudflare R2:
 Permission: `settings.manage`.
 
 Body partial dari POST.
+
+Behavior update:
+
+- `config` di-merge dengan config lama, bukan replace total.
+- `secretConfig` di-merge dengan secret lama, bukan replace total.
+- Frontend boleh mengirim hanya secret yang ingin diganti.
+- Secret yang tidak dikirim tetap dipertahankan.
 
 ## DELETE `/integrations/:id`
 

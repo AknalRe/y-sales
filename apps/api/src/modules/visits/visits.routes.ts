@@ -3,7 +3,7 @@ import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { attendanceSessions, faceCaptures, mediaFiles, outlets, salesTransactions, users, visitSchedules, visitSessions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
-import { authenticate, requirePermission } from '../auth/auth.service.js';
+import { authenticate, getUserPermissions, requirePermission } from '../auth/auth.service.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 import { verifyFaceIdentity } from '../face/face-verification.service.js';
 import { requireTenantId, requireFeature } from '../tenant.js';
@@ -120,6 +120,10 @@ export async function visitRoutes(app: FastifyInstance) {
     if (body.targetOutletCount > targetOutletIds.length) throw Object.assign(new Error('Target outlet tidak boleh lebih besar dari jumlah outlet yang dijadwalkan.'), { statusCode: 400 });
     const [salesUser] = await db.select().from(users).where(and(eq(users.companyId, companyId), eq(users.id, body.salesUserId), eq(users.status, 'active')));
     if (!salesUser) throw Object.assign(new Error('Sales tidak ditemukan atau tidak aktif pada company ini.'), { statusCode: 404 });
+    const salesPermissions = await getUserPermissions(body.salesUserId);
+    if (!salesPermissions?.permissions.includes('visits.execute')) {
+      throw Object.assign(new Error('User yang dijadwalkan harus memiliki akses kunjungan sales.'), { statusCode: 400 });
+    }
 
     const schedules = await db.transaction(async (tx) => {
       const created = [];

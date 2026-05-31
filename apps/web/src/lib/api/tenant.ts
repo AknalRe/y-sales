@@ -112,10 +112,24 @@ export type SalesTransaction = {
 export type SalesTransactionItem = {
   id: string;
   productId: string;
+  productName?: string;
+  productSku?: string;
   quantity: string;
   unitPrice: string;
   discountAmount: string;
   lineTotal: string;
+};
+
+export type SalesTransactionDetail = SalesTransaction & {
+  outletName?: string | null;
+  rejectionReason?: string | null;
+  items: SalesTransactionItem[];
+  photos: Array<{
+    id: string;
+    fileUrl: string;
+    verificationStatus: string;
+    capturedAt: string;
+  }>;
 };
 
 export type Product = {
@@ -124,16 +138,21 @@ export type Product = {
   sku: string;
   name: string;
   description?: string | null;
+  imageUrl?: string | null;
   unit: string;
   priceDefault: string;
   status: 'active' | 'inactive';
   createdAt: string;
+  salesStockQuantity?: string;
+  salesReservedQuantity?: string;
+  salesAvailableQuantity?: string;
 };
 
 export type ProductPayload = {
   sku?: string;
   name: string;
   description?: string;
+  imageUrl?: string | null;
   unit: string;
   priceDefault: string;
   initialStock?: string;
@@ -218,6 +237,71 @@ export type GeneralSettings = {
   };
 };
 
+export type CompanyProfile = {
+  id: string;
+  name: string;
+  slug: string;
+  status: 'active' | 'trialing' | 'suspended' | 'cancelled';
+  logoUrl?: string | null;
+  coverPhotoUrl?: string | null;
+  legalName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  province?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
+  taxNumber?: string | null;
+  websiteUrl?: string | null;
+  timezone: string;
+};
+
+export type CompanyProfilePayload = Partial<{
+  name: string;
+  legalName: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  country: string | null;
+  latitude: number;
+  longitude: number;
+  logoUrl: string | null;
+  coverPhotoUrl: string | null;
+  taxNumber: string | null;
+  websiteUrl: string | null;
+  timezone: string;
+}>;
+
+export type CompanyIntegration = {
+  id: string;
+  companyId: string;
+  type: 'storage' | 'face_recognition' | 'payment' | 'notification';
+  provider: 'cloudflare_r2' | 's3' | 'custom_http' | 'aws_rekognition' | 'azure_face' | 'google_vertex' | 'mock';
+  name: string;
+  status: 'active' | 'inactive';
+  config?: Record<string, unknown> | null;
+  secretConfig?: Record<string, unknown> | null;
+  description?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CompanyIntegrationPayload = {
+  type: CompanyIntegration['type'];
+  provider: CompanyIntegration['provider'];
+  name: string;
+  status?: CompanyIntegration['status'];
+  config?: Record<string, unknown>;
+  secretConfig?: Record<string, unknown>;
+  description?: string;
+};
+
 // ─── Visit APIs ─────────────────────────────────────────────────────────────
 
 export function getVisitSchedules(token: string, params?: { date?: string; salesUserId?: string }) {
@@ -286,6 +370,12 @@ export function getSalesTransactions(token: string, params?: { status?: string; 
   if (params?.from) q.set('from', params.from);
   if (params?.to) q.set('to', params.to);
   return apiRequest<{ orders: SalesTransaction[] }>(`/sales/orders?${q}`, { headers: { Authorization: `Bearer ${token}` } });
+}
+
+export function getSalesTransactionDetail(token: string, id: string) {
+  return apiRequest<{ order: SalesTransactionDetail }>(`/sales/orders/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
 
 export function approveSalesTransaction(token: string, id: string) {
@@ -496,6 +586,43 @@ export function getGeneralSettings(token: string) {
 export function updateGeneralSettings(token: string, payload: Partial<GeneralSettings>) {
   return apiRequest<{ settings: GeneralSettings }>('/settings/general', {
     method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getCompanyProfile(token: string) {
+  return apiRequest<{ company: CompanyProfile | null }>('/company/profile', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateCompanyProfile(token: string, payload: CompanyProfilePayload) {
+  return apiRequest<{ company: CompanyProfile }>('/company/profile', {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getCompanyIntegrations(token: string, type?: CompanyIntegration['type']) {
+  const q = type ? `?type=${encodeURIComponent(type)}` : '';
+  return apiRequest<{ integrations: CompanyIntegration[] }>(`/integrations${q}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function createCompanyIntegration(token: string, payload: CompanyIntegrationPayload) {
+  return apiRequest<{ integration: CompanyIntegration }>('/integrations', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateCompanyIntegration(token: string, id: string, payload: Partial<CompanyIntegrationPayload>) {
+  return apiRequest<{ integration: CompanyIntegration }>(`/integrations/${id}`, {
+    method: 'PATCH',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });

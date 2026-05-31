@@ -17,7 +17,7 @@ import {
   transactionNotePhotos,
 } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
-import { requirePermission } from '../auth/auth.service.js';
+import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { getGeneralSettings } from '../../utils/settings.js';
 import { writeAuditLog } from '../audit/audit.service.js';
@@ -85,12 +85,29 @@ async function ensureOutletConsignmentWarehouse(tx: Tx, input: { companyId: stri
   return warehouse;
 }
 
+function canReviewSalesOrders(user: any) {
+  return user.isSuperAdmin
+    || user.roleCode === 'ADMINISTRATOR'
+    || ['sales.order.review', 'invoice.review', 'reports.view', 'visits.review'].some((permission) => user.permissions.includes(permission));
+}
+
+function canReadSalesOrders(user: any) {
+  return canReviewSalesOrders(user) || user.permissions.includes('sales.view');
+}
+
+function canApproveSalesOrders(user: any) {
+  return user.isSuperAdmin
+    || user.roleCode === 'ADMINISTRATOR'
+    || ['sales.order.review', 'invoice.review'].some((permission) => user.permissions.includes(permission));
+}
+
 export async function salesRoutes(app: FastifyInstance) {
-  app.get('/sales/orders', { preHandler: requirePermission('sales.view') }, async (request) => {
+  app.get('/sales/orders', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
     const query = orderListQuerySchema.parse(request.query);
     const user = request.user!;
-    const canReview = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('sales.order.review') || user.permissions.includes('invoice.review');
+    if (!canReadSalesOrders(user)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.view' });
+    const canReview = canReviewSalesOrders(user);
     const conditions = [eq(salesTransactions.companyId, companyId)];
     if (query.status) conditions.push(eq(salesTransactions.status, query.status));
     if (query.from) conditions.push(gte(salesTransactions.createdAt, new Date(`${query.from}T00:00:00.000Z`)));
@@ -145,11 +162,12 @@ export async function salesRoutes(app: FastifyInstance) {
     return { orders: rows };
   });
 
-  app.get('/sales/orders/:id', { preHandler: requirePermission('sales.view') }, async (request, reply) => {
+  app.get('/sales/orders/:id', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const user = request.user!;
-    const canReview = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('sales.order.review') || user.permissions.includes('invoice.review');
+    if (!canReadSalesOrders(user)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.view' });
+    const canReview = canReviewSalesOrders(user);
     const conditions = [eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)];
     if (!canReview) conditions.push(eq(salesTransactions.salesUserId, user.id));
 
@@ -282,7 +300,8 @@ export async function salesRoutes(app: FastifyInstance) {
     return { order };
   });
 
-  app.post('/sales/orders/:id/approve', { preHandler: requirePermission('sales.order.review') }, async (request) => {
+  app.post('/sales/orders/:id/approve', { preHandler: authenticate }, async (request, reply) => {
+    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.order.review' });
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
@@ -413,7 +432,8 @@ export async function salesRoutes(app: FastifyInstance) {
     return { transaction: updated };
   });
 
-  app.post('/sales/orders/:id/reject', { preHandler: requirePermission('sales.order.review') }, async (request) => {
+  app.post('/sales/orders/:id/reject', { preHandler: authenticate }, async (request, reply) => {
+    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.order.review' });
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = rejectOrderSchema.parse(request.body ?? {});

@@ -22,6 +22,7 @@ export type RouteConfig = {
     label: string;
     icon: LucideIcon;
     permission?: string;
+    permissions?: string[];
     section?: string;
     badge?: string;
     hidden?: boolean;

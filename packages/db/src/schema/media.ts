@@ -1,7 +1,7 @@
 import { boolean, integer, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
 
-export const mediaOwnerTypeEnum = pgEnum('media_owner_type', ['user', 'outlet', 'transaction', 'attendance', 'visit', 'deposit', 'face_template']);
+export const mediaOwnerTypeEnum = pgEnum('media_owner_type', ['user', 'outlet', 'transaction', 'attendance', 'visit', 'deposit', 'face_template', 'product']);
 
 export const mediaFiles = pgTable('media_files', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -15,5 +15,4 @@ export const mediaFiles = pgTable('media_files', {
   uploadedByUserId: uuid('uploaded_by_user_id').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
-
 

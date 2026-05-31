@@ -1,9 +1,9 @@
 import type { FastifyInstance } from 'fastify';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { inventoryBalances, inventoryMovements, products, warehouses } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
-import { requirePermission } from '../auth/auth.service.js';
+import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
@@ -11,6 +11,7 @@ const productSchema = z.object({
   sku: z.string().min(2).optional(),
   name: z.string().min(2),
   description: z.string().optional(),
+  imageUrl: z.string().url().nullable().optional(),
   unit: z.string().min(1).default('pcs'),
   priceDefault: z.string().or(z.number()).transform(String).default('0'),
   initialStock: z.string().or(z.number()).transform(String).optional(),
@@ -51,9 +52,52 @@ function nextSequentialCode(prefix: string, existingCodes: string[]) {
 }
 
 export async function productRoutes(app: FastifyInstance) {
-  app.get('/products', { preHandler: requirePermission('sales.view') }, async (request) => {
+  app.get('/products', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
-    const rows = await db.select().from(products).where(eq(products.companyId, companyId)).orderBy(asc(products.name));
+    const user = request.user!;
+    const allowed = user.isSuperAdmin
+      || user.roleCode === 'ADMINISTRATOR'
+      || ['sales.view', 'products.manage', 'inventory.manage'].some((permission) => user.permissions.includes(permission));
+    if (!allowed) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.view' });
+
+    const salesStock = db
+      .select({
+        productId: inventoryBalances.productId,
+        salesStockQuantity: sql<string>`coalesce(sum(${inventoryBalances.quantity}), 0)`.as('sales_stock_quantity'),
+        salesReservedQuantity: sql<string>`coalesce(sum(${inventoryBalances.reservedQuantity}), 0)`.as('sales_reserved_quantity'),
+      })
+      .from(inventoryBalances)
+      .innerJoin(warehouses, eq(inventoryBalances.warehouseId, warehouses.id))
+      .where(and(
+        eq(inventoryBalances.companyId, companyId),
+        eq(warehouses.companyId, companyId),
+        eq(warehouses.type, 'sales_van'),
+        eq(warehouses.ownerUserId, request.user!.id),
+      ))
+      .groupBy(inventoryBalances.productId)
+      .as('sales_stock');
+
+    const rows = await db
+      .select({
+        id: products.id,
+        companyId: products.companyId,
+        sku: products.sku,
+        name: products.name,
+        description: products.description,
+        imageUrl: products.imageUrl,
+        unit: products.unit,
+        priceDefault: products.priceDefault,
+        status: products.status,
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+        salesStockQuantity: sql<string>`coalesce(${salesStock.salesStockQuantity}, '0')`,
+        salesReservedQuantity: sql<string>`coalesce(${salesStock.salesReservedQuantity}, '0')`,
+        salesAvailableQuantity: sql<string>`coalesce(${salesStock.salesStockQuantity}, '0')::numeric - coalesce(${salesStock.salesReservedQuantity}, '0')::numeric`,
+      })
+      .from(products)
+      .leftJoin(salesStock, eq(products.id, salesStock.productId))
+      .where(eq(products.companyId, companyId))
+      .orderBy(asc(products.name));
     return { products: rows };
   });
 
@@ -71,6 +115,7 @@ export async function productRoutes(app: FastifyInstance) {
         sku,
         name: body.name,
         description: body.description,
+        imageUrl: body.imageUrl,
         unit: body.unit,
         priceDefault: body.priceDefault,
         status: 'active',
@@ -79,6 +124,7 @@ export async function productRoutes(app: FastifyInstance) {
         set: {
           name: body.name,
           description: body.description,
+          imageUrl: body.imageUrl,
           unit: body.unit,
           priceDefault: body.priceDefault,
           updatedAt: new Date(),

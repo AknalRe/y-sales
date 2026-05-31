@@ -28,7 +28,12 @@ const getNavSections = (permissions: string[], user: any, isSuperAdmin: boolean)
     return permissions.includes(permission) || user?.roleCode === 'ADMINISTRATOR';
   };
 
-  const visibleRoutes = allRoutes.filter(r => canSee(r.handle.permission));
+  const visibleRoutes = allRoutes.filter((route) => {
+    if (isSuperAdmin || user?.roleCode === 'ADMINISTRATOR') return true;
+    const required = route.handle.permissions ?? (route.handle.permission ? [route.handle.permission] : []);
+    if (!required.length) return true;
+    return required.some(canSee);
+  });
 
   const sections: Record<string, any[]> = {};
   visibleRoutes.forEach(route => {

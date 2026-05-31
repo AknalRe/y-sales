@@ -13,6 +13,7 @@ export const products = pgTable('products', {
   sku: varchar('sku', { length: 80 }).notNull(),
   name: varchar('name', { length: 180 }).notNull(),
   description: text('description'),
+  imageUrl: text('image_url'),
   unit: varchar('unit', { length: 40 }).notNull(),
   priceDefault: numeric('price_default', { precision: 14, scale: 2 }).default('0').notNull(),
   status: productStatusEnum('status').default('active').notNull(),

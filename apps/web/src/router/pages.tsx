@@ -46,8 +46,7 @@ export const mainRoutes: RouteConfig[] = [
     handle: {
       label: 'Dashboard',
       icon: LayoutDashboard,
-      permission: 'attendance.review',
-      section: 'Command Center',
+      section: 'Dashboard',
       badge: 'Live'
     }
   },
@@ -55,10 +54,10 @@ export const mainRoutes: RouteConfig[] = [
     path: 'tracking',
     element: <TrackingPage />,
     handle: {
-      label: 'Tracking Penjualan',
+      label: 'Tracking Kunjungan',
       icon: Map,
       permission: 'visits.review',
-      section: 'Command Center',
+      section: 'Operasional Sales',
       badge: 'GPS'
     }
   },
@@ -66,10 +65,10 @@ export const mainRoutes: RouteConfig[] = [
     path: 'outlets',
     element: <OutletsPage />,
     handle: {
-      label: 'Management Outlet',
+      label: 'Outlet',
       icon: Store,
       permission: 'outlets.manage',
-      section: 'Sales Ops',
+      section: 'Master Data',
       badge: 'Master'
     }
   },
@@ -80,7 +79,7 @@ export const mainRoutes: RouteConfig[] = [
       label: 'Jadwalkan Sales',
       icon: CalendarPlus,
       permission: 'visits.review',
-      section: 'Sales Ops',
+      section: 'Operasional Sales',
       badge: 'Plan'
     }
   },
@@ -91,7 +90,7 @@ export const mainRoutes: RouteConfig[] = [
       label: 'Laporan Penjualan',
       icon: BarChart3,
       permission: 'reports.view',
-      section: 'Sales Ops',
+      section: 'Laporan',
       badge: 'KPI'
     }
   },
@@ -99,10 +98,10 @@ export const mainRoutes: RouteConfig[] = [
     path: 'stock',
     element: <StockPage />,
     handle: {
-      label: 'Manajemen Stok',
+      label: 'Inventory',
       icon: Boxes,
-      permission: 'products.manage',
-      section: 'Inventory & POS',
+      permissions: ['products.manage', 'inventory.manage'],
+      section: 'Inventory',
       badge: 'Stock'
     }
   },
@@ -113,7 +112,7 @@ export const mainRoutes: RouteConfig[] = [
       label: 'Piutang Usaha',
       icon: CreditCard,
       permission: 'receivables.view',
-      section: 'Inventory & POS',
+      section: 'Approval & Keuangan',
       badge: 'AR'
     }
   },
@@ -124,7 +123,7 @@ export const mainRoutes: RouteConfig[] = [
       label: 'Verifikasi Nota',
       icon: ReceiptText,
       permission: 'invoice.review',
-      section: 'Sales Ops',
+      section: 'Approval & Keuangan',
       badge: 'Review'
     }
   },
@@ -135,7 +134,7 @@ export const mainRoutes: RouteConfig[] = [
       label: 'Review Absensi',
       icon: ShieldCheck,
       permission: 'attendance.review',
-      section: 'Compliance',
+      section: 'Operasional Sales',
       badge: 'HR'
     }
   },
@@ -143,10 +142,10 @@ export const mainRoutes: RouteConfig[] = [
     path: 'sales-accounts',
     element: <SalesAccountsPage />,
     handle: {
-      label: 'Manajemen Akun Sales',
+      label: 'Akun Sales',
       icon: Users,
       permission: 'users.manage',
-      section: 'Sales Ops',
+      section: 'Akses',
       badge: 'Sales'
     }
   },
@@ -154,20 +153,20 @@ export const mainRoutes: RouteConfig[] = [
     path: 'users',
     element: <UsersPage />,
     handle: {
-      label: 'Manajemen User',
+      label: 'User',
       icon: Users,
       permission: 'users.manage',
-      section: 'Pengaturan',
+      section: 'Akses',
     }
   },
   {
     path: 'roles',
     element: <RolesPage />,
     handle: {
-      label: 'Manajemen Role',
+      label: 'Role & Permission',
       icon: Shield,
       permission: 'roles.manage',
-      section: 'Pengaturan',
+      section: 'Akses',
     }
   },
   {
@@ -184,7 +183,7 @@ export const mainRoutes: RouteConfig[] = [
     path: 'settings',
     element: <OperationalSettingsPage />,
     handle: {
-      label: 'Pengaturan Operasional',
+      label: 'Operasional',
       icon: SlidersHorizontal,
       permission: 'settings.manage',
       section: 'Pengaturan',
@@ -246,7 +245,7 @@ export const salesRoutes: RouteConfig[] = [
     path: 'invoices',
     element: <InvoicesPage />,
     handle: {
-      label: 'Foto Nota',
+      label: 'Riwayat Nota',
       icon: Inbox,
       mobile: true
     }

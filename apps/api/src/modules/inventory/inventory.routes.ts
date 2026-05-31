@@ -1,10 +1,10 @@
 import crypto from 'node:crypto';
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { appSettings, auditLogs, inventoryBalances, inventoryMovements, products, warehouses } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
-import { requirePermission } from '../auth/auth.service.js';
+import { authenticate } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 
 const defaultInventoryLabels = {
@@ -36,6 +36,16 @@ const inventoryLabelsSchema = z.object({
 });
 
 type InventoryLabels = z.infer<typeof inventoryLabelsSchema> & typeof defaultInventoryLabels;
+
+async function requireInventoryAccess(request: FastifyRequest, reply: FastifyReply) {
+  await authenticate(request, reply);
+  if (reply.sent) return;
+  const user = request.user!;
+  const allowed = user.isSuperAdmin
+    || user.roleCode === 'ADMINISTRATOR'
+    || ['inventory.manage', 'products.manage'].some((permission) => user.permissions.includes(permission));
+  if (!allowed) return reply.status(403).send({ message: 'Permission denied', permission: 'inventory.manage' });
+}
 
 const warehouseSchema = z.object({
   code: z.string().min(2).optional(),
@@ -200,12 +210,12 @@ async function warehouseHasStock(companyId: string, warehouseId: string) {
 }
 
 export async function inventoryRoutes(app: FastifyInstance) {
-  app.get('/inventory/settings', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.get('/inventory/settings', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     return { labels: await getInventoryLabels(companyId), scope: { companyId } };
   });
 
-  app.put('/inventory/settings', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.put('/inventory/settings', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const oldLabels = await getInventoryLabels(companyId);
     const patch = inventoryLabelsSchema.parse(request.body);
@@ -225,14 +235,14 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return { labels, scope: { companyId } };
   });
 
-  app.get('/inventory/warehouses', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.get('/inventory/warehouses', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const labels = await getInventoryLabels(companyId);
     const rows = await db.select().from(warehouses).where(eq(warehouses.companyId, companyId)).orderBy(warehouses.code);
     return { warehouses: rows.map((row) => ({ ...row, warehouseTypeLabel: warehouseTypeLabel(row.type, labels) })) };
   });
 
-  app.post('/inventory/warehouses', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.post('/inventory/warehouses', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const body = warehouseSchema.parse(request.body);
     const codePrefix = generateWarehouseCode({ type: body.type });
@@ -249,7 +259,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return { warehouse };
   });
 
-  app.patch('/inventory/warehouses/:id', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.patch('/inventory/warehouses/:id', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = warehouseUpdateSchema.parse(request.body);
@@ -259,7 +269,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return { warehouse };
   });
 
-  app.delete('/inventory/warehouses/:id', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.delete('/inventory/warehouses/:id', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const oldWarehouse = await ensureWarehouse(companyId, params.id);
@@ -272,7 +282,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return { warehouse };
   });
 
-  app.get('/inventory/balances', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.get('/inventory/balances', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const labels = await getInventoryLabels(companyId);
     const query = z.object({ warehouseId: z.string().uuid().optional(), productId: z.string().uuid().optional() }).parse(request.query);
@@ -297,7 +307,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return { balances: rows.map((row) => ({ ...row, warehouseTypeLabel: warehouseTypeLabel(row.warehouseType, labels) })) };
   });
 
-  app.get('/inventory/movements', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.get('/inventory/movements', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const labels = await getInventoryLabels(companyId);
     const rows = await db.select({
@@ -319,7 +329,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return { movements: rows.map((row) => ({ ...row, movementLabel: movementLabel(row, labels), directionLabel: Number(row.quantityDelta) < 0 ? labels.transferOutLabel : labels.transferInLabel })) };
   });
 
-  app.post('/inventory/adjustments', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.post('/inventory/adjustments', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const body = adjustmentSchema.parse(request.body);
     await ensureWarehouse(companyId, body.warehouseId);
@@ -335,7 +345,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return { balance: result };
   });
 
-  app.post('/inventory/resets', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.post('/inventory/resets', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const body = resetSchema.parse(request.body);
     await ensureWarehouse(companyId, body.warehouseId);
@@ -354,7 +364,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return { balance: result.balance };
   });
 
-  app.post('/inventory/movements/:id/reverse', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.post('/inventory/movements/:id/reverse', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = reverseSchema.parse(request.body ?? {});
@@ -375,7 +385,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
     return result;
   });
 
-  app.post('/inventory/transfers', { preHandler: requirePermission('inventory.manage') }, async (request) => {
+  app.post('/inventory/transfers', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
     const body = transferSchema.parse(request.body);
     if (body.fromWarehouseId === body.toWarehouseId) throw Object.assign(new Error('Gudang asal dan tujuan tidak boleh sama.'), { statusCode: 400 });

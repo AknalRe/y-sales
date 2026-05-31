@@ -8,7 +8,7 @@ import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 import { createObjectKey, createUploadUrl, deleteObject, getPublicUrl, getStorageConfig } from './storage.service.js';
 
-const ownerTypeSchema = z.enum(['user', 'outlet', 'transaction', 'attendance', 'visit', 'deposit', 'face_template']);
+const ownerTypeSchema = z.enum(['user', 'outlet', 'transaction', 'attendance', 'visit', 'deposit', 'face_template', 'product']);
 
 const uploadUrlSchema = z.object({
   ownerType: ownerTypeSchema,
@@ -49,6 +49,7 @@ async function getTenantMedia(companyId: string, mediaId: string) {
 async function assertCanCreateMedia(request: FastifyRequest, companyId: string, ownerType: z.infer<typeof ownerTypeSchema>, ownerId?: string) {
   const user = request.user!;
   if (user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('media.manage')) return null;
+  if (ownerType === 'product' && user.permissions.includes('products.manage')) return null;
 
   if (ownerType === 'transaction' && ownerId && user.permissions.includes('sales.order.create')) {
     const [transaction] = await db.select().from(salesTransactions).where(and(

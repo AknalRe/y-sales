@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Menu } from 'lucide-react';
+import { Building2, Menu } from 'lucide-react';
 
 interface AdminDesktopSidebarProps {
   open: boolean;
@@ -17,7 +17,13 @@ export function AdminDesktopSidebar({ open, setOpen, navSections, companyName = 
   return (
     <aside className={`${open ? 'admin-workspace-open' : 'admin-workspace-closed'} admin-workspace`}>
       <div className="admin-sidebar-brand">
-        <h2>{companyName}</h2>
+        <div className="admin-sidebar-logo">
+          <span><Building2 size={18} /></span>
+          <div>
+            <h2>{companyName}</h2>
+            <p>Sales Operations</p>
+          </div>
+        </div>
         <button id="admin-sidebar-toggle" onClick={() => setOpen(!open)} className="admin-icon-button" type="button">
           <Menu size={18} />
         </button>
@@ -26,12 +32,12 @@ export function AdminDesktopSidebar({ open, setOpen, navSections, companyName = 
       <nav className="admin-nav" aria-label="Administrator navigation">
         {navSections.map((section) => (
           <section key={section.title} className="admin-nav-section">
-            {section.title === 'Development' && <p>{section.title}</p>}
+            <p>{section.title}</p>
             <ul>
               {section.items.map((item) => {
                 const Icon = item.handle.icon;
                 const href = item.index ? '/admin' : (item.path?.startsWith('/') ? item.path : `/admin/${item.path}`);
-                const active = location.pathname === href;
+                const active = location.pathname === href || (!item.index && location.pathname.startsWith(`${href}/`));
                 return (
                   <li key={href}>
                     <Link id={`admin-nav-${item.handle.label.toLowerCase().replaceAll(' ', '-')}`} to={href} className={`admin-nav-link ${active ? 'admin-nav-active' : ''}`}>

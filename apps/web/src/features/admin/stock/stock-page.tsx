@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ArrowRightLeft, Boxes, Edit3, History, Package, RefreshCw, RotateCcw, Save, Trash2, Warehouse as WarehouseIcon } from 'lucide-react';
+import { AlertTriangle, ArrowRightLeft, Boxes, Edit3, History, Image as ImageIcon, Package, RefreshCw, RotateCcw, Save, Trash2, Upload, Warehouse as WarehouseIcon, X } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import {
   adjustInventory,
@@ -16,7 +16,7 @@ import {
   type Product,
   type Warehouse,
 } from '@/lib/api/tenant';
-import { apiRequest } from '@/lib/api/client';
+import { apiRequest, createMediaUpload, finalizeMediaUpload, uploadToStorageUrl } from '@/lib/api/client';
 import { EmptyState } from '@/components/ui';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
@@ -52,6 +52,9 @@ type ProductForm = {
   sku: string;
   name: string;
   description: string;
+  imageUrl: string;
+  imageFile?: File | null;
+  imagePreviewUrl?: string;
   unit: string;
   priceDefault: string;
   initialStock: string;
@@ -66,7 +69,7 @@ type WarehouseForm = {
   type: Warehouse['type'];
 };
 
-const emptyProduct: ProductForm = { sku: '', name: '', description: '', unit: 'pcs', priceDefault: '0', initialStock: '', status: 'active' };
+const emptyProduct: ProductForm = { sku: '', name: '', description: '', imageUrl: '', imageFile: null, imagePreviewUrl: '', unit: 'pcs', priceDefault: '0', initialStock: '', status: 'active' };
 const emptyWarehouse: WarehouseForm = { code: '', name: '', address: '', type: 'main' };
 
 function formatQty(value: string | number) {
@@ -76,6 +79,24 @@ function formatQty(value: string | number) {
 
 function formatRp(value: string | number) {
   return Number(value ?? 0).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
+}
+
+async function compressProductImage(file: File) {
+  const bitmap = await createImageBitmap(file);
+  const maxSize = 720;
+  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Browser tidak mendukung kompresi gambar.');
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Gagal mengompres gambar.')), 'image/jpeg', 0.78);
+  });
+  return new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
 }
 
 function codeSegment(value: string, fallback: string) {
@@ -191,6 +212,9 @@ export function StockPage() {
       sku: product.sku,
       name: product.name,
       description: product.description ?? '',
+      imageUrl: product.imageUrl ?? '',
+      imageFile: null,
+      imagePreviewUrl: product.imageUrl ?? '',
       unit: product.unit,
       priceDefault: product.priceDefault,
       initialStock: '',
@@ -215,18 +239,40 @@ export function StockPage() {
     setError('');
     setMessage('');
     try {
+      const uploadImage = async (productId: string) => {
+        if (!productForm.imageFile) return productForm.imageUrl || null;
+        const compressed = await compressProductImage(productForm.imageFile);
+        const { uploadUrl, objectKey } = await createMediaUpload(accessToken, {
+          ownerType: 'product',
+          ownerId: productId,
+          fileName: compressed.name,
+          mimeType: compressed.type,
+        });
+        await uploadToStorageUrl(uploadUrl, compressed);
+        const { media } = await finalizeMediaUpload(accessToken, {
+          ownerType: 'product',
+          ownerId: productId,
+          objectKey,
+          mimeType: compressed.type,
+          sizeBytes: compressed.size,
+        });
+        return media.fileUrl;
+      };
+
       if (productForm.id) {
+        const imageUrl = await uploadImage(productForm.id);
         await updateProduct(accessToken, productForm.id, {
           sku: productForm.sku.trim() || undefined,
           name: productForm.name,
           description: productForm.description,
+          imageUrl,
           unit: productForm.unit,
           priceDefault: productForm.priceDefault,
           status: productForm.status,
         });
         setMessage('Produk berhasil diperbarui.');
       } else {
-        await createProduct(accessToken, {
+        const created = await createProduct(accessToken, {
           sku: productForm.sku.trim() || undefined,
           name: productForm.name,
           description: productForm.description,
@@ -234,6 +280,8 @@ export function StockPage() {
           priceDefault: productForm.priceDefault,
           initialStock: productForm.initialStock || undefined,
         });
+        const imageUrl = await uploadImage(created.product.id);
+        if (imageUrl) await updateProduct(accessToken, created.product.id, { imageUrl });
         setMessage('Produk baru berhasil dibuat.');
       }
       setProductForm(emptyProduct);
@@ -413,6 +461,42 @@ function ProductFormCard({ form, saving, products, onChange, onSubmit, onCancel 
     <div className="admin-card" style={{ margin: 0 }}>
       <h3 className="font-extrabold text-admin-foreground mb-4">{form.id ? 'Edit Produk' : 'Tambah Produk'}</h3>
       <div className="grid gap-3">
+        <Field label="Gambar Produk">
+          <div className="flex gap-3 items-center">
+            <div className="flex items-center justify-center overflow-hidden border border-admin-border-subtle bg-admin-bg" style={{ width: 78, height: 78, borderRadius: 16 }}>
+              {form.imagePreviewUrl || form.imageUrl ? (
+                <img src={form.imagePreviewUrl || form.imageUrl} alt={form.name || 'Gambar produk'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <ImageIcon size={28} className="text-admin-muted" />
+              )}
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <label className="admin-btn-ghost cursor-pointer">
+                <Upload size={14} /> Upload
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    onChange({
+                      ...form,
+                      imageFile: file,
+                      imagePreviewUrl: URL.createObjectURL(file),
+                    });
+                    event.currentTarget.value = '';
+                  }}
+                />
+              </label>
+              {(form.imagePreviewUrl || form.imageUrl) && (
+                <button className="admin-btn-ghost" type="button" onClick={() => onChange({ ...form, imageUrl: '', imageFile: null, imagePreviewUrl: '' })}>
+                  <X size={14} /> Hapus
+                </button>
+              )}
+            </div>
+          </div>
+        </Field>
         <Field label="SKU">
           <div className="flex gap-2">
             <input className="admin-input w-full" value={form.sku} onChange={(e) => onChange({ ...form, sku: e.target.value.toUpperCase() })} placeholder="Contoh PRD-KR-001" />
@@ -480,7 +564,14 @@ function ProductTable({ products, onEdit, onDelete }: { products: Product[]; onE
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.id}>
-              <TableCell><strong>{product.name}</strong><br /><code>{product.sku}</code></TableCell>
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center overflow-hidden bg-admin-bg" style={{ width: 42, height: 42, borderRadius: 12 }}>
+                    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={18} className="text-admin-muted" />}
+                  </div>
+                  <div><strong>{product.name}</strong><br /><code>{product.sku}</code></div>
+                </div>
+              </TableCell>
               <TableCell>{product.unit}</TableCell>
               <TableCell>{formatRp(product.priceDefault)}</TableCell>
               <TableCell>{product.status}</TableCell>

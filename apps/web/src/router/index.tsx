@@ -27,10 +27,17 @@ export function AppRouter() {
     return permissions.includes(permission) || user?.roleCode === 'ADMINISTRATOR';
   };
 
+  const canSeeRoute = (route: RouteConfig) => {
+    if (isSuperAdmin || user?.roleCode === 'ADMINISTRATOR') return true;
+    const required = route.handle.permissions ?? (route.handle.permission ? [route.handle.permission] : []);
+    if (!required.length) return true;
+    return required.some((permission) => permissions.includes(permission));
+  };
+
   // Filter routes based on permissions
   const filteredAdminRoutes = useMemo(() => {
     const allAdmin = [...mainRoutes, ...playgroundRoutes.filter(r => !r.handle.mobile)];
-    return allAdmin.filter(route => canSee(route.handle.permission));
+    return allAdmin.filter(canSeeRoute);
   }, [permissions, user, isSuperAdmin]);
 
   const filteredSalesRoutes = useMemo(() => {

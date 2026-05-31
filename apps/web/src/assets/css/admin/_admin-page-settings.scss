@@ -1,26 +1,307 @@
 @mixin settings() {
 
   /* ─── Operational Settings ───────────────────────────────────────────────── */
-  // .settings-page {
-  //   display: grid;
-  //   gap: 1rem;
-  // }
-
-  .settings-metrics {
+  .settings-summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .9rem;
     margin-top: 1.5rem;
+  }
+
+  .settings-summary-card {
+    display: grid;
+    gap: .45rem;
+    min-height: 8.25rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 1.25rem;
+    background: var(--admin-bg-card);
+    padding: 1rem;
+    box-shadow: var(--admin-shadow-card);
+  }
+
+  .settings-summary-card.accent {
+    color: #ffffff;
+    background: var(--admin-sidebar-active-bg);
+    border-color: transparent;
+    box-shadow: 0 18px 34px rgba(232, 101, 10, .2);
+  }
+
+  .settings-summary-card span {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--admin-muted);
+    font-size: .76rem;
+    font-weight: 900;
+  }
+
+  .settings-summary-card.accent span,
+  .settings-summary-card.accent small {
+    color: rgba(255, 255, 255, .78);
+  }
+
+  .settings-summary-card strong {
+    color: var(--admin-foreground);
+    font-size: 1.45rem;
+    font-weight: 950;
+    letter-spacing: 0;
+  }
+
+  .settings-summary-card.accent strong {
+    color: #ffffff;
+  }
+
+  .settings-summary-card small {
+    align-self: end;
+    color: var(--admin-muted);
+    font-size: .78rem;
+    font-weight: 700;
+  }
+
+  .settings-layout {
+    display: grid;
+    grid-template-columns: 18rem minmax(0, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+    align-items: start;
+  }
+
+  .settings-side-nav {
+    position: sticky;
+    top: 1rem;
+    display: grid;
+    gap: .4rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 1.25rem;
+    background: var(--admin-bg-card);
+    padding: .55rem;
+    box-shadow: var(--admin-shadow-card);
+  }
+
+  .settings-side-button {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    border: 0;
+    border-radius: .95rem;
+    background: transparent;
+    padding: .75rem;
+    color: var(--admin-muted);
+    text-align: left;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+  }
+
+  .settings-side-button:hover {
+    background: var(--admin-surface-hover);
+    color: var(--admin-foreground);
+    transform: translateX(2px);
+  }
+
+  .settings-side-button.active {
+    background: var(--admin-sidebar-active-bg);
+    color: #ffffff;
+    box-shadow: 0 12px 24px rgba(232, 101, 10, .18);
+  }
+
+  .settings-side-icon {
+    display: grid;
+    width: 2.35rem;
+    height: 2.35rem;
+    place-items: center;
+    border-radius: .85rem;
+    background: var(--admin-accent-shadow);
+    color: var(--admin-accent);
+  }
+
+  .settings-side-button.active .settings-side-icon {
+    background: rgba(255, 255, 255, .18);
+    color: #ffffff;
+  }
+
+  .settings-side-button strong {
+    display: block;
+    color: inherit;
+    font-size: .86rem;
+    font-weight: 900;
+    line-height: 1.25;
+  }
+
+  .settings-side-button small {
+    display: block;
+    margin-top: .16rem;
+    color: currentColor;
+    opacity: .72;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  .settings-section-panel {
+    border: 1px solid var(--admin-border);
+    border-radius: 1.35rem;
+    background: var(--admin-bg-card);
+    box-shadow: var(--admin-shadow-card);
+    overflow: hidden;
+  }
+
+  .settings-section-header {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--admin-border-subtle);
+    background: linear-gradient(135deg, rgba(232, 101, 10, .1), rgba(15, 118, 110, .07));
+    padding: 1.25rem;
+  }
+
+  .settings-section-icon {
+    display: grid;
+    width: 3rem;
+    height: 3rem;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 1rem;
+    background: var(--admin-sidebar-active-bg);
+    color: #ffffff;
+    box-shadow: 0 14px 28px rgba(232, 101, 10, .18);
+  }
+
+  .settings-section-header small {
+    display: block;
+    color: var(--admin-accent);
+    font-size: .72rem;
+    font-weight: 950;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+  }
+
+  .settings-section-header h2 {
+    margin: .18rem 0 .3rem;
+    color: var(--admin-foreground);
+    font-size: 1.25rem;
+    font-weight: 950;
+    letter-spacing: 0;
+  }
+
+  .settings-section-header p {
+    max-width: 42rem;
+    margin: 0;
+    color: var(--admin-muted);
+    font-size: .9rem;
+    line-height: 1.55;
+  }
+
+  .settings-control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: .85rem;
+    padding: 1rem;
+  }
+
+  .settings-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem;
+    padding: 1rem;
+  }
+
+  .settings-form-grid.compact {
+    padding-top: 0;
+  }
+
+  .settings-field,
+  .settings-check-row {
+    border: 1px solid var(--admin-border);
+    border-radius: 1.05rem;
+    background: var(--admin-surface);
+  }
+
+  .settings-field {
+    display: grid;
+    gap: .5rem;
+    padding: .9rem;
+  }
+
+  .settings-field.wide,
+  .settings-check-row.wide {
+    grid-column: 1 / -1;
+  }
+
+  .settings-field span {
+    color: var(--admin-foreground);
+    font-size: .8rem;
+    font-weight: 900;
+  }
+
+  .settings-field input,
+  .settings-field select,
+  .settings-field textarea {
+    width: 100%;
+    border: 1px solid var(--admin-border-subtle);
+    border-radius: .85rem;
+    background: var(--admin-bg);
+    color: var(--admin-foreground);
+    outline: none;
+    padding: .68rem .78rem;
+    font: inherit;
+    font-size: .88rem;
+  }
+
+  .settings-field textarea {
+    resize: vertical;
+    min-height: 5.25rem;
+  }
+
+  .settings-field input:focus,
+  .settings-field select:focus,
+  .settings-field textarea:focus {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 4px var(--admin-accent-shadow);
+  }
+
+  .settings-field small {
+    color: var(--admin-muted);
+    font-size: .76rem;
+    line-height: 1.45;
+  }
+
+  .settings-check-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: .85rem;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .settings-check-row strong {
+    display: block;
+    color: var(--admin-foreground);
+    font-size: .9rem;
+    font-weight: 900;
+  }
+
+  .settings-check-row small {
+    display: block;
+    margin-top: .2rem;
+    color: var(--admin-muted);
+    font-size: .78rem;
+    line-height: 1.45;
+  }
+
+  .settings-check-row input[type='checkbox'] {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--admin-accent);
   }
 
   .settings-number-card {
     display: grid;
     gap: .65rem;
-    background: var(--admin-bg-card);
-    border: 1px solid var(--admin-border-subtle);
-    border-radius: 20px;
-    padding: 1.25rem;
-    box-shadow: 0 8px 24px rgba(43, 45, 66, .04);
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 1.05rem;
+    padding: 1rem;
   }
 
   .settings-number-card span {
@@ -35,33 +316,53 @@
     color: var(--admin-accent);
   }
 
-  .settings-number-card input {
-    width: 100%;
+  .settings-number-input {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .55rem;
     border: 1px solid var(--admin-border-subtle);
     background: var(--admin-bg);
-    border-radius: 12px;
-    padding: .72rem .85rem;
+    border-radius: .95rem;
+    padding: .2rem .65rem .2rem .2rem;
+  }
+
+  .settings-number-card input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    border-radius: .75rem;
+    padding: .65rem .7rem;
     color: var(--admin-foreground);
     font-size: 1rem;
     font-weight: 800;
     outline: none;
   }
 
-  .settings-number-card input:focus {
+  .settings-number-input:focus-within {
     border-color: var(--admin-accent);
     box-shadow: 0 0 0 4px var(--admin-accent-shadow);
   }
 
-  .settings-number-card small {
+  .settings-number-input small {
     color: var(--admin-muted);
+    font-size: .72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .settings-number-card em {
+    color: var(--admin-muted);
+    font-size: .8rem;
+    font-style: normal;
     line-height: 1.45;
   }
 
   .settings-toggle-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-    margin-top: 1.5rem;
+    gap: .85rem;
+    padding: 0 1rem 1rem;
   }
 
   .settings-toggle-card {
@@ -70,10 +371,10 @@
     align-items: center;
     gap: .85rem;
     text-align: left;
-    background: var(--admin-bg-card);
-    border: 1px solid var(--admin-border-subtle);
-    border-radius: 20px;
-    padding: 1.25rem;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 1.05rem;
+    padding: 1rem;
     cursor: pointer;
     transition: all .18s ease;
   }
@@ -85,7 +386,7 @@
   }
 
   .settings-toggle-card.active {
-    background: var(--admin-accent-shadow);
+    background: rgba(232, 101, 10, .08);
     border-color: var(--admin-accent);
   }
 
@@ -139,5 +440,41 @@
 
   .settings-toggle-card.active .settings-switch span {
     transform: translateX(18px);
+  }
+
+  @media (max-width: 1100px) {
+    .settings-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .settings-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .settings-side-nav {
+      position: static;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .settings-summary-grid,
+    .settings-side-nav,
+    .settings-form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .settings-section-header {
+      padding: 1rem;
+    }
+
+    .settings-toggle-card {
+      grid-template-columns: auto 1fr;
+    }
+
+    .settings-switch {
+      grid-column: 2;
+      justify-self: start;
+    }
   }
 }

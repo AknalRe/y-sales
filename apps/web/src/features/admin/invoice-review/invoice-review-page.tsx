@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { Fragment, useEffect, useState } from 'react';
+import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
-import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, getTenantUsers, type SalesTransaction, type TenantUser } from '@/lib/api/tenant';
+import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, getTenantUsers, getSalesTransactionDetail, type SalesTransaction, type SalesTransactionDetail, type TenantUser } from '@/lib/api/tenant';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 function formatRp(v: string | number) {
@@ -44,6 +44,9 @@ export function InvoiceReviewPage() {
   const [rejectModal, setRejectModal] = useState<ExtendedTransaction | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [viewPhoto, setViewPhoto] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [details, setDetails] = useState<Record<string, SalesTransactionDetail>>({});
+  const [loadingDetail, setLoadingDetail] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   async function load() {
@@ -98,6 +101,21 @@ export function InvoiceReviewPage() {
 
   function getUser(id: string) {
     return users.find(u => u.id === id)?.name ?? '—';
+  }
+
+  async function toggleDetail(tx: ExtendedTransaction) {
+    const nextId = expandedId === tx.id ? null : tx.id;
+    setExpandedId(nextId);
+    if (!accessToken || !nextId || details[nextId]) return;
+    setLoadingDetail(nextId);
+    try {
+      const result = await getSalesTransactionDetail(accessToken, nextId);
+      setDetails((current) => ({ ...current, [nextId]: result.order }));
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal memuat detail transaksi.');
+    } finally {
+      setLoadingDetail(null);
+    }
   }
 
   const pending = transactions.filter(t => ['submitted', 'pending_approval'].includes(t.status)).length;
@@ -176,8 +194,12 @@ export function InvoiceReviewPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map(tx => (
-                  <TableRow key={tx.id}>
+                {transactions.map(tx => {
+                  const detail = details[tx.id];
+                  const expanded = expandedId === tx.id;
+                  return (
+                  <Fragment key={tx.id}>
+                  <TableRow>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="bg-admin-bg p-2.5 rounded-xl">
@@ -197,7 +219,7 @@ export function InvoiceReviewPage() {
                           <User size={12} /> {getUser(tx.salesUserId)}
                         </div>
                         <div className="text-admin-muted mt-1" style={{ fontSize: '.75rem' }}>
-                          Tipe: <span className="capitalize">{tx.customerType}</span>
+                          {(tx as any).outletName ? `${(tx as any).outletName} · ` : ''}Tipe: <span className="capitalize">{tx.customerType}</span>
                         </div>
                       </div>
                     </TableCell>
@@ -237,8 +259,19 @@ export function InvoiceReviewPage() {
                       </span>
                     </TableCell>
                     <TableCell>
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => toggleDetail(tx)}
+                          disabled={loadingDetail === tx.id}
+                          className="admin-btn-ghost"
+                          style={{ padding: '.4rem .65rem', fontSize: '.75rem', borderRadius: 10 }}
+                          type="button"
+                        >
+                          {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          Detail
+                        </button>
                       {['submitted', 'pending_approval'].includes(tx.status) ? (
-                        <div className="flex gap-2">
+                        <>
                           <button
                             onClick={() => handleApprove(tx)}
                             disabled={saving === tx.id}
@@ -257,13 +290,56 @@ export function InvoiceReviewPage() {
                           >
                             Reject
                           </button>
-                        </div>
+                        </>
                       ) : (
                         <span className="text-admin-subtle text-xs italic">No Action</span>
                       )}
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  {expanded && (
+                    <TableRow>
+                      <TableCell colSpan={7} style={{ background: 'var(--admin-bg)' }}>
+                        {loadingDetail === tx.id && !detail ? (
+                          <div className="admin-loading"><RefreshCw size={16} className="spin" /> Memuat detail...</div>
+                        ) : detail ? (
+                          <div className="grid gap-4 lg:grid-cols-[1.5fr_.9fr]">
+                            <div className="admin-card" style={{ margin: 0, padding: '1rem' }}>
+                              <h3 className="font-extrabold text-admin-foreground mb-3">Item Transaksi</h3>
+                              <div className="grid gap-2">
+                                {detail.items.map((item) => (
+                                  <div key={item.id} className="flex items-start justify-between gap-3 rounded-xl bg-admin-surface px-3 py-2">
+                                    <div>
+                                      <strong className="text-admin-foreground text-sm">{item.productName ?? item.productId}</strong>
+                                      <p className="text-admin-muted text-xs m-0">{item.productSku ?? '-'} · {Number(item.quantity).toLocaleString('id-ID')} x {formatRp(item.unitPrice)}</p>
+                                    </div>
+                                    <strong className="text-admin-accent text-sm">{formatRp(item.lineTotal)}</strong>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="admin-card" style={{ margin: 0, padding: '1rem' }}>
+                              <h3 className="font-extrabold text-admin-foreground mb-3">Bukti Nota</h3>
+                              {detail.photos.length ? (
+                                <div className="grid grid-cols-3 gap-2">
+                                  {detail.photos.map((photo) => (
+                                    <button key={photo.id} onClick={() => setViewPhoto(photo.fileUrl)} className="border-none bg-transparent p-0 cursor-pointer" type="button">
+                                      <img src={photo.fileUrl} alt="Bukti nota" className="rounded-xl border border-admin-border" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover' }} />
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-admin-muted text-sm">Belum ada bukti nota.</p>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </Fragment>
+                );
+                })}
                 {!transactions.length && (
                   <TableRow>
                     <TableCell colSpan={7} style={{ padding: '4rem', textAlign: 'center' }}>

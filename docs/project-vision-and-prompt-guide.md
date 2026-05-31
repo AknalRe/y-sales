@@ -20,6 +20,7 @@ YukTrackingSales harus menjadi sistem operasional sales lapangan yang:
 - menjaga stok sales agar berkurang hanya melalui transaksi yang valid dan bisa diaudit;
 - mendukung transaksi langsung, piutang, dan konsinyasi;
 - mewajibkan atau mengizinkan bukti foto transaksi sesuai setting company;
+- mengelola profil company, titik kantor, timezone, dan integrasi teknis yang memengaruhi absensi, visit, media, dan verifikasi wajah;
 - menyediakan approval admin untuk transaksi, stok, bukti foto, outlet, dan proses penting lain;
 - memisahkan invoice outlet dari invoice platform;
 - bisa dikembangkan sebagai SaaS yang setting company dan akses platform-nya dikelola dari admin platform.
@@ -282,17 +283,58 @@ Aturan:
 
 ### 11. Setting Company dan Platform
 
-Setting company yang penting:
+Setting company tidak hanya berisi toggle operasional. Area ini harus dibagi jelas agar admin memahami dampaknya:
+
+1. Data company.
+2. Aturan operasional.
+3. Integrasi teknis.
+4. Subscription/platform.
+
+Data company yang penting:
+
+- nama company dan legal name;
+- email, phone, website, NPWP/tax number;
+- alamat kantor;
+- city, province, postal code, country;
+- latitude dan longitude kantor;
+- timezone;
+- logo dan cover bila dipakai.
+
+Catatan:
+
+- Latitude/longitude company adalah titik utama company/kantor dan bisa menjadi referensi absensi kantor.
+- Titik outlet tetap diatur pada master outlet masing-masing.
+- Absensi outlet/visit tetap memakai radius outlet; absensi kerja umum bisa memakai titik company bila flow company mengharuskan.
+
+Aturan operasional company yang penting:
 
 - default radius outlet;
 - max GPS accuracy;
+- apakah absensi boleh lebih dari satu sesi per hari;
 - apakah bukti foto transaksi wajib;
+- apakah foto wajah absensi wajib;
 - apakah foto wajah visit wajib;
 - apakah face identity match aktif;
 - face match threshold;
 - liveness check;
 - reject visit on face mismatch;
-- integration face provider.
+- mode dan timeout face verification.
+
+Integrasi teknis company yang penting:
+
+- Cloudflare R2 atau S3-compatible storage untuk foto nota, foto outlet, bukti visit, produk, dan dokumen;
+- face recognition provider: `mock`, `custom_http`, `aws_rekognition`, `azure_face`, atau `google_vertex`;
+- payment provider bila modul pembayaran digital dipakai;
+- notification provider bila reminder/alert otomatis dipakai.
+
+Aturan integrasi:
+
+- Integrasi eksternal jangka panjang disimpan per company pada `company_integrations`.
+- Secret seperti API key, access key, dan secret access key tidak boleh tampil full di frontend.
+- Jika secret yang tampil masked disimpan ulang tanpa diganti, backend harus mempertahankan secret lama.
+- Jika integrasi storage company aktif, upload media memakai konfigurasi company tersebut.
+- Jika integrasi storage company nonaktif atau belum ada, backend boleh fallback ke storage dari environment server.
+- Jika face recognition nonaktif, sistem boleh fallback ke mode mock/policy lokal sesuai setting.
 
 Setting platform yang penting:
 
@@ -314,6 +356,8 @@ Setting platform yang penting:
 - `/media/upload-url` dan `/media/complete`: upload bukti transaksi dengan guard ownership.
 - `/inventory/*`: manajemen warehouse, balance, transfer, movement, adjustment.
 - `/settings/general`: setting operasional company.
+- `/company/profile`: profil company, alamat, koordinat kantor, timezone, dan identitas bisnis.
+- `/integrations`: konfigurasi integrasi eksternal per company, seperti storage dan face provider.
 - `/platform/*`: company, subscription, plans, billing platform.
 
 ### Frontend Yang Harus Mengikuti Backend
@@ -334,7 +378,8 @@ Admin company:
 - Verifikasi Nota default filter ke `pending_approval`.
 - Approve transaksi berarti stok langsung release/berkurang.
 - Stock page harus menampilkan quantity, reserved, available, dan movement.
-- Settings page mengatur radius, GPS, foto, dan face policy.
+- Settings page mengatur data company, radius, GPS, foto, face policy, face provider, dan cloud storage.
+- Settings page harus membedakan data company, aturan operasional, dan integrasi teknis.
 
 Admin platform:
 
@@ -420,6 +465,9 @@ Saat Codex bekerja di project ini:
 - jangan hardcode base API URL jika sudah bisa dari env;
 - jangan menghapus setting yang membuat fitur optional;
 - jangan mengabaikan tenant/company boundary;
+- jangan mencampur data company, setting operasional, integrasi teknis, dan setting platform dalam satu konsep backend yang kabur;
+- jangan menampilkan secret integrasi secara penuh di frontend;
+- saat update secret yang masked, pertahankan secret lama jika user tidak mengganti nilainya;
 - setiap endpoint admin harus menghormati permission dan tenant;
 - media/foto harus dilindungi agar tidak bocor lintas tenant;
 - backend harus menjadi sumber validasi final, frontend hanya membantu UX.
@@ -437,6 +485,9 @@ Gunakan checklist ini sebelum menganggap fitur selesai:
 - Apakah flow stok memperhitungkan reserved stock?
 - Apakah approval menulis audit log?
 - Apakah bukti foto transaksi mengikuti setting company?
+- Apakah data company dan koordinat company sudah dipakai sesuai konteksnya, bukan menggantikan radius outlet?
+- Apakah integrasi storage/face provider tersimpan per company dan tidak bocor lintas tenant?
+- Apakah secret integrasi aman saat dibaca dan saat disimpan ulang?
 - Apakah error dari backend bisa dipahami user frontend?
 - Apakah typecheck/build/lint sudah dijalankan?
 
@@ -456,6 +507,7 @@ Fokus project:
 - transaksi outlet dibuat saat visit open;
 - transaksi masuk pending_approval, stok sales masuk reserved, lalu stok berkurang setelah admin approve;
 - bukti foto transaksi bisa wajib/optional via setting company;
+- data company, koordinat kantor, face provider, dan cloud storage diatur dari Pengaturan Operasional admin company;
 - sales hanya boleh upload foto transaksi miliknya yang masih pending_approval;
 - invoice outlet dipisah dari invoice platform;
 - admin platform mengatur company, subscription, billing, dan akses platform.

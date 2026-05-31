@@ -20,6 +20,7 @@
         padding: 1rem 0;
 
         .admin-sidebar-brand h2,
+        .admin-sidebar-logo div,
         .admin-company-card div,
         .admin-search-mini,
         .admin-nav-section p,
@@ -79,15 +80,46 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem 1.25rem 1.25rem;
+    padding: 1.25rem 1rem 1rem;
     border-bottom: 1px solid var(--admin-sidebar-border);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 
     h2 {
         margin: 0;
         color: var(--admin-sidebar-brand-text);
-        font-size: 1.2rem;
-        font-weight: 600;
+        font-size: 1rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+    }
+}
+
+.admin-sidebar-logo {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 0.75rem;
+
+    >span {
+        display: grid;
+        width: 2.5rem;
+        height: 2.5rem;
+        place-items: center;
+        flex-shrink: 0;
+        border-radius: 0.95rem;
+        color: #ffffff;
+        background: var(--admin-sidebar-active-bg);
+        box-shadow: 0 16px 28px rgba(232, 101, 10, .2);
+    }
+
+    div {
+        min-width: 0;
+    }
+
+    p {
+        margin: 0.16rem 0 0;
+        color: var(--admin-sidebar-text);
+        font-size: 0.72rem;
+        font-weight: 700;
     }
 }
 
@@ -190,18 +222,18 @@
 
 // ─── Navigation ──────────────────────────────────────────────────────────
 .admin-nav {
-    padding: 0 1rem;
+    padding: 0 0.85rem 1rem;
 }
 
 .admin-nav-section {
     margin-top: 0;
 
     p {
-        margin: 1.1rem 0 0.55rem 0.65rem;
+        margin: 1rem 0 0.45rem 0.65rem;
         color: var(--admin-sidebar-label);
-        font-size: 0.7rem;
+        font-size: 0.66rem;
         font-weight: 900;
-        letter-spacing: 0.16em;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
     }
 
@@ -216,9 +248,9 @@
     display: flex;
     align-items: center;
     gap: 0.7rem;
-    margin-bottom: 0.4rem;
-    border-radius: 1.15rem;
-    padding: 0.8rem;
+    margin-bottom: 0.28rem;
+    border-radius: 0.9rem;
+    padding: 0.65rem 0.7rem;
     color: var(--admin-sidebar-text);
     text-decoration: none;
     transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease, color 180ms ease;
@@ -233,6 +265,7 @@
 .admin-nav-active {
     color: var(--admin-sidebar-text-hover);
     background: var(--admin-sidebar-active-bg);
+    box-shadow: 0 12px 24px rgba(232, 101, 10, .18);
 
     &:hover {
         background: var(--admin-sidebar-active-hover);
@@ -259,7 +292,7 @@
 .admin-nav-text {
     flex: 1;
     font-weight: 800;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -356,4 +389,18 @@
         position: static;
         width: auto;
     }
+}
+
+.admin-mobile-drawer {
+    background: var(--admin-sidebar-bg);
+}
+
+.admin-mobile-drawer-brand {
+    border-bottom: 1px solid var(--admin-sidebar-border);
+}
+
+.admin-mobile-close {
+    color: var(--admin-sidebar-toggle-text);
+    background: var(--admin-sidebar-toggle-bg);
+    border: 1px solid var(--admin-sidebar-toggle-border);
 }

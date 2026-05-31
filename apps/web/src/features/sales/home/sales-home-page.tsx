@@ -184,7 +184,7 @@ export function SalesHomePage() {
         </Link>
         <Link to="/sales/invoices" className="sales-action-card">
           <div className="sales-action-icon"><ReceiptText size={22} /></div>
-          <span>Foto Nota</span>
+          <span>Riwayat Nota</span>
         </Link>
       </div>
 

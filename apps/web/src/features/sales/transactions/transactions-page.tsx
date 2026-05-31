@@ -159,6 +159,10 @@ export function TransactionsPage() {
     return cart.reduce((sum, item) => sum + (Number(item.product.priceDefault) * item.quantity), 0);
   }, [cart]);
 
+  function getSalesAvailableStock(product: any) {
+    return Number(product.salesAvailableQuantity ?? product.salesStockQuantity ?? 0);
+  }
+
   const productGridStyle = cart.length > 0
     ? {
         maxHeight: productGridMaxHeight ? `${productGridMaxHeight}px` : undefined,
@@ -188,10 +192,13 @@ export function TransactionsPage() {
 
   function addToCart(product: any) {
     setCart(prev => {
+      const available = getSalesAvailableStock(product);
       const existing = prev.find(i => i.product.id === product.id);
       if (existing) {
+        if (existing.quantity >= available) return prev;
         return prev.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
+      if (available <= 0) return prev;
       return [...prev, { product, quantity: 1 }];
     });
   }
@@ -200,6 +207,7 @@ export function TransactionsPage() {
     setCart(prev => prev.map(i => {
       if (i.product.id !== productId) return i;
       const newQty = i.quantity + delta;
+      if (delta > 0 && newQty > getSalesAvailableStock(i.product)) return i;
       return newQty <= 0 ? null : { ...i, quantity: newQty };
     }).filter(Boolean) as CartItem[]);
   }
@@ -262,7 +270,7 @@ export function TransactionsPage() {
             {offlineMessage || 'Order telah dikirim ke admin untuk verifikasi. Lanjutkan perjalanan Anda.'}
           </p>
           <button onClick={() => navigate('/sales/invoices')} className="sales-btn sales-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', marginBottom: '.75rem' }}>
-            Upload Foto Nota
+            Lihat Riwayat Nota
           </button>
           <button onClick={() => setSuccess(false)} className="sales-btn sales-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
             Buat Transaksi Lagi
@@ -394,26 +402,40 @@ export function TransactionsPage() {
       {/* Product Grid */}
       <div ref={productGridRef} className="sales-modern-scrollbar grid grid-cols-3 gap-1" style={productGridStyle}>
         {loading ? <div style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}><Spinner /></div> :
-          filteredProducts.map(p => (
-            <div key={p.id} className="sales-card" style={{ margin: 0, borderRadius: 15, padding: '.75rem', display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
-              <div className="flex items-center justify-center rounded-2xl bg-sales-bg" style={{ width: '100%', aspectRatio: '1' }}>
-                <Package size={32} className="text-sales-accent" />
+          filteredProducts.map(p => {
+            const availableStock = getSalesAvailableStock(p);
+            const cartQty = cart.find(item => item.product.id === p.id)?.quantity ?? 0;
+            const canAdd = availableStock > 0 && cartQty < availableStock;
+            return (
+              <div key={p.id} className="sales-card" style={{ margin: 0, borderRadius: 15, padding: '.65rem', display: 'flex', flexDirection: 'column', gap: '.45rem' }}>
+                <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-sales-bg" style={{ width: '100%', aspectRatio: '1' }}>
+                  {p.imageUrl ? (
+                    <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <Package size={32} className="text-sales-accent" />
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ display: 'block', fontSize: '.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</strong>
+                  <span className="text-sales-muted" style={{ display: 'block', fontSize: '.7rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.sku}</span>
+                  <span className={availableStock > 0 ? 'text-sales-success-light' : 'text-sales-red'} style={{ display: 'block', fontSize: '.68rem', fontWeight: 800, marginTop: '.15rem' }}>
+                    Stok: {availableStock.toLocaleString('id-ID')} {p.unit}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', gap: '.35rem' }}>
+                  <span className="text-sales-accent" style={{ fontSize: '.78rem', fontWeight: 800, lineHeight: 1.15 }}>Rp {Number(p.priceDefault).toLocaleString('id-ID')}</span>
+                  <button
+                    onClick={() => addToCart(p)}
+                    disabled={!canAdd}
+                    className="flex items-center justify-center w-7 h-7 rounded-lg border border-sales-accent-bg bg-sales-bg text-sales-accent"
+                    style={{ opacity: canAdd ? 1 : 0.45, cursor: canAdd ? 'pointer' : 'not-allowed' }}
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <strong style={{ display: 'block', fontSize: '.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</strong>
-                <span className="text-sales-muted" style={{ fontSize: '.75rem' }}>{p.sku}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                <span className="text-sales-accent" style={{ fontSize: '.85rem', fontWeight: 700 }}>Rp {Number(p.priceDefault).toLocaleString('id-ID')}</span>
-                <button
-                  onClick={() => addToCart(p)}
-                  className="flex items-center justify-center w-7 h-7 rounded-lg border border-sales-accent-bg bg-sales-bg text-sales-accent"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         {!loading && filteredProducts.length === 0 && (
           <div style={{ gridColumn: '1 / -1' }}>
             <EmptyState icon={<Package size={44} />} title="Produk tidak ditemukan" />
@@ -451,7 +473,7 @@ export function TransactionsPage() {
                   <div className="flex items-center gap-2">
                     <button onClick={() => updateQty(item.product.id, -1)} className="flex items-center justify-center w-6 h-6 rounded-md bg-sales-surface-muted text-sales-text-label border-none" style={{ cursor: 'pointer', fontSize: '.9rem', fontWeight: 700 }}>-</button>
                     <span className="text-sales-text-heading" style={{ fontSize: '.85rem', fontWeight: 700, minWidth: 20, textAlign: 'center' }}>{item.quantity}</span>
-                    <button onClick={() => updateQty(item.product.id, 1)} className="flex items-center justify-center w-6 h-6 rounded-md bg-sales-accent text-sales-surface border-none" style={{ cursor: 'pointer', fontSize: '.9rem', fontWeight: 700 }}>+</button>
+                    <button onClick={() => updateQty(item.product.id, 1)} disabled={item.quantity >= getSalesAvailableStock(item.product)} className="flex items-center justify-center w-6 h-6 rounded-md bg-sales-accent text-sales-surface border-none" style={{ cursor: item.quantity >= getSalesAvailableStock(item.product) ? 'not-allowed' : 'pointer', fontSize: '.9rem', fontWeight: 700, opacity: item.quantity >= getSalesAvailableStock(item.product) ? 0.45 : 1 }}>+</button>
                   </div>
                   <span className="text-sales-accent" style={{ fontSize: '.8rem', fontWeight: 700, minWidth: 70, textAlign: 'right' }}>
                     Rp {(Number(item.product.priceDefault) * item.quantity).toLocaleString('id-ID')}

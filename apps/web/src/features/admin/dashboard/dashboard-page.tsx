@@ -22,11 +22,11 @@ type ReportSummary = {
 
 const roleMenus = [
   { permission: 'attendance.execute', title: 'Absensi Wajah', icon: Camera, text: 'Check-in kamera depan dan validasi GPS.', href: '/attendance' },
-  { permission: 'visits.execute', title: 'Visit Outlet', icon: MapPin, text: 'Geofence outlet dan durasi kunjungan.', href: '/sales/visit' },
-  { permission: 'attendance.review', title: 'Review Absensi', icon: ShieldCheck, text: 'Validasi foto wajah dan lokasi sales.', href: '/attendance/review' },
+  { permission: 'visits.review', title: 'Tracking Kunjungan', icon: MapPin, text: 'Pantau visit, lokasi check-in, dan outcome outlet.', href: '/admin/tracking' },
+  { permission: 'attendance.review', title: 'Review Absensi', icon: ShieldCheck, text: 'Validasi foto wajah dan lokasi sales.', href: '/admin/attendance/review' },
   { permission: 'invoice.review', title: 'Verifikasi Nota', icon: ShoppingCart, text: 'Approve / reject nota transaksi sales.', href: '/admin/invoice-review' },
   { permission: 'reports.view', title: 'Laporan Penjualan', icon: TrendingUp, text: 'KPI omset, leaderboard, dan export CSV.', href: '/admin/reports' },
-  { permission: 'products.manage', title: 'Manajemen Stok', icon: Package, text: 'Monitor stok dan riwayat mutasi gudang.', href: '/admin/stock' },
+  { permissions: ['products.manage', 'inventory.manage'], title: 'Inventory', icon: Package, text: 'Monitor stok, produk, gudang, dan mutasi.', href: '/admin/stock' },
   { permission: 'receivables.view', title: 'Piutang Usaha', icon: Clock, text: 'Pantau kredit dan jadwal penagihan.', href: '/admin/receivables' },
   { permission: 'roles.manage', title: 'Role & Permission', icon: Users, text: 'Atur akses fitur per role secara fleksibel.', href: '/admin/roles' },
   { permission: 'settings.manage', title: 'Pengaturan', icon: SlidersHorizontal, text: 'Custom radius geofence dan aturan GPS.', href: '/admin/settings' },
@@ -50,7 +50,11 @@ function apiReq<T>(path: string, token: string): Promise<T> {
 export function DashboardPage() {
   const { user, permissions, accessToken, isSuperAdmin } = useAuth();
   const isAdministrator = user?.roleCode === 'ADMINISTRATOR' || user?.roleCode === 'SUPER_ADMIN';
-  const visibleMenus = roleMenus.filter(m => isSuperAdmin || isAdministrator || permissions.includes(m.permission));
+  const visibleMenus = roleMenus.filter((menu) => {
+    if (isSuperAdmin || isAdministrator) return true;
+    const required = (menu as any).permissions ?? [(menu as any).permission];
+    return required.some((permission: string) => permissions.includes(permission));
+  });
 
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [loading, setLoading] = useState(false);

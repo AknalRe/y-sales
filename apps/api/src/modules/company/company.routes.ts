@@ -7,22 +7,26 @@ import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
+const nullableString = z.preprocess((value) => value === '' ? null : value, z.string().nullable().optional());
+const nullableEmail = z.preprocess((value) => value === '' ? null : value, z.string().email().nullable().optional());
+const nullableUrl = z.preprocess((value) => value === '' ? null : value, z.string().url().nullable().optional());
+
 const companyProfileSchema = z.object({
   name: z.string().min(2).optional(),
-  legalName: z.string().optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  province: z.string().optional(),
-  postalCode: z.string().optional(),
-  country: z.string().optional(),
+  legalName: nullableString,
+  email: nullableEmail,
+  phone: nullableString,
+  address: nullableString,
+  city: nullableString,
+  province: nullableString,
+  postalCode: nullableString,
+  country: nullableString,
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  logoUrl: z.string().url().or(z.literal('')).optional(),
-  coverPhotoUrl: z.string().url().or(z.literal('')).optional(),
-  taxNumber: z.string().optional(),
-  websiteUrl: z.string().url().or(z.literal('')).optional(),
+  logoUrl: nullableUrl,
+  coverPhotoUrl: nullableUrl,
+  taxNumber: nullableString,
+  websiteUrl: nullableUrl,
   timezone: z.string().optional(),
 });
 

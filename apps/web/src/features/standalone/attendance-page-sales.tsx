@@ -1,4 +1,4 @@
-import { Loader2, MapPin, WifiOff, CheckCircle2, LogIn, LogOut, RotateCcw, Send } from 'lucide-react';
+import { Loader2, MapPin, WifiOff, CheckCircle2, LogIn, LogOut, RotateCcw, Send, ShieldCheck, Camera, Smartphone } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { AttendanceState } from './attendance-page';
 import { useAuth } from '../auth/auth-provider';
@@ -33,6 +33,7 @@ export function AttendancePageSales(props: AttendanceState) {
   useScrollToTop();
   const { accessToken } = useAuth();
   const { videoRef, location, loading, message, online, preview, image, stream, reloadKey,
+    showPermissionPopup, handleAllowPermissions,
     handleCaptureAndPreview, handleRetake, handleConfirmSend, handleConfirmCheckOut } = props;
 
   const [todaySession, setTodaySession] = useState<TodaySession | null>(null);
@@ -275,6 +276,51 @@ export function AttendancePageSales(props: AttendanceState) {
                 {loading ? 'Mengirim...' : 'Kirim Absensi'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permission Popup */}
+      {showPermissionPopup && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center backdrop-blur-sm p-6" style={{ background: 'var(--sales-overlay-dark)' }}>
+          <div className="w-full max-w-[340px] bg-sales-surface rounded-3xl p-6" style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+            <div className="flex justify-center mb-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'var(--sales-accent-bg)' }}>
+                <ShieldCheck size={32} className="text-sales-accent" />
+              </div>
+            </div>
+            <h2 className="text-center text-sales-text-heading font-extrabold mb-2" style={{ fontSize: '1.1rem' }}>
+              Izin Akses Diperlukan
+            </h2>
+            <p className="text-center text-sales-muted mb-5" style={{ fontSize: '.8rem', lineHeight: 1.6 }}>
+              Untuk melakukan absensi, aplikasi memerlukan akses ke:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem', marginBottom: '1.25rem' }}>
+              <div className="flex items-center gap-3 rounded-xl bg-sales-bg p-3">
+                <Camera size={20} className="text-sales-accent shrink-0" />
+                <div>
+                  <strong className="text-sales-text-heading" style={{ fontSize: '.8rem' }}>Kamera</strong>
+                  <p className="text-sales-muted" style={{ fontSize: '.7rem' }}>Foto wajah saat check-in dan check-out</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl bg-sales-bg p-3">
+                <MapPin size={20} className="text-sales-emerald shrink-0" />
+                <div>
+                  <strong className="text-sales-text-heading" style={{ fontSize: '.8rem' }}>Lokasi GPS</strong>
+                  <p className="text-sales-muted" style={{ fontSize: '.7rem' }}>Validasi lokasi kehadiran</p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleAllowPermissions}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sales-accent text-sales-surface border-none"
+              style={{ padding: '.85rem', fontSize: '.95rem', fontWeight: 800, cursor: 'pointer' }}
+            >
+              <Smartphone size={18} /> Izinkan & Lanjutkan
+            </button>
+            <p className="text-center text-sales-muted mt-3" style={{ fontSize: '.65rem' }}>
+              Browser akan meminta konfirmasi izin secara terpisah.
+            </p>
           </div>
         </div>
       )}

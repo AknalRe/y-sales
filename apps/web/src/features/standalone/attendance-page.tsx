@@ -10,6 +10,8 @@ import { AttendancePageSales } from './attendance-page-sales';
 
 export type AttendanceMode = 'admin' | 'sales';
 
+const permissionStorageKey = 'yuksales.permission.attendance';
+
 export interface AttendanceState {
   videoRef: RefObject<HTMLVideoElement | null>;
   stream: MediaStream | null;
@@ -22,6 +24,8 @@ export interface AttendanceState {
   online: boolean;
   preview: boolean;
   reloadKey: number;
+  showPermissionPopup: boolean;
+  handleAllowPermissions: () => void;
   handleStartCamera: () => Promise<void>;
   handleCapture: () => Promise<void>;
   handleLocation: () => Promise<void>;
@@ -47,27 +51,32 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
   const [online, setOnline] = useState(navigator.onLine);
   const [preview, setPreview] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [showPermissionPopup, setShowPermissionPopup] = useState(mode === 'sales' && !localStorage.getItem(permissionStorageKey));
+
+  function handleAllowPermissions() {
+    localStorage.setItem(permissionStorageKey, '1');
+    setShowPermissionPopup(false);
+  }
 
   useEffect(() => () => stopCamera(stream), [stream]);
 
-  // Auto-start camera and location for sales mode
+  // Auto-start camera and location for sales mode (after permission popup dismissed)
   useEffect(() => {
-    if (mode === 'sales') {
-      const init = async () => {
-        try {
-          if (videoRef.current) {
-            const nextStream = await startFrontCamera(videoRef.current);
-            setStream(nextStream);
-          }
-        } catch { /* camera permission denied */ }
-        try {
-          const current = await getCurrentLocation();
-          setLocation(current);
-        } catch { /* geolocation denied */ }
-      };
-      init();
-    }
-  }, [mode]);
+    if (mode !== 'sales' || showPermissionPopup) return;
+    const init = async () => {
+      try {
+        if (videoRef.current) {
+          const nextStream = await startFrontCamera(videoRef.current);
+          setStream(nextStream);
+        }
+      } catch { /* camera permission denied */ }
+      try {
+        const current = await getCurrentLocation();
+        setLocation(current);
+      } catch { /* geolocation denied */ }
+    };
+    init();
+  }, [mode, showPermissionPopup]);
 
   useEffect(() => {
     refreshQueueCount();
@@ -245,6 +254,7 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
 
   const state: AttendanceState = {
     videoRef, stream, image, location, loading, syncing, message, queueCount, online, preview, reloadKey,
+    showPermissionPopup, handleAllowPermissions,
     handleStartCamera, handleCapture, handleLocation, handleCheckIn, handleCheckOut, handleSyncQueue,
     handleCaptureAndPreview, handleRetake, handleConfirmSend, handleConfirmCheckOut,
   };

@@ -25,6 +25,13 @@ type AttendanceToday = {
   id: string;
   status: string;
   checkInAt?: string | null;
+  checkOutAt?: string | null;
+};
+
+type AttendanceTodayResponse = {
+  session: AttendanceToday | null;
+  canCheckIn: boolean;
+  checkInBlockedReason?: string | null;
 };
 
 function apiGet<T>(path: string, token: string): Promise<T> {
@@ -54,6 +61,8 @@ export function SalesHomePage() {
   const [visits, setVisits] = useState<VisitSession[]>([]);
   const [summary, setSummary] = useState<TodaySummary | null>(null);
   const [attendance, setAttendance] = useState<AttendanceToday | null>(null);
+  const [canCheckInAttendance, setCanCheckInAttendance] = useState(true);
+  const [attendanceBlockedReason, setAttendanceBlockedReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -64,12 +73,16 @@ export function SalesHomePage() {
       const [visitRes, sumRes, attRes] = await Promise.allSettled([
         apiGet<{ sessions: VisitSession[] }>(`/visits/sessions?date=${today}`, accessToken),
         apiGet<{ summary: TodaySummary }>('/reports/summary', accessToken),
-        apiGet<{ session: AttendanceToday | null }>('/attendance/today', accessToken),
+        apiGet<AttendanceTodayResponse>('/attendance/today', accessToken),
       ]);
 
       if (visitRes.status === 'fulfilled') setVisits(visitRes.value.sessions ?? []);
       if (sumRes.status === 'fulfilled') setSummary(sumRes.value.summary);
-      if (attRes.status === 'fulfilled') setAttendance(attRes.value.session);
+      if (attRes.status === 'fulfilled') {
+        setAttendance(attRes.value.session);
+        setCanCheckInAttendance(attRes.value.canCheckIn);
+        setAttendanceBlockedReason(attRes.value.checkInBlockedReason ?? null);
+      }
     } finally {
       setLoading(false);
     }
@@ -112,6 +125,14 @@ export function SalesHomePage() {
                     ? ` pukul ${new Date(attendance.checkInAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
                     : ''}
                 </span>
+              </div>
+            </>
+          ) : attendance && !canCheckInAttendance ? (
+            <>
+              <CheckCircle2 size={18} />
+              <div>
+                <strong>Absensi Hari Ini Selesai</strong>
+                <span>{attendanceBlockedReason ?? 'Company hanya mengizinkan satu sesi absensi dalam sehari.'}</span>
               </div>
             </>
           ) : (

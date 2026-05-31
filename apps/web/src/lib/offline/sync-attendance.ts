@@ -1,4 +1,4 @@
-import { checkInAttendance } from '../api/client';
+import { checkInAttendance, checkOutAttendance } from '../api/client';
 import { deleteQueueItem, getPendingAttendanceQueue, markQueueItemFailed, markQueueItemSyncing } from './attendance-queue';
 
 export async function syncAttendanceQueue() {
@@ -13,6 +13,11 @@ export async function syncAttendanceQueue() {
       await markQueueItemSyncing(item.id);
       if (item.type === 'check-in') {
         await checkInAttendance(item.accessToken, item.payload);
+      } else if (item.type === 'check-out' && item.payload.attendanceSessionId) {
+        await checkOutAttendance(item.accessToken, {
+          ...item.payload,
+          attendanceSessionId: item.payload.attendanceSessionId,
+        });
       }
       await deleteQueueItem(item.id);
       synced += 1;
@@ -24,5 +29,4 @@ export async function syncAttendanceQueue() {
 
   return { synced, failed };
 }
-
 

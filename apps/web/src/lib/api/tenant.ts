@@ -155,6 +155,7 @@ export type DashboardSummary = {
 export type GeneralSettings = {
   defaultGeofenceRadiusM: number;
   maxGpsAccuracyM: number;
+  allowMultipleAttendanceSessionsPerDay: boolean;
   requireFaceForAttendance: boolean;
   requireFaceForVisit: boolean;
   requireTransactionProofPhoto: boolean;

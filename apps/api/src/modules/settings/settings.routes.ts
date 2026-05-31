@@ -37,6 +37,7 @@ function publicSettings<T extends { faceIntegration?: { apiKey?: string } }>(set
 const generalSettingsSchema = z.object({
   defaultGeofenceRadiusM: z.number().positive().optional(),
   maxGpsAccuracyM: z.number().positive().optional(),
+  allowMultipleAttendanceSessionsPerDay: z.boolean().optional(),
   requireFaceForAttendance: z.boolean().optional(),
   requireFaceForVisit: z.boolean().optional(),
   requireTransactionProofPhoto: z.boolean().optional(),

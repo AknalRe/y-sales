@@ -5,6 +5,7 @@ import { db } from '../plugins/db.js';
 export const generalSettingsDefaults = {
   defaultGeofenceRadiusM: 100,
   maxGpsAccuracyM: 100,
+  allowMultipleAttendanceSessionsPerDay: false,
   requireFaceForAttendance: true,
   requireFaceForVisit: true,
   requireTransactionProofPhoto: true,

@@ -28,17 +28,6 @@ if (!defaultCompany) {
   throw new Error('Default company YukSales gagal dibuat.');
 }
 
-// Use tenantSubscriptions (canonical) instead of deprecated companySubscriptions
-await db.insert(tenantSubscriptions).values({
-  companyId: defaultCompany.id,
-  planCode: 'starter',
-  billingCycle: 'monthly',
-  status: 'active',
-}).onConflictDoUpdate({
-  target: tenantSubscriptions.companyId,
-  set: { planCode: 'starter', status: 'active', updatedAt: new Date() },
-});
-
 const roleSeeds = [
   { code: 'ADMINISTRATOR', name: 'Administrator', description: 'Full system access including role and permission management.' },
   { code: 'OWNER', name: 'Owner', description: 'Business owner with executive access.' },
@@ -245,6 +234,7 @@ await db.insert(warehouses).values({
 });
 
 const [mainWarehouse] = await db.select().from(warehouses).where(and(eq(warehouses.companyId, defaultCompany.id), eq(warehouses.code, 'WH-MAIN')));
+const [salesWarehouse] = await db.select().from(warehouses).where(and(eq(warehouses.companyId, defaultCompany.id), eq(warehouses.code, 'WH-SALES-001')));
 const seededProducts = await db.select().from(products).where(eq(products.companyId, defaultCompany.id));
 
 if (mainWarehouse) {
@@ -258,6 +248,21 @@ if (mainWarehouse) {
     }).onConflictDoUpdate({
       target: [inventoryBalances.warehouseId, inventoryBalances.productId],
       set: { quantity: '100.00', reservedQuantity: '0.00', updatedAt: new Date() },
+    });
+  }
+}
+
+if (salesWarehouse) {
+  for (const product of seededProducts) {
+    await db.insert(inventoryBalances).values({
+      companyId: defaultCompany.id,
+      warehouseId: salesWarehouse.id,
+      productId: product.id,
+      quantity: '25.00',
+      reservedQuantity: '0.00',
+    }).onConflictDoUpdate({
+      target: [inventoryBalances.warehouseId, inventoryBalances.productId],
+      set: { quantity: '25.00', reservedQuantity: '0.00', updatedAt: new Date() },
     });
   }
 }
@@ -293,6 +298,8 @@ for (const feature of featureSeeds) {
 }
 
 // ─── Subscription Plans ────────────────────────────────────────────────────
+const allFeatureKeys = featureSeeds.map((f) => f.key);
+
 const planSeeds = [
   {
     code: 'starter',
@@ -301,7 +308,7 @@ const planSeeds = [
     level: 1,
     priceMonthly: '0',
     priceYearly: '0',
-    limits: { users: 10, outlets: 50, products: 200, storage_gb: 1 },
+    limits: { users: 10, outlets: 50, products: 200, warehouses: 2, sales_reps: 5, monthly_visits: 1000, monthly_orders: 500, storage_gb: 1 },
     features: ['visits', 'attendance', 'basic_reports'],
     isPublic: true,
     status: 'active',
@@ -313,7 +320,7 @@ const planSeeds = [
     level: 2,
     priceMonthly: '299000',
     priceYearly: '2990000',
-    limits: { users: 50, outlets: 500, products: 2000, storage_gb: 10 },
+    limits: { users: 50, outlets: 500, products: 2000, warehouses: 10, sales_reps: 30, monthly_visits: 10000, monthly_orders: 5000, storage_gb: 10 },
     features: ['visits', 'attendance', 'face_recognition', 'advanced_reports', 'offline_sync', 'r2_storage'],
     isPublic: true,
     status: 'active',
@@ -321,12 +328,12 @@ const planSeeds = [
   {
     code: 'enterprise',
     name: 'Enterprise',
-    description: 'Untuk perusahaan besar dengan kebutuhan kustom.',
+    description: 'Full akses semua fitur platform tanpa batasan.',
     level: 3,
     priceMonthly: '999000',
     priceYearly: '9990000',
-    limits: { users: 500, outlets: 5000, products: 20000, storage_gb: 100 },
-    features: ['visits', 'attendance', 'face_recognition', 'advanced_reports', 'offline_sync', 'r2_storage', 'api_access', 'priority_support'],
+    limits: { users: 999999, outlets: 999999, products: 999999, warehouses: 999999, sales_reps: 999999, monthly_visits: 999999, monthly_orders: 999999, storage_gb: 999999 },
+    features: allFeatureKeys,
     isPublic: true,
     status: 'active',
   },
@@ -339,13 +346,53 @@ for (const plan of planSeeds) {
   });
 }
 
-// Create default tenant subscription for demo company
-await db.insert(tenantSubscriptions).values({
-  companyId: defaultCompany.id,
-  planCode: 'starter',
-  billingCycle: 'monthly',
-  status: 'active',
-}).onConflictDoNothing();
+const [enterprisePlan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.code, 'enterprise')).limit(1);
+
+if (!enterprisePlan) {
+  throw new Error('Plan enterprise gagal dibuat.');
+}
+
+async function seedFullPlanSubscription(companyId: string, managedByUserId?: string | null) {
+  const now = new Date();
+
+  await db.insert(tenantSubscriptions).values({
+    companyId,
+    planId: enterprisePlan.id,
+    planCode: enterprisePlan.code,
+    billingCycle: 'lifetime',
+    status: 'active',
+    activatedAt: now,
+    currentPeriodStart: now,
+    currentPeriodEnd: null,
+    limitsSnapshot: enterprisePlan.limits ?? null,
+    featuresSnapshot: enterprisePlan.features ?? allFeatureKeys,
+    invoiceRef: 'SEED-FULL-PLAN',
+    amountPaid: '0',
+    paidAt: now,
+    managedByUserId: managedByUserId ?? undefined,
+  }).onConflictDoUpdate({
+    target: tenantSubscriptions.companyId,
+    set: {
+      planId: enterprisePlan.id,
+      planCode: enterprisePlan.code,
+      billingCycle: 'lifetime',
+      status: 'active',
+      activatedAt: now,
+      currentPeriodStart: now,
+      currentPeriodEnd: null,
+      limitsSnapshot: enterprisePlan.limits ?? null,
+      featuresSnapshot: enterprisePlan.features ?? allFeatureKeys,
+      invoiceRef: 'SEED-FULL-PLAN',
+      amountPaid: '0',
+      paidAt: now,
+      managedByUserId: managedByUserId ?? undefined,
+      updatedAt: now,
+    },
+  });
+}
+
+// YukSales is the internal/demo company, so seed it with full enterprise access.
+await seedFullPlanSubscription(defaultCompany.id);
 
 // ─── Users ────────────────────────────────────────────────────────────────
 console.log('  ── Users ─────────────────────────────────────────────────');
@@ -441,6 +488,253 @@ if (administrator && process.env.ADMIN_PASSWORD) {
 
   console.log(`  Administrator created: ${adminEmail}`);
 }
+
+// ─── Mahasura Company (alternative) ─────────────────────────────────────────
+const mahasuraCompany = await db
+  .insert(companies)
+  .values({
+    name: 'Mahasura Sales Tracking',
+    slug: 'mahasura',
+    status: 'active',
+    timezone: 'Asia/Jakarta',
+  })
+  .onConflictDoUpdate({
+    target: companies.slug,
+    set: { name: 'Mahasura Sales Tracking', status: 'active', timezone: 'Asia/Jakarta', updatedAt: new Date() },
+  })
+  .returning();
+
+const [mahasuraCompanyResult] = mahasuraCompany;
+if (!mahasuraCompanyResult) {
+  throw new Error('Mahasura company gagal dibuat.');
+}
+
+console.log('  Mahasura company created: mahasura');
+await seedFullPlanSubscription(mahasuraCompanyResult.id);
+console.log('  Mahasura full enterprise plan assigned.');
+
+// ─── Mahasura Roles & Permissions ─────────────────────────────────────────
+// Insert roles if not exist
+for (const role of roleSeeds) {
+  const [existing] = await db
+    .select()
+    .from(roles)
+    .where(and(eq(roles.companyId, mahasuraCompanyResult.id), eq(roles.code, role.code)));
+
+  if (!existing) {
+    await db.insert(roles).values({ ...role, companyId: mahasuraCompanyResult.id, isSystemRole: true }).onConflictDoUpdate({
+      target: [roles.companyId, roles.code],
+      set: { name: role.name, description: role.description, isSystemRole: true, updatedAt: new Date() },
+    });
+  }
+}
+
+// Refresh role map for mahasura
+const mahasuraSeededRoles = await db.select().from(roles).where(eq(roles.companyId, mahasuraCompanyResult.id));
+const mahasuraRoleMap = new Map(mahasuraSeededRoles.map((r) => [r.code, r.id]));
+
+// Assign all permissions to mahasura roles (same as yuksales)
+console.log('\n  ── Mahasura Permissions per Role ──────────────────────────');
+for (const [roleCode, permCodes] of Object.entries(rolePermissionSeeds)) {
+  const roleId = mahasuraRoleMap.get(roleCode);
+  if (!roleId) {
+    console.log(`  [SKIP] Role "${roleCode}" not found.`);
+    continue;
+  }
+  let seeded = 0;
+  for (const permCode of permCodes) {
+    const permissionId = permissionMap.get(permCode);
+    if (!permissionId) {
+      console.log(`  [WARN] Permission "${permCode}" not found for role "${roleCode}".`);
+      continue;
+    }
+    await db.insert(rolePermissions).values({ roleId, permissionId }).onConflictDoNothing();
+    seeded++;
+  }
+  console.log(`  [OK] ${roleCode.padEnd(22)} ${seeded}/${permCodes.length} permissions`);
+}
+console.log('  ─────────────────────────────────────────────────────────');
+console.log('  Mahasura role permissions seeded.\n');
+
+// ─── Mahasura Settings ─────────────────────────────────────────────
+for (const setting of settingSeeds) {
+  await db.insert(appSettings).values(setting).onConflictDoUpdate({
+    target: appSettings.key,
+    set: { value: setting.value, description: setting.description },
+  });
+}
+
+// ─── Mahasura Sample Outlets ─────────────────────────────────────────
+const mahasuraSampleOutlets = [
+  { code: 'MHS-OT-01', name: 'Toko Surya Jaya', customerType: 'store', ownerName: 'Budi Santoso', phone: '081234567890', address: 'Jl. Pahlawan No. 45, Jakarta', latitude: '-6.2088', longitude: '106.8456', geofenceRadiusM: 150, status: 'active' },
+  { code: 'MHS-OT-02', name: 'Warung Kopi Enak', customerType: 'store', ownerName: 'Siti Aminah', phone: '081234567891', address: 'Jl. Sudirman Kav. 12, Jakarta', latitude: '-6.1751', longitude: '106.8650', geofenceRadiusM: 100, status: 'active' },
+  { code: 'MHS-OT-03', name: 'Toko Bahagia', customerType: 'store', ownerName: 'Ahmad Fauzi', phone: '081234567892', address: 'Mangga Dua Square Blok A No. 12, Jakarta', latitude: '-6.1422', longitude: '106.8802', geofenceRadiusM: 200, status: 'active' },
+] as const;
+
+for (const outlet of mahasuraSampleOutlets) {
+  await db.insert(outlets).values({ ...outlet, companyId: mahasuraCompanyResult.id }).onConflictDoUpdate({
+    target: [outlets.companyId, outlets.code],
+    set: { ...outlet, updatedAt: new Date() },
+  });
+}
+
+// ─── Mahasura Sample Products ─────────────────────────────────────────
+const mahasuraSampleProducts = [
+  { sku: 'MHS-PR-001', name: 'Beras Premium 5kg', description: 'Beras super premium untuk konsumsi rumah tangga.', unit: 'pack', priceDefault: '75000', status: 'active' },
+  { sku: 'MHS-PR-002', name: 'Minyak Goreng 2L', description: 'Minyak sawit premium untuk memasak.', unit: 'botol', priceDefault: '28000', status: 'active' },
+  { sku: 'MHS-PR-003', name: 'Gula Pasir 1kg', description: 'Gula pasir refined untuk industri rumah tangga.', unit: 'pack', priceDefault: '14000', status: 'active' },
+  { sku: 'MHS-PR-004', name: 'Telur Ayam Kampung', description: 'Telur bebas rasakan dari peternakan lokal.', unit: 'butir (10 butir)', priceDefault: '25000', status: 'active' },
+] as const;
+
+for (const product of mahasuraSampleProducts) {
+  await db.insert(products).values({ ...product, companyId: mahasuraCompanyResult.id }).onConflictDoUpdate({
+    target: [products.companyId, products.sku],
+    set: { ...product, updatedAt: new Date() },
+  });
+}
+
+// ─── Mahasura Warehouses ─────────────────────────────────────────
+const [mahasuraMainWarehouse] = await db
+  .insert(warehouses)
+  .values({
+    companyId: mahasuraCompanyResult.id,
+    code: 'MHS-WH-MAIN',
+    name: 'Gudang Utama Mahasura',
+    address: 'Gudang pusat operasional Mahasura',
+    type: 'main',
+    status: 'active',
+  })
+  .onConflictDoUpdate({
+    target: [warehouses.companyId, warehouses.code],
+    set: { name: 'Gudang Utama Mahasura', address: 'Gudang pusat operasional Mahasura', type: 'main', status: 'active' },
+  })
+  .returning();
+
+const [mahasuraSalesWarehouse] = await db
+  .insert(warehouses)
+  .values({
+    companyId: mahasuraCompanyResult.id,
+    code: 'MHS-WH-SALES-001',
+    name: 'Gudang Sales Mahasura 001',
+    address: 'Stok canvas sales default',
+    type: 'sales_van',
+    status: 'active',
+  })
+  .onConflictDoUpdate({
+    target: [warehouses.companyId, warehouses.code],
+    set: { name: 'Gudang Sales Mahasura 001', address: 'Stok canvas sales default', type: 'sales_van', status: 'active' },
+  })
+  .returning();
+
+// ─── Mahasura Inventory ─────────────────────────────────────────
+const mahasuraSeededProducts = await db.select().from(products).where(eq(products.companyId, mahasuraCompanyResult.id));
+if (mahasuraMainWarehouse && mahasuraSeededProducts.length > 0) {
+  for (const product of mahasuraSeededProducts) {
+    await db.insert(inventoryBalances).values({
+      companyId: mahasuraCompanyResult.id,
+      warehouseId: mahasuraMainWarehouse.id,
+      productId: product.id,
+      quantity: '50.00',
+      reservedQuantity: '0.00',
+    }).onConflictDoUpdate({
+      target: [inventoryBalances.warehouseId, inventoryBalances.productId],
+      set: { quantity: '50.00', reservedQuantity: '0.00', updatedAt: new Date() },
+    });
+  }
+}
+
+if (mahasuraSalesWarehouse && mahasuraSeededProducts.length > 0) {
+  for (const product of mahasuraSeededProducts) {
+    await db.insert(inventoryBalances).values({
+      companyId: mahasuraCompanyResult.id,
+      warehouseId: mahasuraSalesWarehouse.id,
+      productId: product.id,
+      quantity: '15.00',
+      reservedQuantity: '0.00',
+    }).onConflictDoUpdate({
+      target: [inventoryBalances.warehouseId, inventoryBalances.productId],
+      set: { quantity: '15.00', reservedQuantity: '0.00', updatedAt: new Date() },
+    });
+  }
+}
+
+// ─── Mahasura Users ─────────────────────────────────────────────
+console.log('  ── Mahasura Users ─────────────────────────────────────────');
+
+// Super Admin User (global, same as yuksales)
+// (Super admin is companyId: null, so shared with yuksales)
+
+// Mahasura Sales Agent
+const [mahasuraSalesAgentRole] = await db.select().from(roles).where(and(eq(roles.companyId, mahasuraCompanyResult.id), eq(roles.code, 'SALES_AGENT')));
+if (mahasuraSalesAgentRole) {
+  const mahasuraSalesEmail = process.env.MAHASURA_SALES_EMAIL ?? 'sales@mahasura.local';
+  const mahasuraSalesName = process.env.MAHASURA_SALES_NAME ?? 'Sales Agent Mahasura';
+  const mahasuraSalesPhone = process.env.MAHASURA_SALES_PHONE ?? '089999999998';
+  const mahasuraSalesEmployeeCode = process.env.MAHASURA_SALES_EMPLOYEE_CODE ?? 'MH-SA-001';
+  const passwordHash = await bcrypt.hash(process.env.MAHASURA_SALES_PASSWORD ?? 'MahasuraSales@123!', 12);
+
+  await db.insert(users).values({
+    companyId: mahasuraCompanyResult.id,
+    roleId: mahasuraSalesAgentRole.id,
+    name: mahasuraSalesName,
+    email: mahasuraSalesEmail,
+    phone: mahasuraSalesPhone,
+    employeeCode: mahasuraSalesEmployeeCode,
+    passwordHash,
+    status: 'active',
+  }).onConflictDoUpdate({
+    target: users.email,
+    set: {
+      companyId: mahasuraCompanyResult.id,
+      roleId: mahasuraSalesAgentRole.id,
+      name: mahasuraSalesName,
+      phone: mahasuraSalesPhone,
+      employeeCode: mahasuraSalesEmployeeCode,
+      passwordHash,
+      status: 'active',
+      updatedAt: new Date(),
+    },
+  });
+
+  console.log(`  Mahasura Sales Agent created: ${mahasuraSalesEmail}`);
+}
+
+// Mahasura Administrator
+const [mahasuraAdminRole] = await db.select().from(roles).where(and(eq(roles.companyId, mahasuraCompanyResult.id), eq(roles.code, 'ADMINISTRATOR')));
+if (mahasuraAdminRole) {
+  const mahasuraAdminName = process.env.MAHASURA_ADMIN_NAME ?? 'Administrator Mahasura';
+  const mahasuraAdminEmail = process.env.MAHASURA_ADMIN_EMAIL ?? 'admin@mahasura.local';
+  const mahasuraAdminPhone = process.env.MAHASURA_ADMIN_PHONE ?? '080000000001';
+  const mahasuraAdminEmployeeCode = process.env.MAHASURA_ADMIN_EMPLOYEE_CODE ?? 'MH-ADM-001';
+  const passwordHash = await bcrypt.hash(process.env.MAHASURA_ADMIN_PASSWORD ?? 'MahasuraAdmin@123!', 12);
+
+  await db.insert(users).values({
+    companyId: mahasuraCompanyResult.id,
+    roleId: mahasuraAdminRole.id,
+    name: mahasuraAdminName,
+    email: mahasuraAdminEmail,
+    phone: mahasuraAdminPhone,
+    employeeCode: mahasuraAdminEmployeeCode,
+    passwordHash,
+    status: 'active',
+  }).onConflictDoUpdate({
+    target: users.email,
+    set: {
+      companyId: mahasuraCompanyResult.id,
+      roleId: mahasuraAdminRole.id,
+      name: mahasuraAdminName,
+      phone: mahasuraAdminPhone,
+      employeeCode: mahasuraAdminEmployeeCode,
+      passwordHash,
+      status: 'active',
+      updatedAt: new Date(),
+    },
+  });
+
+  console.log(`  Mahasura Administrator created: ${mahasuraAdminEmail}`);
+}
+
+console.log('  ─────────────────────────────────────────────────────────');
 
 console.log('  ─────────────────────────────────────────────────────────');
 console.log('  Seed completed');

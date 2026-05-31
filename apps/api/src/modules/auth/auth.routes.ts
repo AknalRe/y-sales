@@ -63,6 +63,7 @@ export async function authRoutes(app: FastifyInstance) {
         phone: users.phone,
         passwordHash: users.passwordHash,
         status: users.status,
+        deletedAt: users.deletedAt,
         companyId: users.companyId,
         companyName: companies.name,
         companySlug: companies.slug,
@@ -73,7 +74,7 @@ export async function authRoutes(app: FastifyInstance) {
       .leftJoin(companies, eq(users.companyId, companies.id))
       .where(or(...identifierConditions));
 
-    if (!user || !user.passwordHash || user.status !== 'active') {
+    if (!user || !user.passwordHash || user.status !== 'active' || user.deletedAt) {
       return reply.status(401).send({ message: 'Invalid credentials' });
     }
 
@@ -85,10 +86,12 @@ export async function authRoutes(app: FastifyInstance) {
 
     const accessToken = signAccessToken({ sub: user.id, companyId: user.companyId, roleCode: user.roleCode, isSuperAdmin: user.roleCode === 'SUPER_ADMIN' });
     const refreshToken = await createSession(user.id, user.companyId, user.roleCode, body.deviceId);
+    await db.update(users).set({ lastLoginAt: new Date(), updatedAt: new Date() }).where(eq(users.id, user.id));
     setRefreshCookie(reply, refreshToken);
 
     return {
       accessToken,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -118,8 +121,14 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.status(401).send({ message: 'Invalid refresh token' });
     }
 
+    // Rotate refresh token
+    const newRefreshToken = await createSession(result.payload.sub, result.payload.companyId, result.payload.roleCode);
+    await revokeRefreshToken(refreshToken);
+    setRefreshCookie(reply, newRefreshToken);
+
     return {
       accessToken: signAccessToken(result.payload),
+      refreshToken: newRefreshToken,
     };
   });
 

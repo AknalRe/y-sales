@@ -6,6 +6,7 @@ import { Spinner } from '@/components/ui';
 
 type ToggleKey =
   | 'requireFaceForAttendance'
+  | 'allowMultipleAttendanceSessionsPerDay'
   | 'requireFaceForVisit'
   | 'requireTransactionProofPhoto'
   | 'requireFaceIdentityMatchForVisit'
@@ -13,6 +14,7 @@ type ToggleKey =
   | 'rejectVisitOnFaceMismatch';
 
 const toggles: Array<{ key: ToggleKey; title: string; description: string; icon: typeof Camera }> = [
+  { key: 'allowMultipleAttendanceSessionsPerDay', title: 'Absensi lebih dari sekali sehari', description: 'Sales boleh memulai sesi absensi baru setelah sesi sebelumnya check-out.', icon: CheckCircle2 },
   { key: 'requireTransactionProofPhoto', title: 'Bukti foto transaksi wajib', description: 'Admin hanya bisa approve transaksi setelah nota/foto bukti diunggah.', icon: Camera },
   { key: 'requireFaceForVisit', title: 'Foto wajah saat visit', description: 'Sales wajib mengambil foto wajah saat check-in dan check-out outlet.', icon: UserCheck },
   { key: 'requireFaceIdentityMatchForVisit', title: 'Cocokkan identitas wajah', description: 'Aktifkan setelah template wajah dan provider verifikasi siap digunakan.', icon: ShieldCheck },

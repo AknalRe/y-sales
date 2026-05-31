@@ -16,6 +16,12 @@ type AttendanceToday = {
   checkOutAt?: string | null;
 };
 
+type AttendanceTodayResponse = {
+  session: AttendanceToday | null;
+  canCheckIn: boolean;
+  checkInBlockedReason?: string | null;
+};
+
 const ROLE_LABEL: Record<string, string> = {
   SALES_AGENT: 'Sales Agent',
   SUPERVISOR: 'Supervisor',
@@ -38,6 +44,8 @@ export function SalesProfilePage() {
   const { user, signOut, accessToken } = useAuth();
   const navigate = useNavigate();
   const [todayAttendance, setTodayAttendance] = useState<AttendanceToday | null>(null);
+  const [canCheckInAttendance, setCanCheckInAttendance] = useState(true);
+  const [attendanceBlockedReason, setAttendanceBlockedReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -52,8 +60,12 @@ export function SalesProfilePage() {
   useEffect(() => {
     if (!accessToken) return;
     setLoading(true);
-    apiReq<{ session: AttendanceToday | null }>('/attendance/today', accessToken)
-      .then(r => setTodayAttendance(r.session))
+    apiReq<AttendanceTodayResponse>('/attendance/today', accessToken)
+      .then(r => {
+        setTodayAttendance(r.session);
+        setCanCheckInAttendance(r.canCheckIn);
+        setAttendanceBlockedReason(r.checkInBlockedReason ?? null);
+      })
       .catch(() => { })
       .finally(() => setLoading(false));
   }, [accessToken]);
@@ -146,10 +158,10 @@ export function SalesProfilePage() {
             <div className="sales-profile-field">
               <span>Status</span>
               <span className="sales-attendance-status" style={{
-                background: todayAttendance.status === 'checked_in' ? 'rgba(52,211,153,.15)' : 'rgba(99,163,237,.12)',
-                color: todayAttendance.status === 'checked_in' ? '#34d399' : '#60a5fa',
+                background: todayAttendance.status === 'open' ? 'rgba(52,211,153,.15)' : 'rgba(99,163,237,.12)',
+                color: todayAttendance.status === 'open' ? '#34d399' : '#60a5fa',
               }}>
-                {todayAttendance.status === 'checked_in' ? '✓ Sedang Check-In' : '✓ Sudah Check-Out'}
+                {todayAttendance.status === 'open' ? '✓ Sedang Check-In' : '✓ Sudah Check-Out'}
               </span>
             </div>
             {todayAttendance.checkInAt && (
@@ -163,6 +175,11 @@ export function SalesProfilePage() {
                 <span>Check-Out</span>
                 <strong>{new Date(todayAttendance.checkOutAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</strong>
               </div>
+            )}
+            {!canCheckInAttendance && todayAttendance.status !== 'open' && (
+              <p style={{ color: '#b45309', fontSize: '.8rem', marginTop: '.75rem' }}>
+                {attendanceBlockedReason ?? 'Company hanya mengizinkan satu sesi absensi dalam sehari.'}
+              </p>
             )}
             <div className="sales-profile-field">
               <span>Validasi</span>

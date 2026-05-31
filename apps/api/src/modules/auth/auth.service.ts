@@ -22,6 +22,15 @@ export type AuthTokenPayload = {
   isSuperAdmin: boolean;
 };
 
+function sanitizeAuthPayload(payload: AuthTokenPayload): AuthTokenPayload {
+  return {
+    sub: payload.sub,
+    companyId: payload.companyId,
+    roleCode: payload.roleCode,
+    isSuperAdmin: payload.isSuperAdmin,
+  };
+}
+
 export function hashPassword(password: string) {
   return bcrypt.hash(password, 12);
 }
@@ -31,11 +40,11 @@ export function verifyPassword(password: string, hash: string) {
 }
 
 export function signAccessToken(payload: AuthTokenPayload) {
-  return jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn: '15m' });
+  return jwt.sign(sanitizeAuthPayload(payload), env.JWT_ACCESS_SECRET, { expiresIn: '15m' });
 }
 
 export function signRefreshToken(payload: AuthTokenPayload) {
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
+  return jwt.sign(sanitizeAuthPayload(payload), env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
 }
 
 export function verifyAccessToken(token: string) {
@@ -48,12 +57,13 @@ export function verifyRefreshToken(token: string) {
 
 export async function getUserPermissions(userId: string) {
   const [user] = await db
-    .select({ companyId: users.companyId, roleId: users.roleId, roleCode: roles.code })
+    .select({ companyId: users.companyId, roleId: users.roleId, roleCode: roles.code, status: users.status, deletedAt: users.deletedAt })
     .from(users)
     .innerJoin(roles, eq(users.roleId, roles.id))
     .where(eq(users.id, userId));
 
   if (!user) return null;
+  if (user.status !== 'active' || user.deletedAt) return null;
 
   const isSuperAdmin = user.roleCode === 'SUPER_ADMIN';
 

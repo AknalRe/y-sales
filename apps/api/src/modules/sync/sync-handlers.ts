@@ -92,7 +92,12 @@ const transactionCreatePayload = z.object({
 });
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
 }
 
 async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Promise<HandlerResult> {
@@ -104,6 +109,19 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
     if (existing) return { success: true, entityId: existing.id };
 
     const settings = await getGeneralSettings(ctx.companyId);
+    const todaySessions = await db.select().from(attendanceSessions).where(
+      and(eq(attendanceSessions.userId, ctx.userId), eq(attendanceSessions.workDate, todayDate()))
+    );
+    const openTodaySession = todaySessions.find((session) => session.status === 'open');
+
+    if (openTodaySession) {
+      return { success: false, error: 'Selesaikan sesi absensi aktif sebelum absen masuk lagi.' };
+    }
+
+    if (!settings.allowMultipleAttendanceSessionsPerDay && todaySessions.length > 0) {
+      return { success: false, error: 'Company hanya mengizinkan satu sesi absensi dalam sehari.' };
+    }
+
     const geofence = validateGeofence({
       current: body.location,
       target: null,

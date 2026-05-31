@@ -1,5 +1,6 @@
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:4000').replace(/\/+$/, '');
 const platformCompanyViewKey = 'yuksales.platform.companyView';
+const refreshTokenKey = 'yuksales.refreshToken';
 
 export type LoginPayload = {
   identifier: string;
@@ -67,6 +68,7 @@ export function getPlatformCompanyView() {
 export function login(payload: LoginPayload) {
   return apiRequest<{
     accessToken: string;
+    refreshToken: string;
     user: {
       id: string;
       name: string;
@@ -82,14 +84,28 @@ export function login(payload: LoginPayload) {
   });
 }
 
+export function storeRefreshToken(token: string) {
+  localStorage.setItem(refreshTokenKey, token);
+}
+
+export function getStoredRefreshToken() {
+  return localStorage.getItem(refreshTokenKey);
+}
+
+export function clearStoredRefreshToken() {
+  localStorage.removeItem(refreshTokenKey);
+}
+
 export function refreshSession() {
-  return apiRequest<{ accessToken: string }>('/auth/refresh', {
+  const storedToken = getStoredRefreshToken();
+  return apiRequest<{ accessToken: string; refreshToken: string }>('/auth/refresh', {
     method: 'POST',
-    body: JSON.stringify({}),
+    body: JSON.stringify(storedToken ? { refreshToken: storedToken } : {}),
   });
 }
 
 export function logout() {
+  clearStoredRefreshToken();
   return apiRequest<{ success: true }>('/auth/logout', {
     method: 'POST',
     body: JSON.stringify({}),

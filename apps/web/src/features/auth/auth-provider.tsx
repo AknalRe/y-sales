@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { clearPlatformCompanyView, getMe, login, logout, refreshSession } from '../../lib/api/client';
+import { clearPlatformCompanyView, getMe, login, logout, refreshSession, storeRefreshToken, clearStoredRefreshToken } from '../../lib/api/client';
 
 type SessionUser = {
   id: string;
@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearSession = useCallback(() => {
     localStorage.removeItem(profileStorageKey);
+    clearStoredRefreshToken();
     clearPlatformCompanyView();
     setAccessToken(undefined);
     setUser(undefined);
@@ -49,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async signIn(identifier, password) {
       const deviceId = getDeviceId();
       const result = await login({ identifier, password, deviceId });
+      if (result.refreshToken) storeRefreshToken(result.refreshToken);
       const me = await getMe(result.accessToken);
       const session = {
         accessToken: result.accessToken,
@@ -77,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const refreshed = await refreshSession();
         if (cancelled) return;
+        if (refreshed.refreshToken) storeRefreshToken(refreshed.refreshToken);
         const me = await getMe(refreshed.accessToken);
         if (cancelled) return;
         setAccessToken(refreshed.accessToken);

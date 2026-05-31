@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Home, MapPin, ReceiptText, ShoppingCart, UserRound, Clock } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
@@ -14,6 +15,11 @@ const bottomNav = [
 export function SalesShell() {
   const location = useLocation();
   const { user } = useAuth();
+  const mainRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [location.pathname]);
 
   return (
     <div className="flex min-h-screen justify-center bg-gray-50 text-slate-900">
@@ -30,7 +36,7 @@ export function SalesShell() {
           </div>
         </header> */}
 
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 pb-24">
+        <main ref={mainRef} className="flex-1 overflow-y-auto bg-gray-50 p-4 pb-24">
           <PlatformCompanyViewBanner />
           <Outlet />
         </main>

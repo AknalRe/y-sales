@@ -1,7 +1,8 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { Banknote, Building2, CreditCard, LayoutDashboard, Layers3, Menu } from 'lucide-react';
+import { Banknote, Building2, CreditCard, LayoutDashboard, Layers3, Menu, Moon, Sun } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '../../auth/auth-provider';
 import { PlatformDesktopSidebar } from './platform-desktop-sidebar';
 import { PlatformMobileSidebar } from './platform-mobile-sidebar';
@@ -17,6 +18,7 @@ const platformNav = [
 export function PlatformShell() {
   const { user, isSuperAdmin, signOut } = useAuth();
   const isMobile = useIsMobile(820);
+  const { isDark, toggleTheme } = useTheme();
 
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -63,6 +65,9 @@ export function PlatformShell() {
               <Menu size={18} />
             </button>
             <span className="platform-brand-name">Yuksales</span>
+            <button onClick={toggleTheme} className="platform-toggle-btn" type="button" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+              {isDark ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
           </header>
         )}
         <Outlet />

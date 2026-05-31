@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
+import { LogOut, Moon, Sun, UserCircle } from 'lucide-react';
 import type { PlatformNavItem } from './platform-desktop-sidebar';
+import { useTheme } from '@/hooks/use-theme';
 
 interface PlatformMobileSidebarProps {
     mobileMenuOpen: boolean;
@@ -25,6 +27,7 @@ export function PlatformMobileSidebar({
     signOut,
 }: PlatformMobileSidebarProps) {
     const location = useLocation();
+    const { isDark, toggleTheme } = useTheme();
 
     if (!mobileMenuOpen) return null;
 
@@ -37,13 +40,13 @@ export function PlatformMobileSidebar({
             />
             <div
                 className="relative flex w-4/5 max-w-xs flex-col h-full shadow-2xl animate-in slide-in-from-left"
-                style={{ background: "rgba(2, 6, 23, 0.92)", backdropFilter: "blur(22px)" }}
+                style={{ background: "var(--platform-gradient-sidebar)", backdropFilter: "blur(22px)" }}
             >
                 <div
                     className="flex items-center justify-between p-4"
                     style={{ borderBottom: "1px solid var(--platform-border)" }}
                 >
-                    <h2 className="text-lg font-bold" style={{ color: "#fff" }}>
+                    <h2 className="text-lg font-bold" style={{ color: "var(--platform-text)" }}>
                         Yuksales
                     </h2>
                     <button
@@ -74,7 +77,7 @@ export function PlatformMobileSidebar({
                                         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
                                         style={{
                                             color: active ? "#ffffff" : "var(--platform-subtle)",
-                                            background: active ? "linear-gradient(135deg, rgba(139, 92, 246, .32), rgba(6, 182, 212, .18))" : "transparent",
+                                            background: active ? "linear-gradient(135deg, var(--platform-violet-shadow-md), var(--platform-info-shadow-glow))" : "transparent",
                                         }}
                                     >
                                         <Icon size={18} style={{ color: active ? "#ffffff" : "var(--platform-subtle)" }} />
@@ -93,12 +96,17 @@ export function PlatformMobileSidebar({
                     <div className="flex items-center gap-3 mb-3">
                         <div className="platform-avatar">{initials}</div>
                         <div>
-                            <strong className="text-sm" style={{ color: "#fff" }}>{userName}</strong>
+                            <strong className="text-sm" style={{ color: "var(--platform-text)" }}>{userName}</strong>
                             <span className="block text-xs" style={{ color: "var(--platform-subtle)" }}>{userEmail}</span>
                         </div>
                     </div>
                     <div className="space-y-1">
+                        <button onClick={toggleTheme} className="platform-profile-item w-full" type="button">
+                            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+                            <span>{isDark ? 'Mode Terang' : 'Mode Gelap'}</span>
+                        </button>
                         <button className="platform-profile-item w-full" type="button">
+                            <UserCircle size={15} />
                             <span>Profil</span>
                         </button>
                         <button
@@ -106,6 +114,7 @@ export function PlatformMobileSidebar({
                             className="platform-profile-item platform-profile-danger w-full"
                             type="button"
                         >
+                            <LogOut size={15} />
                             <span>Keluar</span>
                         </button>
                     </div>

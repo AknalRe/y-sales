@@ -104,7 +104,7 @@
 .platform-revenue-value {
   display: block;
   margin-top: .35rem;
-  color: #fff;
+  color: var(--platform-text);
   font-size: clamp(1.25rem, 2vw, 1.9rem);
 }
 

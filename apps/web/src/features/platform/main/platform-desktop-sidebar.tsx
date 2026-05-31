@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, Menu, Shield, UserCircle } from 'lucide-react';
+import { LogOut, Menu, Moon, Shield, Sun, UserCircle } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
 
 export interface PlatformNavItem {
     path: string;
@@ -32,6 +33,7 @@ export function PlatformDesktopSidebar({
     signOut,
 }: PlatformDesktopSidebarProps) {
     const location = useLocation();
+    const { isDark, toggleTheme } = useTheme();
 
     return (
         <aside className={`platform-sidebar ${sidebarOpen ? 'platform-sidebar-open' : 'platform-sidebar-closed'}`}>
@@ -87,6 +89,10 @@ export function PlatformDesktopSidebar({
                 </div>
                 {profileOpen && (
                     <div className="platform-profile-menu">
+                        <button onClick={toggleTheme} className="platform-profile-item" type="button">
+                            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+                            <span>{isDark ? 'Mode Terang' : 'Mode Gelap'}</span>
+                        </button>
                         <button className="platform-profile-item" type="button">
                             <UserCircle size={15} />
                             <span>Profil</span>

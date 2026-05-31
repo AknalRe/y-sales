@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Camera, CheckCircle2, Loader2, MapPin, Video, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone } from 'lucide-react';
-import { checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
+import { apiRequest, checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
 import { getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, type Consignment, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
@@ -14,6 +15,7 @@ const permissionStorageKey = 'yuksales.permission.visit';
 
 export function VisitPage() {
   useScrollToTop();
+  const navigate = useNavigate();
   const { accessToken } = useAuth();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -38,6 +40,7 @@ export function VisitPage() {
 
   const [outcome, setOutcome] = useState<'closed_order' | 'no_order' | 'follow_up' | 'outlet_closed' | 'rejected' | 'invalid_location'>('closed_order');
   const [notes, setNotes] = useState('');
+  const [attendanceOpen, setAttendanceOpen] = useState<boolean | null>(null);
 
   useEffect(() => () => stopCamera(stream), [stream]);
 
@@ -95,6 +98,15 @@ export function VisitPage() {
         .catch(e => console.error(e))
         .finally(() => setSchedulesLoading(false));
     }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    apiRequest<{ session: { status: string } | null }>('/attendance/today', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then(res => setAttendanceOpen(res.session?.status === 'open'))
+      .catch(() => setAttendanceOpen(false));
   }, [accessToken]);
 
   useEffect(() => {
@@ -306,7 +318,30 @@ export function VisitPage() {
       )}
 
       {/* ── CHECK-IN MODE ──────────────────────────────────────── */}
-      {!activeVisitId && (
+      {!activeVisitId && attendanceOpen === false && (
+        <div className="sales-step-card">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sales-amber-bg text-sales-amber-deep">
+              <XCircle size={20} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong className="text-sales-text-heading" style={{ fontSize: '.85rem' }}>Belum Absensi</strong>
+              <p className="text-sales-muted" style={{ fontSize: '.75rem', marginTop: 2 }}>
+                Absensi kehadiran diperlukan sebelum bisa visit outlet.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/sales/attendance')}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-sales-accent text-sales-surface border-none"
+            style={{ marginTop: '.75rem', padding: '.7rem', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Buka Halaman Absensi
+          </button>
+        </div>
+      )}
+
+      {!activeVisitId && (attendanceOpen === true || attendanceOpen === null) && (
         <>
           {/* Step 1: Pilih Outlet */}
           <div className="sales-step-card">

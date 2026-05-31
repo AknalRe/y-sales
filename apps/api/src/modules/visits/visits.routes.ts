@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { faceCaptures, mediaFiles, outlets, salesTransactions, users, visitSchedules, visitSessions } from '@yuksales/db/schema';
+import { attendanceSessions, faceCaptures, mediaFiles, outlets, salesTransactions, users, visitSchedules, visitSessions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { writeAuditLog } from '../audit/audit.service.js';
@@ -288,6 +288,15 @@ export async function visitRoutes(app: FastifyInstance) {
     const body = checkInSchema.parse(request.body);
     const [existing] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.clientRequestId, body.clientRequestId)));
     if (existing) return { visit: existing, idempotent: true };
+
+    // Attendance gate: must have active attendance session today
+    const [attendanceToday] = await db.select().from(attendanceSessions).where(and(
+      eq(attendanceSessions.companyId, companyId),
+      eq(attendanceSessions.userId, request.user!.id),
+      eq(attendanceSessions.workDate, todayDate()),
+      eq(attendanceSessions.status, 'open'),
+    ));
+    if (!attendanceToday) throw Object.assign(new Error('Anda harus absensi (check-in kehadiran) terlebih dahulu sebelum bisa visit outlet.'), { statusCode: 400 });
 
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, body.outletId)));
     if (!outlet) return { message: 'Outlet tidak ditemukan' };

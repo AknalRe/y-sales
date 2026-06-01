@@ -466,6 +466,62 @@ buat audit log media.deleted
 
 ---
 
+# 5.1 Attendance Review & Report
+
+## GET `/attendance/review`
+
+Permission: `attendance.review`.
+
+Query:
+
+```txt
+from=2026-06-01
+to=2026-06-01
+status=closed
+validationStatus=manual_review
+q=SA-001
+```
+
+Response berisi sesi absensi, data sales, status validasi, foto check-in, koordinat, akurasi GPS, jarak dari target, dan `workMinutes`.
+
+## PATCH `/attendance/review/:id`
+
+Permission: `attendance.review`.
+
+Dipakai reviewer untuk approval absensi.
+
+Body:
+
+```json
+{
+  "action": "approve"
+}
+```
+
+Action:
+
+- `approve`: set `validationStatus=valid`. Jika sesi sebelumnya `flagged`, status dikembalikan ke `closed`.
+- `reject`: set `status=flagged` dan `validationStatus=manual_review`.
+- `reset`: kembalikan sesi ke `validationStatus=manual_review`. Status menjadi `closed` jika sudah check-out, atau `open` jika belum check-out.
+
+Audit action:
+
+```txt
+attendance.review.approve
+attendance.review.reject
+attendance.review.reset
+```
+
+## GET `/attendance/report`
+
+Permission: `attendance.review`.
+
+Query sama dengan `/attendance/review`.
+
+Response berisi summary total sesi, sesi valid, sesi bermasalah, sesi open/closed/flagged, total durasi kerja, dan agregasi per sales.
+
+---
+
 # 6. Outlet Management
 
 Tabel utama:

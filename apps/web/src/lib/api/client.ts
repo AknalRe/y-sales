@@ -182,6 +182,7 @@ export function checkOutAttendance(accessToken: string, payload: AttendancePaylo
 
 export type AttendanceReviewItem = {
   id: string;
+  userId: string;
   workDate: string;
   status: string;
   validationStatus: string;
@@ -191,15 +192,80 @@ export type AttendanceReviewItem = {
   checkInAccuracyM?: string;
   checkInDistanceM?: string;
   checkOutAt?: string;
+  checkOutLatitude?: string;
+  checkOutLongitude?: string;
+  checkOutAccuracyM?: string;
   salesName: string;
   salesEmail?: string;
+  salesPhone?: string;
+  employeeCode?: string;
   faceDetected?: boolean;
   faceConfidence?: string;
   faceImageUrl?: string;
+  workMinutes?: number;
 };
 
-export function getAttendanceReview(accessToken: string) {
-  return apiRequest<{ attendance: AttendanceReviewItem[] }>('/attendance/review', {
+export type AttendanceReviewParams = {
+  from?: string;
+  to?: string;
+  status?: string;
+  validationStatus?: string;
+  q?: string;
+};
+
+function buildAttendanceQuery(params?: AttendanceReviewParams) {
+  const q = new URLSearchParams();
+  if (params?.from) q.set('from', params.from);
+  if (params?.to) q.set('to', params.to);
+  if (params?.status) q.set('status', params.status);
+  if (params?.validationStatus) q.set('validationStatus', params.validationStatus);
+  if (params?.q) q.set('q', params.q);
+  const query = q.toString();
+  return query ? `?${query}` : '';
+}
+
+export function getAttendanceReview(accessToken: string, params?: AttendanceReviewParams) {
+  return apiRequest<{ attendance: AttendanceReviewItem[] }>(`/attendance/review${buildAttendanceQuery(params)}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
+
+export function updateAttendanceReview(accessToken: string, id: string, action: 'approve' | 'reject' | 'flag_manual_review' | 'reset') {
+  return apiRequest<{ session: AttendanceReviewItem }>(`/attendance/review/${id}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ action }),
+  });
+}
+
+export type AttendanceReportRow = {
+  userId: string;
+  salesName: string;
+  salesEmail?: string | null;
+  employeeCode?: string | null;
+  totalSessions: number;
+  validSessions: number;
+  issueSessions: number;
+  openSessions: number;
+  closedSessions: number;
+  flaggedSessions: number;
+  totalWorkMinutes: number;
+  firstCheckInAt?: string | null;
+  lastCheckOutAt?: string | null;
+};
+
+export type AttendanceReportSummary = {
+  totalSessions: number;
+  validSessions: number;
+  issueSessions: number;
+  openSessions: number;
+  closedSessions: number;
+  flaggedSessions: number;
+  totalWorkMinutes: number;
+};
+
+export function getAttendanceReport(accessToken: string, params?: AttendanceReviewParams) {
+  return apiRequest<{ summary: AttendanceReportSummary; rows: AttendanceReportRow[] }>(`/attendance/report${buildAttendanceQuery(params)}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 }

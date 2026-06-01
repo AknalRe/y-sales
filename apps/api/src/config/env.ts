@@ -6,6 +6,17 @@ import { z } from 'zod';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
+function envBoolean(defaultValue: boolean) {
+  return z.preprocess((v) => {
+    if (v === undefined || v === '') return defaultValue;
+    if (typeof v === 'boolean') return v;
+    const s = String(v).toLowerCase().trim();
+    if (s === 'true' || s === '1') return true;
+    if (s === 'false' || s === '0') return false;
+    return defaultValue;
+  }, z.boolean());
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DATABASE_URL: z.string().url().default('postgres://YukSales:YukSales@localhost:5432/YukSales_sales'),
@@ -15,12 +26,12 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('1d'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
   WEB_ORIGIN: z.string().default('http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,https://localhost:5173,https://127.0.0.1:5173,https://localhost:5174,https://127.0.0.1:5174,http://192.168.18.203:5173,http://192.168.18.203:4000,https://192.168.18.203:5173,https://192.168.18.203:4000'),
-  API_HTTPS_ENABLED: z.coerce.boolean().default(false),
+  API_HTTPS_ENABLED: envBoolean(false),
   API_TLS_KEY_PATH: z.string().default('192.168.18.203+3-key.pem'),
   API_TLS_CERT_PATH: z.string().default('192.168.18.203+3.pem'),
   REFRESH_COOKIE_NAME: z.string().default('yuksales_refresh_token'),
-  REFRESH_COOKIE_SECURE: z.coerce.boolean().default(true),
-  APP_DEBUG: z.coerce.boolean().default(false),
+  REFRESH_COOKIE_SECURE: envBoolean(true),
+  APP_DEBUG: envBoolean(false),
 });
 
 export const env = envSchema.parse(process.env);

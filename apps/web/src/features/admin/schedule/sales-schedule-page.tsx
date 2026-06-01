@@ -151,6 +151,13 @@ export function SalesSchedulePage() {
     setSelectedOutletIds((c) => c.includes(id) ? c.filter((i) => i !== id) : [...c, id]);
   }
 
+  function getCreateBlocker() {
+    if (!form.salesUserId) return 'Pilih sales terlebih dahulu.';
+    if (!form.scheduledDate) return 'Pilih tanggal jadwal terlebih dahulu.';
+    if (!selectedOutletIds.length) return 'Pilih minimal satu outlet.';
+    return '';
+  }
+
   function openModal() {
     setForm({ ...emptyForm, scheduledDate: selectedDate || todayStr() });
     setSelectedOutletIds([]);
@@ -163,8 +170,8 @@ export function SalesSchedulePage() {
     event?.preventDefault();
     if (!accessToken) return;
     setError('');
-    if (!form.salesUserId) { setError('Pilih sales terlebih dahulu.'); return; }
-    if (!selectedOutletIds.length) { setError('Pilih minimal satu outlet.'); return; }
+    const blocker = getCreateBlocker();
+    if (blocker) { setError(blocker); return; }
     setSaving(true);
     try {
       const result = await createVisitSchedules(accessToken, {
@@ -352,17 +359,17 @@ export function SalesSchedulePage() {
 
       {/* ─── Create Modal ───────────────────────── */}
       {showModal && (
-        <div className="admin-modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="admin-modal-overlay" onClick={() => { if (!saving) setShowModal(false); }}>
           <div className="admin-modal" style={{ maxWidth: 640, maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header">
               <div>
                 <h2>Buat Jadwal Sales</h2>
                 <p className="admin-modal-subtitle">Satu outlet akan menjadi satu schedule.</p>
               </div>
-              <button onClick={() => setShowModal(false)} className="admin-modal-close" type="button">×</button>
+              <button onClick={() => setShowModal(false)} className="admin-modal-close" type="button" disabled={saving}>×</button>
             </div>
 
-            <form onSubmit={handleCreate} className="admin-modal-body">
+            <form id="sales-schedule-create-form" onSubmit={handleCreate} className="admin-modal-body">
               {error && <div className="admin-alert admin-alert-error mb-3"><AlertTriangle size={15} />{error}</div>}
 
               <div className="admin-field">
@@ -448,12 +455,21 @@ export function SalesSchedulePage() {
                   })}
                   {!filteredOutlets.length && <p className="rounded-xl p-3 text-center text-sm text-admin-muted" style={{ border: '1px dashed var(--admin-border)' }}>Outlet tidak ditemukan.</p>}
                 </div>
+                <p className="mt-2 text-xs font-semibold text-admin-muted">
+                  Tombol simpan akan membuat satu jadwal untuk setiap outlet yang dipilih.
+                </p>
               </div>
             </form>
 
             <div className="admin-modal-footer">
-              <button onClick={() => setShowModal(false)} className="admin-btn-ghost" type="button">Batal</button>
-              <button onClick={handleCreate} className="admin-btn-primary" type="button" disabled={saving || !form.salesUserId || !selectedOutletIds.length}>
+              <button onClick={() => setShowModal(false)} className="admin-btn-ghost" type="button" disabled={saving}>Batal</button>
+              <button
+                className="admin-btn-primary"
+                type="submit"
+                form="sales-schedule-create-form"
+                disabled={saving}
+                title={getCreateBlocker() || 'Simpan jadwal sales'}
+              >
                 {saving ? <RefreshCw size={15} className="spin" /> : <Send size={15} />} Buat {selectedOutletIds.length} Jadwal
               </button>
             </div>

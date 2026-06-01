@@ -62,6 +62,28 @@ export const mainRoutes: RouteConfig[] = [
     }
   },
   {
+    path: 'sales-schedules',
+    element: <SalesSchedulePage />,
+    handle: {
+      label: 'Jadwalkan Sales',
+      icon: CalendarPlus,
+      permission: 'visits.review',
+      section: 'Operasional Sales',
+      badge: 'Plan'
+    }
+  },
+  {
+    path: 'attendance/review', // Relative to /admin
+    element: <AttendanceReviewPage />,
+    handle: {
+      label: 'Review Absensi',
+      icon: ShieldCheck,
+      permission: 'attendance.review',
+      section: 'Operasional Sales',
+      badge: 'HR'
+    }
+  },
+  {
     path: 'receivables',
     element: <ReceivablesPage />,
     handle: {
@@ -84,28 +106,6 @@ export const mainRoutes: RouteConfig[] = [
     }
   },
   {
-    path: 'outlets',
-    element: <OutletsPage />,
-    handle: {
-      label: 'Outlet',
-      icon: Store,
-      permission: 'outlets.manage',
-      section: 'Master Data',
-      badge: 'Master'
-    }
-  },
-  {
-    path: 'sales-schedules',
-    element: <SalesSchedulePage />,
-    handle: {
-      label: 'Jadwalkan Sales',
-      icon: CalendarPlus,
-      permission: 'visits.review',
-      section: 'Operasional Sales',
-      badge: 'Plan'
-    }
-  },
-  {
     path: 'reports',
     element: <ReportsPage />,
     handle: {
@@ -117,25 +117,25 @@ export const mainRoutes: RouteConfig[] = [
     }
   },
   {
+    path: 'outlets',
+    element: <OutletsPage />,
+    handle: {
+      label: 'Outlet',
+      icon: Store,
+      permission: 'outlets.manage',
+      section: 'Master Data',
+      badge: 'Master'
+    }
+  },
+  {
     path: 'stock',
     element: <StockPage />,
     handle: {
       label: 'Inventory',
       icon: Boxes,
       permissions: ['products.manage', 'inventory.manage'],
-      section: 'Inventory',
+      section: 'Master Data',
       badge: 'Stock'
-    }
-  },
-  {
-    path: 'attendance/review', // Relative to /admin
-    element: <AttendanceReviewPage />,
-    handle: {
-      label: 'Review Absensi',
-      icon: ShieldCheck,
-      permission: 'attendance.review',
-      section: 'Operasional Sales',
-      badge: 'HR'
     }
   },
   {

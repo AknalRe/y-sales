@@ -9,9 +9,6 @@
     background: color-mix(in srgb, var(--admin-bg) 88%, transparent);
     backdrop-filter: blur(18px);
     padding: .75rem 0;
-    margin: 0 -1.25rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
   }
 
   .settings-sticky-header .admin-page-header {
@@ -85,7 +82,7 @@
 
   .settings-side-nav {
     position: sticky;
-    top: 22rem;
+    top: 18rem;
     align-self: start;
     display: grid;
     gap: .4rem;
@@ -472,6 +469,171 @@
     transform: translateX(18px);
   }
 
+  /* ─── Inventory Page ─────────────────────────────────────────────────────── */
+  .inventory-section-body {
+    padding: 1rem;
+  }
+
+  .inventory-section-body--topless {
+    padding-top: 0;
+  }
+
+  .inventory-filter-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 320px) minmax(280px, 1fr);
+    gap: .75rem;
+    padding: 1rem;
+  }
+
+  .inventory-filter-row .admin-input,
+  .inventory-filter-row .admin-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .inventory-table-shell {
+    overflow: hidden;
+    border: 1px solid var(--admin-border);
+    border-radius: 1.15rem;
+    background: var(--admin-bg-card);
+  }
+
+  .inventory-transfer-layout {
+    display: grid;
+    grid-template-columns: minmax(360px, 480px) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .inventory-transfer-card,
+  .inventory-sales-panel {
+    margin: 0;
+  }
+
+  .inventory-transfer-card {
+    position: sticky;
+    top: 18rem;
+    align-self: start;
+  }
+
+  .inventory-card-heading {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .8rem;
+    align-items: start;
+    margin-bottom: 1rem;
+  }
+
+  .inventory-card-heading > span {
+    display: grid;
+    width: 2.55rem;
+    height: 2.55rem;
+    place-items: center;
+    border-radius: .9rem;
+    color: #fff;
+    background: var(--admin-sidebar-active-bg);
+    box-shadow: 0 12px 24px rgba(232, 101, 10, .16);
+  }
+
+  .inventory-card-heading h3 {
+    margin: 0;
+    color: var(--admin-foreground);
+    font-size: 1rem;
+    font-weight: 950;
+    letter-spacing: 0;
+  }
+
+  .inventory-card-heading p {
+    margin: .18rem 0 0;
+    color: var(--admin-muted);
+    font-size: .8rem;
+    line-height: 1.45;
+  }
+
+  .inventory-card-heading--compact {
+    margin-bottom: .85rem;
+  }
+
+  .inventory-sales-panel {
+    padding: 1rem;
+  }
+
+  .inventory-sales-list {
+    display: grid;
+    gap: .75rem;
+    max-height: min(58vh, 42rem);
+    overflow: auto;
+    padding-right: .25rem;
+  }
+
+  .inventory-sales-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .inventory-sales-list::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--admin-muted) 34%, transparent);
+  }
+
+  .inventory-sales-card {
+    border: 1px solid var(--admin-border);
+    border-radius: 1rem;
+    background: var(--admin-surface);
+    padding: .95rem;
+  }
+
+  .inventory-sales-card-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: .75rem;
+    align-items: center;
+  }
+
+  .inventory-sales-avatar {
+    display: grid;
+    width: 2.55rem;
+    height: 2.55rem;
+    place-items: center;
+    border-radius: .85rem;
+    background: var(--admin-accent-shadow);
+    color: var(--admin-accent);
+    font-size: .82rem;
+    font-weight: 950;
+  }
+
+  .inventory-sales-title {
+    min-width: 0;
+  }
+
+  .inventory-sales-title strong {
+    display: block;
+    overflow: hidden;
+    color: var(--admin-foreground);
+    font-size: .86rem;
+    font-weight: 950;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inventory-sales-title p {
+    overflow: hidden;
+    margin: .12rem 0 0;
+    color: var(--admin-muted);
+    font-size: .72rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inventory-stock-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: .65rem;
+    padding-top: .65rem;
+    border-top: 1px solid var(--admin-border-subtle);
+  }
+
   @media (max-width: 1100px) {
     .settings-summary-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -484,6 +646,14 @@
     .settings-side-nav {
       position: static;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .inventory-transfer-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .inventory-transfer-card {
+      position: static;
     }
   }
 
@@ -515,6 +685,25 @@
     .settings-switch {
       grid-column: 2;
       justify-self: start;
+    }
+
+    .inventory-section-body,
+    .inventory-filter-row {
+      padding: .75rem;
+    }
+
+    .inventory-filter-row {
+      grid-template-columns: 1fr;
+    }
+
+    .inventory-sales-card-head {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .inventory-sales-card-head .admin-btn-ghost {
+      grid-column: 1 / -1;
+      justify-content: center;
+      width: 100%;
     }
   }
 }

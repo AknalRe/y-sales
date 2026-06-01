@@ -864,6 +864,48 @@ Body:
 }
 ```
 
+## POST `/inventory/sales-warehouses/ensure`
+
+Permission: `inventory.manage`.
+
+Fungsi:
+
+- Membuat atau mengaktifkan kembali gudang sales tipe `sales_van` untuk user sales pada company aktif.
+- Backend memvalidasi `salesUserId` harus user aktif, tenant-aware, dan role-nya sales.
+- Jika gudang sales sudah ada dan aktif, endpoint mengembalikan gudang tersebut tanpa membuat duplikat.
+- Kode gudang sales dibuat otomatis berurutan dengan prefix `WH-GS`, contoh `WH-GS-001`.
+
+Body:
+
+```json
+{
+  "salesUserId": "uuid-sales-user"
+}
+```
+
+Response:
+
+```json
+{
+  "warehouse": {
+    "id": "uuid-warehouse",
+    "code": "WH-GS-001",
+    "name": "Gudang Sales YKS-001",
+    "type": "sales_van",
+    "ownerUserId": "uuid-sales-user",
+    "status": "active"
+  },
+  "created": true
+}
+```
+
+Audit action:
+
+```txt
+warehouse.sales.create
+warehouse.sales.reactivate
+```
+
 ## PATCH `/inventory/warehouses/:id`
 
 ## DELETE `/inventory/warehouses/:id`
@@ -919,13 +961,19 @@ movementType=in|out|adjustment|transfer|reset|reversal
 
 ## POST `/inventory/transfers`
 
+Dipakai untuk transfer antar warehouse aktif, termasuk distribusi stok dari gudang sumber pilihan admin ke gudang sales `sales_van`.
+
 ```json
 {
   "fromWarehouseId": "uuid-source",
   "toWarehouseId": "uuid-destination",
-  "productId": "uuid-product",
-  "quantity": "5",
-  "reason": "Distribusi ke sales"
+  "notes": "Distribusi ke sales",
+  "items": [
+    {
+      "productId": "uuid-product",
+      "quantity": "5"
+    }
+  ]
 }
 ```
 

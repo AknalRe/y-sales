@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { appSettings, auditLogs, inventoryBalances, inventoryMovements, products, warehouses } from '@yuksales/db/schema';
+import { appSettings, auditLogs, inventoryBalances, inventoryMovements, products, roles, users, warehouses } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { authenticate } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
@@ -82,6 +82,10 @@ const transferSchema = z.object({
     productId: z.string().uuid(),
     quantity: z.string().or(z.number()).transform(String),
   })).min(1),
+});
+
+const ensureSalesWarehouseSchema = z.object({
+  salesUserId: z.string().uuid(),
 });
 
 function inventoryLabelsKey(companyId: string) {
@@ -182,6 +186,19 @@ async function ensureProduct(companyId: string, productId: string) {
   return product;
 }
 
+function isSalesRole(code?: string | null, name?: string | null) {
+  const roleCode = code?.toUpperCase() ?? '';
+  const roleName = name?.toLowerCase() ?? '';
+  return (
+    roleCode.includes('SALES') ||
+    roleCode.includes('AGENT') ||
+    roleCode.includes('FIELD') ||
+    roleName.includes('sales') ||
+    roleName.includes('lapangan') ||
+    roleName.includes('agent')
+  );
+}
+
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 async function applyInventoryDelta(tx: Tx, input: { companyId: string; warehouseId: string; productId: string; quantityDelta: number }) {
@@ -257,6 +274,57 @@ export async function inventoryRoutes(app: FastifyInstance) {
 
     await writeAudit(request, { action: 'warehouse.create', entityType: 'warehouse', entityId: warehouse.id, newValues: warehouse });
     return { warehouse };
+  });
+
+  app.post('/inventory/sales-warehouses/ensure', { preHandler: requireInventoryAccess }, async (request, reply) => {
+    const companyId = requireTenantId(request);
+    const body = ensureSalesWarehouseSchema.parse(request.body);
+
+    const [salesUser] = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        employeeCode: users.employeeCode,
+        status: users.status,
+        roleCode: roles.code,
+        roleName: roles.name,
+      })
+      .from(users)
+      .innerJoin(roles, eq(users.roleId, roles.id))
+      .where(and(eq(users.companyId, companyId), eq(users.id, body.salesUserId), isNull(users.deletedAt)));
+
+    if (!salesUser) return reply.status(404).send({ message: 'Sales tidak ditemukan pada company ini.' });
+    if (salesUser.status !== 'active') return reply.status(400).send({ message: 'Sales tidak aktif.' });
+    if (!isSalesRole(salesUser.roleCode, salesUser.roleName)) return reply.status(400).send({ message: 'User ini bukan role sales.' });
+
+    const [existing] = await db.select().from(warehouses).where(and(
+      eq(warehouses.companyId, companyId),
+      eq(warehouses.ownerUserId, salesUser.id),
+      eq(warehouses.type, 'sales_van'),
+    ));
+
+    if (existing) {
+      if (existing.status === 'active') return { warehouse: existing, created: false };
+      const [reactivated] = await db.update(warehouses).set({ status: 'active' }).where(eq(warehouses.id, existing.id)).returning();
+      await writeAudit(request, { action: 'warehouse.sales.reactivate', entityType: 'warehouse', entityId: reactivated.id, oldValues: existing, newValues: reactivated });
+      return { warehouse: reactivated, created: false };
+    }
+
+    const existingWarehouseCodes = (await db.select({ code: warehouses.code }).from(warehouses).where(eq(warehouses.companyId, companyId))).map((warehouse) => warehouse.code);
+    const code = nextSequentialCode('WH-GS', existingWarehouseCodes);
+    const label = salesUser.employeeCode ?? salesUser.name;
+    const [warehouse] = await db.insert(warehouses).values({
+      companyId,
+      code,
+      name: `Gudang Sales ${label}`,
+      address: `Stok canvas ${salesUser.name}`,
+      type: 'sales_van',
+      ownerUserId: salesUser.id,
+      status: 'active',
+    }).returning();
+
+    await writeAudit(request, { action: 'warehouse.sales.create', entityType: 'warehouse', entityId: warehouse.id, newValues: warehouse });
+    return { warehouse, created: true };
   });
 
   app.patch('/inventory/warehouses/:id', { preHandler: requireInventoryAccess }, async (request) => {

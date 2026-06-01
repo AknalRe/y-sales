@@ -216,6 +216,10 @@ Aturan:
 - Transfer/adjustment tidak boleh membuat quantity lebih kecil dari reserved stock.
 - Movement stok harus tercatat pada `inventory_movements`.
 - Approval transaksi harus mencatat audit log.
+- Sales aktif harus memiliki warehouse tipe `sales_van` sebelum stok dikirim.
+- Sumber distribusi stok ke sales bisa dipilih dari warehouse aktif yang tersedia; default yang disarankan adalah gudang utama.
+- Jika sales belum memiliki warehouse, admin dapat membuatnya dari inventory transfer melalui endpoint ensure gudang sales.
+- Ensure gudang sales harus tenant-aware, tidak membuat duplikat, dan hanya boleh untuk user dengan role sales.
 
 ### 8. Piutang dan Konsinyasi
 

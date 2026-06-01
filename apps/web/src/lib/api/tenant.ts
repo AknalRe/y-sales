@@ -165,6 +165,7 @@ export type Warehouse = {
   name: string;
   type: 'main' | 'sales_van' | 'outlet_consignment';
   status: 'active' | 'inactive';
+  ownerUserId?: string;
 };
 
 export type WarehousePayload = {
@@ -480,6 +481,14 @@ export function transferInventory(token: string, payload: { fromWarehouseId: str
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+  });
+}
+
+export function ensureSalesWarehouse(token: string, salesUserId: string) {
+  return apiRequest<{ warehouse: Warehouse; created: boolean }>('/inventory/sales-warehouses/ensure', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ salesUserId }),
   });
 }
 

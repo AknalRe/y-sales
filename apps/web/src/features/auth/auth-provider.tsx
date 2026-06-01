@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { clearPlatformCompanyView, getMe, login, logout, refreshSession, storeRefreshToken, clearStoredRefreshToken } from '../../lib/api/client';
+import { clearPlatformCompanyView, getMe, login, logout, refreshSession, storeRefreshToken, clearStoredRefreshToken, getStoredRefreshToken } from '../../lib/api/client';
 
 type SessionUser = {
   id: string;
@@ -62,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAccessToken(session.accessToken);
         setUser(session.user);
         setPermissions(session.permissions);
+        setInitializing(false);
         return session.user;
       } catch (meError) {
         clearStoredRefreshToken();
@@ -81,6 +82,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     async function restoreSession() {
+      if (!getStoredRefreshToken()) {
+        if (!cancelled) setInitializing(false);
+        return;
+      }
+
       try {
         const refreshed = await refreshSession();
         if (cancelled) return;

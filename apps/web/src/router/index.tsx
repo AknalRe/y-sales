@@ -70,6 +70,8 @@ export function AppRouter() {
   return useRoutes([
     { path: '/login', element: <LoginPage /> },
     { path: '/login/:company', element: <LoginPage /> },
+    { path: '/:company/login', element: <LoginPage /> },
+    { path: '/:company', element: <CompanyRootRedirect /> },
     // ─── Platform (Super Admin only) ────────────────────────────────────────
     {
       path: '/platform',
@@ -110,3 +112,7 @@ export function AppRouter() {
 
 // Export for sidebar use
 export { mainRoutes, playgroundRoutes, salesRoutes };
+
+function CompanyRootRedirect() {
+  return <Navigate to="login" replace />;
+}

@@ -6,6 +6,7 @@ export type LoginPayload = {
   identifier: string;
   password: string;
   deviceId?: string;
+  companySlug?: string;
 };
 
 export async function apiRequest<TResponse>(path: string, options: RequestInit = {}) {
@@ -89,6 +90,10 @@ export function login(payload: LoginPayload) {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+export function getCompanyBySlug(slug: string) {
+  return apiRequest<{ company: { name: string; slug: string; logoUrl?: string | null } }>(`/auth/company/${slug}`);
 }
 
 export function storeRefreshToken(token: string) {

@@ -14,6 +14,8 @@
     "db:migrate": "pnpm --filter @yuksales/db db:migrate",
     "db:studio": "pnpm --filter @yuksales/db db:studio",
     "db:seed": "pnpm --filter @yuksales/db db:seed",
+    "db:seedcompany": "pnpm --filter @yuksales/db db:seedcompany",
+    "db:fresh": "pnpm --filter @yuksales/db db:fresh",
     "db:debug": "pnpm --filter @yuksales/db db:debug"
   },
   "devDependencies": {

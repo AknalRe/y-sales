@@ -399,10 +399,11 @@ console.log('  ── Users ─────────────────�
 
 // ─── Super Admin User ──────────────────────────────────────────────────────
 const [superAdminRole] = await db.select().from(roles).where(and(eq(roles.code, 'SUPER_ADMIN')));
-if (superAdminRole && process.env.SUPER_ADMIN_PASSWORD) {
+if (superAdminRole) {
   const superAdminEmail = process.env.SUPER_ADMIN_EMAIL ?? 'superadmin@yuksales.id';
   const superAdminName = process.env.SUPER_ADMIN_NAME ?? 'Super Admin YukSales';
-  const passwordHash = await bcrypt.hash(process.env.SUPER_ADMIN_PASSWORD, 12);
+  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD ?? 'SuperAdmin@123!';
+  const passwordHash = await bcrypt.hash(superAdminPassword, 12);
 
   await db.insert(users).values({
     companyId: null,
@@ -421,12 +422,13 @@ if (superAdminRole && process.env.SUPER_ADMIN_PASSWORD) {
 
 // ─── Sales Agent User ─────────────────────────────────────────────────────
 const [salesAgentRole] = await db.select().from(roles).where(and(eq(roles.companyId, defaultCompany.id), eq(roles.code, 'SALES_AGENT')));
-if (salesAgentRole && process.env.SALES_PASSWORD) {
+if (salesAgentRole) {
   const salesEmail = process.env.SALES_EMAIL ?? 'sales@yuksales.local';
   const salesName = process.env.SALES_NAME ?? 'Sales Agent YukSales';
   const salesPhone = process.env.SALES_PHONE ?? '089999999999';
   const salesEmployeeCode = process.env.SALES_EMPLOYEE_CODE ?? 'SA-001';
-  const passwordHash = await bcrypt.hash(process.env.SALES_PASSWORD, 12);
+  const salesPassword = process.env.SALES_PASSWORD ?? 'YukSales@123!';
+  const passwordHash = await bcrypt.hash(salesPassword, 12);
 
   await db.insert(users).values({
     companyId: defaultCompany.id,
@@ -456,12 +458,13 @@ if (salesAgentRole && process.env.SALES_PASSWORD) {
 
 // ─── Administrator User ───────────────────────────────────────────────────
 const [administrator] = await db.select().from(roles).where(and(eq(roles.companyId, defaultCompany.id), eq(roles.code, 'ADMINISTRATOR')));
-if (administrator && process.env.ADMIN_PASSWORD) {
+if (administrator) {
   const adminName = process.env.ADMIN_NAME ?? 'Administrator YukSales';
   const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@yuksales.local';
   const adminPhone = process.env.ADMIN_PHONE ?? '080000000000';
   const adminEmployeeCode = process.env.ADMIN_EMPLOYEE_CODE ?? 'ADM-001';
-  const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+  const adminPassword = process.env.ADMIN_PASSWORD ?? 'Admin@123!';
+  const passwordHash = await bcrypt.hash(adminPassword, 12);
 
   await db.insert(users).values({
     companyId: defaultCompany.id,

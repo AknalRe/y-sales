@@ -522,6 +522,13 @@ export function getOutlets(token: string, params?: { status?: string; q?: string
   return apiRequest<{ outlets: Outlet[] }>(`/outlets?${q}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
+export function reverseGeocodeOutlet(token: string, latitude: number, longitude: number) {
+  const q = new URLSearchParams({ latitude: String(latitude), longitude: String(longitude) });
+  return apiRequest<{ address: string | null }>(`/outlets/geocode/reverse?${q}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export function createOutlet(token: string, payload: OutletPayload) {
   return apiRequest<{ outlet: Outlet }>('/outlets', {
     method: 'POST',

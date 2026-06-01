@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Edit3, MapPin, Plus, RefreshCw, Search, Store, Trash2, XCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth/auth-provider';
 import {
@@ -7,6 +7,7 @@ import {
   deleteOutlet,
   getOutlets,
   rejectOutlet,
+  reverseGeocodeOutlet,
   updateOutlet,
   type Outlet,
   type OutletPayload,
@@ -78,7 +79,7 @@ function toForm(outlet: Outlet): OutletForm {
 }
 
 export function OutletsPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -91,6 +92,9 @@ export function OutletsPage() {
   const [rejectTarget, setRejectTarget] = useState<Outlet | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [form, setForm] = useState<OutletForm>(emptyForm);
+  const [resolvingAddress, setResolvingAddress] = useState(false);
+  const reverseRequestId = useRef(0);
+  const canApproveOutlet = Boolean(user?.isSuperAdmin || ['ADMINISTRATOR', 'OWNER', 'OPERATIONAL_MANAGER'].includes(user?.roleCode ?? ''));
 
   async function load() {
     if (!accessToken) return;
@@ -110,8 +114,11 @@ export function OutletsPage() {
   }
 
   useEffect(() => {
-    load();
-  }, [accessToken, statusFilter]);
+    const timer = window.setTimeout(() => {
+      void load();
+    }, search.trim() ? 350 : 0);
+    return () => window.clearTimeout(timer);
+  }, [accessToken, statusFilter, search]);
 
   const stats = useMemo(() => ({
     total: outlets.length,
@@ -140,6 +147,37 @@ export function OutletsPage() {
     setFormOpen(false);
     setEditingOutlet(null);
     setForm(emptyForm);
+    setResolvingAddress(false);
+  }
+
+  async function syncAddressFromPoint(latitude: number, longitude: number, manual = false) {
+    if (!accessToken || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+    const requestId = reverseRequestId.current + 1;
+    reverseRequestId.current = requestId;
+    setResolvingAddress(true);
+    if (manual) setError('');
+    try {
+      const result = await reverseGeocodeOutlet(accessToken, latitude, longitude);
+      if (reverseRequestId.current !== requestId) return;
+      if (result.address) {
+        setForm((current) => ({ ...current, address: result.address ?? current.address }));
+      } else if (manual) {
+        setError('Alamat tidak ditemukan dari titik maps tersebut.');
+      }
+    } catch (err) {
+      if (manual) setError(err instanceof Error ? err.message : 'Gagal mengambil alamat dari titik maps.');
+    } finally {
+      if (reverseRequestId.current === requestId) setResolvingAddress(false);
+    }
+  }
+
+  function handleMapPositionChange(position: { latitude: number; longitude: number }) {
+    setForm((current) => ({
+      ...current,
+      latitude: String(position.latitude),
+      longitude: String(position.longitude),
+    }));
+    void syncAddressFromPoint(position.latitude, position.longitude);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -147,6 +185,10 @@ export function OutletsPage() {
     if (!accessToken) return;
 
     const payload = toPayload(form);
+    if (!canApproveOutlet) {
+      if (editingOutlet) delete payload.status;
+      else payload.status = 'pending_verification';
+    }
     if (!Number.isFinite(payload.latitude) || !Number.isFinite(payload.longitude)) {
       setError('Latitude dan longitude harus berupa angka valid.');
       return;
@@ -270,20 +312,27 @@ export function OutletsPage() {
       </div>
 
       <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-5 shadow-sm">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div className="relative min-w-[240px] flex-1">
+        <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
+          <div className="relative min-w-0">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted" />
             <input
-              className="admin-input w-full pl-9"
-              placeholder="Cari kode, nama, alamat, atau HP..."
+              className="admin-input w-full pl-9 pr-10"
+              placeholder="Cari kode, nama, PIC, alamat, atau HP..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') load();
-              }}
             />
+            {search ? (
+              <button
+                className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-admin-muted hover:bg-admin-bg"
+                type="button"
+                aria-label="Bersihkan pencarian"
+                onClick={() => setSearch('')}
+              >
+                x
+              </button>
+            ) : null}
           </div>
-          <select className="admin-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+          <select className="admin-select w-full" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
             <option value="">Semua status</option>
             <option value="pending_verification">Menunggu Verifikasi</option>
             <option value="active">Aktif</option>
@@ -291,6 +340,13 @@ export function OutletsPage() {
             <option value="rejected">Ditolak</option>
             <option value="inactive">Nonaktif</option>
           </select>
+          <button className="admin-btn-ghost justify-center" type="button" onClick={() => { setSearch(''); setStatusFilter(''); }}>
+            Reset Filter
+          </button>
+        </div>
+        <div className="mb-4 flex items-center justify-between gap-2 text-xs font-bold text-admin-muted">
+          <span>{outlets.length} outlet ditemukan</span>
+          {loading ? <span>Memuat data...</span> : null}
         </div>
 
         {loading ? (
@@ -299,70 +355,68 @@ export function OutletsPage() {
             <span>Memuat outlet...</span>
           </div>
         ) : outlets.length ? (
-          <div className="grid gap-3">
+          <div className="grid gap-3 xl:grid-cols-2">
             {outlets.map((outlet) => {
               const tone = statusTone[outlet.status];
               return (
-                <article key={outlet.id} className="rounded-2xl border border-admin-border p-4 transition hover:border-admin-accent hover:shadow-sm">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded-xl bg-admin-accent-shadow px-2.5 py-1 text-xs font-black text-admin-accent">{outlet.code}</span>
-                        <span className="rounded-xl px-2.5 py-1 text-xs font-black" style={{ background: tone.bg, color: tone.color, border: `1px solid ${tone.border}` }}>
+                <article key={outlet.id} className="flex min-h-[12rem] flex-col rounded-2xl border border-admin-border bg-admin-bg-card p-3 transition hover:border-admin-accent hover:shadow-sm">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-lg bg-admin-accent-shadow px-2 py-0.5 text-[11px] font-black text-admin-accent">{outlet.code}</span>
+                      <span className="rounded-lg px-2 py-0.5 text-[11px] font-black" style={{ background: tone.bg, color: tone.color, border: `1px solid ${tone.border}` }}>
                           {tone.label}
                         </span>
-                        <span className="rounded-xl bg-admin-bg px-2.5 py-1 text-xs font-black text-admin-muted">
+                      <span className="rounded-lg bg-admin-bg px-2 py-0.5 text-[11px] font-black text-admin-muted">
                           {outlet.customerType === 'agent' ? 'Agent' : 'Toko'}
                         </span>
-                      </div>
-                      <h2 className="truncate text-lg font-black text-admin-foreground">{outlet.name}</h2>
-                      <p className="mt-1 text-sm font-semibold text-admin-muted">{outlet.ownerName || 'Tanpa PIC'} {outlet.phone ? `- ${outlet.phone}` : ''}</p>
-                      <p className="mt-2 flex items-start gap-2 text-sm font-medium text-admin-muted">
-                        <MapPin size={15} className="mt-0.5 shrink-0 text-admin-muted" />
-                        <span>{outlet.address}</span>
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-admin-muted">
-                        <span className="rounded-xl bg-admin-bg px-3 py-1">Lat {outlet.latitude}</span>
-                        <span className="rounded-xl bg-admin-bg px-3 py-1">Lng {outlet.longitude}</span>
-                        <span className="rounded-xl bg-admin-bg px-3 py-1">Radius {outlet.geofenceRadiusM ?? 'default'}m</span>
-                        <a
-                          href={`https://www.google.com/maps?q=${outlet.latitude},${outlet.longitude}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-xl bg-admin-accent-shadow px-3 py-1 text-admin-accent"
-                        >
-                          Buka Maps
-                        </a>
-                      </div>
-                      {outlet.rejectionReason ? (
-                        <p className="mt-3 rounded-xl bg-admin-danger-soft px-3 py-2 text-xs font-bold text-admin-danger">Alasan reject: {outlet.rejectionReason}</p>
-                      ) : null}
                     </div>
+                    <h2 className="truncate text-base font-black text-admin-foreground">{outlet.name}</h2>
+                    <p className="mt-1 truncate text-xs font-semibold text-admin-muted">{outlet.ownerName || 'Tanpa PIC'} {outlet.phone ? `- ${outlet.phone}` : ''}</p>
+                    <p className="mt-2 flex items-start gap-1.5 text-xs font-medium text-admin-muted">
+                      <MapPin size={13} className="mt-0.5 shrink-0 text-admin-muted" />
+                      <span className="line-clamp-2">{outlet.address}</span>
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold text-admin-muted">
+                      <span className="rounded-lg bg-admin-bg px-2 py-0.5">Lat {outlet.latitude}</span>
+                      <span className="rounded-lg bg-admin-bg px-2 py-0.5">Lng {outlet.longitude}</span>
+                      <span className="rounded-lg bg-admin-bg px-2 py-0.5">Radius {outlet.geofenceRadiusM ?? 'default'}m</span>
+                      <a
+                        href={`https://www.google.com/maps?q=${outlet.latitude},${outlet.longitude}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg bg-admin-accent-shadow px-2 py-0.5 text-admin-accent"
+                      >
+                        Maps
+                      </a>
+                    </div>
+                    {outlet.rejectionReason ? (
+                      <p className="mt-2 rounded-lg bg-admin-danger-soft px-2 py-1.5 text-[11px] font-bold text-admin-danger">Alasan reject: {outlet.rejectionReason}</p>
+                    ) : null}
+                  </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      <button className="admin-btn-ghost" type="button" onClick={() => openEdit(outlet)}>
-                        <Edit3 size={14} />
+                  <div className="mt-3 flex flex-wrap justify-end gap-1.5 border-t border-admin-border-subtle pt-3">
+                    <button className="admin-btn-ghost px-2.5 py-1.5 text-xs" type="button" onClick={() => openEdit(outlet)}>
+                      <Edit3 size={13} />
                         Edit
-                      </button>
-                      {outlet.status !== 'active' ? (
-                        <button className="admin-btn-ghost" type="button" disabled={saving} onClick={() => handleVerify(outlet)}>
-                          <CheckCircle2 size={14} />
+                    </button>
+                    {canApproveOutlet && outlet.status !== 'active' ? (
+                      <button className="admin-btn-ghost px-2.5 py-1.5 text-xs" type="button" disabled={saving} onClick={() => handleVerify(outlet)}>
+                        <CheckCircle2 size={13} />
                           Aktifkan
-                        </button>
-                      ) : null}
-                      {outlet.status !== 'rejected' && outlet.status !== 'inactive' ? (
-                        <button className="admin-btn-ghost" type="button" disabled={saving} onClick={() => { setRejectTarget(outlet); setRejectReason(''); }}>
-                          <XCircle size={14} />
+                      </button>
+                    ) : null}
+                    {canApproveOutlet && outlet.status !== 'rejected' && outlet.status !== 'inactive' ? (
+                      <button className="admin-btn-ghost px-2.5 py-1.5 text-xs" type="button" disabled={saving} onClick={() => { setRejectTarget(outlet); setRejectReason(''); }}>
+                        <XCircle size={13} />
                           Reject
-                        </button>
-                      ) : null}
-                      {outlet.status !== 'inactive' ? (
-                        <button className="admin-btn-ghost" type="button" disabled={saving} onClick={() => handleDeactivate(outlet)}>
-                          <Trash2 size={14} />
+                      </button>
+                    ) : null}
+                    {outlet.status !== 'inactive' ? (
+                      <button className="admin-btn-ghost px-2.5 py-1.5 text-xs" type="button" disabled={saving} onClick={() => handleDeactivate(outlet)}>
+                        <Trash2 size={13} />
                           Nonaktif
-                        </button>
-                      ) : null}
-                    </div>
+                      </button>
+                    ) : null}
                   </div>
                 </article>
               );
@@ -401,14 +455,20 @@ export function OutletsPage() {
                   <option value="agent">Agent</option>
                 </select>
               </Field>
-              <Field label="Status">
-                <select className="admin-select" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as OutletForm['status'] }))}>
-                  <option value="pending_verification">Menunggu Verifikasi</option>
-                  <option value="active">Aktif</option>
-                  <option value="draft">Draft</option>
-                  <option value="inactive">Nonaktif</option>
-                </select>
-              </Field>
+              {canApproveOutlet ? (
+                <Field label="Status">
+                  <select className="admin-select" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as OutletForm['status'] }))}>
+                    <option value="pending_verification">Menunggu Verifikasi</option>
+                    <option value="active">Aktif</option>
+                    <option value="draft">Draft</option>
+                    <option value="inactive">Nonaktif</option>
+                  </select>
+                </Field>
+              ) : (
+                <div className="rounded-2xl border border-admin-border bg-admin-bg px-4 py-3 text-sm font-semibold text-admin-muted">
+                  Outlet yang Anda buat akan masuk status <strong className="text-admin-foreground">Menunggu Verifikasi</strong> dan perlu approval Administrator, Owner, atau Operational Manager.
+                </div>
+              )}
               <Field label="Nama PIC / Owner">
                 <input className="admin-input" value={form.ownerName} onChange={(event) => setForm((current) => ({ ...current, ownerName: event.target.value }))} />
               </Field>
@@ -419,11 +479,8 @@ export function OutletsPage() {
                 <OutletMapPicker
                   latitude={Number.isFinite(Number(form.latitude)) ? Number(form.latitude) : null}
                   longitude={Number.isFinite(Number(form.longitude)) ? Number(form.longitude) : null}
-                  onChange={(position) => setForm((current) => ({
-                    ...current,
-                    latitude: String(position.latitude),
-                    longitude: String(position.longitude),
-                  }))}
+                  onChange={handleMapPositionChange}
+                  description="Klik peta atau geser marker untuk mengisi koordinat. Alamat akan disesuaikan dari titik maps."
                 />
               </div>
               <Field label="Latitude">
@@ -436,8 +493,20 @@ export function OutletsPage() {
                 <input className="admin-input" type="number" min={1} placeholder="Kosongkan untuk default sistem" value={form.geofenceRadiusM} onChange={(event) => setForm((current) => ({ ...current, geofenceRadiusM: event.target.value }))} />
               </Field>
               <label className="grid gap-2 text-sm font-bold text-admin-text sm:col-span-2">
-                Alamat
+                <span className="flex flex-wrap items-center justify-between gap-2">
+                  Alamat
+                  <button
+                    className="admin-btn-ghost px-2.5 py-1.5 text-xs"
+                    type="button"
+                    disabled={resolvingAddress || !Number.isFinite(Number(form.latitude)) || !Number.isFinite(Number(form.longitude))}
+                    onClick={() => void syncAddressFromPoint(Number(form.latitude), Number(form.longitude), true)}
+                  >
+                    {resolvingAddress ? <RefreshCw size={13} className="spin" /> : <MapPin size={13} />}
+                    Ambil alamat dari titik
+                  </button>
+                </span>
                 <textarea className="admin-input min-h-24 resize-none" value={form.address} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} required />
+                <small className="font-semibold text-admin-muted">Alamat mengikuti titik maps saat marker dipilih. Tetap bisa diedit manual jika hasil maps belum presisi.</small>
               </label>
             </div>
 

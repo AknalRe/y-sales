@@ -507,9 +507,43 @@ status=active
 q=toko
 ```
 
+Catatan:
+
+- `status` difilter di database dan harus salah satu `draft`, `pending_verification`, `active`, `rejected`, `inactive`.
+- `q` mencari `code`, `name`, `ownerName`, `phone`, dan `address`.
+- Result tenant-aware dan mengabaikan outlet yang sudah soft-deleted.
+
+## GET `/outlets/geocode/reverse`
+
+Permission: `outlets.manage`.
+
+Dipakai frontend untuk menyamakan teks alamat dengan titik maps yang dipilih admin.
+
+Query:
+
+```txt
+latitude=-7.250445
+longitude=112.768845
+```
+
+Response:
+
+```json
+{
+  "address": "Jl. Contoh, Surabaya, Jawa Timur, Indonesia"
+}
+```
+
 ## POST `/outlets`
 
 Permission: `outlets.manage`.
+
+Approval rule:
+
+- `ADMINISTRATOR`, `OWNER`, dan `OPERATIONAL_MANAGER` boleh menentukan status outlet saat create/update dan boleh approve/reject outlet.
+- Role lain yang memiliki `outlets.manage`, misalnya `ADMIN` atau `SUPERVISOR`, tetap bisa membuat outlet, tetapi status create dipaksa menjadi `pending_verification`.
+- Role non-approver tidak boleh mengubah field `status` saat update.
+- Endpoint approve/reject tetap menolak role selain approver walaupun role tersebut punya permission teknis.
 
 Body:
 

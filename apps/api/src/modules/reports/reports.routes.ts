@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import { and, count, desc, eq, gte, isNull, ne, sum } from 'drizzle-orm';
+import { and, count, desc, eq, gte, isNull, lte, ne, sum } from 'drizzle-orm';
+import { z } from 'zod';
 import {
   attendanceSessions,
   inventoryBalances,
@@ -31,17 +32,35 @@ function todayDateString() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 }
 
+function startOfDate(value: string) {
+  return new Date(`${value}T00:00:00.000+07:00`);
+}
+
+function endOfDate(value: string) {
+  return new Date(`${value}T23:59:59.999+07:00`);
+}
+
 function toNumber(value: unknown) {
   return Number(value ?? 0);
 }
 
+const reportSummaryQuerySchema = z.object({
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+});
+
 export async function reportRoutes(app: FastifyInstance) {
   app.get('/reports/summary', { preHandler: requirePermission('reports.view') }, async (request) => {
     const companyId = requireTenantId(request);
+    const query = reportSummaryQuerySchema.parse(request.query);
     const user = request.user!;
     const canReview = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('sales.order.review') || user.permissions.includes('visits.review');
     const today = todayStart();
     const month = monthStart();
+    const from = query.from ?? todayDateString();
+    const to = query.to ?? from;
+    const periodStart = startOfDate(from);
+    const periodEnd = endOfDate(to);
     const salesConditions = [eq(salesTransactions.companyId, companyId)];
     const visitsConditions = [eq(visitSessions.companyId, companyId)];
     if (!canReview) {
@@ -56,6 +75,10 @@ export async function reportRoutes(app: FastifyInstance) {
       .from(salesTransactions)
       .where(and(...salesConditions, gte(salesTransactions.createdAt, today)));
 
+    const [salesPeriod] = await db.select({ total: sum(salesTransactions.totalAmount), count: count() })
+      .from(salesTransactions)
+      .where(and(...salesConditions, gte(salesTransactions.createdAt, periodStart), lte(salesTransactions.createdAt, periodEnd)));
+
     const [salesMonth] = await db.select({ total: sum(salesTransactions.totalAmount), count: count() })
       .from(salesTransactions)
       .where(and(...salesConditions, gte(salesTransactions.createdAt, month)));
@@ -66,6 +89,10 @@ export async function reportRoutes(app: FastifyInstance) {
     const [visitsToday] = await db.select({ count: count() })
       .from(visitSessions)
       .where(and(...visitsConditions, gte(visitSessions.createdAt, today)));
+
+    const [visitsPeriod] = await db.select({ count: count() })
+      .from(visitSessions)
+      .where(and(...visitsConditions, gte(visitSessions.createdAt, periodStart), lte(visitSessions.createdAt, periodEnd)));
 
     const [productCount] = await db.select({ count: count() })
       .from(products).where(and(eq(products.companyId, companyId), eq(products.status, 'active')));
@@ -89,21 +116,22 @@ export async function reportRoutes(app: FastifyInstance) {
 
     const [pending] = await db.select({ count: count() })
       .from(salesTransactions)
-      .where(and(...salesConditions, eq(salesTransactions.status, 'pending_approval')));
+      .where(and(...salesConditions, eq(salesTransactions.status, 'pending_approval'), gte(salesTransactions.createdAt, periodStart), lte(salesTransactions.createdAt, periodEnd)));
 
-    const workDate = todayDateString();
     const [attendanceOpen] = await db.select({ count: count() })
       .from(attendanceSessions)
-      .where(and(eq(attendanceSessions.companyId, companyId), eq(attendanceSessions.workDate, workDate), eq(attendanceSessions.status, 'open')));
+      .where(and(eq(attendanceSessions.companyId, companyId), gte(attendanceSessions.workDate, from), lte(attendanceSessions.workDate, to), eq(attendanceSessions.status, 'open')));
 
     const [attendanceClosed] = await db.select({ count: count() })
       .from(attendanceSessions)
-      .where(and(eq(attendanceSessions.companyId, companyId), eq(attendanceSessions.workDate, workDate), eq(attendanceSessions.status, 'closed')));
+      .where(and(eq(attendanceSessions.companyId, companyId), gte(attendanceSessions.workDate, from), lte(attendanceSessions.workDate, to), eq(attendanceSessions.status, 'closed')));
 
     const [pendingAttendance] = await db.select({ count: count() })
       .from(attendanceSessions)
       .where(and(
         eq(attendanceSessions.companyId, companyId),
+        gte(attendanceSessions.workDate, from),
+        lte(attendanceSessions.workDate, to),
         ne(attendanceSessions.validationStatus, 'valid'),
         ne(attendanceSessions.status, 'flagged'),
       ));
@@ -137,7 +165,7 @@ export async function reportRoutes(app: FastifyInstance) {
       .from(salesTransactions)
       .innerJoin(users, eq(salesTransactions.salesUserId, users.id))
       .leftJoin(outlets, eq(salesTransactions.outletId, outlets.id))
-      .where(and(...salesConditions))
+      .where(and(...salesConditions, gte(salesTransactions.createdAt, periodStart), lte(salesTransactions.createdAt, periodEnd)))
       .orderBy(desc(salesTransactions.createdAt))
       .limit(5);
 
@@ -152,7 +180,7 @@ export async function reportRoutes(app: FastifyInstance) {
       .from(visitSessions)
       .innerJoin(users, eq(visitSessions.salesUserId, users.id))
       .innerJoin(outlets, eq(visitSessions.outletId, outlets.id))
-      .where(and(...visitsConditions))
+      .where(and(...visitsConditions, gte(visitSessions.createdAt, periodStart), lte(visitSessions.createdAt, periodEnd)))
       .orderBy(desc(visitSessions.createdAt))
       .limit(5);
 
@@ -186,6 +214,11 @@ export async function reportRoutes(app: FastifyInstance) {
         todaySalesAmount: salesToday.total ?? '0',
         todayOrders: salesToday.count,
         todayVisits: visitsToday.count,
+        periodFrom: from,
+        periodTo: to,
+        periodSalesAmount: salesPeriod.total ?? '0',
+        periodOrders: salesPeriod.count,
+        periodVisits: visitsPeriod.count,
         monthSalesAmount: salesMonth.total ?? '0',
         monthOrders: salesMonth.count,
         totalOutlets: outletCount.count,

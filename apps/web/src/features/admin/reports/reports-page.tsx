@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx-js-style';
 import { BarChart3, Download, RefreshCw, TrendingUp, ShoppingCart, MapPin, Users, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { getSalesTransactions, getTenantUsers, type SalesTransaction, type TenantUser } from '@/lib/api/tenant';
@@ -42,6 +43,50 @@ function thisMonthRange() {
   const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const to = now.toISOString().slice(0, 10);
   return { from, to };
+}
+
+const excelHeaderStyle = {
+  font: { bold: true, color: { rgb: 'FFFFFF' } },
+  fill: { fgColor: { rgb: 'C75A18' } },
+  alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+  border: {
+    top: { style: 'thin', color: { rgb: 'E5E7EB' } },
+    bottom: { style: 'thin', color: { rgb: 'E5E7EB' } },
+    left: { style: 'thin', color: { rgb: 'E5E7EB' } },
+    right: { style: 'thin', color: { rgb: 'E5E7EB' } },
+  },
+};
+
+const excelBodyStyle = {
+  alignment: { vertical: 'top', wrapText: true },
+  border: {
+    top: { style: 'thin', color: { rgb: 'E5E7EB' } },
+    bottom: { style: 'thin', color: { rgb: 'E5E7EB' } },
+    left: { style: 'thin', color: { rgb: 'E5E7EB' } },
+    right: { style: 'thin', color: { rgb: 'E5E7EB' } },
+  },
+};
+
+const excelTitleStyle = {
+  font: { bold: true, sz: 16, color: { rgb: '0F172A' } },
+  alignment: { vertical: 'center' },
+};
+
+function styleWorksheet(sheet: XLSX.WorkSheet, headerRowIndex = 0) {
+  const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:A1');
+  for (let row = range.s.r; row <= range.e.r; row += 1) {
+    for (let column = range.s.c; column <= range.e.c; column += 1) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: row, c: column })];
+      if (!cell) continue;
+      cell.s = row === headerRowIndex ? excelHeaderStyle : excelBodyStyle;
+    }
+  }
+  sheet['!autofilter'] = {
+    ref: XLSX.utils.encode_range({
+      s: { r: headerRowIndex, c: range.s.c },
+      e: { r: range.e.r, c: range.e.c },
+    }),
+  };
 }
 
 export function ReportsPage() {
@@ -94,16 +139,78 @@ export function ReportsPage() {
     return { totalRevenue, avgOrder, closed: closed.length, total: transactions.length, leaderboard };
   }, [transactions, users]);
 
-  function downloadCSV() {
-    const header = 'No Transaksi,Sales,Outlet,Total,Status,Tanggal\n';
-    const rows = transactions.map(t =>
-      `${t.transactionNo},${users.find(u => u.id === t.salesUserId)?.name ?? ''},${t.outletId ?? ''},${t.totalAmount},${t.status},${t.createdAt.slice(0, 10)}`
-    ).join('\n');
-    const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `laporan_${from}_${to}.csv`; a.click();
-    URL.revokeObjectURL(url);
+  function downloadExcel() {
+    const workbook = XLSX.utils.book_new();
+    workbook.Props = {
+      Title: 'Laporan Penjualan',
+      Subject: 'Ringkasan omset dan transaksi sales',
+      Author: 'YukSales',
+      CreatedDate: new Date(),
+    };
+
+    const summarySheet = XLSX.utils.aoa_to_sheet([
+      ['Laporan Penjualan'],
+      ['Periode', `${from} s/d ${to}`],
+      ['Status Filter', statusFilter ? statusLabel[statusFilter] ?? statusFilter : 'Semua Status'],
+      ['Total Revenue', stats.totalRevenue],
+      ['Transaksi Closed', stats.closed],
+      ['Total Transaksi', stats.total],
+      ['Average Order', stats.avgOrder],
+    ]);
+    summarySheet.A1.s = excelTitleStyle;
+    summarySheet['!cols'] = [{ wch: 24 }, { wch: 28 }];
+    summarySheet['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+
+    const leaderboardSheet = XLSX.utils.aoa_to_sheet([
+      ['Peringkat', 'Sales', 'Jumlah Transaksi', 'Revenue'],
+      ...stats.leaderboard.map((row, index) => [
+        index + 1,
+        row.name,
+        row.count,
+        row.revenue,
+      ]),
+    ]);
+    leaderboardSheet['!cols'] = [{ wch: 12 }, { wch: 28 }, { wch: 18 }, { wch: 18 }];
+    styleWorksheet(leaderboardSheet);
+
+    const transactionSheet = XLSX.utils.aoa_to_sheet([
+      ['No Transaksi', 'Sales', 'Outlet ID', 'Customer Type', 'Payment Method', 'Payment Status', 'Subtotal', 'Diskon', 'Total', 'Status', 'Submitted At', 'Approved At', 'Tanggal Dibuat'],
+      ...transactions.map((transaction) => [
+        transaction.transactionNo,
+        users.find((user) => user.id === transaction.salesUserId)?.name ?? '-',
+        transaction.outletId ?? '-',
+        transaction.customerType,
+        transaction.paymentMethod,
+        transaction.paymentStatus,
+        Number(transaction.subtotalAmount || 0),
+        Number(transaction.discountAmount || 0),
+        Number(transaction.totalAmount || 0),
+        statusLabel[transaction.status] ?? transaction.status,
+        transaction.submittedAt ? new Date(transaction.submittedAt).toLocaleString('id-ID') : '-',
+        transaction.approvedAt ? new Date(transaction.approvedAt).toLocaleString('id-ID') : '-',
+        new Date(transaction.createdAt).toLocaleString('id-ID'),
+      ]),
+    ]);
+    transactionSheet['!cols'] = [
+      { wch: 22 }, { wch: 28 }, { wch: 38 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
+      { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 22 }, { wch: 22 }, { wch: 22 },
+    ];
+    styleWorksheet(transactionSheet);
+
+    for (const sheet of [summarySheet, leaderboardSheet, transactionSheet]) {
+      const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:A1');
+      for (let row = range.s.r; row <= range.e.r; row += 1) {
+        for (let col = range.s.c; col <= range.e.c; col += 1) {
+          const cell = sheet[XLSX.utils.encode_cell({ r: row, c: col })];
+          if (cell && typeof cell.v === 'number') cell.z = '#,##0';
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Ringkasan');
+    XLSX.utils.book_append_sheet(workbook, leaderboardSheet, 'Leaderboard');
+    XLSX.utils.book_append_sheet(workbook, transactionSheet, 'Transaksi');
+    XLSX.writeFile(workbook, `laporan-penjualan-${from}-${to}.xlsx`, { compression: true });
   }
 
   return (
@@ -114,7 +221,7 @@ export function ReportsPage() {
           <p className="admin-page-subtitle">Ringkasan omset, produk terjual, visit, dan performa sales.</p>
         </div>
         <div style={{ display: 'flex', gap: '.5rem' }}>
-          <button onClick={downloadCSV} className="admin-btn admin-btn-ghost" type="button"><Download size={15} /> CSV</button>
+          <button onClick={downloadExcel} className="admin-btn admin-btn-ghost" type="button" disabled={!transactions.length}><Download size={15} /> Excel</button>
           <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
         </div>
       </div>

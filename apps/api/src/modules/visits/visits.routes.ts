@@ -108,7 +108,33 @@ export async function visitRoutes(app: FastifyInstance) {
     const conditions = [eq(visitSchedules.companyId, companyId)];
     if (query.date) conditions.push(eq(visitSchedules.scheduledDate, query.date));
     if (query.salesUserId) conditions.push(eq(visitSchedules.salesUserId, query.salesUserId));
-    const schedules = await db.select().from(visitSchedules).where(and(...conditions)).orderBy(desc(visitSchedules.scheduledDate), visitSchedules.priority);
+    const schedules = await db
+      .select({
+        id: visitSchedules.id,
+        companyId: visitSchedules.companyId,
+        salesUserId: visitSchedules.salesUserId,
+        salesName: users.name,
+        outletId: visitSchedules.outletId,
+        outletCode: outlets.code,
+        outletName: outlets.name,
+        outletAddress: outlets.address,
+        scheduledDate: visitSchedules.scheduledDate,
+        plannedStartTime: visitSchedules.plannedStartTime,
+        plannedEndTime: visitSchedules.plannedEndTime,
+        targetOutletCount: visitSchedules.targetOutletCount,
+        targetDurationMinutes: visitSchedules.targetDurationMinutes,
+        targetClosingCount: visitSchedules.targetClosingCount,
+        targetRevenueAmount: visitSchedules.targetRevenueAmount,
+        priority: visitSchedules.priority,
+        status: visitSchedules.status,
+        notes: visitSchedules.notes,
+        createdAt: visitSchedules.createdAt,
+      })
+      .from(visitSchedules)
+      .innerJoin(users, eq(visitSchedules.salesUserId, users.id))
+      .leftJoin(outlets, eq(visitSchedules.outletId, outlets.id))
+      .where(and(...conditions))
+      .orderBy(desc(visitSchedules.scheduledDate), visitSchedules.priority);
     return { schedules };
   });
 
@@ -267,17 +293,28 @@ export async function visitRoutes(app: FastifyInstance) {
         salesUserId: visitSessions.salesUserId,
         outletId: visitSessions.outletId,
         scheduleId: visitSessions.scheduleId,
+        salesName: users.name,
+        outletCode: outlets.code,
         outletName: outlets.name,
         outletAddress: outlets.address,
         checkInAt: visitSessions.checkInAt,
         checkInLatitude: visitSessions.checkInLatitude,
         checkInLongitude: visitSessions.checkInLongitude,
+        checkInAccuracyM: visitSessions.checkInAccuracyM,
+        checkInDistanceM: visitSessions.checkInDistanceM,
         checkOutAt: visitSessions.checkOutAt,
+        checkOutLatitude: visitSessions.checkOutLatitude,
+        checkOutLongitude: visitSessions.checkOutLongitude,
+        checkOutAccuracyM: visitSessions.checkOutAccuracyM,
+        durationSeconds: visitSessions.durationSeconds,
         outcome: visitSessions.outcome,
         status: visitSessions.status,
+        validationStatus: visitSessions.validationStatus,
+        closingNotes: visitSessions.closingNotes,
         createdAt: visitSessions.createdAt,
       })
       .from(visitSessions)
+      .innerJoin(users, eq(visitSessions.salesUserId, users.id))
       .innerJoin(outlets, eq(visitSessions.outletId, outlets.id))
       .where(and(...conditions))
       .orderBy(desc(visitSessions.checkInAt));

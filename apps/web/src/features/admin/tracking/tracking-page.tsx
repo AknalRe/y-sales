@@ -1,28 +1,77 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Map, RefreshCw, User, MapPin, CheckCircle2, AlertCircle, Timer, Navigation, Calendar } from 'lucide-react';
-import { useAuth } from '../../auth/auth-provider';
-import { getVisitSchedules, getVisitSessions, getTenantUsers, type VisitSchedule, type VisitSession, type TenantUser } from '@/lib/api/tenant';
-import { TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Map,
+  MapPin,
+  Navigation,
+  RefreshCw,
+  Search,
+  Timer,
+  User,
+  X,
+} from 'lucide-react';
 
-const scheduleStatusColor: Record<string, string> = {
-  assigned: 'var(--admin-accent)',
-  approved: 'var(--admin-success)',
-  in_progress: 'var(--admin-danger-light)',
-  completed: 'var(--admin-success)',
-  missed: 'var(--admin-danger)',
-  cancelled: 'var(--admin-muted)',
-  draft: 'var(--admin-subtle)',
+import { useAuth } from '../../auth/auth-provider';
+import {
+  getTenantUsers,
+  getVisitSchedules,
+  getVisitSessions,
+  type TenantUser,
+  type VisitSchedule,
+  type VisitSession,
+} from '@/lib/api/tenant';
+
+const scheduleStatusLabel: Record<string, string> = {
+  draft: 'Draft',
+  assigned: 'Ditugaskan',
+  approved: 'Disetujui',
+  in_progress: 'Berjalan',
+  completed: 'Selesai',
+  missed: 'Terlewat',
+  cancelled: 'Dibatalkan',
 };
 
-const visitStatusColor: Record<string, string> = {
-  open: 'var(--admin-danger-light)',
-  completed: 'var(--admin-success)',
-  invalid_location: 'var(--admin-danger)',
-  synced: 'var(--admin-accent)',
+const visitStatusLabel: Record<string, string> = {
+  open: 'Sedang Visit',
+  completed: 'Selesai',
+  invalid_location: 'Lokasi Invalid',
+  synced: 'Tersinkron',
 };
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+}
+
+function formatTime(value?: string | null) {
+  if (!value) return '-';
+  return new Date(value).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDuration(seconds?: number | null) {
+  if (!seconds) return '-';
+  const minutes = Math.round(seconds / 60);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `${h}j ${m}m` : `${m}m`;
+}
+
+function formatRp(value: string | number) {
+  return `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
+}
+
+function mapsUrl(latitude?: string | null, longitude?: string | null) {
+  if (!latitude || !longitude) return '';
+  return `https://www.google.com/maps?q=${encodeURIComponent(`${latitude},${longitude}`)}`;
+}
+
+function statusTone(status: string) {
+  if (['completed', 'approved', 'valid', 'synced'].includes(status)) return 'success';
+  if (['open', 'in_progress', 'assigned'].includes(status)) return 'warning';
+  if (['invalid_location', 'missed', 'cancelled', 'face_not_detected'].includes(status)) return 'danger';
+  return 'info';
 }
 
 export function TrackingPage() {
@@ -32,52 +81,65 @@ export function TrackingPage() {
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [query, setQuery] = useState('');
+  const [tab, setTab] = useState<'sessions' | 'schedules'>('sessions');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'schedules' | 'sessions'>('sessions');
 
   async function load() {
     if (!accessToken) return;
     setLoading(true);
+    setError('');
     try {
-      const params = {
-        date: selectedDate || undefined,
-        salesUserId: selectedUserId || undefined,
-      };
-      const [schRes, sesRes, userRes] = await Promise.all([
+      const params = { date: selectedDate || undefined, salesUserId: selectedUserId || undefined };
+      const [scheduleRes, sessionRes, userRes] = await Promise.all([
         getVisitSchedules(accessToken, params),
         getVisitSessions(accessToken, params),
         getTenantUsers(accessToken),
       ]);
-      setSchedules(schRes.schedules ?? []);
-      setSessions(sesRes.sessions ?? []);
+      setSchedules(scheduleRes.schedules ?? []);
+      setSessions(sessionRes.sessions ?? []);
       setUsers(userRes.users ?? []);
-      setError('');
-    } catch (e: any) {
-      console.error(e);
-      setError(e.message ?? 'Gagal memuat data');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal memuat tracking kunjungan');
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { load(); }, [accessToken, selectedDate, selectedUserId]);
-
-  const stats = useMemo(() => ({
-    total: sessions.length,
-    completed: sessions.filter(s => s.status === 'completed').length,
-    open: sessions.filter(s => s.status === 'open').length,
-    invalid: sessions.filter(s => s.status === 'invalid_location').length,
-  }), [sessions]);
+  useEffect(() => { void load(); }, [accessToken, selectedDate, selectedUserId]);
 
   function getUserName(id: string) {
-    return users.find(u => u.id === id)?.name ?? 'User—' + id.slice(0, 4);
+    return users.find((user) => user.id === id)?.name ?? 'Sales tidak dikenal';
   }
 
-  function formatTime(ts?: string | null) {
-    if (!ts) return '—';
-    return new Date(ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-  }
+  const filteredSessions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return sessions.filter((session) => {
+      if (selectedStatus && session.status !== selectedStatus) return false;
+      if (!q) return true;
+      return `${session.salesName ?? getUserName(session.salesUserId)} ${session.outletCode ?? ''} ${session.outletName ?? ''} ${session.outletAddress ?? ''} ${session.outcome ?? ''} ${session.status}`.toLowerCase().includes(q);
+    });
+  }, [sessions, selectedStatus, query, users]);
+
+  const filteredSchedules = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return schedules.filter((schedule) => {
+      if (selectedStatus && schedule.status !== selectedStatus) return false;
+      if (!q) return true;
+      return `${schedule.salesName ?? getUserName(schedule.salesUserId)} ${schedule.outletCode ?? ''} ${schedule.outletName ?? ''} ${schedule.outletAddress ?? ''} ${schedule.notes ?? ''} ${schedule.status}`.toLowerCase().includes(q);
+    });
+  }, [schedules, selectedStatus, query, users]);
+
+  const stats = useMemo(() => ({
+    total: filteredSessions.length,
+    completed: filteredSessions.filter((session) => session.status === 'completed').length,
+    open: filteredSessions.filter((session) => session.status === 'open').length,
+    invalid: filteredSessions.filter((session) => session.status === 'invalid_location').length,
+  }), [filteredSessions]);
+
+  const activeRows = tab === 'sessions' ? filteredSessions.length : filteredSchedules.length;
 
   return (
     <div className="admin-page">
@@ -85,195 +147,184 @@ export function TrackingPage() {
         <div>
           <h1 className="admin-page-title">
             <Navigation size={24} style={{ color: 'var(--admin-accent)' }} />
-            Tracking Lapangan
+            Tracking Kunjungan
           </h1>
-          <p className="admin-page-subtitle">
-            Monitor pergerakan sales dan aktivitas kunjungan outlet hari ini.</p>
+          <p className="admin-page-subtitle">Monitor pergerakan sales, status visit outlet, dan realisasi jadwal harian.</p>
         </div>
-        <button
-          onClick={load}
-          className="admin-btn-ghost"
-          disabled={loading}
-        >
+        <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
           <RefreshCw size={16} className={loading ? 'spin' : ''} />
+          Refresh
         </button>
       </div>
 
-      {error && <div className="dashboard-error"><AlertCircle size={15} /> {error}</div>}
+      {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}
 
-      {/* Stats Cards */}
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4">
-        <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
-          <div className="admin-stat-icon" style={{ background: 'var(--admin-accent-shadow)', color: 'var(--admin-accent)' }}><MapPin size={20} /></div>
-          <div>
-            <span className="text-admin-subtle text-xs font-semibold uppercase tracking-wide">Total Visit</span>
-            <strong className="text-xl text-admin-foreground">{stats.total}</strong>
-          </div>
-        </div>
-        <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
-          <div className="admin-stat-icon" style={{ background: 'var(--admin-success-soft)', color: 'var(--admin-success)' }}><CheckCircle2 size={20} /></div>
-          <div>
-            <span className="text-admin-subtle text-xs font-semibold uppercase tracking-wide">Selesai</span>
-            <strong className="text-xl text-admin-foreground">{stats.completed}</strong>
-          </div>
-        </div>
-        <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
-          <div className="admin-stat-icon" style={{ background: 'var(--admin-accent-shadow)', color: 'var(--admin-accent-light)' }}><Timer size={20} /></div>
-          <div>
-            <span className="text-admin-subtle text-xs font-semibold uppercase tracking-wide">Aktif</span>
-            <strong className="text-xl text-admin-foreground">{stats.open}</strong>
-          </div>
-        </div>
-        <div className="admin-stat-card" style={{ flex: 1, minWidth: 200, padding: '1.25rem' }}>
-          <div className="admin-stat-icon" style={{ background: 'var(--admin-danger-soft)', color: 'var(--admin-danger)' }}><AlertCircle size={20} /></div>
-          <div>
-            <span className="text-admin-subtle text-xs font-semibold uppercase tracking-wide">Invalid</span>
-            <strong className="text-xl text-admin-foreground">{stats.invalid}</strong>
-          </div>
-        </div>
-      </div>
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <TrackingStat label="Total Visit" value={stats.total} icon={MapPin} />
+        <TrackingStat label="Selesai" value={stats.completed} icon={CheckCircle2} tone="success" />
+        <TrackingStat label="Aktif" value={stats.open} icon={Timer} tone="warning" />
+        <TrackingStat label="Invalid" value={stats.invalid} icon={AlertCircle} tone="danger" />
+      </section>
 
-      {/* Filters & Tabs */}
-      <div className="flex flex-wrap justify-between items-center gap-4 bg-admin-bg-card border border-admin-border rounded-2xl p-4 mb-6">
-        <div className="flex flex-wrap gap-3">
-          <div className="admin-filter-group" style={{ background: 'var(--admin-bg)', padding: '.25rem .75rem', borderRadius: 12 }}>
-            <Calendar size={16} className="text-admin-muted" />
-            <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="admin-input" style={{ border: 'none', background: 'transparent' }} />
+      <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+        <div className="grid gap-3 xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
+          <input className="admin-input w-full" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} />
+          <select className="admin-select w-full" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+            <option value="">Semua sales</option>
+            {users.filter((user) => user.roleCode !== 'ADMINISTRATOR').map((user) => (
+              <option key={user.id} value={user.id}>{user.name}</option>
+            ))}
+          </select>
+          <select className="admin-select w-full" value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)}>
+            <option value="">Semua status</option>
+            {Object.entries(tab === 'sessions' ? visitStatusLabel : scheduleStatusLabel).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <div className="relative min-w-0">
+            <Search size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-admin-muted" />
+            <input
+              className="admin-input admin-input-with-icon w-full"
+              placeholder="Cari sales, outlet, alamat, outcome, atau status..."
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            {query && (
+              <button className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-admin-muted hover:bg-admin-bg" type="button" onClick={() => setQuery('')} aria-label="Bersihkan pencarian">
+                <X size={14} />
+              </button>
+            )}
           </div>
-          <div className="admin-filter-group" style={{ background: 'var(--admin-bg)', padding: '.25rem .75rem', borderRadius: 12 }}>
-            <User size={16} className="text-admin-muted" />
-            <select value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)} className="admin-select" style={{ border: 'none', background: 'transparent' }}>
-              <option value="">Semua Sales</option>
-              {users.filter(u => u.roleCode !== 'ADMINISTRATOR').map(u => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </select>
+          <div className="admin-tab-group justify-self-end" style={{ background: 'var(--admin-border-subtle)', padding: '.3rem', borderRadius: 14 }}>
+            <button onClick={() => { setTab('sessions'); setSelectedStatus(''); }} className={`admin-tab ${tab === 'sessions' ? 'active' : ''}`} type="button">Visit</button>
+            <button onClick={() => { setTab('schedules'); setSelectedStatus(''); }} className={`admin-tab ${tab === 'schedules' ? 'active' : ''}`} type="button">Jadwal</button>
           </div>
         </div>
-        <div className="admin-tab-group" style={{ background: 'var(--admin-border-subtle)', padding: '.3rem', borderRadius: 14 }}>
-          <button onClick={() => setTab('sessions')} className={`admin-tab ${tab === 'sessions' ? 'active' : ''}`} style={{ borderRadius: 11, fontSize: '.85rem' }}>Kunjungan (Visit)</button>
-          <button onClick={() => setTab('schedules')} className={`admin-tab ${tab === 'schedules' ? 'active' : ''}`} style={{ borderRadius: 11, fontSize: '.85rem' }}>Jadwal Sales</button>
-        </div>
-      </div>
+      </section>
 
-      <div className="admin-card" style={{ padding: 0, overflow: "hidden" }}>
-        <div style={{ overflowX: 'auto', width: '100%' }}>
-          {loading ? (
-            <div className="py-16 text-center">
-              <RefreshCw size={32} className="spin mx-auto mb-4 opacity-20" />
-              <p className="text-admin-muted font-semibold">Menyelaraskan data lapangan...</p>
+      {loading ? (
+        <div className="admin-loading mt-5">
+          <RefreshCw size={18} className="spin" />
+          <span>Menyelaraskan data lapangan...</span>
+        </div>
+      ) : (
+        <section className="mt-5 grid gap-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-admin-muted">{activeRows} data ditampilkan</p>
+          </div>
+
+          {tab === 'sessions' ? filteredSessions.map((session) => (
+            <VisitSessionCard key={session.id} session={session} salesName={session.salesName ?? getUserName(session.salesUserId)} />
+          )) : filteredSchedules.map((schedule) => (
+            <VisitScheduleCard key={schedule.id} schedule={schedule} salesName={schedule.salesName ?? getUserName(schedule.salesUserId)} />
+          ))}
+
+          {!activeRows && (
+            <div className="rounded-[2rem] border-2 border-dashed border-admin-border py-20 text-center text-admin-muted">
+              <Map size={46} className="mx-auto mb-4 opacity-30" />
+              <p className="text-base font-black text-admin-foreground">Tidak ada data tracking</p>
+              <p className="text-sm">Ubah filter atau tunggu sales melakukan kunjungan.</p>
             </div>
-          ) : tab === 'sessions' ? (
-            <table className="admin-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Informasi Sales</TableHead>
-                  <TableHead>Lokasi (Check-In)</TableHead>
-                  <TableHead>Check-In</TableHead>
-                  <TableHead>Check-Out</TableHead>
-                  <TableHead>Outcome</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sessions.map(s => (
-                  <TableRow key={s.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-[10px] flex items-center justify-center font-extrabold text-admin-accent border border-admin-border-subtle" style={{ background: 'var(--admin-bg)' }}>
-                          {getUserName(s.salesUserId).charAt(0)}
-                        </div>
-                        <strong className="text-admin-foreground text-[.9rem]">{getUserName(s.salesUserId)}</strong>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-xs text-admin-muted">
-                        <MapPin size={12} className="text-admin-subtle" />
-                        {s.checkInLatitude && s.checkInLongitude
-                          ? <a href={`https://www.google.com/maps?q=${s.checkInLatitude},${s.checkInLongitude}`} target="_blank" rel="noreferrer" className="text-blue-500 no-underline font-bold">
-                            Lihat di Peta
-                          </a>
-                          : 'Tidak ada koordinat'}
-                      </div>
-                    </TableCell>
-                    <TableCell><div className="font-semibold text-admin-text">{formatTime(s.checkInAt)}</div></TableCell>
-                    <TableCell><div className="font-semibold text-admin-text">{formatTime(s.checkOutAt)}</div></TableCell>
-                    <TableCell>
-                      <div className="text-[.8rem] text-admin-muted capitalize">
-                        {s.outcome ? s.outcome.replace(/_/g, ' ') : '—'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="admin-badge font-extrabold px-2 py-1 rounded-full" style={{
-                        color: visitStatusColor[s.status],
-                        background: `color-mix(in srgb, ${visitStatusColor[s.status]} 15%, transparent)`,
-                        border: `1px solid color-mix(in srgb, ${visitStatusColor[s.status]} 30%, transparent)`,
-                      }}>
-                        {s.status.toUpperCase()}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!sessions.length && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-16 text-center">
-                      <div className="opacity-10 mb-4"><Map size={48} className="mx-auto" /></div>
-                      <p className="text-admin-muted font-semibold">Belum ada aktivitas kunjungan.</p>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </table>
-          ) : (
-            <table className="admin-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama Sales</TableHead>
-                  <TableHead>Tanggal Tugas</TableHead>
-                  <TableHead>Target Outlet</TableHead>
-                  <TableHead>Target Closing</TableHead>
-                  <TableHead>Target Revenue</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {schedules.map(s => (
-                  <TableRow key={s.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-[10px] flex items-center justify-center font-extrabold text-admin-accent border border-admin-border-subtle" style={{ background: 'var(--admin-bg)' }}>
-                          {getUserName(s.salesUserId).charAt(0)}
-                        </div>
-                        <strong className="text-admin-foreground text-[.9rem]">{getUserName(s.salesUserId)}</strong>
-                      </div>
-                    </TableCell>
-                    <TableCell><div className="font-semibold text-admin-text">{s.scheduledDate}</div></TableCell>
-                    <TableCell><div className="font-bold text-admin-foreground">{s.targetOutletCount}</div></TableCell>
-                    <TableCell><div className="font-bold text-admin-success">{s.targetClosingCount}</div></TableCell>
-                    <TableCell><div className="font-extrabold text-admin-accent">Rp {Number(s.targetRevenueAmount).toLocaleString('id-ID')}</div></TableCell>
-                    <TableCell>
-                      <span className="admin-badge font-extrabold px-2 py-1 rounded-full" style={{
-                        color: scheduleStatusColor[s.status],
-                        background: `color-mix(in srgb, ${scheduleStatusColor[s.status]} 15%, transparent)`,
-                        border: `1px solid color-mix(in srgb, ${scheduleStatusColor[s.status]} 30%, transparent)`,
-                      }}>
-                        {s.status.toUpperCase()}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!schedules.length && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-16 text-center">
-                      <div className="opacity-10 mb-4"><Calendar size={48} className="mx-auto" /></div>
-                      <p className="text-admin-muted font-semibold">Belum ada jadwal tugas yang dibuat.</p>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </table>
           )}
+        </section>
+      )}
+    </div>
+  );
+}
+
+function TrackingStat({ label, value, icon: Icon, tone = 'default' }: { label: string; value: number; icon: any; tone?: 'default' | 'success' | 'warning' | 'danger' }) {
+  const color = tone === 'success' ? 'var(--admin-success)' : tone === 'warning' ? 'var(--admin-warning)' : tone === 'danger' ? 'var(--admin-danger)' : 'var(--admin-accent)';
+  return (
+    <div className="rounded-[1.2rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <Icon size={18} style={{ color }} />
+        <span className="text-xs font-black uppercase tracking-wide text-admin-muted">{label}</span>
+      </div>
+      <strong className="text-2xl font-black" style={{ color }}>{value}</strong>
+    </div>
+  );
+}
+
+function StatusBadge({ status, label }: { status: string; label: string }) {
+  const tone = statusTone(status);
+  const cls = tone === 'success'
+    ? 'bg-admin-success-soft text-admin-success'
+    : tone === 'danger'
+      ? 'bg-admin-danger-soft text-admin-danger'
+      : tone === 'warning'
+        ? 'bg-admin-warning-soft text-admin-warning'
+        : 'bg-admin-accent-shadow text-admin-accent';
+  return <span className={`rounded-xl px-2.5 py-1 text-[11px] font-black ${cls}`}>{label}</span>;
+}
+
+function VisitSessionCard({ session, salesName }: { session: VisitSession; salesName: string }) {
+  const checkInMaps = mapsUrl(session.checkInLatitude, session.checkInLongitude);
+  return (
+    <article className="grid gap-3 rounded-2xl border border-admin-border bg-admin-bg-card p-3 shadow-sm lg:grid-cols-[minmax(230px,1fr)_minmax(260px,1.3fr)_minmax(320px,1fr)_auto] lg:items-center">
+      <div className="min-w-0">
+        <div className="flex flex-wrap gap-1.5">
+          <StatusBadge status={session.status} label={visitStatusLabel[session.status] ?? session.status} />
+          {session.validationStatus && <StatusBadge status={session.validationStatus} label={session.validationStatus.replace(/_/g, ' ')} />}
         </div>
+        <h2 className="mt-1 truncate text-sm font-black text-admin-foreground">{salesName}</h2>
+        <p className="truncate text-xs font-semibold text-admin-muted">{session.outletCode ? `${session.outletCode} - ` : ''}{session.outletName ?? 'Outlet tidak dikenal'}</p>
+      </div>
+
+      <div className="min-w-0">
+        <p className="truncate text-sm font-black text-admin-foreground">{session.outletAddress ?? '-'}</p>
+        <p className="text-xs font-semibold text-admin-muted">Jarak {session.checkInDistanceM ?? '-'}m · Akurasi {session.checkInAccuracyM ?? '-'}m</p>
+      </div>
+
+      <div className="grid gap-1.5 sm:grid-cols-3">
+        <MiniMetric icon={Clock} label="Check-in" value={formatTime(session.checkInAt)} />
+        <MiniMetric icon={Clock} label="Check-out" value={formatTime(session.checkOutAt)} />
+        <MiniMetric icon={Timer} label="Durasi" value={formatDuration(session.durationSeconds)} />
+      </div>
+
+      <div className="flex flex-wrap justify-end gap-2">
+        {checkInMaps ? (
+          <a className="admin-btn-ghost px-3 py-2 text-xs" href={checkInMaps} target="_blank" rel="noreferrer">
+            <MapPin size={14} /> Maps
+          </a>
+        ) : (
+          <button className="admin-btn-ghost px-3 py-2 text-xs" type="button" disabled><MapPin size={14} /> Maps</button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function VisitScheduleCard({ schedule, salesName }: { schedule: VisitSchedule; salesName: string }) {
+  return (
+    <article className="grid gap-3 rounded-2xl border border-admin-border bg-admin-bg-card p-3 shadow-sm lg:grid-cols-[minmax(230px,1fr)_minmax(280px,1.4fr)_minmax(240px,1fr)_auto] lg:items-center">
+      <div className="min-w-0">
+        <StatusBadge status={schedule.status} label={scheduleStatusLabel[schedule.status] ?? schedule.status} />
+        <h2 className="mt-1 truncate text-sm font-black text-admin-foreground">{salesName}</h2>
+        <p className="truncate text-xs font-semibold text-admin-muted">{schedule.scheduledDate} · Prioritas {schedule.priority}</p>
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-black text-admin-foreground">{schedule.outletCode ? `${schedule.outletCode} - ` : ''}{schedule.outletName ?? 'Tanpa outlet'}</p>
+        <p className="truncate text-xs font-semibold text-admin-muted">{schedule.outletAddress ?? schedule.notes ?? '-'}</p>
+      </div>
+      <div className="grid gap-1.5 sm:grid-cols-3">
+        <MiniMetric icon={Calendar} label="Jam" value={`${schedule.plannedStartTime ?? '--:--'}-${schedule.plannedEndTime ?? '--:--'}`} />
+        <MiniMetric icon={MapPin} label="Outlet" value={String(schedule.targetOutletCount)} />
+        <MiniMetric icon={CheckCircle2} label="Target" value={`${schedule.targetClosingCount} · ${formatRp(schedule.targetRevenueAmount)}`} />
+      </div>
+      <div className="justify-self-end text-xs font-bold text-admin-muted">
+        Dibuat {formatTime(schedule.createdAt)}
+      </div>
+    </article>
+  );
+}
+
+function MiniMetric({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-xl border border-admin-border-subtle bg-admin-bg/45 px-2.5 py-2">
+      <Icon size={13} className="shrink-0 text-admin-accent" strokeWidth={3} />
+      <div className="min-w-0">
+        <p className="text-[9px] font-black uppercase tracking-wider text-admin-subtle">{label}</p>
+        <p className="truncate text-xs font-black text-admin-foreground">{value}</p>
       </div>
     </div>
   );

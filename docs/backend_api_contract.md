@@ -1348,6 +1348,15 @@ Permission: `reports.view`.
 
 Dipakai dashboard admin untuk ringkasan operasional company aktif. Jika user bukan reviewer/admin, data transaksi dan visit mengikuti scope user tersebut.
 
+Query:
+
+```txt
+from=2026-06-01
+to=2026-06-30
+```
+
+Jika `from/to` tidak dikirim, backend memakai tanggal hari ini dalam timezone Asia/Jakarta. Filter periode berlaku untuk transaksi, visit, absensi, pending approval, dan aktivitas terbaru. Master data seperti total produk, outlet aktif, sales aktif, dan stok tetap menunjukkan kondisi saat ini.
+
 Response:
 
 ```json
@@ -1362,6 +1371,11 @@ Response:
     "todaySalesAmount": "250000.00",
     "todayOrders": 3,
     "todayVisits": 5,
+    "periodFrom": "2026-06-01",
+    "periodTo": "2026-06-30",
+    "periodSalesAmount": "2500000.00",
+    "periodOrders": 14,
+    "periodVisits": 20,
     "monthSalesAmount": "5000000.00",
     "monthOrders": 30,
     "totalOutlets": 12,

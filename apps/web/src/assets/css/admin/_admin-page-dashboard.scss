@@ -109,6 +109,157 @@
     justify-content: flex-end;
   }
 
+  .dashboard-filter-panel {
+    position: relative;
+    z-index: 2;
+    border: 1px solid var(--admin-border);
+    background: var(--admin-bg-card);
+    border-radius: 1.5rem;
+    padding: .9rem;
+    box-shadow: var(--admin-shadow-sm);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      bottom: 0;
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, var(--admin-accent), transparent);
+      opacity: 0;
+      transform: translateX(-35%);
+      transition: opacity .2s ease;
+    }
+  }
+
+  .dashboard-filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: .7rem;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-filter-field {
+    position: relative;
+    display: grid;
+    gap: .35rem;
+    flex: 0 0 155px;
+    min-width: 155px;
+
+    >span {
+      color: var(--admin-muted);
+      font-size: .72rem;
+      font-weight: 850;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+
+    input {
+      min-height: 42px;
+      min-width: 0;
+      cursor: pointer;
+    }
+  }
+
+  .dashboard-filter-input-icon {
+    position: absolute;
+    left: .9rem;
+    bottom: 13px;
+    color: var(--admin-muted);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .dashboard-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-filter-button {
+    min-height: 42px !important;
+    padding-inline: 1rem !important;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+
+    &.active {
+      border-color: var(--admin-accent) !important;
+      box-shadow: 0 10px 22px var(--admin-accent-shadow) !important;
+    }
+  }
+
+  .dashboard-filter-meta {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .55rem;
+    flex: 1 1 320px;
+    min-width: 260px;
+    color: var(--admin-muted);
+    font-size: .75rem;
+    font-weight: 800;
+    line-height: 1.4;
+    text-align: right;
+
+    strong {
+      flex: 0 0 auto;
+      color: var(--admin-accent);
+      background: var(--admin-accent-shadow);
+      border: 1px solid color-mix(in srgb, var(--admin-accent) 25%, transparent);
+      border-radius: 999px;
+      padding: .35rem .65rem;
+      white-space: nowrap;
+    }
+
+    span {
+      min-width: 0;
+    }
+  }
+
+  .dashboard-filter-loading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .4rem;
+    color: var(--admin-accent);
+  }
+
+  .dashboard-page-loading {
+    .dashboard-filter-panel {
+      border-color: color-mix(in srgb, var(--admin-accent) 35%, var(--admin-border));
+
+      &::after {
+        opacity: 1;
+        animation: dashboard-loading-bar 1.15s ease-in-out infinite;
+      }
+    }
+
+    .dashboard-kpi-card,
+    .dashboard-revenue-card,
+    .dashboard-ops-card,
+    .dashboard-activity-card {
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .42), transparent);
+        opacity: .45;
+        pointer-events: none;
+        animation: dashboard-card-shimmer 1.3s ease-in-out infinite;
+      }
+    }
+  }
+
 
   .dashboard-review-badge {
     display: flex;
@@ -537,6 +688,29 @@
       justify-content: flex-start;
     }
 
+    .dashboard-filter-row {
+      align-items: stretch;
+    }
+
+    .dashboard-filter-field {
+      flex: 1 1 145px;
+    }
+
+    .dashboard-filter-actions {
+      width: 100%;
+
+      .dashboard-filter-button {
+        flex: 1 1 0;
+      }
+    }
+
+    .dashboard-filter-meta {
+      margin-left: 0;
+      min-width: 0;
+      justify-content: flex-start;
+      text-align: left;
+    }
+
     .dashboard-ops-grid {
       grid-template-columns: 1fr;
     }
@@ -549,6 +723,26 @@
 
     to {
       transform: rotate(360deg);
+    }
+  }
+
+  @keyframes dashboard-loading-bar {
+    0% {
+      transform: translateX(-80%);
+    }
+
+    100% {
+      transform: translateX(80%);
+    }
+  }
+
+  @keyframes dashboard-card-shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
     }
   }
 }

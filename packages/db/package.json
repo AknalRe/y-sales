@@ -16,6 +16,7 @@
     "db:seedcompany": "tsx src/seed-company.ts",
     "db:fresh": "tsx src/db-fresh.ts",
     "db:debug": "tsx src/debug-connection.ts",
+    "db:repair-migrations": "tsx src/repair-migrations.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint ."

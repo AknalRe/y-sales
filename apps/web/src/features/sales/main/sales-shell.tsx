@@ -1,12 +1,12 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Home, MapPin, ReceiptText, ShoppingCart, UserRound, Clock } from 'lucide-react';
+import { Home, MapPin, ReceiptText, ShoppingCart, UserRound, Clock, CalendarDays } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-view-banner';
 
 const bottomNav = [
   { name: 'Beranda', href: '/sales', icon: Home },
   { name: 'Absensi', href: '/sales/attendance', icon: Clock },
-  { name: 'Kunjungan', href: '/sales/visit', icon: MapPin },
+  { name: 'Jadwal', href: '/sales/schedules', icon: CalendarDays },
   { name: 'Transaksi', href: '/sales/transactions', icon: ShoppingCart },
   { name: 'Nota', href: '/sales/invoices', icon: ReceiptText },
 ];

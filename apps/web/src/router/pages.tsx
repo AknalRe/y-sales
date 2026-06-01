@@ -36,6 +36,7 @@ import { OperationalSettingsPage } from '@/features/admin/settings/operational-s
 import { SalesSchedulePage } from '@/features/admin/schedule/sales-schedule-page';
 import { OutletsPage } from '@/features/admin/outlets/outlets-page';
 import { SalesAccountsPage } from '@/features/admin/sales-accounts/sales-accounts-page';
+import { SalesSchedulesPage } from '@/features/sales/schedules/sales-schedules-page';
 import { type RouteConfig } from './types';
 
 // --- ADMIN ROUTES ---
@@ -229,6 +230,15 @@ export const salesRoutes: RouteConfig[] = [
     handle: {
       label: 'Check-In Kunjungan',
       icon: Map,
+      mobile: true
+    }
+  },
+  {
+    path: 'schedules',
+    element: <SalesSchedulesPage />,
+    handle: {
+      label: 'Jadwal Kunjungan',
+      icon: CalendarPlus,
       mobile: true
     }
   },

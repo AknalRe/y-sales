@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Camera, ReceiptText, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp } from 'lucide-react';
+import { Camera, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp, CalendarDays } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { apiRequest } from '../../../lib/api/client';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
@@ -175,7 +175,11 @@ export function SalesHomePage() {
 
       {/* Quick Actions */}
       <div className="sales-quick-actions">
-        <Link to="/sales/attendance" className="sales-action-card sales-action-primary">
+        <Link to="/sales/schedules" className="sales-action-card sales-action-primary">
+          <div className="sales-action-icon"><CalendarDays size={22} /></div>
+          <span>Jadwal Visit</span>
+        </Link>
+        <Link to="/sales/attendance" className="sales-action-card">
           <div className="sales-action-icon"><Camera size={22} /></div>
           <span>Absensi Wajah</span>
         </Link>
@@ -187,17 +191,13 @@ export function SalesHomePage() {
           <div className="sales-action-icon"><ShoppingCart size={22} /></div>
           <span>Transaksi</span>
         </Link>
-        <Link to="/sales/invoices" className="sales-action-card">
-          <div className="sales-action-icon"><ReceiptText size={22} /></div>
-          <span>Riwayat Nota</span>
-        </Link>
       </div>
 
       {/* Today's Visits */}
       <section className="sales-visits-section">
         <div className="sales-section-header">
           <h2>Kunjungan Hari Ini</h2>
-          <Link to="/sales/visit" className="sales-section-link">Lihat Semua →</Link>
+          <Link to="/sales/schedules" className="sales-section-link">Lihat Jadwal →</Link>
         </div>
 
         {loading ? (

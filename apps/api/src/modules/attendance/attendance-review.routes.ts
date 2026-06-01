@@ -45,6 +45,10 @@ function minutesBetween(start?: Date | string | null, end?: Date | string | null
   return Math.round((endMs - startMs) / 60000);
 }
 
+function needsAttendanceReview(row: { status: string; validationStatus: string }) {
+  return row.validationStatus !== 'valid' && row.status !== 'flagged';
+}
+
 export async function attendanceReviewRoutes(app: FastifyInstance) {
   app.get('/attendance/review', { preHandler: requirePermission('attendance.review') }, async (request) => {
     const companyId = requireTenantId(request);
@@ -164,7 +168,7 @@ export async function attendanceReviewRoutes(app: FastifyInstance) {
       };
       item.totalSessions += 1;
       if (row.validationStatus === 'valid') item.validSessions += 1;
-      if (row.validationStatus !== 'valid') item.issueSessions += 1;
+      if (needsAttendanceReview(row)) item.issueSessions += 1;
       if (row.status === 'open') item.openSessions += 1;
       if (row.status === 'closed') item.closedSessions += 1;
       if (row.status === 'flagged') item.flaggedSessions += 1;
@@ -178,7 +182,7 @@ export async function attendanceReviewRoutes(app: FastifyInstance) {
       summary: {
         totalSessions: rows.length,
         validSessions: rows.filter((row) => row.validationStatus === 'valid').length,
-        issueSessions: rows.filter((row) => row.validationStatus !== 'valid').length,
+        issueSessions: rows.filter((row) => needsAttendanceReview(row)).length,
         openSessions: rows.filter((row) => row.status === 'open').length,
         closedSessions: rows.filter((row) => row.status === 'closed').length,
         flaggedSessions: rows.filter((row) => row.status === 'flagged').length,

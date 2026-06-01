@@ -518,7 +518,12 @@ Permission: `attendance.review`.
 
 Query sama dengan `/attendance/review`.
 
-Response berisi summary total sesi, sesi valid, sesi bermasalah, sesi open/closed/flagged, total durasi kerja, dan agregasi per sales.
+Response berisi summary total sesi, sesi valid, sesi perlu review, sesi open/closed/flagged, total durasi kerja, dan agregasi per sales.
+
+Catatan definisi:
+
+- `issueSessions` / `pendingAttendanceReviews` hanya menghitung sesi yang belum valid dan belum `flagged`.
+- Sesi `flagged` berarti sudah direview sebagai tidak disetujui, sehingga masuk `flaggedSessions`, bukan “perlu review”.
 
 ---
 
@@ -1340,6 +1345,48 @@ Permission: `roles.manage`.
 ## GET `/reports/summary`
 
 Permission: `reports.view`.
+
+Dipakai dashboard admin untuk ringkasan operasional company aktif. Jika user bukan reviewer/admin, data transaksi dan visit mengikuti scope user tersebut.
+
+Response:
+
+```json
+{
+  "summary": {
+    "totalSalesAmount": "1250000.00",
+    "totalOrders": 12,
+    "totalVisits": 18,
+    "totalProducts": 4,
+    "pendingApprovals": 2,
+    "activeUsers": 7,
+    "todaySalesAmount": "250000.00",
+    "todayOrders": 3,
+    "todayVisits": 5,
+    "monthSalesAmount": "5000000.00",
+    "monthOrders": 30,
+    "totalOutlets": 12,
+    "activeOutlets": 10,
+    "pendingOutletVerification": 1,
+    "activeSales": 3,
+    "todayAttendanceOpen": 2,
+    "todayAttendanceClosed": 4,
+    "pendingAttendanceReviews": 2,
+    "lowStockProducts": 1,
+    "outOfStockProducts": 0,
+    "totalStockQuantity": 120,
+    "recentActivities": [
+      {
+        "id": "uuid",
+        "type": "order",
+        "title": "Sales Agent membuat transaksi",
+        "description": "Warkop Berkah · Rp 245.000",
+        "status": "pending_approval",
+        "createdAt": "2026-06-01T03:00:00.000Z"
+      }
+    ]
+  }
+}
+```
 
 ---
 

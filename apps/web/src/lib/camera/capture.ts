@@ -29,6 +29,11 @@ async function detectFace(canvas: HTMLCanvasElement) {
   }
 }
 
+function drawVideoFrame(video: HTMLVideoElement, context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+}
+
 export async function captureFromVideo(video: HTMLVideoElement): Promise<CapturedImage> {
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth;
@@ -37,7 +42,7 @@ export async function captureFromVideo(video: HTMLVideoElement): Promise<Capture
 
   if (!context) throw new Error('Camera canvas is not available');
 
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  drawVideoFrame(video, context, canvas);
   const face = await detectFace(canvas);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
   const sizeBytes = Math.round((dataUrl.length * 3) / 4);
@@ -53,6 +58,7 @@ export async function captureFromVideo(video: HTMLVideoElement): Promise<Capture
 }
 
 export async function startFrontCamera(video: HTMLVideoElement) {
+  video.style.transform = 'none';
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: 'user' },
     audio: false,
@@ -65,4 +71,3 @@ export async function startFrontCamera(video: HTMLVideoElement) {
 export function stopCamera(stream?: MediaStream | null) {
   stream?.getTracks().forEach((track) => track.stop());
 }
-

@@ -18,7 +18,7 @@ type AuthContextValue = {
   permissions: string[];
   isSuperAdmin: boolean;
   initializing: boolean;
-  signIn: (identifier: string, password: string) => Promise<SessionUser>;
+  signIn: (identifier: string, password: string, companySlug?: string) => Promise<SessionUser>;
   signOut: () => void;
 };
 
@@ -47,9 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     permissions,
     isSuperAdmin: user?.isSuperAdmin ?? false,
     initializing,
-    async signIn(identifier, password) {
+    async signIn(identifier, password, companySlug) {
       const deviceId = getDeviceId();
-      const result = await login({ identifier, password, deviceId });
+      const result = await login({ identifier, password, deviceId, companySlug });
       if (result.refreshToken) storeRefreshToken(result.refreshToken);
       try {
         const me = await getMe(result.accessToken);

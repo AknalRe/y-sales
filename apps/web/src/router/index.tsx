@@ -69,6 +69,7 @@ export function AppRouter() {
 
   return useRoutes([
     { path: '/login', element: <LoginPage /> },
+    { path: '/login/:company', element: <LoginPage /> },
     // ─── Platform (Super Admin only) ────────────────────────────────────────
     {
       path: '/platform',

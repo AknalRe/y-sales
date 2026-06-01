@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
-import { eq, or } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { companies, roles, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -17,6 +17,7 @@ const loginSchema = z.object({
   identifier: z.string().min(3),
   password: z.string().min(6),
   deviceId: z.string().optional(),
+  companySlug: z.string().min(1).optional(),
 });
 
 const refreshSchema = z.object({
@@ -49,11 +50,23 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/auth/login', async (request, reply) => {
     const body = loginSchema.parse(request.body);
 
+    if (body.companySlug) {
+      const [company] = await db.select({ id: companies.id }).from(companies).where(eq(companies.slug, body.companySlug)).limit(1);
+      if (!company) {
+        return reply.status(404).send({ message: 'Perusahaan tidak ditemukan.' });
+      }
+    }
+
     const identifierConditions = [
       eq(users.email, body.identifier),
       eq(users.phone, body.identifier),
       eq(users.employeeCode, body.identifier),
     ];
+
+    const conditions = [or(...identifierConditions)!];
+    if (body.companySlug) {
+      conditions.push(eq(companies.slug, body.companySlug));
+    }
 
     const [user] = await db
       .select({
@@ -72,7 +85,7 @@ export async function authRoutes(app: FastifyInstance) {
       .from(users)
       .innerJoin(roles, eq(users.roleId, roles.id))
       .leftJoin(companies, eq(users.companyId, companies.id))
-      .where(or(...identifierConditions));
+      .where(and(...conditions));
 
     if (!user || !user.passwordHash || user.status !== 'active' || user.deletedAt) {
       return reply.status(401).send({ message: 'Email/HP/kode karyawan atau password salah.' });
@@ -176,5 +189,21 @@ export async function authRoutes(app: FastifyInstance) {
       } : null,
       permissions: authUser.permissions,
     };
+  });
+
+  // ─── Public: Get company info by slug (no auth) ───────────────────────
+  app.get('/auth/company/:slug', async (request, reply) => {
+    const params = request.params as { slug: string };
+    const [company] = await db
+      .select({ name: companies.name, slug: companies.slug, logoUrl: companies.logoUrl })
+      .from(companies)
+      .where(eq(companies.slug, params.slug))
+      .limit(1);
+
+    if (!company) {
+      return reply.status(404).send({ message: 'Perusahaan tidak ditemukan.' });
+    }
+
+    return { company };
   });
 }

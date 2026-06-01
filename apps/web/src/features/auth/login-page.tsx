@@ -1,32 +1,81 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Camera, Loader2, LockKeyhole, MapPin, Moon, Sun } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import { useTheme } from '@/hooks/use-theme';
 import { getHomePathForRole } from '@yuksales/shared';
+import { getCompanyBySlug } from '@/lib/api/client';
+
+type CompanyInfo = { name: string; slug: string; logoUrl?: string | null };
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { company } = useParams<{ company?: string }>();
   const { signIn } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  const [companyLoading, setCompanyLoading] = useState(!!company);
+  const [companyError, setCompanyError] = useState('');
+
+  useEffect(() => {
+    if (!company) { setCompanyInfo(null); setCompanyError(''); return; }
+    let cancelled = false;
+    setCompanyLoading(true);
+    setCompanyError('');
+    getCompanyBySlug(company)
+      .then((res) => { if (!cancelled) setCompanyInfo(res.company); })
+      .catch((err) => { if (!cancelled) setCompanyError(err instanceof Error ? err.message : 'Perusahaan tidak ditemukan'); })
+      .finally(() => { if (!cancelled) setCompanyLoading(false); });
+    return () => { cancelled = true; };
+  }, [company]);
+
+  const displayName = companyInfo?.name ?? 'YukTrackingSales';
+  const displayInitial = displayName.charAt(0).toUpperCase();
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const signedInUser = await signIn(identifier, password);
+      const signedInUser = await signIn(identifier, password, company);
       navigate(getHomePathForRole(signedInUser.roleCode, signedInUser.isSuperAdmin));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login gagal');
     } finally {
       setLoading(false);
     }
+  }
+
+  if (company && companyLoading) {
+    return (
+      <main className="relative grid min-h-screen place-items-center overflow-hidden bg-brand-primary px-5 py-10 text-white">
+        <section className="relative z-10 w-full max-w-md animate-float-in">
+          <div className="brand-glass rounded-3xl p-8 text-center">
+            <Loader2 className="mx-auto mb-4 animate-spin" size={32} />
+            <p className="text-white/70">Memuat data perusahaan...</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (companyError) {
+    return (
+      <main className="relative grid min-h-screen place-items-center overflow-hidden bg-brand-primary px-5 py-10 text-white">
+        <section className="relative z-10 w-full max-w-md animate-float-in">
+          <div className="brand-glass rounded-3xl p-8 text-center">
+            <h1 className="text-2xl font-black mb-4">Perusahaan Tidak Ditemukan</h1>
+            <p className="text-white/70 mb-6">{companyError}</p>
+            <a href="/login" className="brand-button inline-block rounded-2xl px-6 py-3 font-bold">Kembali ke Login</a>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -37,9 +86,14 @@ export function LoginPage() {
       <section className="relative z-10 w-full max-w-md animate-float-in">
         <div className="brand-glass rounded-3xl p-8">
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-white/15 text-3xl font-black text-white shadow-2xl ring-1 ring-white/20">Y</div>
-            <h1 className="text-4xl font-black tracking-tight text-white">YukTrackingSales</h1>
-            {/* <p className="mt-2 text-sm font-medium text-brand-secondary">Sistem operasional sales lapangan multi-company</p> */}
+            {companyInfo?.logoUrl ? (
+              <img src={companyInfo.logoUrl} alt={displayName} className="mx-auto mb-4 h-16 w-16 rounded-2xl object-cover shadow-2xl ring-1 ring-white/20" />
+            ) : (
+              <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-white/15 text-3xl font-black text-white shadow-2xl ring-1 ring-white/20">
+                {displayInitial}
+              </div>
+            )}
+            <h1 className="text-4xl font-black tracking-tight text-white">{displayName}</h1>
           </div>
 
           <div className="mb-6 grid grid-cols-3 gap-3 text-center text-xs font-bold text-white/75">
@@ -79,13 +133,13 @@ export function LoginPage() {
 
             {error && <p className="rounded-2xl border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</p>}
 
-            <button id="login-submit-button" className="brand-button flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 font-bold disabled:cursor-not-allowed disabled:opacity-70" disabled={loading}>
+            <button id="login-submit-button" className="brand-button flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 font-bold disabled:cursor-not-allowed disabled:opacity-70" disabled={loading || companyLoading}>
               {loading ? <Loader2 className="animate-spin" size={18} /> : null}
-              {loading ? 'Memproses...' : 'Masuk ke Workspace'}
+              {loading ? 'Memproses...' : `Masuk ke ${displayName}`}
             </button>
           </form>
         </div>
-        <p className="mt-8 text-center text-xs text-white/50">© {new Date().getFullYear()} YukTrackingSales. Operasional sales, outlet, stok, dan approval.</p>
+        <p className="mt-8 text-center text-xs text-white/50">© {new Date().getFullYear()} {displayName}. Operasional sales, outlet, stok, dan approval.</p>
       </section>
     </main>
   );

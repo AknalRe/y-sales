@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CalendarPlus, CheckCircle2, Clock, MapPin, RefreshCw, Search, Send, UserRound, XCircle } from 'lucide-react';
+import { AlertTriangle, CalendarPlus, CheckCircle2, Clock, MapPin, RefreshCw, Search, Send, UserRound, X, XCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth/auth-provider';
 import {
   approveVisitSchedule,
@@ -318,33 +318,33 @@ export function SalesSchedulePage() {
               </label>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              <label className="grid gap-2 text-sm font-bold text-admin-text">
+            <div className="flex flex-wrap gap-4">
+              <label className="grid gap-2 text-sm font-bold text-admin-text flex-1 min-w-[140px]">
                 Target Closing
                 <input
                   type="number"
                   min={0}
-                  className="admin-input"
+                  className="admin-input w-full"
                   value={form.targetClosingCount}
                   onChange={(event) => setForm((current) => ({ ...current, targetClosingCount: Number(event.target.value) }))}
                 />
               </label>
-              <label className="grid gap-2 text-sm font-bold text-admin-text">
+              <label className="grid gap-2 text-sm font-bold text-admin-text flex-1 min-w-[140px]">
                 Target Omset
                 <input
                   type="number"
                   min={0}
-                  className="admin-input"
+                  className="admin-input w-full"
                   value={form.targetRevenueAmount}
                   onChange={(event) => setForm((current) => ({ ...current, targetRevenueAmount: event.target.value }))}
                 />
               </label>
-              <label className="grid gap-2 text-sm font-bold text-admin-text">
+              <label className="grid gap-2 text-sm font-bold text-admin-text flex-1 min-w-[140px]">
                 Durasi/Outlet
                 <input
                   type="number"
                   min={1}
-                  className="admin-input"
+                  className="admin-input w-full"
                   placeholder="menit"
                   value={form.targetDurationMinutes}
                   onChange={(event) => setForm((current) => ({ ...current, targetDurationMinutes: event.target.value }))}
@@ -374,14 +374,19 @@ export function SalesSchedulePage() {
                 </span>
               </div>
 
-              <div className="relative mb-3">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted" />
+              <div className="admin-search-box !p-2.5 !rounded-xl !gap-2 mb-3">
+                <Search size={14} />
                 <input
-                  className="admin-input w-full pl-9"
+                  className="!text-sm"
                   placeholder="Cari outlet..."
                   value={outletSearch}
                   onChange={(event) => setOutletSearch(event.target.value)}
                 />
+                {outletSearch ? (
+                  <button className="admin-search-clear !h-6 !w-6" type="button" onClick={() => setOutletSearch('')} title="Bersihkan pencarian">
+                    <X size={12} />
+                  </button>
+                ) : null}
               </div>
 
               <div className="max-h-64 space-y-2 overflow-auto pr-1">

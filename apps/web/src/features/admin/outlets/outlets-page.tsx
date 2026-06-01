@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Edit3, MapPin, Plus, RefreshCw, Search, Store, Trash2, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Edit3, MapPin, Plus, RefreshCw, Search, Store, Trash2, X, XCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth/auth-provider';
 import {
   approveOutlet,
@@ -312,27 +312,21 @@ export function OutletsPage() {
       </div>
 
       <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-5 shadow-sm">
-        <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
-          <div className="relative min-w-0">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted" />
+        <div className="admin-filter-row">
+          <div className="admin-search-box">
+            <Search size={15} />
             <input
-              className="admin-input w-full pl-9 pr-10"
               placeholder="Cari kode, nama, PIC, alamat, atau HP..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
             {search ? (
-              <button
-                className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-admin-muted hover:bg-admin-bg"
-                type="button"
-                aria-label="Bersihkan pencarian"
-                onClick={() => setSearch('')}
-              >
-                x
+              <button className="admin-search-clear" type="button" onClick={() => setSearch('')} title="Bersihkan pencarian">
+                <X size={14} />
               </button>
             ) : null}
           </div>
-          <select className="admin-select w-full" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+          <select className="admin-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
             <option value="">Semua status</option>
             <option value="pending_verification">Menunggu Verifikasi</option>
             <option value="active">Aktif</option>

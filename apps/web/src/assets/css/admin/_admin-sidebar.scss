@@ -17,7 +17,7 @@
 
     &-closed {
         width: 5.2rem;
-        padding: 1rem 0;
+        // padding: 1rem 0;
 
         .admin-sidebar-brand h2,
         .admin-sidebar-logo div,
@@ -34,7 +34,7 @@
             padding: 0.75rem 0 1rem 0;
             justify-content: center;
             border-bottom: 1px solid var(--admin-sidebar-border);
-            margin-bottom: 1.5rem;
+            // margin-bottom: 1.5rem;
         }
 
         .admin-nav-link {
@@ -80,11 +80,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem;
+    padding: 1.5rem;
     // margin-top: 1rem;
     border-bottom: 1px solid var(--admin-sidebar-border);
-    margin-bottom: 0.75rem;
-    min-height: 3.5rem;
+    // margin-bottom: 0.75rem;
+    // min-height: 3.5rem;
 
     h2 {
         margin: 0;
@@ -224,7 +224,7 @@
 
 // ─── Navigation ──────────────────────────────────────────────────────────
 .admin-nav {
-    padding: 0 0.85rem 1rem;
+    padding: 1rem 0.85rem 1rem;
 }
 
 .admin-nav-section {

@@ -30,7 +30,7 @@ async function detectFace(canvas: HTMLCanvasElement) {
 }
 
 function drawVideoFrame(video: HTMLVideoElement, context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
-  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.setTransform(-1, 0, 0, 1, canvas.width, 0);
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
 }
 
@@ -58,7 +58,7 @@ export async function captureFromVideo(video: HTMLVideoElement): Promise<Capture
 }
 
 export async function startFrontCamera(video: HTMLVideoElement) {
-  video.style.transform = 'none';
+  video.style.transform = 'scaleX(-1)';
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: 'user' },
     audio: false,

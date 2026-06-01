@@ -229,7 +229,6 @@ export function ReportsPage() {
           <button onClick={downloadExcel} className="admin-btn-ghost" type="button" disabled={!transactions.length}><Download size={15} /> Excel</button>
           <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} className={loading ? 'spin' : ''} /></button>
         </div>
-        </div>
       </div>
 
       {error && (

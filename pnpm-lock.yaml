@@ -16,6 +16,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      xlsx-js-style:
+        specifier: ^1.2.0
+        version: 1.2.0
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1

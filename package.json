@@ -39,5 +39,8 @@
       "esbuild",
       "bcryptjs"
     ]
+  },
+  "dependencies": {
+    "xlsx-js-style": "^1.2.0"
   }
 }

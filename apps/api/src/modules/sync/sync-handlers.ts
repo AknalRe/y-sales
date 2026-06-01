@@ -40,7 +40,7 @@ const attendanceCheckInPayload = z.object({
     dataUrl: z.string().min(20),
     mimeType: z.string().default('image/jpeg'),
     sizeBytes: z.number().int().nonnegative().default(0),
-    faceDetected: z.boolean().default(true),
+    faceDetected: z.boolean().default(false),
     faceConfidence: z.number().min(0).max(1).optional(),
   }),
 });
@@ -56,7 +56,7 @@ const visitCheckInPayload = z.object({
     dataUrl: z.string().min(20),
     mimeType: z.string().default('image/jpeg'),
     sizeBytes: z.number().int().nonnegative().default(0),
-    faceDetected: z.boolean().default(true),
+    faceDetected: z.boolean().default(false),
     faceConfidence: z.number().min(0).max(1).optional(),
     capturedAt: z.string().datetime().optional(),
   }),
@@ -73,7 +73,7 @@ const visitCheckOutPayload = z.object({
     dataUrl: z.string().min(20),
     mimeType: z.string().default('image/jpeg'),
     sizeBytes: z.number().int().nonnegative().default(0),
-    faceDetected: z.boolean().default(true),
+    faceDetected: z.boolean().default(false),
     faceConfidence: z.number().min(0).max(1).optional(),
     capturedAt: z.string().datetime().optional(),
   }),
@@ -99,6 +99,18 @@ function todayDate() {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date());
+}
+
+function getGeofenceError(geofence: ReturnType<typeof validateGeofence>) {
+  if (!geofence.accuracyValid) {
+    return `Akurasi GPS terlalu rendah. Maksimal ${geofence.maxAccuracyMeters}m, saat ini ${Math.round(Number(geofence.accuracyMeters ?? 0))}m.`;
+  }
+
+  if (geofence.targetRequired && !geofence.valid) {
+    return `Lokasi berada di luar radius yang diizinkan. Radius maksimal ${geofence.radiusMeters}m, jarak saat ini ${Math.round(Number(geofence.distanceMeters ?? 0))}m.`;
+  }
+
+  return '';
 }
 
 async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Promise<HandlerResult> {
@@ -139,6 +151,9 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
       accuracyMeters: body.location.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
+    if (settings.requireFaceForAttendance && !body.faceCapture.faceDetected) return { success: false, error: 'Wajah tidak terdeteksi untuk absensi.' };
+    const attendanceGeofenceError = getGeofenceError(geofence);
+    if (attendanceGeofenceError) return { success: false, error: attendanceGeofenceError };
 
     const [media] = await db.insert(mediaFiles).values({
       ownerType: 'attendance',
@@ -228,6 +243,9 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
       accuracyMeters: body.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
+    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) return { success: false, error: 'Wajah tidak terdeteksi untuk check-in kunjungan.' };
+    const visitGeofenceError = getGeofenceError(geofence);
+    if (visitGeofenceError) return { success: false, error: visitGeofenceError };
 
     const [media] = await db.insert(mediaFiles).values({
       ownerType: 'visit',
@@ -287,6 +305,23 @@ async function handleVisitCheckOut(payload: unknown, ctx: SyncContext): Promise<
     );
     if (!visit) return { success: false, error: 'Visit session tidak ditemukan' };
     if (visit.checkOutAt) return { success: true, entityId: visit.id };
+
+    const [outlet] = await db.select().from(outlets).where(
+      and(eq(outlets.companyId, ctx.companyId), eq(outlets.id, visit.outletId))
+    );
+    if (!outlet) return { success: false, error: 'Outlet visit tidak ditemukan' };
+    const settings = await getGeneralSettings(ctx.companyId);
+    const radius = visit.geofenceRadiusMUsed ?? outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
+    const geofence = validateGeofence({
+      current: { latitude: body.latitude, longitude: body.longitude },
+      target: { latitude: Number(outlet.latitude), longitude: Number(outlet.longitude) },
+      radiusMeters: radius,
+      accuracyMeters: body.accuracyM,
+      maxAccuracyMeters: settings.maxGpsAccuracyM,
+    });
+    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) return { success: false, error: 'Wajah tidak terdeteksi untuk check-out kunjungan.' };
+    const visitGeofenceError = getGeofenceError(geofence);
+    if (visitGeofenceError) return { success: false, error: visitGeofenceError };
 
     const [media] = await db.insert(mediaFiles).values({
       ownerType: 'visit',

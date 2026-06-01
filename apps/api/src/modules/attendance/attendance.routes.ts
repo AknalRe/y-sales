@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { attendanceSessions, companies, faceCaptures, mediaFiles, outlets } from '@yuksales/db/schema';
@@ -19,7 +19,7 @@ const faceCaptureSchema = z.object({
   dataUrl: z.string().min(20),
   mimeType: z.string().default('image/jpeg'),
   sizeBytes: z.number().int().nonnegative().default(0),
-  faceDetected: z.boolean().default(true),
+  faceDetected: z.boolean().default(false),
   faceConfidence: z.number().min(0).max(1).optional(),
 });
 
@@ -42,6 +42,38 @@ function todayDateString() {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date());
+}
+
+function rejectInvalidAttendanceValidation(input: {
+  reply: FastifyReply;
+  settings: Awaited<ReturnType<typeof getGeneralSettings>>;
+  geofence: ReturnType<typeof validateGeofence>;
+  faceDetected: boolean;
+}) {
+  if (input.settings.requireFaceForAttendance && !input.faceDetected) {
+    return input.reply.status(400).send({
+      message: 'Wajah tidak terdeteksi. Pastikan kamera menghadap wajah sales sebelum mengirim absensi.',
+      validationStatus: 'face_not_detected',
+    });
+  }
+
+  if (!input.geofence.accuracyValid) {
+    return input.reply.status(400).send({
+      message: `Akurasi GPS terlalu rendah. Maksimal ${input.settings.maxGpsAccuracyM}m, saat ini ${Math.round(Number(input.geofence.accuracyMeters ?? 0))}m.`,
+      validationStatus: 'invalid_location',
+      geofence: input.geofence,
+    });
+  }
+
+  if (input.geofence.targetRequired && !input.geofence.valid) {
+    return input.reply.status(400).send({
+      message: `Lokasi berada di luar radius yang diizinkan. Radius maksimal ${input.geofence.radiusMeters}m, jarak saat ini ${Math.round(Number(input.geofence.distanceMeters ?? 0))}m.`,
+      validationStatus: 'invalid_location',
+      geofence: input.geofence,
+    });
+  }
+
+  return null;
 }
 
 async function getAttendanceGeofenceTarget(input: {
@@ -176,6 +208,9 @@ export async function attendanceRoutes(app: FastifyInstance) {
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
 
+    const rejected = rejectInvalidAttendanceValidation({ reply, settings, geofence, faceDetected: body.faceCapture.faceDetected });
+    if (rejected) return rejected;
+
     const validationStatus = !body.faceCapture.faceDetected
       ? 'face_not_detected'
       : geofence.valid
@@ -234,6 +269,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     await requireFeature(request, 'attendance');
     const body = checkOutSchema.parse(request.body);
+    const settings = await getGeneralSettings(companyId);
 
     const [existingSession] = await db
       .select()
@@ -248,6 +284,29 @@ export async function attendanceRoutes(app: FastifyInstance) {
     if (existingSession.status === 'closed') {
       return { session: existingSession };
     }
+
+    let attendanceTarget;
+    try {
+      attendanceTarget = await getAttendanceGeofenceTarget({
+        companyId,
+        outletId: existingSession.checkInOutletId ?? body.outletId,
+        requireAttendanceAtOffice: settings.requireAttendanceAtOffice,
+      });
+    } catch (error) {
+      const statusCode = typeof (error as any)?.statusCode === 'number' ? (error as any).statusCode : 400;
+      return reply.status(statusCode).send({ message: error instanceof Error ? error.message : 'Validasi lokasi absensi gagal.' });
+    }
+
+    const geofence = validateGeofence({
+      current: body.location,
+      target: attendanceTarget.target,
+      radiusMeters: attendanceTarget.outlet?.geofenceRadiusM ?? settings.defaultGeofenceRadiusM,
+      accuracyMeters: body.location.accuracyM,
+      maxAccuracyMeters: settings.maxGpsAccuracyM,
+    });
+
+    const rejected = rejectInvalidAttendanceValidation({ reply, settings, geofence, faceDetected: body.faceCapture.faceDetected });
+    if (rejected) return rejected;
 
     const session = await db.transaction(async (tx) => {
       const [media] = await tx.insert(mediaFiles).values({
@@ -279,6 +338,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
         checkOutAccuracyM: body.location.accuracyM?.toString(),
         checkOutFaceCaptureId: face.id,
         status: 'closed',
+        validationStatus: existingSession.validationStatus === 'valid' && geofence.valid && body.faceCapture.faceDetected ? 'valid' : existingSession.validationStatus,
         updatedAt: new Date(),
       }).where(and(eq(attendanceSessions.id, body.attendanceSessionId), eq(attendanceSessions.userId, authUser.id), eq(attendanceSessions.companyId, companyId))).returning();
 
@@ -287,6 +347,6 @@ export async function attendanceRoutes(app: FastifyInstance) {
 
     await writeAuditLog({ request, action: 'attendance.checked_out', entityType: 'attendance_session', entityId: session.id, oldValues: existingSession, newValues: session });
 
-    return { session };
+    return { session, geofence };
   });
 }

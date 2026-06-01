@@ -29,7 +29,7 @@ const faceCaptureSchema = z.object({
   dataUrl: z.string().min(20),
   mimeType: z.string().default('image/jpeg'),
   sizeBytes: z.number().int().nonnegative().default(0),
-  faceDetected: z.boolean().default(true),
+  faceDetected: z.boolean().default(false),
   faceConfidence: z.number().min(0).max(1).optional(),
   capturedAt: z.string().datetime().optional(),
 });
@@ -58,6 +58,22 @@ const checkOutSchema = z.object({
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function assertVisitLocationValid(geofence: ReturnType<typeof validateGeofence>) {
+  if (!geofence.accuracyValid) {
+    throw Object.assign(
+      new Error(`Akurasi GPS terlalu rendah. Maksimal ${geofence.maxAccuracyMeters}m, saat ini ${Math.round(Number(geofence.accuracyMeters ?? 0))}m.`),
+      { statusCode: 400 },
+    );
+  }
+
+  if (!geofence.valid) {
+    throw Object.assign(
+      new Error(`Lokasi berada di luar radius outlet. Radius maksimal ${geofence.radiusMeters}m, jarak saat ini ${Math.round(Number(geofence.distanceMeters ?? 0))}m.`),
+      { statusCode: 400 },
+    );
+  }
 }
 
 async function createVisitFaceCapture({
@@ -370,6 +386,7 @@ export async function visitRoutes(app: FastifyInstance) {
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-in kunjungan.'), { statusCode: 400 });
+    assertVisitLocationValid(geofence);
     const hasValidFace = body.faceCapture.faceDetected;
     const gpsAccuracy = { valid: geofence.accuracyValid, accuracyM: body.accuracyM ?? null, maxAccuracyM: settings.maxGpsAccuracyM };
 
@@ -441,6 +458,7 @@ export async function visitRoutes(app: FastifyInstance) {
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-out kunjungan.'), { statusCode: 400 });
+    assertVisitLocationValid(geofence);
 
     const { updated, face, identity, durationSeconds } = await db.transaction(async (tx) => {
       const faceResult = await createVisitFaceCapture({

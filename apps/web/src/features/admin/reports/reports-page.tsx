@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
-import { BarChart3, Download, RefreshCw, TrendingUp, ShoppingCart, MapPin, Users, AlertCircle } from 'lucide-react';
+import { BarChart3, Download, RefreshCw, TrendingUp, ShoppingCart, MapPin, Users, AlertTriangle, Activity } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
-import { getSalesTransactions, getTenantUsers, type SalesTransaction, type TenantUser } from '@/lib/api/tenant';
+import { getSalesTransactions, getTenantUsers, getReportSummary, type SalesTransaction, type TenantUser, type ReportSummary } from '@/lib/api/tenant';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 const statusLabel: Record<string, string> = {
@@ -93,23 +93,28 @@ export function ReportsPage() {
   const { accessToken } = useAuth();
   const [transactions, setTransactions] = useState<SalesTransaction[]>([]);
   const [users, setUsers] = useState<TenantUser[]>([]);
+  const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const range = thisMonthRange();
   const [from, setFrom] = useState(range.from);
   const [to, setTo] = useState(range.to);
   const [statusFilter, setStatusFilter] = useState('');
+  const [salesFilter, setSalesFilter] = useState('');
+  const [kpiTab, setKpiTab] = useState<'penjualan' | 'kunjungan'>('penjualan');
 
   async function load() {
     if (!accessToken) return;
     setLoading(true);
     try {
-      const [txRes, userRes] = await Promise.all([
-        getSalesTransactions(accessToken, { status: statusFilter || undefined, from, to }),
+      const [txRes, userRes, summaryRes] = await Promise.all([
+        getSalesTransactions(accessToken, { status: statusFilter || undefined, from, to, salesUserId: salesFilter || undefined }),
         getTenantUsers(accessToken),
+        getReportSummary(accessToken),
       ]);
       setTransactions(txRes.orders ?? []);
       setUsers(userRes.users ?? []);
+      setSummary(summaryRes.summary);
       setError('');
     } catch (e: any) {
       console.error(e);
@@ -119,7 +124,7 @@ export function ReportsPage() {
     }
   }
 
-  useEffect(() => { load(); }, [accessToken, from, to, statusFilter]);
+  useEffect(() => { load(); }, [accessToken, from, to, statusFilter, salesFilter]);
 
   const stats = useMemo(() => {
     const closed = transactions.filter(t => ['closed', 'approved', 'validated'].includes(t.status));
@@ -218,137 +223,188 @@ export function ReportsPage() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title"><BarChart3 size={22} /> Laporan Penjualan</h1>
-          <p className="admin-page-subtitle">Ringkasan omset, produk terjual, visit, dan performa sales.</p>
+          <p className="admin-page-subtitle">Ringkasan omset, kunjungan, dan performa sales.</p>
         </div>
-        <div style={{ display: 'flex', gap: '.5rem' }}>
-          <button onClick={downloadExcel} className="admin-btn admin-btn-ghost" type="button" disabled={!transactions.length}><Download size={15} /> Excel</button>
-          <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+        <div className="flex gap-2">
+          <button onClick={downloadExcel} className="admin-btn-ghost" type="button" disabled={!transactions.length}><Download size={15} /> Excel</button>
+          <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} className={loading ? 'spin' : ''} /></button>
         </div>
-      </div>
-
-      {error && <div className="dashboard-error"><AlertCircle size={15} /> {error}</div>}
-
-      {/* KPI Stats */}
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4">
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon bg-admin-success-soft text-admin-success"><TrendingUp size={18} /></div>
-          <div>
-            <span>Total Revenue</span>
-            {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 100 }} /> : <strong>{formatRp(stats.totalRevenue)}</strong>}
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon bg-admin-accent-shadow text-admin-accent"><ShoppingCart size={18} /></div>
-          <div>
-            <span>Transaksi Closed</span>
-            {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 30 }} /> : <strong>{stats.closed}</strong>}
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon bg-admin-accent-shadow text-admin-accent-light"><MapPin size={18} /></div>
-          <div>
-            <span>Total Transaksi</span>
-            {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 30 }} /> : <strong>{stats.total}</strong>}
-          </div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-icon bg-admin-accent-shadow text-admin-focus-ring"><Users size={18} /></div>
-          <div>
-            <span>Avg Order</span>
-            {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 100 }} /> : <strong>{formatRp(stats.avgOrder)}</strong>}
-          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="admin-filter-row flex items-center gap-3 flex-wrap">
-        <label className="text-admin-subtle text-sm">Periode:</label>
-        <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="admin-input" style={{ width: 'auto' }} />
-        <span className="text-admin-subtle">—</span>
-        <input type="date" value={to} onChange={e => setTo(e.target.value)} className="admin-input" style={{ width: 'auto' }} />
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select" style={{ width: 'auto' }}>
-          <option value="">Semua Status</option>
-          {Object.entries(statusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-        </select>
+      {error && (
+        <div className="admin-alert admin-alert-error">
+          <AlertTriangle size={15} />
+          {error}
+        </div>
+      )}
+
+      {/* ─── KPI Tabs ───────────────────────────────────── */}
+      <div className="admin-tab-group mb-4 w-fit">
+        <button type="button" onClick={() => setKpiTab('penjualan')} className={`admin-tab flex-1 ${kpiTab === 'penjualan' ? 'active' : ''}`}>Penjualan</button>
+        <button type="button" onClick={() => setKpiTab('kunjungan')} className={`admin-tab flex-1 ${kpiTab === 'kunjungan' ? 'active' : ''}`}>Kunjungan</button>
       </div>
 
-      <div className="admin-content-grid-half">
-        {/* Leaderboard */}
-        <div className="admin-card">
-          <div className="admin-card-header"><h2>🏆 Leaderboard Sales</h2></div>
-          <div className="admin-table-wrap">
-            <Table className="admin-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>#</TableHead>
-                  <TableHead>Sales</TableHead>
-                  <TableHead>Transaksi</TableHead>
-                  <TableHead>Revenue</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stats.leaderboard.map((s, i) => (
-                  <TableRow key={s.name}>
-                    <TableCell>
-                      <strong className={i === 0 ? 'text-admin-accent' : i === 1 ? 'text-admin-muted' : i === 2 ? 'text-admin-accent-light' : 'text-admin-foreground'}>
-                        {i + 1}
-                      </strong>
-                    </TableCell>
-                    <TableCell>{s.name}</TableCell>
-                    <TableCell>{s.count}</TableCell>
-                    <TableCell><strong>{formatRp(s.revenue)}</strong></TableCell>
-                  </TableRow>
-                ))}
-                {!stats.leaderboard.length && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="admin-empty">Belum ada data.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        {/* Transaction List */}
-        <div className="admin-card">
-          <div className="admin-card-header"><h2>Transaksi ({transactions.length})</h2></div>
-          {loading ? <div className="admin-loading">Memuat...</div> : (
-            <div className="admin-table-wrap" style={{ maxHeight: 360, overflowY: 'auto' }}>
-              <Table className="admin-table">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>No</TableHead>
-                    <TableHead>Sales</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.map(t => {
-                    return (
-                      <TableRow key={t.id}>
-                        <TableCell><strong style={{ fontSize: '.75rem' }}>{t.transactionNo}</strong></TableCell>
-                        <TableCell>{users.find(u => u.id === t.salesUserId)?.name ?? '—'}</TableCell>
-                        <TableCell>{formatRp(t.totalAmount)}</TableCell>
-                        <TableCell>
-                          <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(t.status)}`}>
-                            {statusLabel[t.status] ?? t.status}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {!transactions.length && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="admin-empty">Tidak ada transaksi.</TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+      {kpiTab === 'penjualan' && (
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-5">
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon bg-admin-success-soft text-admin-success"><TrendingUp size={18} /></div>
+            <div>
+              <span className="text-xs text-admin-muted font-semibold">Total Omset</span>
+              {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 100 }} /> : <strong className="text-lg">{formatRp(stats.totalRevenue)}</strong>}
+              <p className="text-[11px] text-admin-muted-dim mt-0.5">Bulan ini</p>
             </div>
-          )}
+          </div>
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon bg-admin-accent-shadow text-admin-accent"><ShoppingCart size={18} /></div>
+            <div>
+              <span className="text-xs text-admin-muted font-semibold">Pesanan Selesai</span>
+              {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 30 }} /> : <strong className="text-lg">{stats.closed}</strong>}
+              <p className="text-[11px] text-admin-muted-dim mt-0.5">dari {stats.total} transaksi</p>
+            </div>
+          </div>
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon bg-admin-accent-shadow text-admin-accent-light"><Users size={18} /></div>
+            <div>
+              <span className="text-xs text-admin-muted font-semibold">Rata-rata per Pesanan</span>
+              {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 100 }} /> : <strong className="text-lg">{formatRp(stats.avgOrder)}</strong>}
+              <p className="text-[11px] text-admin-muted-dim mt-0.5">Bulan ini</p>
+            </div>
+          </div>
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon bg-admin-accent-shadow text-admin-focus-ring"><BarChart3 size={18} /></div>
+            <div>
+              <span className="text-xs text-admin-muted font-semibold">Total Transaksi</span>
+              {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 30 }} /> : <strong className="text-lg">{stats.total}</strong>}
+              <p className="text-[11px] text-admin-muted-dim mt-0.5">Semua status</p>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {kpiTab === 'kunjungan' && (
+        <div className="grid gap-2 sm:grid-cols-2 mb-5">
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon bg-admin-accent-shadow text-admin-accent"><MapPin size={18} /></div>
+            <div>
+              <span className="text-xs text-admin-muted font-semibold">Total Kunjungan</span>
+              {loading || !summary ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 30 }} /> : <strong className="text-lg">{summary.totalVisits}</strong>}
+              <p className="text-[11px] text-admin-muted-dim mt-0.5">Keseluruhan</p>
+            </div>
+          </div>
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon bg-admin-success-soft text-admin-success"><Activity size={18} /></div>
+            <div>
+              <span className="text-xs text-admin-muted font-semibold">Kunjungan Hari Ini</span>
+              {loading || !summary ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 30 }} /> : <strong className="text-lg">{summary.todayVisits}</strong>}
+              <p className="text-[11px] text-admin-muted-dim mt-0.5">Hari ini</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {kpiTab === 'penjualan' && (
+        <>
+          {/* ─── Filters ────────────────────────────────────── */}
+          <div className="admin-filter-row !flex-nowrap !justify-between">
+            <div className="flex items-center gap-2">
+              <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="admin-input" />
+              <input type="date" value={to} onChange={e => setTo(e.target.value)} className="admin-input" />
+            </div>
+            <div className="flex items-center gap-2">
+              <select value={salesFilter} onChange={e => setSalesFilter(e.target.value)} className="admin-select">
+                <option value="">Semua Sales</option>
+                {users.filter(u => u.status === 'active').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+              </select>
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select">
+                <option value="">Semua Status</option>
+                {Object.entries(statusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+              <span className="admin-count-badge">{transactions.length} transaksi</span>
+            </div>
+          </div>
+
+          <div className="admin-content-grid-half">
+            {/* ─── Leaderboard ────────────────────────────────── */}
+            <div className="admin-card">
+              <div className="admin-card-header"><h2>Leaderboard Sales</h2></div>
+              <div className="admin-table-wrap">
+                <Table className="admin-table">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Sales</TableHead>
+                      <TableHead>Transaksi</TableHead>
+                      <TableHead>Omset</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stats.leaderboard.map((s, i) => (
+                      <TableRow key={s.name}>
+                        <TableCell>
+                          <strong className={i === 0 ? 'text-admin-accent' : i === 1 ? 'text-admin-muted' : i === 2 ? 'text-admin-accent-light' : 'text-admin-foreground'}>
+                            {i + 1}
+                          </strong>
+                        </TableCell>
+                        <TableCell>{s.name}</TableCell>
+                        <TableCell>{s.count}</TableCell>
+                        <TableCell><strong>{formatRp(s.revenue)}</strong></TableCell>
+                      </TableRow>
+                    ))}
+                    {!stats.leaderboard.length && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="admin-empty">Belum ada data.</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+
+            {/* ─── Transaction List ───────────────────────────── */}
+            <div className="admin-card">
+              <div className="admin-card-header"><h2>Daftar Transaksi ({transactions.length})</h2></div>
+              {loading ? <div className="admin-loading">Memuat...</div> : (
+                <div className="admin-table-wrap" style={{ maxHeight: 420, overflowY: 'auto' }}>
+                  <Table className="admin-table">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>No</TableHead>
+                        <TableHead>Sales</TableHead>
+                        <TableHead>Outlet</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions.map(t => {
+                        return (
+                          <TableRow key={t.id}>
+                            <TableCell><strong style={{ fontSize: '.75rem' }}>{t.transactionNo}</strong></TableCell>
+                            <TableCell>{users.find(u => u.id === t.salesUserId)?.name ?? '—'}</TableCell>
+                            <TableCell>{t.outletName ?? '—'}</TableCell>
+                            <TableCell>{formatRp(t.totalAmount)}</TableCell>
+                            <TableCell>
+                              <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(t.status)}`}>
+                                {statusLabel[t.status] ?? t.status}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {!transactions.length && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="admin-empty">Tidak ada transaksi.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -114,6 +114,7 @@ export type SalesTransaction = {
   transactionNo: string;
   salesUserId: string;
   outletId?: string | null;
+  outletName?: string | null;
   customerType: 'store' | 'agent' | 'end_user';
   paymentMethod: 'cash' | 'qris' | 'credit' | 'consignment';
   subtotalAmount: string;
@@ -385,11 +386,12 @@ export function getTodayVisitPlan(token: string) {
 
 // ─── Sales Transaction APIs ──────────────────────────────────────────────────
 
-export function getSalesTransactions(token: string, params?: { status?: string; from?: string; to?: string }) {
+export function getSalesTransactions(token: string, params?: { status?: string; from?: string; to?: string; salesUserId?: string }) {
   const q = new URLSearchParams();
   if (params?.status) q.set('status', params.status);
   if (params?.from) q.set('from', params.from);
   if (params?.to) q.set('to', params.to);
+  if (params?.salesUserId) q.set('salesUserId', params.salesUserId);
   return apiRequest<{ orders: SalesTransaction[] }>(`/sales/orders?${q}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
@@ -611,6 +613,24 @@ export type TenantSubscriptionInfo = {
 
 export function getDashboardSummary(token: string) {
   return apiRequest<DashboardSummary>('/dashboard/summary', { headers: { Authorization: `Bearer ${token}` } });
+}
+
+// ─── Reports ────────────────────────────────────────────────────────────────
+
+export type ReportSummary = {
+  totalSalesAmount: string;
+  totalOrders: number;
+  totalVisits: number;
+  totalProducts: number;
+  pendingApprovals: number;
+  activeUsers: number;
+  todaySalesAmount: string;
+  todayOrders: number;
+  todayVisits: number;
+};
+
+export function getReportSummary(token: string) {
+  return apiRequest<{ summary: ReportSummary }>('/reports/summary', { headers: { Authorization: `Bearer ${token}` } });
 }
 
 export function getGeneralSettings(token: string) {

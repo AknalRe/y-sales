@@ -66,6 +66,12 @@ function fileToDataUrl(file: File) {
   });
 }
 
+async function dataUrlToFile(dataUrl: string) {
+  const response = await fetch(dataUrl);
+  const blob = await response.blob();
+  return new File([blob], `face-template-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
+}
+
 export function SalesAccountsPage() {
   const { accessToken } = useAuth();
   const [users, setUsers] = useState<TenantUser[]>([]);
@@ -317,18 +323,19 @@ export function SalesAccountsPage() {
   }
 
   async function handleEnrollFace() {
-    if (!accessToken || !faceTarget || !faceFile || !facePreview) return;
+    if (!accessToken || !faceTarget || !facePreview) return;
 
     setFaceSaving(true);
     setError('');
     try {
+      const uploadFile = faceFile ?? await dataUrlToFile(facePreview);
       await enrollFaceTemplate(accessToken, {
         userId: faceTarget.id,
         dataUrl: facePreview,
-        mimeType: faceFile.type as 'image/jpeg' | 'image/jpg' | 'image/png' | 'image/webp',
-        sizeBytes: faceFile.size,
+        mimeType: uploadFile.type as 'image/jpeg' | 'image/jpg' | 'image/png' | 'image/webp',
+        sizeBytes: uploadFile.size,
       });
-      setSuccess(`Template wajah ${faceTarget.name} berhasil disimpan.`);
+      setSuccess(`Data wajah ${faceTarget.name} berhasil disimpan.`);
       setFaceTarget(null);
       setFaceFile(null);
       setFacePreview('');
@@ -693,8 +700,8 @@ export function SalesAccountsPage() {
             </div>
             <div className="admin-modal-footer">
               <button onClick={() => setFaceTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
-              <button onClick={handleEnrollFace} className="admin-btn-primary" type="button" disabled={faceSaving || !faceFile || !facePreview}>
-                {faceSaving ? 'Menyimpan...' : 'Simpan Template Wajah'}
+              <button onClick={handleEnrollFace} className="admin-btn-primary" type="button" disabled={faceSaving || !facePreview}>
+                {faceSaving ? 'Menyimpan...' : 'Simpan Wajah'}
               </button>
             </div>
           </div>

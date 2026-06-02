@@ -234,6 +234,8 @@ Attendance behavior:
 - `requireAttendanceAtOffice=true`: `/attendance/check-in` dan sync offline check-in memvalidasi lokasi user terhadap `companies.latitude` dan `companies.longitude`.
 - Radius yang dipakai untuk absensi kantor adalah `defaultGeofenceRadiusM`.
 - Jika koordinat kantor belum diatur, backend mengembalikan error dan check-in tidak dibuat.
+- Backend juga menjalankan GPS integrity check sebelum membuat absensi: `isMocked=true`, koordinat invalid, akurasi invalid, timestamp lokasi terlalu lama/masa depan, atau perpindahan tidak wajar akan ditolak sebagai `invalid_location`.
+- Browser web standar tidak menyediakan flag fake GPS yang pasti. Field `isMocked` disiapkan untuk native/WebView/Android bridge; untuk web murni backend memakai heuristik timestamp, akurasi, dan perpindahan lokasi.
 
 ---
 
@@ -737,6 +739,7 @@ Provider adapter yang tersedia:
 
 ```txt
 mock
+internal_python
 custom_http
 azure_face
 google_vertex
@@ -810,6 +813,12 @@ Body:
   "latitude": -7.250445,
   "longitude": 112.768845,
   "accuracyM": 8,
+  "locationTimestamp": 1714543200000,
+  "speedMps": 0,
+  "heading": null,
+  "altitude": null,
+  "altitudeAccuracyM": null,
+  "isMockedLocation": false,
   "faceCapture": {
     "dataUrl": "data:image/jpeg;base64,...",
     "mimeType": "image/jpeg",
@@ -828,6 +837,7 @@ outlet company sama
 schedule company/sales sesuai
 geofence radius outlet/general settings
 GPS accuracy <= maxGpsAccuracyM
+GPS integrity valid: mocked/fake flag, timestamp, koordinat, akurasi, dan perpindahan lokasi harus wajar
 faceDetected wajib jika requireFaceForVisit=true
 identity match jika requireFaceIdentityMatchForVisit=true
 ```
@@ -844,6 +854,12 @@ Body:
   "latitude": -7.250445,
   "longitude": 112.768845,
   "accuracyM": 8,
+  "locationTimestamp": 1714545000000,
+  "speedMps": 0,
+  "heading": null,
+  "altitude": null,
+  "altitudeAccuracyM": null,
+  "isMockedLocation": false,
   "outcome": "closed_order",
   "closingNotes": "Order berhasil",
   "faceCapture": {

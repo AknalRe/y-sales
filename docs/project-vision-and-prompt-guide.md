@@ -56,6 +56,8 @@ Catatan:
 - Company bisa mengatur apakah absensi kerja wajib dilakukan di titik kantor.
 - Jika `requireAttendanceAtOffice` aktif, backend memvalidasi lokasi absensi terhadap latitude/longitude company dan default radius company.
 - Jika titik kantor belum diatur, backend harus menolak check-in absensi dengan pesan yang jelas.
+- Backend wajib menolak absensi jika GPS integrity gagal: fake/mock GPS terdeteksi, koordinat invalid, akurasi invalid, timestamp lokasi basi, timestamp masa depan, atau perpindahan lokasi tidak wajar.
+- Web browser tidak bisa memastikan fake GPS secara absolut; jika aplikasi mobile/native nanti bisa membaca flag mocked location, kirim ke backend sebagai `isMocked=true`/`isMockedLocation=true` agar langsung gagal.
 
 ### 2. Management Outlet
 
@@ -118,6 +120,7 @@ Flow:
 4. Sales mengambil foto wajah dan lokasi GPS.
 5. Sales check-in.
 6. Backend validasi outlet, schedule, tenant, radius, GPS accuracy, dan face setting.
+7. Backend juga validasi GPS integrity; fake/mock GPS atau lompatan lokasi tidak wajar harus gagal, bukan masuk approval.
 7. Sales melakukan aktivitas di outlet.
 8. Sales check-out dengan outcome kunjungan.
 9. Schedule berubah menjadi `completed`.

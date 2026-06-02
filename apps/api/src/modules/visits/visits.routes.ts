@@ -9,6 +9,7 @@ import { verifyFaceIdentity } from '../face/face-verification.service.js';
 import { requireTenantId, requireFeature } from '../tenant.js';
 import { getGeneralSettings } from '../../utils/settings.js';
 import { validateGeofence } from '../../utils/geofence.js';
+import { validateGpsIntegrity } from '../../utils/gps-integrity.js';
 
 const scheduleSchema = z.object({
   salesUserId: z.string().uuid(),
@@ -43,6 +44,12 @@ const checkInSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   accuracyM: z.number().optional(),
+  locationTimestamp: z.number().optional(),
+  speedMps: z.number().optional().nullable(),
+  heading: z.number().optional().nullable(),
+  altitude: z.number().optional().nullable(),
+  altitudeAccuracyM: z.number().optional().nullable(),
+  isMockedLocation: z.boolean().optional(),
   faceCapture: faceCaptureSchema,
 });
 
@@ -51,6 +58,12 @@ const checkOutSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   accuracyM: z.number().optional(),
+  locationTimestamp: z.number().optional(),
+  speedMps: z.number().optional().nullable(),
+  heading: z.number().optional().nullable(),
+  altitude: z.number().optional().nullable(),
+  altitudeAccuracyM: z.number().optional().nullable(),
+  isMockedLocation: z.boolean().optional(),
   outcome: z.enum(['closed_order', 'no_order', 'follow_up', 'outlet_closed', 'rejected', 'invalid_location']),
   closingNotes: z.string().optional(),
   faceCapture: faceCaptureSchema,
@@ -385,6 +398,21 @@ export async function visitRoutes(app: FastifyInstance) {
       accuracyMeters: body.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
+    const gpsIntegrity = validateGpsIntegrity({
+      location: {
+        latitude: body.latitude,
+        longitude: body.longitude,
+        accuracyM: body.accuracyM,
+        timestamp: body.locationTimestamp,
+        speedMps: body.speedMps,
+        heading: body.heading,
+        altitude: body.altitude,
+        altitudeAccuracyM: body.altitudeAccuracyM,
+        isMocked: body.isMockedLocation,
+      },
+      capturedAt: body.faceCapture.capturedAt ?? new Date(),
+    });
+    if (!gpsIntegrity.valid) throw Object.assign(new Error(gpsIntegrity.message), { statusCode: 400, gpsIntegrity });
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-in kunjungan.'), { statusCode: 400 });
     assertVisitLocationValid(geofence);
     const hasValidFace = body.faceCapture.faceDetected;
@@ -434,9 +462,9 @@ export async function visitRoutes(app: FastifyInstance) {
       return { visit: visitResult, face: faceResult, identity: identityResult };
     });
 
-    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
 
-    return { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
+    return { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
   });
 
   app.post('/visits/check-out', { preHandler: requirePermission('visits.execute') }, async (request) => {
@@ -457,6 +485,26 @@ export async function visitRoutes(app: FastifyInstance) {
       accuracyMeters: body.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
+    const gpsIntegrity = validateGpsIntegrity({
+      location: {
+        latitude: body.latitude,
+        longitude: body.longitude,
+        accuracyM: body.accuracyM,
+        timestamp: body.locationTimestamp,
+        speedMps: body.speedMps,
+        heading: body.heading,
+        altitude: body.altitude,
+        altitudeAccuracyM: body.altitudeAccuracyM,
+        isMocked: body.isMockedLocation,
+      },
+      capturedAt: body.faceCapture.capturedAt ?? new Date(),
+      previousPoint: {
+        latitude: visit.checkInLatitude,
+        longitude: visit.checkInLongitude,
+        capturedAt: visit.checkInAt,
+      },
+    });
+    if (!gpsIntegrity.valid) throw Object.assign(new Error(gpsIntegrity.message), { statusCode: 400, gpsIntegrity });
     if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-out kunjungan.'), { statusCode: 400 });
     assertVisitLocationValid(geofence);
 
@@ -497,8 +545,8 @@ export async function visitRoutes(app: FastifyInstance) {
     });
 
     const [orderCount] = await db.select({ count: sql<number>`count(*)::int` }).from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.visitSessionId, visit.id)));
-    await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: { ...updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
-    return { visit: updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity }, result: { durationSeconds, durationMinutes: Math.round(durationSeconds / 60), hasClosingOrder: Number(orderCount?.count ?? 0) > 0 } };
+    await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: { ...updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    return { visit: updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity }, result: { durationSeconds, durationMinutes: Math.round(durationSeconds / 60), hasClosingOrder: Number(orderCount?.count ?? 0) > 0 } };
   });
 
   app.get('/visits/performance', { preHandler: requirePermission('visits.review') }, async (request) => {

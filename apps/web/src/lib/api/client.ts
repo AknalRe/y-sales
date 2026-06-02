@@ -153,6 +153,12 @@ export type AttendancePayload = {
     latitude: number;
     longitude: number;
     accuracyM?: number;
+    timestamp?: number;
+    speedMps?: number | null;
+    heading?: number | null;
+    altitude?: number | null;
+    altitudeAccuracyM?: number | null;
+    isMocked?: boolean;
   };
   faceCapture: {
     dataUrl: string;
@@ -297,6 +303,12 @@ export type VisitPayload = {
   latitude: number;
   longitude: number;
   accuracyM?: number;
+  locationTimestamp?: number;
+  speedMps?: number | null;
+  heading?: number | null;
+  altitude?: number | null;
+  altitudeAccuracyM?: number | null;
+  isMockedLocation?: boolean;
   faceCapture: {
     dataUrl: string;
     mimeType: string;
@@ -320,6 +332,12 @@ export type VisitCheckOutPayload = {
   latitude: number;
   longitude: number;
   accuracyM?: number;
+  locationTimestamp?: number;
+  speedMps?: number | null;
+  heading?: number | null;
+  altitude?: number | null;
+  altitudeAccuracyM?: number | null;
+  isMockedLocation?: boolean;
   outcome: 'closed_order' | 'no_order' | 'follow_up' | 'outlet_closed' | 'rejected' | 'invalid_location';
   closingNotes?: string;
   faceCapture: VisitPayload['faceCapture'];

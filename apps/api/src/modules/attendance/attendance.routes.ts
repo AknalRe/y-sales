@@ -7,12 +7,19 @@ import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId, requireFeature } from '../tenant.js';
 import { getGeneralSettings } from '../../utils/settings.js';
 import { validateGeofence } from '../../utils/geofence.js';
+import { validateGpsIntegrity } from '../../utils/gps-integrity.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
 const geoSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   accuracyM: z.number().optional(),
+  timestamp: z.number().optional(),
+  speedMps: z.number().optional().nullable(),
+  heading: z.number().optional().nullable(),
+  altitude: z.number().optional().nullable(),
+  altitudeAccuracyM: z.number().optional().nullable(),
+  isMocked: z.boolean().optional(),
 });
 
 const faceCaptureSchema = z.object({
@@ -207,6 +214,10 @@ export async function attendanceRoutes(app: FastifyInstance) {
       accuracyMeters: body.location.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
+    const gpsIntegrity = validateGpsIntegrity({ location: body.location, capturedAt: body.capturedAt });
+    if (!gpsIntegrity.valid) {
+      return reply.status(400).send({ message: gpsIntegrity.message, validationStatus: 'invalid_location', gpsIntegrity });
+    }
 
     const rejected = rejectInvalidAttendanceValidation({ reply, settings, geofence, faceDetected: body.faceCapture.faceDetected });
     if (rejected) return rejected;
@@ -259,7 +270,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
       return sess;
     });
 
-    await writeAuditLog({ request, action: 'attendance.checked_in', entityType: 'attendance_session', entityId: session.id, newValues: session });
+    await writeAuditLog({ request, action: 'attendance.checked_in', entityType: 'attendance_session', entityId: session.id, newValues: { session, geofence, gpsIntegrity } });
 
     return reply.status(201).send({ session, geofence });
   });
@@ -304,6 +315,18 @@ export async function attendanceRoutes(app: FastifyInstance) {
       accuracyMeters: body.location.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
+    const gpsIntegrity = validateGpsIntegrity({
+      location: body.location,
+      capturedAt: body.capturedAt,
+      previousPoint: {
+        latitude: existingSession.checkInLatitude,
+        longitude: existingSession.checkInLongitude,
+        capturedAt: existingSession.checkInAt,
+      },
+    });
+    if (!gpsIntegrity.valid) {
+      return reply.status(400).send({ message: gpsIntegrity.message, validationStatus: 'invalid_location', gpsIntegrity });
+    }
 
     const rejected = rejectInvalidAttendanceValidation({ reply, settings, geofence, faceDetected: body.faceCapture.faceDetected });
     if (rejected) return rejected;
@@ -345,7 +368,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
       return sess;
     });
 
-    await writeAuditLog({ request, action: 'attendance.checked_out', entityType: 'attendance_session', entityId: session.id, oldValues: existingSession, newValues: session });
+    await writeAuditLog({ request, action: 'attendance.checked_out', entityType: 'attendance_session', entityId: session.id, oldValues: existingSession, newValues: { session, geofence, gpsIntegrity } });
 
     return { session, geofence };
   });

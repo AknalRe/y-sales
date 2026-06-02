@@ -194,6 +194,7 @@ export function checkOutAttendance(accessToken: string, payload: AttendancePaylo
 export type MobileRuntimeSettings = {
   enableLiveFaceDetectionInCamera: boolean;
   requireFaceForAttendance: boolean;
+  requireFaceIdentityMatchForAttendance: boolean;
   requireFaceForVisit: boolean;
   requireFaceIdentityMatchForVisit: boolean;
   faceMatchThreshold: number;

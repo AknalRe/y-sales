@@ -38,6 +38,7 @@ type ToggleKey =
   | 'requireFaceForAttendance'
   | 'allowMultipleAttendanceSessionsPerDay'
   | 'requireAttendanceAtOffice'
+  | 'requireFaceIdentityMatchForAttendance'
   | 'requireFaceForVisit'
   | 'enableLiveFaceDetectionInCamera'
   | 'requireTransactionProofPhoto'
@@ -197,6 +198,12 @@ const sections: SettingsSection[] = [
         title: 'Foto wajah absensi',
         description: 'Absensi tetap wajib membawa bukti wajah.',
         icon: UserCheck,
+      },
+      {
+        key: 'requireFaceIdentityMatchForAttendance',
+        title: 'Cocokkan identitas absensi',
+        description: 'Absensi memanggil face provider untuk memastikan wajah cocok dengan template user.',
+        icon: ShieldCheck,
       },
     ],
   },

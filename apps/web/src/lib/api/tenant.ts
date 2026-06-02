@@ -238,6 +238,7 @@ export type GeneralSettings = {
   allowMultipleAttendanceSessionsPerDay: boolean;
   requireAttendanceAtOffice: boolean;
   requireFaceForAttendance: boolean;
+  requireFaceIdentityMatchForAttendance: boolean;
   requireFaceForVisit: boolean;
   enableLiveFaceDetectionInCamera: boolean;
   requireTransactionProofPhoto: boolean;

@@ -56,6 +56,7 @@ const generalSettingsSchema = z.object({
   allowMultipleAttendanceSessionsPerDay: z.boolean().optional(),
   requireAttendanceAtOffice: z.boolean().optional(),
   requireFaceForAttendance: z.boolean().optional(),
+  requireFaceIdentityMatchForAttendance: z.boolean().optional(),
   requireFaceForVisit: z.boolean().optional(),
   enableLiveFaceDetectionInCamera: z.boolean().optional(),
   requireTransactionProofPhoto: z.boolean().optional(),
@@ -82,6 +83,7 @@ export async function settingsRoutes(app: FastifyInstance) {
       settings: {
         enableLiveFaceDetectionInCamera: settings.enableLiveFaceDetectionInCamera,
         requireFaceForAttendance: settings.requireFaceForAttendance,
+        requireFaceIdentityMatchForAttendance: settings.requireFaceIdentityMatchForAttendance,
         requireFaceForVisit: settings.requireFaceForVisit,
         requireFaceIdentityMatchForVisit: settings.requireFaceIdentityMatchForVisit,
         faceMatchThreshold: settings.faceMatchThreshold,

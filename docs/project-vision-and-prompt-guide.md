@@ -58,6 +58,7 @@ Catatan:
 - Jika titik kantor belum diatur, backend harus menolak check-in absensi dengan pesan yang jelas.
 - Backend wajib menolak absensi jika GPS integrity gagal: fake/mock GPS terdeteksi, koordinat invalid, akurasi invalid, timestamp lokasi basi, timestamp masa depan, atau perpindahan lokasi tidak wajar.
 - Web browser tidak bisa memastikan fake GPS secara absolut; jika aplikasi mobile/native nanti bisa membaca flag mocked location, kirim ke backend sebagai `isMocked=true`/`isMockedLocation=true` agar langsung gagal.
+- Jika `requireFaceIdentityMatchForAttendance` aktif, absensi wajib memanggil provider face recognition dan mencocokkan wajah dengan template aktif user. Jika tidak cocok, sesi masuk `manual_review`.
 
 ### 2. Management Outlet
 

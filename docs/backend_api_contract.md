@@ -203,6 +203,7 @@ Body:
   "allowMultipleAttendanceSessionsPerDay": false,
   "requireAttendanceAtOffice": false,
   "requireFaceForAttendance": true,
+  "requireFaceIdentityMatchForAttendance": true,
   "requireFaceForVisit": true,
   "enableLiveFaceDetectionInCamera": true,
   "requireFaceIdentityMatchForVisit": true,
@@ -236,6 +237,7 @@ Attendance behavior:
 - Jika koordinat kantor belum diatur, backend mengembalikan error dan check-in tidak dibuat.
 - Backend juga menjalankan GPS integrity check sebelum membuat absensi: `isMocked=true`, koordinat invalid, akurasi invalid, timestamp lokasi terlalu lama/masa depan, atau perpindahan tidak wajar akan ditolak sebagai `invalid_location`.
 - Browser web standar tidak menyediakan flag fake GPS yang pasti. Field `isMocked` disiapkan untuk native/WebView/Android bridge; untuk web murni backend memakai heuristik timestamp, akurasi, dan perpindahan lokasi.
+- Jika `requireFaceIdentityMatchForAttendance=true`, absensi check-in/check-out memanggil face provider (`internal_python`/custom/provider lain) untuk mencocokkan foto absensi dengan template wajah aktif user.
 
 ---
 

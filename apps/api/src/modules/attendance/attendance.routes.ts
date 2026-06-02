@@ -9,6 +9,7 @@ import { getGeneralSettings } from '../../utils/settings.js';
 import { validateGeofence } from '../../utils/geofence.js';
 import { validateGpsIntegrity } from '../../utils/gps-integrity.js';
 import { writeAuditLog } from '../audit/audit.service.js';
+import { verifyFaceIdentity } from '../face/face-verification.service.js';
 
 const geoSchema = z.object({
   latitude: z.number(),
@@ -222,13 +223,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
     const rejected = rejectInvalidAttendanceValidation({ reply, settings, geofence, faceDetected: body.faceCapture.faceDetected });
     if (rejected) return rejected;
 
-    const validationStatus = !body.faceCapture.faceDetected
-      ? 'face_not_detected'
-      : geofence.valid
-        ? 'valid'
-        : 'invalid_location';
-
-    const session = await db.transaction(async (tx) => {
+    const { session, face, identity } = await db.transaction(async (tx) => {
       const [media] = await tx.insert(mediaFiles).values({
         ownerType: 'attendance',
         fileUrl: body.faceCapture.dataUrl,
@@ -251,6 +246,23 @@ export async function attendanceRoutes(app: FastifyInstance) {
         livenessStatus: 'not_checked',
       }).returning();
 
+      const identity = settings.requireFaceIdentityMatchForAttendance
+        ? await verifyFaceIdentity({
+          companyId,
+          userId: authUser.id,
+          faceCaptureId: face.id,
+          faceDetected: body.faceCapture.faceDetected,
+          faceConfidence: body.faceCapture.faceConfidence,
+          settings,
+        })
+        : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
+      const identityValid = !settings.requireFaceIdentityMatchForAttendance || identity.status === 'matched';
+      const validationStatus = !body.faceCapture.faceDetected
+        ? 'face_not_detected'
+        : geofence.valid && identityValid
+          ? 'valid'
+          : 'manual_review';
+
       const [sess] = await tx.insert(attendanceSessions).values({
         companyId,
         userId: authUser.id,
@@ -267,12 +279,12 @@ export async function attendanceRoutes(app: FastifyInstance) {
         clientRequestId: body.clientRequestId,
       }).returning();
 
-      return sess;
+      return { session: sess, face, identity };
     });
 
-    await writeAuditLog({ request, action: 'attendance.checked_in', entityType: 'attendance_session', entityId: session.id, newValues: { session, geofence, gpsIntegrity } });
+    await writeAuditLog({ request, action: 'attendance.checked_in', entityType: 'attendance_session', entityId: session.id, newValues: { session, geofence, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
 
-    return reply.status(201).send({ session, geofence });
+    return reply.status(201).send({ session, geofence, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } });
   });
 
   app.post('/attendance/check-out', { preHandler: requirePermission('attendance.execute') }, async (request, reply) => {
@@ -331,7 +343,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
     const rejected = rejectInvalidAttendanceValidation({ reply, settings, geofence, faceDetected: body.faceCapture.faceDetected });
     if (rejected) return rejected;
 
-    const session = await db.transaction(async (tx) => {
+    const { session, face, identity } = await db.transaction(async (tx) => {
       const [media] = await tx.insert(mediaFiles).values({
         ownerType: 'attendance',
         fileUrl: body.faceCapture.dataUrl,
@@ -354,6 +366,18 @@ export async function attendanceRoutes(app: FastifyInstance) {
         livenessStatus: 'not_checked',
       }).returning();
 
+      const identity = settings.requireFaceIdentityMatchForAttendance
+        ? await verifyFaceIdentity({
+          companyId,
+          userId: authUser.id,
+          faceCaptureId: face.id,
+          faceDetected: body.faceCapture.faceDetected,
+          faceConfidence: body.faceCapture.faceConfidence,
+          settings,
+        })
+        : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
+      const identityValid = !settings.requireFaceIdentityMatchForAttendance || identity.status === 'matched';
+
       const [sess] = await tx.update(attendanceSessions).set({
         checkOutAt: new Date(body.capturedAt),
         checkOutLatitude: String(body.location.latitude),
@@ -361,15 +385,15 @@ export async function attendanceRoutes(app: FastifyInstance) {
         checkOutAccuracyM: body.location.accuracyM?.toString(),
         checkOutFaceCaptureId: face.id,
         status: 'closed',
-        validationStatus: existingSession.validationStatus === 'valid' && geofence.valid && body.faceCapture.faceDetected ? 'valid' : existingSession.validationStatus,
+        validationStatus: existingSession.validationStatus === 'valid' && geofence.valid && body.faceCapture.faceDetected && identityValid ? 'valid' : 'manual_review',
         updatedAt: new Date(),
       }).where(and(eq(attendanceSessions.id, body.attendanceSessionId), eq(attendanceSessions.userId, authUser.id), eq(attendanceSessions.companyId, companyId))).returning();
 
-      return sess;
+      return { session: sess, face, identity };
     });
 
-    await writeAuditLog({ request, action: 'attendance.checked_out', entityType: 'attendance_session', entityId: session.id, oldValues: existingSession, newValues: { session, geofence, gpsIntegrity } });
+    await writeAuditLog({ request, action: 'attendance.checked_out', entityType: 'attendance_session', entityId: session.id, oldValues: existingSession, newValues: { session, geofence, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
 
-    return { session, geofence };
+    return { session, geofence, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
   });
 }

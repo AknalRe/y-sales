@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle2, Info, WifiOff, X } from 'lucide-react';
-import { toast } from '@/utils/helpers/toast-bridge';
+import { showAppToast } from '@/components/ui/app-toast';
 
 export type SalesAlertTone = 'success' | 'error' | 'warning' | 'info';
 
@@ -33,7 +33,7 @@ export function showSalesAlertToast(message: string, tone?: SalesAlertTone) {
         : 'Informasi';
   const duration = resolvedTone === 'error' ? 6000 : resolvedTone === 'warning' ? 5000 : 3500;
 
-  toast[resolvedTone](title, message, { duration });
+  showAppToast({ title, message, tone: resolvedTone, duration });
 }
 
 type SalesAlertProps = {

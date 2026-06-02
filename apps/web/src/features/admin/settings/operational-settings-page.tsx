@@ -194,7 +194,7 @@ const sections: SettingsSection[] = [
       {
         key: 'requireFaceForAttendance',
         title: 'Foto wajah absensi',
-        description: 'Absensi tetap wajib membawa bukti wajah sales.',
+        description: 'Absensi tetap wajib membawa bukti wajah.',
         icon: UserCheck,
       },
     ],

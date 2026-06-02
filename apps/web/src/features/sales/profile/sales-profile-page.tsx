@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/auth-provider';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../../lib/api/client';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
+import { showSalesAlertToast } from '../ui/sales-alert';
 
 function apiReq<T>(path: string, token: string): Promise<T> {
   return apiRequest<T>(path, { headers: { Authorization: `Bearer ${token}` } });
@@ -75,6 +76,10 @@ export function SalesProfilePage() {
       })
       .finally(() => setLoading(false));
   }, [accessToken]);
+
+  useEffect(() => {
+    showSalesAlertToast(error, 'error');
+  }, [error]);
 
   function handleSignOut() {
     signOut();

@@ -52,7 +52,7 @@ function rejectInvalidAttendanceValidation(input: {
 }) {
   if (input.settings.requireFaceForAttendance && !input.faceDetected) {
     return input.reply.status(400).send({
-      message: 'Wajah tidak terdeteksi. Pastikan kamera menghadap wajah sales sebelum mengirim absensi.',
+      message: 'Wajah tidak terdeteksi. Pastikan kamera menghadap wajah sebelum mengirim absensi.',
       validationStatus: 'face_not_detected',
     });
   }

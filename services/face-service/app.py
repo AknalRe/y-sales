@@ -4,8 +4,10 @@ import base64
 import hashlib
 import json
 import os
+import sys
 import time
 import urllib.request
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
@@ -26,6 +28,17 @@ except Exception:  # pragma: no cover - runtime dependency check
 
 SERVICE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = Path(os.getenv("FACE_SERVICE_CONFIG", SERVICE_DIR / "config.json"))
+
+
+def ts() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def log(msg: str, **extra: Any) -> None:
+    parts = [f"[{ts()}]", "[face-service]", msg]
+    for k, v in extra.items():
+        parts.append(f"{k}={v}")
+    print(" ".join(parts), flush=True)
 
 
 def load_config() -> dict[str, Any]:
@@ -264,13 +277,61 @@ def blur_score(face) -> float | None:
 
 
 def compare_images(reference_source: str, captured_source: str, threshold: float) -> dict[str, Any]:
+    t0 = time.monotonic()
     reference_bytes = load_image_bytes(reference_source)
     captured_bytes = load_image_bytes(captured_source)
     reference_image = open_image(reference_bytes)
     captured_image = open_image(captured_bytes)
 
+    log("Images loaded",
+        ref_size=f"{reference_image.width}x{reference_image.height}",
+        cap_size=f"{captured_image.width}x{captured_image.height}",
+        ref_bytes=len(reference_bytes),
+        cap_bytes=len(captured_bytes))
+
     reference_face, reference_face_detected = crop_face_if_available(reference_image)
     captured_face, captured_face_detected = crop_face_if_available(captured_image)
+
+    log("Face detection result",
+        ref_face_detected=reference_face_detected,
+        cap_face_detected=captured_face_detected,
+        ref_face_size=f"{reference_face.width}x{reference_face.height}" if reference_face_detected else "none",
+        cap_face_size=f"{captured_face.width}x{captured_face.height}" if captured_face_detected else "none")
+
+    face_detector_available = cv2 is not None and np is not None
+
+    # STRICT REJECTION: If captured image has no detectable face, reject immediately.
+    # Do NOT fall through to image comparison — non-face images must never pass.
+    if face_detector_available and not captured_face_detected:
+        elapsed = time.monotonic() - t0
+        log("REJECTED: no face detected in captured image", elapsed_ms=round(elapsed * 1000, 1))
+        return {
+            "matched": False,
+            "confidence": 0.0,
+            "livenessStatus": "not_checked",
+            "reason": "NO_FACE_IN_CAPTURED_IMAGE",
+            "engine": "opencv_face_ensemble_v2",
+            "faceDetected": False,
+            "scores": {},
+            "referenceHash": hashlib.sha256(reference_bytes).hexdigest(),
+            "capturedHash": hashlib.sha256(captured_bytes).hexdigest(),
+        }
+
+    # Also reject if reference has no face
+    if face_detector_available and not reference_face_detected:
+        elapsed = time.monotonic() - t0
+        log("REJECTED: no face detected in reference image", elapsed_ms=round(elapsed * 1000, 1))
+        return {
+            "matched": False,
+            "confidence": 0.0,
+            "livenessStatus": "not_checked",
+            "reason": "NO_FACE_IN_REFERENCE_IMAGE",
+            "engine": "opencv_face_ensemble_v2",
+            "faceDetected": False,
+            "scores": {},
+            "referenceHash": hashlib.sha256(reference_bytes).hexdigest(),
+            "capturedHash": hashlib.sha256(captured_bytes).hexdigest(),
+        }
 
     hash_similarity = dct_phash_similarity(reference_face, captured_face)
     hist_similarity = histogram_similarity(reference_face, captured_face)
@@ -292,8 +353,7 @@ def compare_images(reference_source: str, captured_source: str, threshold: float
     # very weak texture/hash matches from looking overly confident.
     confidence = max(0.0, min(1.0, (raw_confidence - 0.18) / 0.72))
 
-    face_detector_available = cv2 is not None and np is not None
-    faces_detected = reference_face_detected and captured_face_detected if face_detector_available else None
+    faces_detected = reference_face_detected and captured_face_detected
     matched = confidence >= threshold
     reference_blur = blur_score(reference_face)
     captured_blur = blur_score(captured_face)
@@ -308,6 +368,20 @@ def compare_images(reference_source: str, captured_source: str, threshold: float
         reason = "MATCHED_BY_PHASH_NO_FACE_DETECTOR"
     else:
         reason = "MATCHED_BY_FACE_ENSEMBLE"
+
+    elapsed = time.monotonic() - t0
+    log("Comparison complete",
+        matched=matched,
+        confidence=round(confidence, 4),
+        threshold=threshold,
+        reason=reason,
+        hash=round(hash_similarity, 4),
+        hist=round(hist_similarity, 4),
+        lbp=round(lbp_score, 4) if lbp_score is not None else "n/a",
+        orb=round(orb_score, 4) if orb_score is not None else "n/a",
+        ref_blur=round(reference_blur, 2) if reference_blur is not None else "n/a",
+        cap_blur=round(captured_blur, 2) if captured_blur is not None else "n/a",
+        elapsed_ms=round(elapsed * 1000, 1))
 
     return {
         "matched": matched,
@@ -331,7 +405,7 @@ def compare_images(reference_source: str, captured_source: str, threshold: float
 
 
 class FaceServiceHandler(BaseHTTPRequestHandler):
-    server_version = "YukSalesFaceService/0.1"
+    server_version = "YukSalesFaceService/0.2"
 
     def do_GET(self) -> None:  # noqa: N802
         if self.path == "/health":
@@ -352,19 +426,44 @@ class FaceServiceHandler(BaseHTTPRequestHandler):
             return
 
         if not require_auth(self):
+            log("Auth failed", remote=self.address_string())
             json_response(self, 401, {"message": "Unauthorized"})
             return
+
+        request_id = hashlib.md5(f"{time.time()}-{self.address_string()}".encode()).hexdigest()[:8]
+        t0 = time.monotonic()
+        log(f"[REQ {request_id}] POST /verify from {self.address_string()}")
 
         try:
             payload = read_json_body(self)
             threshold = float(payload.get("threshold") or DEFAULT_THRESHOLD)
+            has_ref = bool(payload.get("referenceImageUrl"))
+            has_cap = bool(payload.get("capturedImageUrl"))
+            log(f"[REQ {request_id}] Payload received",
+                has_reference=has_ref,
+                has_captured=has_cap,
+                threshold=threshold)
+
+            if not has_ref or not has_cap:
+                raise ValueError("MISSING_IMAGE_URL")
+
             result = compare_images(
                 str(payload.get("referenceImageUrl") or ""),
                 str(payload.get("capturedImageUrl") or ""),
                 threshold,
             )
+            elapsed = time.monotonic() - t0
+            log(f"[REQ {request_id}] Response",
+                matched=result["matched"],
+                confidence=result["confidence"],
+                reason=result["reason"],
+                elapsed_ms=round(elapsed * 1000, 1))
             json_response(self, 200, result)
         except Exception as error:
+            elapsed = time.monotonic() - t0
+            log(f"[REQ {request_id}] ERROR",
+                error=str(error),
+                elapsed_ms=round(elapsed * 1000, 1))
             json_response(self, 400, {
                 "matched": False,
                 "confidence": 0,
@@ -373,13 +472,20 @@ class FaceServiceHandler(BaseHTTPRequestHandler):
             })
 
     def log_message(self, format: str, *args: Any) -> None:
-        print(f"[face-service] {self.address_string()} {format % args}", flush=True)
+        pass  # Suppress default BaseHTTPRequestHandler logging; we use our own log()
 
 
 def main() -> None:
+    log("Starting face service",
+        host=HOST,
+        port=PORT,
+        threshold=DEFAULT_THRESHOLD,
+        min_face_size=MIN_FACE_SIZE,
+        face_image_size=FACE_IMAGE_SIZE,
+        has_api_key=bool(API_KEY))
+    log(f"Pillow={'OK' if Image is not None else 'MISSING'} | OpenCV={'OK' if cv2 is not None and np is not None else 'MISSING'}")
     server = ThreadingHTTPServer((HOST, PORT), FaceServiceHandler)
-    print(f"YukSales face service listening on http://{HOST}:{PORT}", flush=True)
-    print(f"Pillow installed: {Image is not None}; OpenCV installed: {cv2 is not None and np is not None}", flush=True)
+    log(f"Listening on http://{HOST}:{PORT}")
     server.serve_forever()
 
 

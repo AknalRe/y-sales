@@ -190,17 +190,21 @@ export async function verifyFaceIdentity(input: VerifyFaceIdentityInput) {
   const [capturedFace] = await db.select().from(faceCaptures).where(eq(faceCaptures.id, input.faceCaptureId));
   const [capturedMedia] = capturedFace ? await db.select().from(mediaFiles).where(eq(mediaFiles.id, capturedFace.mediaFileId)) : [];
 
+  const integration = input.settings.faceIntegration;
   let providerResult: ProviderResult | null = null;
+
   try {
-    if (templateMedia && capturedMedia) {
+    if (integration.enabled && integration.provider !== 'mock' && templateMedia && capturedMedia) {
       providerResult = await callConfiguredProvider({ ...input, referenceImageUrl: templateMedia.fileUrl, capturedImageUrl: capturedMedia.fileUrl });
+    } else if (!integration.enabled || integration.provider === 'mock') {
+      console.warn(`[face-verification] Face integration ${integration.enabled ? 'provider=mock' : 'DISABLED'} — face verification requires a configured provider. companyId=${input.companyId} userId=${input.userId}`);
     }
   } catch (error) {
     providerResult = { matched: false, confidence: 0, livenessStatus: 'manual_review' as const, reason: error instanceof Error ? error.message : 'FACE_PROVIDER_ERROR' };
   }
 
-  const confidence = providerResult?.confidence ?? input.faceConfidence ?? 0;
-  const matched = providerResult?.matched ?? confidence >= input.settings.faceMatchThreshold;
+  const confidence = providerResult?.confidence ?? 0;
+  const matched = providerResult?.matched ?? false;
   const status = matched ? 'matched' : 'not_matched';
   const livenessStatus = providerResult?.livenessStatus ?? (input.settings.requireLivenessForVisit ? 'manual_review' : 'not_checked');
 
@@ -214,8 +218,8 @@ export async function verifyFaceIdentity(input: VerifyFaceIdentityInput) {
     status,
     confidence,
     livenessStatus,
-    reason: providerResult?.reason ?? (matched ? 'MATCHED_BY_CONFIGURED_THRESHOLD' : 'BELOW_CONFIGURED_THRESHOLD'),
-    provider: input.settings.faceIntegration.enabled ? input.settings.faceIntegration.provider : 'mock',
+    reason: providerResult?.reason ?? (integration.enabled && integration.provider !== 'mock' ? 'NO_PROVIDER_RESULT' : 'FACE_SERVICE_NOT_CONFIGURED'),
+    provider: integration.enabled ? integration.provider : 'disabled',
     templateId: template.id,
   };
 }

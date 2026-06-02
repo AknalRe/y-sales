@@ -258,6 +258,9 @@ export async function attendanceRoutes(app: FastifyInstance) {
         })
         : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
       const identityValid = !settings.requireFaceIdentityMatchForAttendance || identity.status === 'matched';
+      if (settings.requireFaceIdentityMatchForAttendance && identity.status === 'not_matched') {
+        throw Object.assign(new Error(`Wajah tidak cocok dengan data registrasi (confidence: ${Math.round((identity.confidence ?? 0) * 100)}%). Silakan coba lagi.`), { statusCode: 403 });
+      }
       const validationStatus = !body.faceCapture.faceDetected
         ? 'face_not_detected'
         : geofence.valid && identityValid
@@ -379,6 +382,9 @@ export async function attendanceRoutes(app: FastifyInstance) {
         })
         : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
       const identityValid = !settings.requireFaceIdentityMatchForAttendance || identity.status === 'matched';
+      if (settings.requireFaceIdentityMatchForAttendance && identity.status === 'not_matched') {
+        throw Object.assign(new Error(`Wajah tidak cocok dengan data registrasi (confidence: ${Math.round((identity.confidence ?? 0) * 100)}%). Silakan coba lagi.`), { statusCode: 403 });
+      }
 
       const [sess] = await tx.update(attendanceSessions).set({
         checkOutAt: new Date(body.capturedAt),

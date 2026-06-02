@@ -8,7 +8,7 @@ export const generalSettingsDefaults = {
   allowMultipleAttendanceSessionsPerDay: false,
   requireAttendanceAtOffice: false,
   requireFaceForAttendance: true,
-  requireFaceIdentityMatchForAttendance: false,
+  requireFaceIdentityMatchForAttendance: true,
   requireFaceForVisit: true,
   enableLiveFaceDetectionInCamera: true,
   requireTransactionProofPhoto: true,

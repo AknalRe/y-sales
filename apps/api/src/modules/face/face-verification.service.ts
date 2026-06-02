@@ -10,6 +10,8 @@ type VerifyFaceIdentityInput = {
   faceDetected: boolean;
   faceConfidence?: number;
   settings: GeneralSettings;
+  capturedImageUrl?: string;
+  referenceImageUrl?: string;
 };
 
 type ProviderResult = {
@@ -207,20 +209,23 @@ export async function verifyFaceIdentity(input: VerifyFaceIdentityInput) {
   const [capturedFace] = await db.select().from(faceCaptures).where(eq(faceCaptures.id, input.faceCaptureId));
   const [capturedMedia] = capturedFace ? await db.select().from(mediaFiles).where(eq(mediaFiles.id, capturedFace.mediaFileId)) : [];
 
+  const refUrl = input.referenceImageUrl ?? templateMedia?.fileUrl;
+  const capUrl = input.capturedImageUrl ?? capturedMedia?.fileUrl;
+
   const integration = input.settings.faceIntegration;
   let providerResult: ProviderResult | null = null;
 
-  console.log(`[${new Date().toISOString()}] [face-verify] integration.enabled=${integration.enabled} provider=${integration.provider} baseUrl=${integration.baseUrl || '(empty)'} hasTemplateMedia=${!!templateMedia} hasCapturedMedia=${!!capturedMedia}`);
+  console.log(`[${new Date().toISOString()}] [face-verify] integration.enabled=${integration.enabled} provider=${integration.provider} baseUrl=${integration.baseUrl || '(empty)'} hasRefUrl=${!!refUrl} hasCapUrl=${!!capUrl}`);
 
   try {
-    if (integration.enabled && integration.provider !== 'mock' && templateMedia && capturedMedia) {
-      providerResult = await callConfiguredProvider({ ...input, referenceImageUrl: templateMedia.fileUrl, capturedImageUrl: capturedMedia.fileUrl });
+    if (integration.enabled && integration.provider !== 'mock' && refUrl && capUrl) {
+      providerResult = await callConfiguredProvider({ ...input, referenceImageUrl: refUrl, capturedImageUrl: capUrl });
     } else if (!integration.enabled || integration.provider === 'mock') {
       console.warn(`[${new Date().toISOString()}] [face-verify] ⚠ Face integration ${integration.enabled ? 'provider=mock' : 'DISABLED'} — mock mode, face NOT verified by service. companyId=${input.companyId} userId=${input.userId}`);
-    } else if (!templateMedia) {
-      console.warn(`[${new Date().toISOString()}] [face-verify] ⚠ Template media not found for templateId=${template.id}`);
-    } else if (!capturedMedia) {
-      console.warn(`[${new Date().toISOString()}] [face-verify] ⚠ Captured media not found for faceCaptureId=${input.faceCaptureId}`);
+    } else if (!refUrl) {
+      console.warn(`[${new Date().toISOString()}] [face-verify] ⚠ Reference image URL not found for templateId=${template.id}`);
+    } else if (!capUrl) {
+      console.warn(`[${new Date().toISOString()}] [face-verify] ⚠ Captured image URL not found for faceCaptureId=${input.faceCaptureId}`);
     }
   } catch (error) {
     console.error(`[${new Date().toISOString()}] [face-verify] ✗ Provider error: ${error instanceof Error ? error.message : String(error)}`);

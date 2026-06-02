@@ -7,25 +7,49 @@ export type CapturedImage = {
   faceConfidence?: number;
 };
 
+export type FaceDetectionBox = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type FaceDetectionSnapshot = {
+  supported: boolean;
+  detected: boolean;
+  confidence: number;
+  box?: FaceDetectionBox;
+  checkedAt: string;
+};
+
 type BrowserFaceDetector = {
   detect(source: CanvasImageSource): Promise<Array<{ boundingBox: DOMRectReadOnly; landmarks?: unknown[] }>>;
 };
 
-async function detectFace(canvas: HTMLCanvasElement) {
+async function detectFace(canvas: HTMLCanvasElement): Promise<FaceDetectionSnapshot> {
   const FaceDetectorCtor = (window as unknown as { FaceDetector?: new (options?: { fastMode?: boolean; maxDetectedFaces?: number }) => BrowserFaceDetector }).FaceDetector;
   if (!FaceDetectorCtor) {
-    return { detected: false, confidence: 0 };
+    return { supported: false, detected: false, confidence: 0, checkedAt: new Date().toISOString() };
   }
 
   try {
     const detector = new FaceDetectorCtor({ fastMode: true, maxDetectedFaces: 1 });
     const faces = await detector.detect(canvas);
+    const firstFace = faces[0]?.boundingBox;
     return {
+      supported: true,
       detected: faces.length > 0,
       confidence: faces.length > 0 ? 0.9 : 0,
+      box: firstFace ? {
+        x: firstFace.x,
+        y: firstFace.y,
+        width: firstFace.width,
+        height: firstFace.height,
+      } : undefined,
+      checkedAt: new Date().toISOString(),
     };
   } catch {
-    return { detected: false, confidence: 0 };
+    return { supported: true, detected: false, confidence: 0, checkedAt: new Date().toISOString() };
   }
 }
 
@@ -55,6 +79,24 @@ export async function captureFromVideo(video: HTMLVideoElement): Promise<Capture
     faceDetected: face.detected,
     faceConfidence: face.confidence,
   };
+}
+
+export async function detectFaceFromVideo(video: HTMLVideoElement): Promise<FaceDetectionSnapshot> {
+  if (!video.videoWidth || !video.videoHeight) {
+    return { supported: true, detected: false, confidence: 0, checkedAt: new Date().toISOString() };
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    return { supported: true, detected: false, confidence: 0, checkedAt: new Date().toISOString() };
+  }
+
+  drawVideoFrame(video, context, canvas);
+  return detectFace(canvas);
 }
 
 export async function startFrontCamera(video: HTMLVideoElement) {

@@ -67,9 +67,9 @@ const generalSettingsSchema = z.object({
 
 const enrollFaceSchema = z.object({
   userId: z.string().uuid(),
-  dataUrl: z.string().min(20),
-  mimeType: z.string().default('image/jpeg'),
-  sizeBytes: z.number().int().nonnegative().default(0),
+  dataUrl: z.string().min(20).refine((value) => /^data:image\/(jpeg|jpg|png|webp);base64,/i.test(value), 'Foto wajah harus berupa image data URL.'),
+  mimeType: z.enum(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']).default('image/jpeg'),
+  sizeBytes: z.number().int().positive().max(4_000_000),
   embeddingRef: z.string().optional(),
 });
 
@@ -111,11 +111,14 @@ export async function settingsRoutes(app: FastifyInstance) {
     if (!user) throw Object.assign(new Error('User tidak ditemukan pada company ini.'), { statusCode: 404 });
 
     const template = await db.transaction(async (tx) => {
+      const templateHash = crypto.createHash('sha256').update(body.dataUrl).digest('hex');
       const [media] = await tx.insert(mediaFiles).values({
         ownerType: 'face_template',
+        ownerId: user.id,
         fileUrl: body.dataUrl,
         mimeType: body.mimeType,
         sizeBytes: body.sizeBytes,
+        fileHash: templateHash,
         capturedAt: new Date(),
         uploadedByUserId: request.user?.id,
       }).returning();
@@ -127,7 +130,7 @@ export async function settingsRoutes(app: FastifyInstance) {
         roleId: user.roleId,
         mediaFileId: media.id,
         embeddingRef: body.embeddingRef,
-        templateHash: crypto.createHash('sha256').update(body.dataUrl).digest('hex'),
+        templateHash,
         status: 'active',
         createdByUserId: request.user?.id,
       }).returning();

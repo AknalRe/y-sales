@@ -78,6 +78,8 @@ Penjelasan singkat:
 Jika face recognition tidak aktif, sistem cukup memastikan ada wajah.
 Jika face recognition aktif, wajah sales harus cocok dengan template wajah user tersebut.
 Jika tidak valid, kunjungan bisa ditolak atau masuk manual review sesuai setting company.
+Frontend sales menampilkan live preview deteksi wajah berupa kotak wajah dan status agar user tahu kualitas foto sebelum submit.
+Validasi final tetap dilakukan backend berdasarkan GPS, radius, faceDetected, dan template wajah aktif.
 ```
 
 ---

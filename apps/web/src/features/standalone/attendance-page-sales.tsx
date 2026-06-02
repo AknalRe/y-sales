@@ -5,6 +5,7 @@ import { useAuth } from '../auth/auth-provider';
 import { apiRequest } from '../../lib/api/client';
 import { useScrollToTop } from '../../hooks/use-scroll-to-top';
 import { SalesAlert, showSalesAlertToast } from '../sales/ui/sales-alert';
+import { LiveFaceOverlay } from '../sales/ui/live-face-overlay';
 
 type TodaySession = {
   id: string;
@@ -177,6 +178,7 @@ export function AttendancePageSales(props: AttendanceState) {
       {/* Live Camera */}
       <div className="relative mt-2">
         <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
+        <LiveFaceOverlay videoRef={videoRef} stream={stream} />
         {location && (
           <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
             <MapPin size={13} className="shrink-0 text-sales-emerald" />

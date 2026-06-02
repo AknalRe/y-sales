@@ -706,10 +706,18 @@ Behavior:
 
 ```txt
 validasi user company sama
-simpan media face_template
+simpan media face_template dengan ownerId=userId dan fileHash/templateHash sha256
 nonaktifkan template aktif lama
 buat template baru active companyId/userId/roleId
 buat audit log
+```
+
+Catatan:
+
+```txt
+dataUrl wajib berupa image data URL: jpeg/jpg/png/webp
+sizeBytes maksimal 4MB
+template aktif terbaru dipakai sebagai referensi identity match
 ```
 
 Face verification check-in/out:

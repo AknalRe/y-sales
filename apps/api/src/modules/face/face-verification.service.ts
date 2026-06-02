@@ -29,7 +29,7 @@ async function postJson(url: string, input: ProviderInput, body: Record<string, 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), integration.timeoutMs);
   const t0 = Date.now();
-  console.log(`[face-verify] → POST ${url} provider=${integration.provider} timeout=${integration.timeoutMs}ms`);
+  console.log(`[${new Date().toISOString()}] [face-verify] → POST ${url} provider=${integration.provider} timeout=${integration.timeoutMs}ms`);
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -42,15 +42,15 @@ async function postJson(url: string, input: ProviderInput, body: Record<string, 
     });
     const elapsed = Date.now() - t0;
     if (!response.ok) {
-      console.error(`[face-verify] ← POST ${url} status=${response.status} elapsed=${elapsed}ms`);
+      console.error(`[${new Date().toISOString()}] [face-verify] ← POST ${url} status=${response.status} elapsed=${elapsed}ms`);
       throw new Error(`FACE_PROVIDER_HTTP_${response.status}`);
     }
     const result = await response.json() as Record<string, unknown>;
-    console.log(`[face-verify] ← POST ${url} status=200 elapsed=${elapsed}ms matched=${result.matched} confidence=${result.confidence} reason=${result.reason}`);
+    console.log(`[${new Date().toISOString()}] [face-verify] ← POST ${url} status=200 elapsed=${elapsed}ms matched=${result.matched} confidence=${result.confidence} reason=${result.reason}`);
     return result;
   } catch (error) {
     const elapsed = Date.now() - t0;
-    console.error(`[face-verify] ✗ POST ${url} error=${error instanceof Error ? error.message : String(error)} elapsed=${elapsed}ms`);
+    console.error(`[${new Date().toISOString()}] [face-verify] ✗ POST ${url} error=${error instanceof Error ? error.message : String(error)} elapsed=${elapsed}ms`);
     throw error;
   } finally {
     clearTimeout(timeout);
@@ -177,11 +177,11 @@ async function callConfiguredProvider(input: ProviderInput): Promise<ProviderRes
 }
 
 export async function verifyFaceIdentity(input: VerifyFaceIdentityInput) {
-  console.log(`[face-verify] verifyFaceIdentity start companyId=${input.companyId} userId=${input.userId} faceDetected=${input.faceDetected} faceCaptureId=${input.faceCaptureId}`);
+  console.log(`[${new Date().toISOString()}] [face-verify] verifyFaceIdentity start companyId=${input.companyId} userId=${input.userId} faceDetected=${input.faceDetected} faceCaptureId=${input.faceCaptureId}`);
 
   const [user] = await db.select().from(users).where(and(eq(users.id, input.userId), eq(users.companyId, input.companyId), eq(users.status, 'active')));
   if (!user) {
-    console.log(`[face-verify] REJECT reason=USER_NOT_FOUND_IN_COMPANY userId=${input.userId}`);
+    console.log(`[${new Date().toISOString()}] [face-verify] REJECT reason=USER_NOT_FOUND_IN_COMPANY userId=${input.userId}`);
     return { status: 'not_matched' as const, confidence: 0, livenessStatus: 'manual_review' as const, reason: 'USER_NOT_FOUND_IN_COMPANY' };
   }
 
@@ -193,12 +193,12 @@ export async function verifyFaceIdentity(input: VerifyFaceIdentityInput) {
   )).orderBy(desc(userFaceTemplates.createdAt)).limit(1);
 
   if (!template) {
-    console.log(`[face-verify] REVIEW reason=ACTIVE_FACE_TEMPLATE_NOT_FOUND userId=${input.userId}`);
+    console.log(`[${new Date().toISOString()}] [face-verify] REVIEW reason=ACTIVE_FACE_TEMPLATE_NOT_FOUND userId=${input.userId}`);
     return { status: 'manual_review' as const, confidence: input.faceConfidence ?? 0, livenessStatus: 'manual_review' as const, reason: 'ACTIVE_FACE_TEMPLATE_NOT_FOUND' };
   }
 
   if (!input.faceDetected) {
-    console.log(`[face-verify] REJECT reason=FACE_NOT_DETECTED userId=${input.userId}`);
+    console.log(`[${new Date().toISOString()}] [face-verify] REJECT reason=FACE_NOT_DETECTED userId=${input.userId}`);
     await db.update(faceCaptures).set({ identityMatchStatus: 'not_matched', identityConfidence: '0', livenessStatus: 'manual_review' }).where(eq(faceCaptures.id, input.faceCaptureId));
     return { status: 'not_matched' as const, confidence: 0, livenessStatus: 'manual_review' as const, reason: 'FACE_NOT_DETECTED' };
   }
@@ -210,20 +210,20 @@ export async function verifyFaceIdentity(input: VerifyFaceIdentityInput) {
   const integration = input.settings.faceIntegration;
   let providerResult: ProviderResult | null = null;
 
-  console.log(`[face-verify] integration.enabled=${integration.enabled} provider=${integration.provider} baseUrl=${integration.baseUrl || '(empty)'} hasTemplateMedia=${!!templateMedia} hasCapturedMedia=${!!capturedMedia}`);
+  console.log(`[${new Date().toISOString()}] [face-verify] integration.enabled=${integration.enabled} provider=${integration.provider} baseUrl=${integration.baseUrl || '(empty)'} hasTemplateMedia=${!!templateMedia} hasCapturedMedia=${!!capturedMedia}`);
 
   try {
     if (integration.enabled && integration.provider !== 'mock' && templateMedia && capturedMedia) {
       providerResult = await callConfiguredProvider({ ...input, referenceImageUrl: templateMedia.fileUrl, capturedImageUrl: capturedMedia.fileUrl });
     } else if (!integration.enabled || integration.provider === 'mock') {
-      console.warn(`[face-verify] ⚠ Face integration ${integration.enabled ? 'provider=mock' : 'DISABLED'} — mock mode, face NOT verified by service. companyId=${input.companyId} userId=${input.userId}`);
+      console.warn(`[${new Date().toISOString()}] [face-verify] ⚠ Face integration ${integration.enabled ? 'provider=mock' : 'DISABLED'} — mock mode, face NOT verified by service. companyId=${input.companyId} userId=${input.userId}`);
     } else if (!templateMedia) {
-      console.warn(`[face-verify] ⚠ Template media not found for templateId=${template.id}`);
+      console.warn(`[${new Date().toISOString()}] [face-verify] ⚠ Template media not found for templateId=${template.id}`);
     } else if (!capturedMedia) {
-      console.warn(`[face-verify] ⚠ Captured media not found for faceCaptureId=${input.faceCaptureId}`);
+      console.warn(`[${new Date().toISOString()}] [face-verify] ⚠ Captured media not found for faceCaptureId=${input.faceCaptureId}`);
     }
   } catch (error) {
-    console.error(`[face-verify] ✗ Provider error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`[${new Date().toISOString()}] [face-verify] ✗ Provider error: ${error instanceof Error ? error.message : String(error)}`);
     providerResult = { matched: false, confidence: 0, livenessStatus: 'manual_review' as const, reason: error instanceof Error ? error.message : 'FACE_PROVIDER_ERROR' };
   }
 
@@ -232,7 +232,7 @@ export async function verifyFaceIdentity(input: VerifyFaceIdentityInput) {
   const status = matched ? 'matched' : 'not_matched';
   const livenessStatus = providerResult?.livenessStatus ?? (input.settings.requireLivenessForVisit ? 'manual_review' : 'not_checked');
 
-  console.log(`[face-verify] RESULT status=${status} confidence=${confidence} reason=${providerResult?.reason ?? 'NO_PROVIDER'} provider=${integration.enabled ? integration.provider : 'disabled'}`);
+  console.log(`[${new Date().toISOString()}] [face-verify] RESULT status=${status} confidence=${confidence} reason=${providerResult?.reason ?? 'NO_PROVIDER'} provider=${integration.enabled ? integration.provider : 'disabled'}`);
 
   await db.update(faceCaptures).set({
     identityMatchStatus: status,

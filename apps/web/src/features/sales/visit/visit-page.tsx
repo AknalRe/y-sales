@@ -9,6 +9,7 @@ import { useAuth } from '../../auth/auth-provider';
 import { enqueueVisit, getVisitQueueCount } from '../../../lib/offline/visit-queue';
 import { syncVisitQueue } from '../../../lib/offline/sync-visits';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
+import { SalesAlert, showSalesAlertToast } from '../ui/sales-alert';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 const permissionStorageKey = 'yuksales.permission.visit';
@@ -116,6 +117,10 @@ export function VisitPage() {
       setConsignments([]);
     }
   }, [accessToken, activeVisitId, selectedOutlet]);
+
+  useEffect(() => {
+    showSalesAlertToast(message);
+  }, [message]);
 
   const availableSchedules = schedules.filter((schedule) => ['assigned', 'approved'].includes(schedule.status));
   const selectedSchedule = schedules.find((schedule) => schedule.id === selectedScheduleId);
@@ -520,11 +525,7 @@ export function VisitPage() {
         </>
       )}
 
-      {message && (
-        <div className="sales-message">
-          {message}
-        </div>
-      )}
+      <SalesAlert message={message} onClose={() => setMessage('')} />
 
       {/* Preview Modal */}
       {preview && image && (

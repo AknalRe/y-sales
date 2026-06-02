@@ -4,6 +4,7 @@ import type { AttendanceState } from './attendance-page';
 import { useAuth } from '../auth/auth-provider';
 import { apiRequest } from '../../lib/api/client';
 import { useScrollToTop } from '../../hooks/use-scroll-to-top';
+import { SalesAlert, showSalesAlertToast } from '../sales/ui/sales-alert';
 
 type TodaySession = {
   id: string;
@@ -34,7 +35,7 @@ export function AttendancePageSales(props: AttendanceState) {
   const { accessToken } = useAuth();
   const { videoRef, location, loading, message, online, preview, image, stream, reloadKey,
     showPermissionPopup, handleAllowPermissions,
-    handleCaptureAndPreview, handleRetake, handleConfirmSend, handleConfirmCheckOut } = props;
+    handleCaptureAndPreview, handleRetake, handleConfirmSend, handleConfirmCheckOut, clearMessage } = props;
 
   const [todaySession, setTodaySession] = useState<TodaySession | null>(null);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -81,6 +82,10 @@ export function AttendancePageSales(props: AttendanceState) {
   useEffect(() => {
     void loadData();
   }, [loadData, reloadKey]);
+
+  useEffect(() => {
+    showSalesAlertToast(message);
+  }, [message]);
 
   function formatTime(dateStr?: string | null) {
     if (!dateStr) return '--:--';
@@ -199,11 +204,7 @@ export function AttendancePageSales(props: AttendanceState) {
           {mode === 'check-in' ? 'Absen Masuk' : 'Absen Keluar'}
         </button>
 
-        {message && (
-          <div className="mt-2 rounded-xl border border-green-200 bg-green-50 px-3.5 py-2.8 text-green-800" style={{ fontSize: '.8rem' }}>
-            {message}
-          </div>
-        )}
+        <SalesAlert message={message} onClose={clearMessage} className="mt-2" />
       </div>
 
       {/* List Absensi */}

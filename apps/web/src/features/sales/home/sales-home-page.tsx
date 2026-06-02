@@ -4,6 +4,7 @@ import { Camera, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCirc
 import { useAuth } from '../../auth/auth-provider';
 import { apiRequest } from '../../../lib/api/client';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
+import { showSalesAlertToast } from '../ui/sales-alert';
 
 type VisitSession = {
   id: string;
@@ -89,6 +90,10 @@ export function SalesHomePage() {
   }
 
   useEffect(() => { load(); }, [accessToken]);
+
+  useEffect(() => {
+    showSalesAlertToast(error, 'error');
+  }, [error]);
 
   const checkedIn = attendance?.status === 'open';
   const todayVisitsDone = visits.filter(v => v.status === 'completed').length;

@@ -36,6 +36,7 @@ export interface AttendanceState {
   handleRetake: () => void;
   handleConfirmSend: () => Promise<void>;
   handleConfirmCheckOut: (attendanceSessionId: string) => Promise<void>;
+  clearMessage: () => void;
 }
 
 export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
@@ -266,6 +267,7 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
     showPermissionPopup, handleAllowPermissions,
     handleStartCamera, handleCapture, handleLocation, handleCheckIn, handleCheckOut, handleSyncQueue,
     handleCaptureAndPreview, handleRetake, handleConfirmSend, handleConfirmCheckOut,
+    clearMessage: () => setMessage(''),
   };
 
   if (mode === 'sales') {

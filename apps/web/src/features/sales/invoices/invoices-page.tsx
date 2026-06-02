@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/auth-provider';
 import { apiRequest, createMediaUpload, uploadToStorageUrl, finalizeMediaUpload } from '../../../lib/api/client';
 import { EmptyState, Spinner } from '../../../components/ui';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
+import { showSalesAlertToast } from '../ui/sales-alert';
 
 const orderStatusLabel: Record<string, string> = {
   draft: 'Draft',
@@ -118,6 +119,10 @@ export function InvoicesPage() {
     fetchOrders();
   }, [accessToken]);
 
+  useEffect(() => {
+    showSalesAlertToast(error, 'error');
+  }, [error]);
+
   async function toggleDetail(orderId: string) {
     const nextOrderId = expandedOrderId === orderId ? null : orderId;
     setExpandedOrderId(nextOrderId);
@@ -150,6 +155,7 @@ export function InvoicesPage() {
         order.id === orderId ? { ...order, hasInvoice: true, proofPhotoCount: Number(order.proofPhotoCount ?? 0) + 1 } : order
       )));
       await fetchOrderDetail(orderId, true);
+      showSalesAlertToast('Foto bukti nota berhasil diunggah.', 'success');
     } catch (e: any) {
       setError(e.message || 'Gagal mengunggah foto nota.');
     } finally {

@@ -7,6 +7,7 @@ import { EmptyState, Spinner } from '../../../components/ui';
 import { enqueueTransaction, getTransactionQueueCount } from '../../../lib/offline/transaction-queue';
 import { syncTransactionQueue } from '../../../lib/offline/sync-transactions';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
+import { SalesAlert, showSalesAlertToast } from '../ui/sales-alert';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 const transactionDraftStorageKey = 'yuksales.sales.transactionDraft';
@@ -69,6 +70,14 @@ export function TransactionsPage() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    showSalesAlertToast(offlineMessage);
+  }, [offlineMessage]);
+
+  useEffect(() => {
+    showSalesAlertToast(error, 'error');
+  }, [error]);
 
   useEffect(() => {
     const raw = localStorage.getItem(activeVisitStorageKey);
@@ -370,9 +379,7 @@ export function TransactionsPage() {
         </div>
       )}
 
-      {offlineMessage && (
-        <div className="sales-message" style={{ marginBottom: '.5rem' }}>{offlineMessage}</div>
-      )}
+      <SalesAlert message={offlineMessage} onClose={() => setOfflineMessage('')} />
 
       {/* Search */}
       <div className="sales-card" style={{ margin: 0, padding: 0, borderRadius: 15 }}>

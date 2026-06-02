@@ -4,6 +4,7 @@ import { CalendarDays, Clock, MapPin, Navigation, Store, CheckCircle2 } from 'lu
 import { useAuth } from '../../auth/auth-provider';
 import { getTodayVisitPlan, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
+import { showSalesAlertToast } from '../ui/sales-alert';
 
 const STATUS_LABEL: Record<string, { text: string; color: string; bg: string }> = {
   draft: { text: 'Draft', color: 'var(--sales-muted)', bg: 'var(--sales-bg)' },
@@ -49,6 +50,10 @@ export function SalesSchedulesPage() {
       .catch(e => setError(e.message || 'Gagal memuat jadwal kunjungan.'))
       .finally(() => setLoading(false));
   }, [accessToken]);
+
+  useEffect(() => {
+    showSalesAlertToast(error, 'error');
+  }, [error]);
 
   const today = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',

@@ -30,6 +30,17 @@ export async function buildApp() {
     ...(httpsOptions ? { https: httpsOptions } : {}),
   });
 
+  // ─── Request/Response Logger (always active) ────────────────────────────
+  app.addHook('onRequest', async (request) => {
+    (request as any)._startTime = Date.now();
+    console.log(`[${new Date().toISOString()}] → ${request.method} ${request.url} ip=${request.ip}`);
+  });
+
+  app.addHook('onResponse', async (request, reply) => {
+    const elapsed = Date.now() - ((request as any)._startTime || Date.now());
+    console.log(`[${new Date().toISOString()}] ← ${request.method} ${request.url} status=${reply.statusCode} elapsed=${elapsed}ms`);
+  });
+
   await app.register(cors, {
     origin: allowedOrigins,
     credentials: true,

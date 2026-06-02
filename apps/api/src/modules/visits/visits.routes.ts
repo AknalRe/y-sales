@@ -434,6 +434,7 @@ export async function visitRoutes(app: FastifyInstance) {
           faceDetected: hasValidFace,
           faceConfidence: body.faceCapture.faceConfidence,
           settings,
+          capturedImageUrl: body.faceCapture.dataUrl,
         })
         : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
       if (settings.rejectVisitOnFaceMismatch && identityResult.status === 'not_matched') throw Object.assign(new Error('Identitas wajah tidak cocok dengan user login.'), { statusCode: 403 });
@@ -517,7 +518,7 @@ export async function visitRoutes(app: FastifyInstance) {
         tx,
       });
       const identityResult = settings.requireFaceIdentityMatchForVisit
-        ? await verifyFaceIdentity({ companyId, userId: request.user!.id, faceCaptureId: faceResult.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence, settings })
+        ? await verifyFaceIdentity({ companyId, userId: request.user!.id, faceCaptureId: faceResult.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence, settings, capturedImageUrl: body.faceCapture.dataUrl })
         : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
       if (settings.rejectVisitOnFaceMismatch && identityResult.status === 'not_matched') throw Object.assign(new Error('Identitas wajah check-out tidak cocok dengan user login.'), { statusCode: 403 });
       const identityValid = !settings.requireFaceIdentityMatchForVisit || identityResult.status === 'matched';

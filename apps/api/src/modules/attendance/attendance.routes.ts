@@ -375,6 +375,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
           faceDetected: body.faceCapture.faceDetected,
           faceConfidence: body.faceCapture.faceConfidence,
           settings,
+          capturedImageUrl: body.faceCapture.dataUrl,
         })
         : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
       const identityValid = !settings.requireFaceIdentityMatchForAttendance || identity.status === 'matched';

@@ -22,6 +22,9 @@ module.exports = {
       script: facePython,
       args: "services/face-service/app.py",
       interpreter: "none",
+      env: {
+        PYTHONUNBUFFERED: "1",
+      },
     },
   ],
 };

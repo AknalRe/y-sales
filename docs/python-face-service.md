@@ -27,7 +27,9 @@ Script setup akan membuat `.venv-face`, menginstall dependency Python, dan menya
   "port": 5055,
   "apiKey": "change-this-face-service-key",
   "maxImageBytes": 4194304,
-  "threshold": 0.8
+  "threshold": 0.72,
+  "faceImageSize": 160,
+  "minFaceSize": 56
 }
 ```
 
@@ -91,7 +93,7 @@ Pengaturan Operasional → Face Verification:
 - Base URL: `http://127.0.0.1:5055/verify`
 - API key: samakan dengan `FACE_SERVICE_API_KEY`
 - Mode: `detect_and_verify`
-- Threshold: mulai dari `0.8`
+- Threshold: mulai dari `0.72` untuk provider `internal_python`. Naikkan jika terlalu mudah cocok, turunkan sedikit jika user yang sama sering gagal.
 
 ## Kontrak Response
 
@@ -113,12 +115,13 @@ Service mengembalikan:
   "matched": true,
   "confidence": 0.86,
   "livenessStatus": "not_checked",
-  "reason": "MATCHED_BY_FACE_CROP_PHASH"
+  "reason": "MATCHED_BY_FACE_ENSEMBLE",
+  "engine": "opencv_face_ensemble_v2"
 }
 ```
 
 ## Catatan Akurasi
 
-Implementasi awal ini memakai OpenCV Haar Cascade untuk menemukan wajah dan perceptual hash untuk similarity. Ini cukup untuk MVP lokal dan menguji flow end-to-end, tetapi belum setara InsightFace/ArcFace.
+Implementasi lokal ini memakai OpenCV Haar Cascade untuk menemukan wajah, normalisasi grayscale/equalization, LBP histogram, pHash DCT, dan ORB feature matching. Ini lebih stabil daripada hash sederhana, tetapi tetap belum setara embedding model seperti InsightFace/ArcFace.
 
 Untuk production yang lebih kuat, endpoint `/verify` bisa diganti engine embedding InsightFace tanpa mengubah Node.js API, selama response tetap `matched`, `confidence`, `livenessStatus`, dan `reason`.

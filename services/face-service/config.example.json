@@ -3,5 +3,7 @@
   "port": 5055,
   "apiKey": "change-this-face-service-key",
   "maxImageBytes": 4194304,
-  "threshold": 0.8
+  "threshold": 0.72,
+  "faceImageSize": 160,
+  "minFaceSize": 56
 }

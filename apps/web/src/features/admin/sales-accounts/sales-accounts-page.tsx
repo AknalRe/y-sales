@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  ImageUp,
   KeyRound,
   Mail,
   Pencil,
@@ -35,6 +34,7 @@ import {
   type TenantUser,
 } from '@/lib/api/platform';
 import { EmptyState } from '@/components/ui';
+import { FaceCaptureField } from '../shared/face-capture-field';
 
 type SalesAccount = TenantUser;
 
@@ -680,36 +680,11 @@ export function SalesAccountsPage() {
                 <Camera size={15} />
                 Foto ini menjadi template wajah aktif untuk validasi absensi dan visit. Template lama akan otomatis dinonaktifkan.
               </div>
-              <label
-                htmlFor="sales-face-file"
-                className="admin-field admin-field-full"
-                style={{
-                  display: 'grid',
-                  placeItems: 'center',
-                  minHeight: 220,
-                  border: '1px dashed var(--admin-border-strong)',
-                  borderRadius: 18,
-                  background: 'var(--admin-bg)',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                }}
-              >
-                {facePreview ? (
-                  <img src={facePreview} alt={`Preview wajah ${faceTarget.name}`} style={{ width: '100%', height: 220, objectFit: 'cover' }} />
-                ) : (
-                  <span className="grid place-items-center gap-2 text-admin-muted" style={{ fontSize: '.85rem', fontWeight: 800 }}>
-                    <ImageUp size={34} />
-                    Pilih atau ambil foto wajah
-                  </span>
-                )}
-              </label>
-              <input
+              <FaceCaptureField
                 id="sales-face-file"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                capture="user"
-                style={{ display: 'none' }}
-                onChange={(event) => void handleFaceFileChange(event.target.files?.[0])}
+                preview={facePreview}
+                targetName={faceTarget.name}
+                onCapture={handleFaceFileChange}
               />
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <DetailBox label="Status Template" value={activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'} />

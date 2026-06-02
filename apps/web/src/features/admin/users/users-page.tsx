@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Users, Plus, Search, Trash2, RefreshCw,
-  KeyRound, AlertTriangle, CheckCircle2, UserX, Pencil, Eye, EyeOff, Camera, ImageUp
+  KeyRound, AlertTriangle, CheckCircle2, UserX, Pencil, Eye, EyeOff, Camera
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -20,6 +20,7 @@ import {
 } from '@/lib/api/platform';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui';
+import { FaceCaptureField } from '../shared/face-capture-field';
 
 const statusIcon = {
   active: <CheckCircle2 size={13} className="text-admin-success" />,
@@ -717,36 +718,11 @@ export function UsersPage() {
                 <Camera size={15} />
                 Foto ini menjadi template wajah aktif user. Template lama akan otomatis dinonaktifkan.
               </div>
-              <label
-                htmlFor="user-face-file"
-                className="admin-field admin-field-full"
-                style={{
-                  display: 'grid',
-                  placeItems: 'center',
-                  minHeight: 220,
-                  border: '1px dashed var(--admin-border-strong)',
-                  borderRadius: 18,
-                  background: 'var(--admin-bg)',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                }}
-              >
-                {facePreview ? (
-                  <img src={facePreview} alt={`Preview wajah ${faceTarget.name}`} style={{ width: '100%', height: 220, objectFit: 'cover' }} />
-                ) : (
-                  <span className="grid place-items-center gap-2 text-admin-muted" style={{ fontSize: '.85rem', fontWeight: 800 }}>
-                    <ImageUp size={34} />
-                    Pilih atau ambil foto wajah
-                  </span>
-                )}
-              </label>
-              <input
+              <FaceCaptureField
                 id="user-face-file"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                capture="user"
-                style={{ display: 'none' }}
-                onChange={(event) => void handleFaceFileChange(event.target.files?.[0])}
+                preview={facePreview}
+                targetName={faceTarget.name}
+                onCapture={handleFaceFileChange}
               />
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="admin-detail-box">

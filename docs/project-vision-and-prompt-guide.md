@@ -322,6 +322,7 @@ Aturan operasional company yang penting:
 - apakah bukti foto transaksi wajib;
 - apakah foto wajah absensi wajib;
 - apakah foto wajah visit wajib;
+- apakah live detector wajah di kamera sales aktif;
 - apakah face identity match aktif;
 - face match threshold;
 - liveness check;
@@ -331,7 +332,7 @@ Aturan operasional company yang penting:
 Integrasi teknis company yang penting:
 
 - Cloudflare R2 atau S3-compatible storage untuk foto nota, foto outlet, bukti visit, produk, dan dokumen;
-- face recognition provider: `mock`, `custom_http`, `aws_rekognition`, `azure_face`, atau `google_vertex`;
+- face recognition provider: `mock`, `internal_python`, `custom_http`, `aws_rekognition`, `azure_face`, atau `google_vertex`;
 - payment provider bila modul pembayaran digital dipakai;
 - notification provider bila reminder/alert otomatis dipakai.
 

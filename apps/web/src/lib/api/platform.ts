@@ -157,6 +157,20 @@ export type Permission = {
   description?: string | null;
 };
 
+export type FaceTemplate = {
+  id: string;
+  companyId: string;
+  userId: string;
+  roleId: string;
+  mediaFileId: string;
+  embeddingRef?: string | null;
+  templateHash?: string | null;
+  status: 'active' | 'inactive' | 'revoked';
+  createdByUserId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // ─── Platform: Companies ─────────────────────────────────────────────────────
 
 export function platformGetCompanies(token: string, page = 1) {
@@ -382,6 +396,26 @@ export function resetPassword(token: string, id: string, newPassword: string) {
   return apiRequest<{ success: boolean }>(
     `/users/${id}/reset-password`,
     { method: 'POST', body: JSON.stringify({ newPassword }), headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+export function getFaceTemplates(token: string) {
+  return apiRequest<{ templates: FaceTemplate[] }>(
+    '/settings/face-templates',
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
+export function enrollFaceTemplate(token: string, data: {
+  userId: string;
+  dataUrl: string;
+  mimeType: 'image/jpeg' | 'image/jpg' | 'image/png' | 'image/webp';
+  sizeBytes: number;
+  embeddingRef?: string;
+}) {
+  return apiRequest<{ template: FaceTemplate }>(
+    '/settings/face-templates',
+    { method: 'POST', body: JSON.stringify(data), headers: { Authorization: `Bearer ${token}` } }
   );
 }
 

@@ -11,7 +11,7 @@ import { writeAuditLog } from '../audit/audit.service.js';
 
 const faceIntegrationSchema = z.object({
   enabled: z.boolean().optional(),
-  provider: z.enum(['mock', 'custom_http', 'aws_rekognition', 'azure_face', 'google_vertex']).optional(),
+  provider: z.enum(['mock', 'internal_python', 'custom_http', 'aws_rekognition', 'azure_face', 'google_vertex']).optional(),
   baseUrl: z.string().url().or(z.literal('')).optional(),
   apiKey: z.string().optional(),
   projectId: z.string().optional(),
@@ -57,6 +57,7 @@ const generalSettingsSchema = z.object({
   requireAttendanceAtOffice: z.boolean().optional(),
   requireFaceForAttendance: z.boolean().optional(),
   requireFaceForVisit: z.boolean().optional(),
+  enableLiveFaceDetectionInCamera: z.boolean().optional(),
   requireTransactionProofPhoto: z.boolean().optional(),
   requireFaceIdentityMatchForVisit: z.boolean().optional(),
   faceMatchThreshold: z.number().min(0).max(1).optional(),
@@ -74,6 +75,21 @@ const enrollFaceSchema = z.object({
 });
 
 export async function settingsRoutes(app: FastifyInstance) {
+  app.get('/settings/mobile-runtime', { preHandler: requirePermission('attendance.execute') }, async (request) => {
+    const companyId = requireTenantId(request);
+    const settings = await getGeneralSettings(companyId);
+    return {
+      settings: {
+        enableLiveFaceDetectionInCamera: settings.enableLiveFaceDetectionInCamera,
+        requireFaceForAttendance: settings.requireFaceForAttendance,
+        requireFaceForVisit: settings.requireFaceForVisit,
+        requireFaceIdentityMatchForVisit: settings.requireFaceIdentityMatchForVisit,
+        faceMatchThreshold: settings.faceMatchThreshold,
+        faceProvider: settings.faceIntegration.enabled ? settings.faceIntegration.provider : 'mock',
+      },
+    };
+  });
+
   app.get('/settings/general', { preHandler: requirePermission('settings.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const settings = await getGeneralSettings(companyId);

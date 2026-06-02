@@ -185,6 +185,21 @@ export function checkOutAttendance(accessToken: string, payload: AttendancePaylo
   });
 }
 
+export type MobileRuntimeSettings = {
+  enableLiveFaceDetectionInCamera: boolean;
+  requireFaceForAttendance: boolean;
+  requireFaceForVisit: boolean;
+  requireFaceIdentityMatchForVisit: boolean;
+  faceMatchThreshold: number;
+  faceProvider: 'mock' | 'internal_python' | 'custom_http' | 'aws_rekognition' | 'azure_face' | 'google_vertex';
+};
+
+export function getMobileRuntimeSettings(accessToken: string) {
+  return apiRequest<{ settings: MobileRuntimeSettings }>('/settings/mobile-runtime', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
+
 export type AttendanceReviewItem = {
   id: string;
   userId: string;

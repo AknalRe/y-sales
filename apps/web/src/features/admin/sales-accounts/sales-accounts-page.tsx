@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  Camera,
   CheckCircle2,
   Eye,
   EyeOff,
+  ImageUp,
   KeyRound,
   Mail,
   Pencil,
@@ -21,11 +23,14 @@ import { useAuth } from '../../auth/auth-provider';
 import {
   createUser,
   deleteUser,
+  enrollFaceTemplate,
+  getFaceTemplates,
   getRoles,
   getUsers,
   resetPassword,
   suggestEmployeeCode,
   updateUser,
+  type FaceTemplate,
   type Role,
   type TenantUser,
 } from '@/lib/api/platform';
@@ -52,6 +57,15 @@ function isSalesRole(code?: string, name?: string) {
   );
 }
 
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(new Error('Gagal membaca file foto wajah.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function SalesAccountsPage() {
   const { accessToken } = useAuth();
   const [users, setUsers] = useState<TenantUser[]>([]);
@@ -67,6 +81,11 @@ export function SalesAccountsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState<SalesAccount | null>(null);
   const [resetTarget, setResetTarget] = useState<SalesAccount | null>(null);
+  const [faceTarget, setFaceTarget] = useState<SalesAccount | null>(null);
+  const [faceTemplates, setFaceTemplates] = useState<FaceTemplate[]>([]);
+  const [faceFile, setFaceFile] = useState<File | null>(null);
+  const [facePreview, setFacePreview] = useState('');
+  const [faceSaving, setFaceSaving] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [form, setForm] = useState({
     name: '',
@@ -113,14 +132,21 @@ export function SalesAccountsPage() {
     return { active, inactive, suspended, total: salesAccounts.length };
   }, [salesAccounts]);
 
+  const activeFaceTemplateByUser = useMemo(() => {
+    return new Map(faceTemplates.filter((template) => template.status === 'active').map((template) => [template.userId, template]));
+  }, [faceTemplates]);
+
   async function load() {
     if (!accessToken) return;
     setLoading(true);
     setError('');
     try {
-      const [userRes, roleRes] = await Promise.all([getUsers(accessToken), getRoles(accessToken)]);
-      setUsers(userRes.users ?? []);
-      setRoles(roleRes.roles ?? []);
+      const [userRes, roleRes, faceRes] = await Promise.allSettled([getUsers(accessToken), getRoles(accessToken), getFaceTemplates(accessToken)]);
+      if (userRes.status === 'fulfilled') setUsers(userRes.value.users ?? []);
+      if (roleRes.status === 'fulfilled') setRoles(roleRes.value.roles ?? []);
+      if (faceRes.status === 'fulfilled') setFaceTemplates(faceRes.value.templates ?? []);
+      const failed = [userRes, roleRes].find((result) => result.status === 'rejected') as PromiseRejectedResult | undefined;
+      if (failed) throw failed.reason;
     } catch (e: any) {
       setError(e.message ?? 'Gagal memuat data akun sales.');
     } finally {
@@ -263,6 +289,57 @@ export function SalesAccountsPage() {
     }
   }
 
+  function openFaceEnrollment(sales: SalesAccount) {
+    setFaceTarget(sales);
+    setFaceFile(null);
+    setFacePreview('');
+  }
+
+  async function handleFaceFileChange(file?: File | null) {
+    if (!file) {
+      setFaceFile(null);
+      setFacePreview('');
+      return;
+    }
+
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      setError('Foto wajah harus berupa JPEG, PNG, atau WEBP.');
+      return;
+    }
+
+    if (file.size > 4_000_000) {
+      setError('Ukuran foto wajah maksimal 4MB.');
+      return;
+    }
+
+    setFaceFile(file);
+    setFacePreview(await fileToDataUrl(file));
+  }
+
+  async function handleEnrollFace() {
+    if (!accessToken || !faceTarget || !faceFile || !facePreview) return;
+
+    setFaceSaving(true);
+    setError('');
+    try {
+      await enrollFaceTemplate(accessToken, {
+        userId: faceTarget.id,
+        dataUrl: facePreview,
+        mimeType: faceFile.type as 'image/jpeg' | 'image/jpg' | 'image/png' | 'image/webp',
+        sizeBytes: faceFile.size,
+      });
+      setSuccess(`Template wajah ${faceTarget.name} berhasil disimpan.`);
+      setFaceTarget(null);
+      setFaceFile(null);
+      setFacePreview('');
+      await load();
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal menyimpan template wajah.');
+    } finally {
+      setFaceSaving(false);
+    }
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -394,7 +471,13 @@ export function SalesAccountsPage() {
                         <div className="admin-user-avatar">{sales.name.charAt(0).toUpperCase()}</div>
                         <div>
                           <div className="admin-user-name">{sales.name}</div>
-                          <span className="admin-role-badge">{sales.roleName ?? sales.roleCode}</span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="admin-role-badge">{sales.roleName ?? sales.roleCode}</span>
+                            <span className={`admin-role-badge ${activeFaceTemplateByUser.has(sales.id) ? 'text-admin-success' : 'text-admin-muted'}`}>
+                              <Camera size={11} />
+                              {activeFaceTemplateByUser.has(sales.id) ? 'Wajah aktif' : 'Belum wajah'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -430,6 +513,9 @@ export function SalesAccountsPage() {
                         </button>
                         <button onClick={() => setResetTarget(sales)} className="admin-btn-icon-sm" title="Reset Password" type="button">
                           <KeyRound size={14} />
+                        </button>
+                        <button onClick={() => openFaceEnrollment(sales)} className="admin-btn-icon-sm" title="Data Wajah" type="button">
+                          <Camera size={14} />
                         </button>
                         <button onClick={() => handleDelete(sales)} className="admin-btn-icon-sm admin-btn-danger-sm" title="Hapus Sales" type="button">
                           <Trash2 size={14} />
@@ -560,15 +646,81 @@ export function SalesAccountsPage() {
                 <DetailBox label="Kode Karyawan" value={selectedSales.employeeCode ?? '-'} />
                 <DetailBox label="Status" value={selectedSales.status} />
                 <DetailBox label="Role" value={selectedSales.roleName ?? selectedSales.roleCode} />
+                <DetailBox label="Template Wajah" value={activeFaceTemplateByUser.has(selectedSales.id) ? 'Aktif' : 'Belum diinput'} />
                 <DetailBox label="Login Terakhir" value={selectedSales.lastLoginAt ? new Date(selectedSales.lastLoginAt).toLocaleString('id-ID') : 'Belum pernah'} />
               </div>
             </div>
             <div className="admin-modal-footer">
+              <button onClick={() => openFaceEnrollment(selectedSales)} className="admin-btn-ghost" type="button">
+                <Camera size={14} />
+                Data Wajah
+              </button>
               <button onClick={() => openEdit(selectedSales)} className="admin-btn-primary" type="button">
                 <Pencil size={14} />
                 Edit
               </button>
               <button onClick={() => setSelectedSales(null)} className="admin-btn-ghost" type="button">Tutup</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {faceTarget ? (
+        <div className="admin-modal-overlay" onClick={() => setFaceTarget(null)}>
+          <div className="admin-modal admin-modal-sm" onClick={(event) => event.stopPropagation()}>
+            <div className="admin-modal-header">
+              <div>
+                <h2>Data Wajah Sales</h2>
+                <p className="admin-modal-subtitle">{faceTarget.name}</p>
+              </div>
+              <button onClick={() => setFaceTarget(null)} className="admin-modal-close" type="button">×</button>
+            </div>
+            <div className="admin-modal-body">
+              <div className="admin-alert admin-alert-info" style={{ marginBottom: '1rem' }}>
+                <Camera size={15} />
+                Foto ini menjadi template wajah aktif untuk validasi absensi dan visit. Template lama akan otomatis dinonaktifkan.
+              </div>
+              <label
+                htmlFor="sales-face-file"
+                className="admin-field admin-field-full"
+                style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  minHeight: 220,
+                  border: '1px dashed var(--admin-border-strong)',
+                  borderRadius: 18,
+                  background: 'var(--admin-bg)',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                }}
+              >
+                {facePreview ? (
+                  <img src={facePreview} alt={`Preview wajah ${faceTarget.name}`} style={{ width: '100%', height: 220, objectFit: 'cover' }} />
+                ) : (
+                  <span className="grid place-items-center gap-2 text-admin-muted" style={{ fontSize: '.85rem', fontWeight: 800 }}>
+                    <ImageUp size={34} />
+                    Pilih atau ambil foto wajah
+                  </span>
+                )}
+              </label>
+              <input
+                id="sales-face-file"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="user"
+                style={{ display: 'none' }}
+                onChange={(event) => void handleFaceFileChange(event.target.files?.[0])}
+              />
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <DetailBox label="Status Template" value={activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'} />
+                <DetailBox label="File Baru" value={faceFile ? `${Math.round(faceFile.size / 1024)} KB` : '-'} />
+              </div>
+            </div>
+            <div className="admin-modal-footer">
+              <button onClick={() => setFaceTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={handleEnrollFace} className="admin-btn-primary" type="button" disabled={faceSaving || !faceFile || !facePreview}>
+                {faceSaving ? 'Menyimpan...' : 'Simpan Template Wajah'}
+              </button>
             </div>
           </div>
         </div>

@@ -9,6 +9,8 @@
     "dev:api": "pnpm --filter @yuksales/api dev",
     "build": "pnpm -r build",
     "build:all": "pnpm install && pnpm db:generate && pnpm db:migrate && pnpm --filter @yuksales/web build && pnpm --filter @yuksales/api build",
+    "start:api": "pnpm --filter @yuksales/api start",
+    "face:start": "python services/face-service/app.py",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "db:generate": "pnpm --filter @yuksales/db db:generate",

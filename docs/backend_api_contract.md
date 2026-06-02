@@ -204,13 +204,14 @@ Body:
   "requireAttendanceAtOffice": false,
   "requireFaceForAttendance": true,
   "requireFaceForVisit": true,
+  "enableLiveFaceDetectionInCamera": true,
   "requireFaceIdentityMatchForVisit": true,
   "faceMatchThreshold": 0.85,
   "requireLivenessForVisit": true,
   "rejectVisitOnFaceMismatch": false,
   "faceIntegration": {
     "enabled": true,
-    "provider": "custom_http",
+    "provider": "internal_python",
     "baseUrl": "https://face-service.example.com/verify",
     "apiKey": "secret-api-key",
     "projectId": "",
@@ -1406,6 +1407,27 @@ Response:
         "createdAt": "2026-06-01T03:00:00.000Z"
       }
     ]
+  }
+}
+```
+
+## GET `/settings/mobile-runtime`
+
+Permission: `attendance.execute`.
+
+Dipakai aplikasi mobile/sales untuk membaca setting runtime yang aman dibuka ke user sales.
+
+Response:
+
+```json
+{
+  "settings": {
+    "enableLiveFaceDetectionInCamera": true,
+    "requireFaceForAttendance": true,
+    "requireFaceForVisit": true,
+    "requireFaceIdentityMatchForVisit": true,
+    "faceMatchThreshold": 0.85,
+    "faceProvider": "internal_python"
   }
 }
 ```

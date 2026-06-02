@@ -239,6 +239,7 @@ export type GeneralSettings = {
   requireAttendanceAtOffice: boolean;
   requireFaceForAttendance: boolean;
   requireFaceForVisit: boolean;
+  enableLiveFaceDetectionInCamera: boolean;
   requireTransactionProofPhoto: boolean;
   requireFaceIdentityMatchForVisit: boolean;
   faceMatchThreshold: number;
@@ -246,7 +247,7 @@ export type GeneralSettings = {
   rejectVisitOnFaceMismatch: boolean;
   faceIntegration: {
     enabled: boolean;
-    provider: 'mock' | 'custom_http' | 'aws_rekognition' | 'azure_face' | 'google_vertex';
+    provider: 'mock' | 'internal_python' | 'custom_http' | 'aws_rekognition' | 'azure_face' | 'google_vertex';
     baseUrl: string;
     apiKey: string;
     projectId: string;

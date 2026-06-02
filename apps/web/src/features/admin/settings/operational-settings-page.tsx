@@ -39,6 +39,7 @@ type ToggleKey =
   | 'allowMultipleAttendanceSessionsPerDay'
   | 'requireAttendanceAtOffice'
   | 'requireFaceForVisit'
+  | 'enableLiveFaceDetectionInCamera'
   | 'requireTransactionProofPhoto'
   | 'requireFaceIdentityMatchForVisit'
   | 'requireLivenessForVisit'
@@ -233,6 +234,12 @@ const sections: SettingsSection[] = [
       },
     ],
     toggles: [
+      {
+        key: 'enableLiveFaceDetectionInCamera',
+        title: 'Live detector di kamera sales',
+        description: 'Menampilkan kotak wajah secara langsung di preview kamera mobile sebelum foto dikirim.',
+        icon: Camera,
+      },
       {
         key: 'requireFaceIdentityMatchForVisit',
         title: 'Cocokkan identitas wajah',
@@ -629,6 +636,7 @@ export function OperationalSettingsPage() {
                   onChange={(e) => patchFaceIntegration('provider', e.target.value as GeneralSettings['faceIntegration']['provider'])}
                 >
                   <option value="mock">Mock / internal test</option>
+                  <option value="internal_python">Internal Python service</option>
                   <option value="custom_http">Custom HTTP</option>
                   <option value="aws_rekognition">AWS Rekognition</option>
                   <option value="azure_face">Azure Face</option>

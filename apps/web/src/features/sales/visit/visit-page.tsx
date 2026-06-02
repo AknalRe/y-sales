@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone } from 'lucide-react';
-import { apiRequest, checkInVisit, checkOutVisit, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
+import { apiRequest, checkInVisit, checkOutVisit, getMobileRuntimeSettings, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
 import { getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, type Consignment, type TodayVisitSchedule } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
@@ -43,6 +43,7 @@ export function VisitPage() {
   const [outcome, setOutcome] = useState<'closed_order' | 'no_order' | 'follow_up' | 'outlet_closed' | 'rejected' | 'invalid_location'>('closed_order');
   const [notes, setNotes] = useState('');
   const [attendanceOpen, setAttendanceOpen] = useState<boolean | null>(null);
+  const [liveFaceDetectionEnabled, setLiveFaceDetectionEnabled] = useState(true);
 
   useEffect(() => () => stopCamera(stream), [stream]);
 
@@ -109,6 +110,13 @@ export function VisitPage() {
     })
       .then(res => setAttendanceOpen(res.session?.status === 'open'))
       .catch(() => setAttendanceOpen(false));
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getMobileRuntimeSettings(accessToken)
+      .then((res) => setLiveFaceDetectionEnabled(res.settings.enableLiveFaceDetectionInCamera))
+      .catch(() => setLiveFaceDetectionEnabled(true));
   }, [accessToken]);
 
   useEffect(() => {
@@ -387,7 +395,7 @@ export function VisitPage() {
             <h2>2. Verifikasi Wajah & GPS</h2>
             <div className="relative">
               <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
-              <LiveFaceOverlay videoRef={videoRef} stream={stream} />
+              {liveFaceDetectionEnabled && <LiveFaceOverlay videoRef={videoRef} stream={stream} />}
               {location && (
                 <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
                   <MapPin size={13} className="shrink-0 text-sales-emerald" />
@@ -499,7 +507,7 @@ export function VisitPage() {
             <h2>3. Foto & Check-Out</h2>
             <div className="relative">
               <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
-              <LiveFaceOverlay videoRef={videoRef} stream={stream} />
+              {liveFaceDetectionEnabled && <LiveFaceOverlay videoRef={videoRef} stream={stream} />}
               {location && (
                 <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
                   <MapPin size={13} className="shrink-0 text-sales-emerald" />

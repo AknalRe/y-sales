@@ -71,6 +71,21 @@ async function callCustomHttpProvider(input: ProviderInput): Promise<ProviderRes
   return normalizeResult(result as Partial<ProviderResult>, 'CUSTOM_HTTP_PROVIDER');
 }
 
+async function callInternalPythonProvider(input: ProviderInput): Promise<ProviderResult> {
+  const integration = input.settings.faceIntegration;
+  if (!integration.baseUrl) throw new Error('INTERNAL_PYTHON_FACE_SERVICE_URL_REQUIRED');
+  const result = await postJson(integration.baseUrl, input, {
+    provider: 'internal_python',
+    mode: integration.mode,
+    referenceImageUrl: input.referenceImageUrl,
+    capturedImageUrl: input.capturedImageUrl,
+    threshold: input.settings.faceMatchThreshold,
+    requireLiveness: input.settings.requireLivenessForVisit,
+    templateId: input.faceCaptureId,
+  }, integration.apiKey ? { authorization: `Bearer ${integration.apiKey}` } : {});
+  return normalizeResult(result as Partial<ProviderResult>, 'INTERNAL_PYTHON_PROVIDER');
+}
+
 async function callAzureFaceProvider(input: ProviderInput): Promise<ProviderResult> {
   const integration = input.settings.faceIntegration;
   if (!integration.baseUrl || !integration.apiKey) throw new Error('AZURE_FACE_BASE_URL_AND_API_KEY_REQUIRED');
@@ -140,6 +155,7 @@ async function callConfiguredProvider(input: ProviderInput): Promise<ProviderRes
   const integration = input.settings.faceIntegration;
   if (!integration.enabled || integration.provider === 'mock') return null;
 
+  if (integration.provider === 'internal_python') return callInternalPythonProvider(input);
   if (integration.provider === 'custom_http') return callCustomHttpProvider(input);
   if (integration.provider === 'azure_face') return callAzureFaceProvider(input);
   if (integration.provider === 'google_vertex') return callGoogleVertexProvider(input);

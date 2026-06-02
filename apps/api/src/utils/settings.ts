@@ -9,6 +9,7 @@ export const generalSettingsDefaults = {
   requireAttendanceAtOffice: false,
   requireFaceForAttendance: true,
   requireFaceForVisit: true,
+  enableLiveFaceDetectionInCamera: true,
   requireTransactionProofPhoto: true,
   requireFaceIdentityMatchForVisit: true,
   faceMatchThreshold: 0.8,
@@ -16,7 +17,7 @@ export const generalSettingsDefaults = {
   rejectVisitOnFaceMismatch: false,
   faceIntegration: {
     enabled: false,
-    provider: 'mock' as 'mock' | 'custom_http' | 'aws_rekognition' | 'azure_face' | 'google_vertex',
+    provider: 'mock' as 'mock' | 'internal_python' | 'custom_http' | 'aws_rekognition' | 'azure_face' | 'google_vertex',
     baseUrl: '',
     apiKey: '',
     projectId: '',

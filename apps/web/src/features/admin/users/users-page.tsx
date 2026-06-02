@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Users, Plus, Search, Trash2, RefreshCw,
-  KeyRound, AlertTriangle, CheckCircle2, UserX, Pencil, Eye, EyeOff
+  KeyRound, AlertTriangle, CheckCircle2, UserX, Pencil, Eye, EyeOff, Camera, ImageUp
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -9,11 +9,14 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  enrollFaceTemplate,
+  getFaceTemplates,
   resetPassword,
   getRoles,
   suggestEmployeeCode,
   type TenantUser,
   type Role,
+  type FaceTemplate,
 } from '@/lib/api/platform';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui';
@@ -24,6 +27,15 @@ const statusIcon = {
   suspended: <AlertTriangle size={13} className="text-admin-danger" />,
 };
 
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(new Error('Gagal membaca file foto wajah.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function UsersPage() {
   const { accessToken } = useAuth();
   const [users, setUsers] = useState<TenantUser[]>([]);
@@ -33,6 +45,11 @@ export function UsersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState<TenantUser | null>(null);
   const [resetTarget, setResetTarget] = useState<TenantUser | null>(null);
+  const [faceTarget, setFaceTarget] = useState<TenantUser | null>(null);
+  const [faceTemplates, setFaceTemplates] = useState<FaceTemplate[]>([]);
+  const [faceFile, setFaceFile] = useState<File | null>(null);
+  const [facePreview, setFacePreview] = useState('');
+  const [faceSaving, setFaceSaving] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -55,6 +72,8 @@ export function UsersPage() {
     (u.email ?? '').toLowerCase().includes(search.toLowerCase()) ||
     (u.phone ?? '').includes(search)
   );
+
+  const activeFaceTemplateByUser = new Map(faceTemplates.filter((template) => template.status === 'active').map((template) => [template.userId, template]));
 
   async function handleGenerateEmployeeCode(mode: 'create' | 'edit') {
     if (!accessToken) return;
@@ -82,9 +101,12 @@ export function UsersPage() {
     if (!accessToken) return;
     setLoading(true);
     try {
-      const [u, r] = await Promise.all([getUsers(accessToken), getRoles(accessToken)]);
-      setUsers(u.users);
-      setRoles(r.roles);
+      const [u, r, f] = await Promise.allSettled([getUsers(accessToken), getRoles(accessToken), getFaceTemplates(accessToken)]);
+      if (u.status === 'fulfilled') setUsers(u.value.users);
+      if (r.status === 'fulfilled') setRoles(r.value.roles);
+      if (f.status === 'fulfilled') setFaceTemplates(f.value.templates ?? []);
+      const failed = [u, r].find((result) => result.status === 'rejected') as PromiseRejectedResult | undefined;
+      if (failed) throw failed.reason;
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -181,6 +203,53 @@ export function UsersPage() {
     }
   }
 
+  function openFaceEnrollment(user: TenantUser) {
+    setFaceTarget(user);
+    setFaceFile(null);
+    setFacePreview('');
+  }
+
+  async function handleFaceFileChange(file?: File | null) {
+    if (!file) {
+      setFaceFile(null);
+      setFacePreview('');
+      return;
+    }
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      setError('Foto wajah harus berupa JPEG, PNG, atau WEBP.');
+      return;
+    }
+    if (file.size > 4_000_000) {
+      setError('Ukuran foto wajah maksimal 4MB.');
+      return;
+    }
+    setFaceFile(file);
+    setFacePreview(await fileToDataUrl(file));
+  }
+
+  async function handleEnrollFace() {
+    if (!accessToken || !faceTarget || !faceFile || !facePreview) return;
+    setFaceSaving(true);
+    setError('');
+    try {
+      await enrollFaceTemplate(accessToken, {
+        userId: faceTarget.id,
+        dataUrl: facePreview,
+        mimeType: faceFile.type as 'image/jpeg' | 'image/jpg' | 'image/png' | 'image/webp',
+        sizeBytes: faceFile.size,
+      });
+      setSuccess(`Template wajah ${faceTarget.name} berhasil disimpan.`);
+      setFaceTarget(null);
+      setFaceFile(null);
+      setFacePreview('');
+      await load();
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal menyimpan template wajah.');
+    } finally {
+      setFaceSaving(false);
+    }
+  }
+
   async function toggleStatus(user: TenantUser) {
     if (!accessToken) return;
     const newStatus = user.status === 'active' ? 'inactive' : 'active';
@@ -273,6 +342,10 @@ export function UsersPage() {
                         {user.employeeCode && (
                           <div className="admin-user-code">{user.employeeCode}</div>
                         )}
+                        <span className={`admin-role-badge ${activeFaceTemplateByUser.has(user.id) ? 'text-admin-success' : 'text-admin-muted'}`}>
+                          <Camera size={11} />
+                          {activeFaceTemplateByUser.has(user.id) ? 'Wajah aktif' : 'Belum wajah'}
+                        </span>
                       </div>
                     </div>
                   </TableCell>
@@ -318,6 +391,15 @@ export function UsersPage() {
                         type="button"
                       >
                         <KeyRound size={14} />
+                      </button>
+                      <button
+                        id={`users-face-${user.id}`}
+                        onClick={() => openFaceEnrollment(user)}
+                        className="admin-btn-icon-sm"
+                        title="Data Wajah"
+                        type="button"
+                      >
+                        <Camera size={14} />
                       </button>
                       <button
                         id={`users-delete-${user.id}`}
@@ -614,6 +696,73 @@ export function UsersPage() {
                 disabled={saving || newPassword.length < 6}
               >
                 {saving ? 'Mereset...' : 'Reset Password'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {faceTarget && (
+        <div className="admin-modal-overlay" onClick={() => setFaceTarget(null)}>
+          <div className="admin-modal admin-modal-sm" onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <div>
+                <h2>Data Wajah User</h2>
+                <p className="admin-modal-subtitle">{faceTarget.name}</p>
+              </div>
+              <button onClick={() => setFaceTarget(null)} className="admin-modal-close" type="button">×</button>
+            </div>
+            <div className="admin-modal-body">
+              <div className="admin-alert admin-alert-info" style={{ marginBottom: '1rem' }}>
+                <Camera size={15} />
+                Foto ini menjadi template wajah aktif user. Template lama akan otomatis dinonaktifkan.
+              </div>
+              <label
+                htmlFor="user-face-file"
+                className="admin-field admin-field-full"
+                style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  minHeight: 220,
+                  border: '1px dashed var(--admin-border-strong)',
+                  borderRadius: 18,
+                  background: 'var(--admin-bg)',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                }}
+              >
+                {facePreview ? (
+                  <img src={facePreview} alt={`Preview wajah ${faceTarget.name}`} style={{ width: '100%', height: 220, objectFit: 'cover' }} />
+                ) : (
+                  <span className="grid place-items-center gap-2 text-admin-muted" style={{ fontSize: '.85rem', fontWeight: 800 }}>
+                    <ImageUp size={34} />
+                    Pilih atau ambil foto wajah
+                  </span>
+                )}
+              </label>
+              <input
+                id="user-face-file"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="user"
+                style={{ display: 'none' }}
+                onChange={(event) => void handleFaceFileChange(event.target.files?.[0])}
+              />
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="admin-detail-box">
+                  <span>Status Template</span>
+                  <strong>{activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'}</strong>
+                </div>
+                <div className="admin-detail-box">
+                  <span>File Baru</span>
+                  <strong>{faceFile ? `${Math.round(faceFile.size / 1024)} KB` : '-'}</strong>
+                </div>
+              </div>
+            </div>
+            <div className="admin-modal-footer">
+              <button onClick={() => setFaceTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={handleEnrollFace} className="admin-btn-primary" type="button" disabled={faceSaving || !faceFile || !facePreview}>
+                {faceSaving ? 'Menyimpan...' : 'Simpan Template Wajah'}
               </button>
             </div>
           </div>

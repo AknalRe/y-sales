@@ -10,6 +10,8 @@
     "build": "pnpm -r build",
     "build:all": "pnpm install && pnpm db:generate && pnpm db:migrate && pnpm --filter @yuksales/web build && pnpm --filter @yuksales/api build",
     "start:api": "pnpm --filter @yuksales/api start",
+    "face:setup:linux": "sh services/face-service/setup-linux.sh",
+    "face:setup:windows": "powershell -ExecutionPolicy Bypass -File services/face-service/setup-windows.ps1",
     "face:start": "python services/face-service/app.py",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",

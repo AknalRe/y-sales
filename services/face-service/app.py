@@ -8,6 +8,7 @@ import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
 try:
@@ -23,11 +24,32 @@ except Exception:  # pragma: no cover - runtime dependency check
     np = None
 
 
-HOST = os.getenv("FACE_SERVICE_HOST", "127.0.0.1")
-PORT = int(os.getenv("FACE_SERVICE_PORT", "5055"))
-API_KEY = os.getenv("FACE_SERVICE_API_KEY", "")
-MAX_IMAGE_BYTES = int(os.getenv("FACE_SERVICE_MAX_IMAGE_BYTES", str(4 * 1024 * 1024)))
-DEFAULT_THRESHOLD = float(os.getenv("FACE_SERVICE_THRESHOLD", "0.8"))
+SERVICE_DIR = Path(__file__).resolve().parent
+CONFIG_PATH = Path(os.getenv("FACE_SERVICE_CONFIG", SERVICE_DIR / "config.json"))
+
+
+def load_config() -> dict[str, Any]:
+    if not CONFIG_PATH.exists():
+        return {}
+    with CONFIG_PATH.open("r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+CONFIG = load_config()
+
+
+def config_value(key: str, env_key: str, default: Any) -> Any:
+    env_value = os.getenv(env_key)
+    if env_value is not None:
+        return env_value
+    return CONFIG.get(key, default)
+
+
+HOST = str(config_value("host", "FACE_SERVICE_HOST", "127.0.0.1"))
+PORT = int(config_value("port", "FACE_SERVICE_PORT", 5055))
+API_KEY = str(config_value("apiKey", "FACE_SERVICE_API_KEY", ""))
+MAX_IMAGE_BYTES = int(config_value("maxImageBytes", "FACE_SERVICE_MAX_IMAGE_BYTES", 4 * 1024 * 1024))
+DEFAULT_THRESHOLD = float(config_value("threshold", "FACE_SERVICE_THRESHOLD", 0.8))
 
 
 def json_response(handler: BaseHTTPRequestHandler, status: int, payload: dict[str, Any]) -> None:

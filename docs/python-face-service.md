@@ -4,28 +4,46 @@ Service ini dipakai oleh provider `internal_python` pada pengaturan Face Verific
 
 ## Install
 
+Linux/server:
+
 ```bash
 cd /path/to/sales-tracking
-python3 -m venv .venv-face
-source .venv-face/bin/activate
-pip install -r services/face-service/requirements.txt
+pnpm face:setup:linux
 ```
 
 Windows PowerShell:
 
 ```powershell
-python -m venv .venv-face
-.\.venv-face\Scripts\Activate.ps1
-pip install -r services/face-service/requirements.txt
+pnpm face:setup:windows
+```
+
+Script setup akan membuat `.venv-face`, menginstall dependency Python, dan menyalin `services/face-service/config.example.json` ke `services/face-service/config.json` bila belum ada.
+
+`config.json` tidak ikut commit. Edit nilai ini di server:
+
+```json
+{
+  "host": "127.0.0.1",
+  "port": 5055,
+  "apiKey": "change-this-face-service-key",
+  "maxImageBytes": 4194304,
+  "threshold": 0.8
+}
 ```
 
 ## Jalankan Manual
 
 ```bash
-FACE_SERVICE_HOST=127.0.0.1 FACE_SERVICE_PORT=5055 FACE_SERVICE_API_KEY=secret-face-key python services/face-service/app.py
+.venv-face/bin/python services/face-service/app.py
 ```
 
-Atau dari root repo:
+Windows:
+
+```powershell
+.\.venv-face\Scripts\python.exe services\face-service\app.py
+```
+
+Atau dari root repo jika ingin memakai Python global:
 
 ```bash
 pnpm face:start
@@ -39,26 +57,30 @@ curl http://127.0.0.1:5055/health
 
 ## Jalankan Dengan PM2
 
+File `ecosystem.config.cjs` sudah disiapkan untuk API dan face service.
+
+Jalankan face service saja:
+
 ```bash
-pm2 start "pnpm --filter @yuksales/api start" --name yuksales-api
-pm2 start "python services/face-service/app.py" --name yuksales-face-service --cwd /path/to/sales-tracking
+pm2 start ecosystem.config.cjs --only yuksales-face-service
 pm2 save
 ```
 
-Jika memakai virtualenv:
+Jalankan API saja:
 
 ```bash
-pm2 start "/path/to/sales-tracking/.venv-face/bin/python services/face-service/app.py" --name yuksales-face-service --cwd /path/to/sales-tracking
+pm2 start ecosystem.config.cjs --only yuksales-api
+pm2 save
 ```
 
-Environment PM2 yang disarankan:
+Atau jalankan keduanya:
 
 ```bash
-FACE_SERVICE_HOST=127.0.0.1
-FACE_SERVICE_PORT=5055
-FACE_SERVICE_API_KEY=secret-face-key
-FACE_SERVICE_THRESHOLD=0.8
+pm2 start ecosystem.config.cjs
+pm2 save
 ```
+
+PM2 memakai Python dari `.venv-face`, jadi setup harus dijalankan lebih dulu.
 
 ## Setting Di Admin
 

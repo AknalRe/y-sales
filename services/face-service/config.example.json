@@ -1,0 +1,7 @@
+{
+  "host": "127.0.0.1",
+  "port": 5055,
+  "apiKey": "change-this-face-service-key",
+  "maxImageBytes": 4194304,
+  "threshold": 0.8
+}

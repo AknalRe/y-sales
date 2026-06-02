@@ -54,3 +54,7 @@ temp/
 sistem-mahasura/
 
 *.pem
+services/face-service/config.json
+.venv-face/
+__pycache__/
+*.pyc

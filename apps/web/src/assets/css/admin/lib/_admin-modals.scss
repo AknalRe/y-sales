@@ -210,6 +210,11 @@
   }
 }
 
+.admin-user-avatar-img {
+  object-fit: cover;
+  color: transparent;
+}
+
 .admin-face-capture {
   display: grid;
   gap: .8rem;

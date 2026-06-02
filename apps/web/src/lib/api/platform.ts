@@ -169,6 +169,8 @@ export type FaceTemplate = {
   createdByUserId?: string | null;
   createdAt: string;
   updatedAt: string;
+  fileUrl?: string | null;
+  mimeType?: string | null;
 };
 
 // ─── Platform: Companies ─────────────────────────────────────────────────────

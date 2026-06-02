@@ -37,6 +37,19 @@ function fileToDataUrl(file: File) {
   });
 }
 
+function UserAvatar(props: { name: string; imageUrl?: string | null }) {
+  if (props.imageUrl) {
+    return (
+      <img
+        className="admin-user-avatar admin-user-avatar-img"
+        src={props.imageUrl}
+        alt={`Foto wajah ${props.name}`}
+      />
+    );
+  }
+  return <div className="admin-user-avatar">{props.name.charAt(0).toUpperCase()}</div>;
+}
+
 async function dataUrlToFile(dataUrl: string) {
   const response = await fetch(dataUrl);
   const blob = await response.blob();
@@ -342,9 +355,7 @@ export function UsersPage() {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="admin-user-cell">
-                      <div className="admin-user-avatar">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
+                      <UserAvatar name={user.name} imageUrl={activeFaceTemplateByUser.get(user.id)?.fileUrl} />
                       <div>
                         <div className="admin-user-name">{user.name}</div>
                         {user.employeeCode && (

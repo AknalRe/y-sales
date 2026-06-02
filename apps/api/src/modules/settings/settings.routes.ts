@@ -116,7 +116,26 @@ export async function settingsRoutes(app: FastifyInstance) {
 
   app.get('/settings/face-templates', { preHandler: requirePermission('settings.manage') }, async (request) => {
     const companyId = requireTenantId(request);
-    const templates = await db.select().from(userFaceTemplates).where(eq(userFaceTemplates.companyId, companyId)).orderBy(desc(userFaceTemplates.createdAt));
+    const templates = await db
+      .select({
+        id: userFaceTemplates.id,
+        companyId: userFaceTemplates.companyId,
+        userId: userFaceTemplates.userId,
+        roleId: userFaceTemplates.roleId,
+        mediaFileId: userFaceTemplates.mediaFileId,
+        embeddingRef: userFaceTemplates.embeddingRef,
+        templateHash: userFaceTemplates.templateHash,
+        status: userFaceTemplates.status,
+        createdByUserId: userFaceTemplates.createdByUserId,
+        createdAt: userFaceTemplates.createdAt,
+        updatedAt: userFaceTemplates.updatedAt,
+        fileUrl: mediaFiles.fileUrl,
+        mimeType: mediaFiles.mimeType,
+      })
+      .from(userFaceTemplates)
+      .leftJoin(mediaFiles, eq(userFaceTemplates.mediaFileId, mediaFiles.id))
+      .where(eq(userFaceTemplates.companyId, companyId))
+      .orderBy(desc(userFaceTemplates.createdAt));
     return { templates };
   });
 

@@ -66,6 +66,25 @@ function fileToDataUrl(file: File) {
   });
 }
 
+function UserAvatar(props: { name: string; imageUrl?: string | null; size?: number }) {
+  const size = props.size ?? 36;
+  if (props.imageUrl) {
+    return (
+      <img
+        className="admin-user-avatar admin-user-avatar-img"
+        src={props.imageUrl}
+        alt={`Foto wajah ${props.name}`}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  return (
+    <div className="admin-user-avatar" style={{ width: size, height: size }}>
+      {props.name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 async function dataUrlToFile(dataUrl: string) {
   const response = await fetch(dataUrl);
   const blob = await response.blob();
@@ -475,7 +494,7 @@ export function SalesAccountsPage() {
                   <tr key={sales.id}>
                     <td>
                       <div className="admin-user-cell">
-                        <div className="admin-user-avatar">{sales.name.charAt(0).toUpperCase()}</div>
+                        <UserAvatar name={sales.name} imageUrl={activeFaceTemplateByUser.get(sales.id)?.fileUrl} />
                         <div>
                           <div className="admin-user-name">{sales.name}</div>
                           <div className="flex flex-wrap items-center gap-1.5">
@@ -637,9 +656,7 @@ export function SalesAccountsPage() {
             </div>
             <div className="admin-modal-body">
               <div className="flex items-center gap-4 mb-6 p-4 rounded-xl" style={{ background: 'var(--admin-bg)' }}>
-                <div className="admin-user-avatar" style={{ width: 56, height: 56, fontSize: '1.5rem' }}>
-                  {selectedSales.name.charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar name={selectedSales.name} imageUrl={activeFaceTemplateByUser.get(selectedSales.id)?.fileUrl} size={56} />
                 <div className="flex-1">
                   <div className="text-lg font-bold text-admin-foreground">{selectedSales.name}</div>
                   <div className="text-sm text-admin-muted">{selectedSales.roleName ?? selectedSales.roleCode}</div>

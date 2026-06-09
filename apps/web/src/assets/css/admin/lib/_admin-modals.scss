@@ -377,15 +377,41 @@
     }
   }
 
-  strong {
-    color: var(--admin-foreground);
-    font-size: .86rem;
+  .admin-map-search-result-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+
+    strong {
+      color: var(--admin-foreground);
+      font-size: .86rem;
+    }
+
+    em {
+      border-radius: 999px;
+      background: rgba(249, 115, 22, .12);
+      color: var(--admin-accent);
+      padding: .16rem .45rem;
+      font-size: .66rem;
+      font-style: normal;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
   }
 
-  span {
+  .admin-map-search-result-address {
     color: var(--admin-muted);
     font-size: .76rem;
     line-height: 1.35;
+  }
+
+  .admin-map-search-result-meta {
+    color: var(--admin-muted);
+    font-size: .68rem;
+    font-weight: 800;
+    opacity: .82;
   }
 }
 

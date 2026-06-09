@@ -9,6 +9,7 @@ export type MapSearchOption = {
   latitude: number;
   longitude: number;
   type?: string | null;
+  provider?: 'photon' | 'nominatim';
 };
 
 type OutletMapPickerProps = {
@@ -42,6 +43,7 @@ export function OutletMapPicker({
   const markerRef = useRef<L.Marker | null>(null);
   const onChangeRef = useRef(onChange);
   const searchRequestRef = useRef(0);
+  const selectedSearchAddressRef = useRef('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
@@ -136,7 +138,24 @@ export function OutletMapPicker({
     }
   }
 
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (!onSearch || query.length < 3) {
+      setSearchResults([]);
+      setSearchError('');
+      return;
+    }
+    if (selectedSearchAddressRef.current === query) return;
+
+    const timeout = window.setTimeout(() => {
+      void handleSearch();
+    }, 650);
+
+    return () => window.clearTimeout(timeout);
+  }, [searchQuery, onSearch]);
+
   function selectSearchResult(result: MapSearchOption) {
+    selectedSearchAddressRef.current = result.address;
     setSearchQuery(result.address);
     setSearchResults([]);
     setSearchError('');
@@ -148,6 +167,7 @@ export function OutletMapPicker({
   }
 
   function clearSearch() {
+    selectedSearchAddressRef.current = '';
     setSearchQuery('');
     setSearchResults([]);
     setSearchError('');
@@ -192,8 +212,15 @@ export function OutletMapPicker({
             <div className="admin-map-search-results">
               {searchResults.map((result) => (
                 <button key={result.id} type="button" onClick={() => selectSearchResult(result)}>
-                  <strong>{result.address.split(',')[0]}</strong>
-                  <span>{result.address}</span>
+                  <span className="admin-map-search-result-main">
+                    <strong>{result.address.split(',')[0]}</strong>
+                    {result.type ? <em>{result.type}</em> : null}
+                  </span>
+                  <span className="admin-map-search-result-address">{result.address}</span>
+                  <span className="admin-map-search-result-meta">
+                    {result.latitude.toFixed(6)}, {result.longitude.toFixed(6)}
+                    {result.provider ? ` - ${result.provider}` : ''}
+                  </span>
                 </button>
               ))}
             </div>

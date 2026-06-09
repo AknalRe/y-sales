@@ -46,6 +46,11 @@ const reverseGeocodeQuerySchema = z.object({
   longitude: z.coerce.number().min(-180).max(180),
 });
 
+const searchGeocodeQuerySchema = z.object({
+  q: z.string().trim().min(3).max(160),
+  limit: z.coerce.number().int().min(1).max(8).default(5),
+});
+
 function toOutletValues(body: z.infer<typeof outletPatchSchema>) {
   return {
     ...body,
@@ -100,6 +105,47 @@ export async function outletRoutes(app: FastifyInstance) {
       return { address: data.display_name ?? null };
     } catch {
       return reply.status(502).send({ message: 'Layanan alamat maps tidak dapat diakses.' });
+    }
+  });
+
+  app.get('/outlets/geocode/search', { preHandler: requirePermission('outlets.manage') }, async (request, reply) => {
+    const query = searchGeocodeQuerySchema.parse(request.query);
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('q', query.q);
+    url.searchParams.set('limit', String(query.limit));
+    url.searchParams.set('countrycodes', 'id');
+    url.searchParams.set('addressdetails', '1');
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'YukSales/0.1 outlet-address-search',
+          Accept: 'application/json',
+        },
+      });
+      if (!response.ok) return reply.status(502).send({ message: 'Gagal mencari alamat dari layanan maps.' });
+      const data = await response.json() as Array<{
+        place_id?: number;
+        display_name?: string;
+        lat?: string;
+        lon?: string;
+        type?: string;
+        class?: string;
+      }>;
+      return {
+        results: data
+          .map((item) => ({
+            id: String(item.place_id ?? `${item.lat},${item.lon}`),
+            address: item.display_name ?? '',
+            latitude: Number(item.lat),
+            longitude: Number(item.lon),
+            type: item.type ?? item.class ?? null,
+          }))
+          .filter((item) => item.address && Number.isFinite(item.latitude) && Number.isFinite(item.longitude)),
+      };
+    } catch {
+      return reply.status(502).send({ message: 'Layanan pencarian alamat maps tidak dapat diakses.' });
     }
   });
 

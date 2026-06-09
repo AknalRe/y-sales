@@ -8,6 +8,7 @@ import {
   getOutlets,
   rejectOutlet,
   reverseGeocodeOutlet,
+  searchMapAddress,
   updateOutlet,
   type Outlet,
   type OutletPayload,
@@ -171,13 +172,14 @@ export function OutletsPage() {
     }
   }
 
-  function handleMapPositionChange(position: { latitude: number; longitude: number }) {
+  function handleMapPositionChange(position: { latitude: number; longitude: number; address?: string }) {
     setForm((current) => ({
       ...current,
       latitude: String(position.latitude),
       longitude: String(position.longitude),
+      address: position.address ?? current.address,
     }));
-    void syncAddressFromPoint(position.latitude, position.longitude);
+    if (!position.address) void syncAddressFromPoint(position.latitude, position.longitude);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -474,6 +476,7 @@ export function OutletsPage() {
                   latitude={Number.isFinite(Number(form.latitude)) ? Number(form.latitude) : null}
                   longitude={Number.isFinite(Number(form.longitude)) ? Number(form.longitude) : null}
                   onChange={handleMapPositionChange}
+                  onSearch={accessToken ? (query) => searchMapAddress(accessToken, query).then((result) => result.results) : undefined}
                   description="Klik peta atau geser marker untuk mengisi koordinat. Alamat akan disesuaikan dari titik maps."
                 />
               </div>

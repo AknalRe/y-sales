@@ -27,6 +27,7 @@ import {
   updateCompanyIntegration,
   updateCompanyProfile,
   updateGeneralSettings,
+  searchMapAddress,
   type CompanyIntegration,
   type CompanyProfile,
   type GeneralSettings,
@@ -570,11 +571,13 @@ export function OperationalSettingsPage() {
                   latitude={Number.isFinite(Number(company.latitude)) ? Number(company.latitude) : null}
                   longitude={Number.isFinite(Number(company.longitude)) ? Number(company.longitude) : null}
                   title="Pilih Titik Kantor"
-                  description="Klik peta atau geser marker untuk mengisi koordinat kantor company."
+                  description="Cari alamat, klik peta, atau geser marker untuk mengisi koordinat kantor company."
+                  onSearch={accessToken ? (query) => searchMapAddress(accessToken, query).then((result) => result.results) : undefined}
                   onChange={(position) => setCompany((current) => current ? {
                     ...current,
                     latitude: String(position.latitude),
                     longitude: String(position.longitude),
+                    address: position.address ?? current.address,
                   } : current)}
                 />
               </div>

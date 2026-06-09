@@ -1,11 +1,21 @@
-import { useEffect, useRef } from 'react';
+import { Search, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+export type MapSearchOption = {
+  id: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  type?: string | null;
+};
 
 type OutletMapPickerProps = {
   latitude?: number | null;
   longitude?: number | null;
-  onChange: (position: { latitude: number; longitude: number }) => void;
+  onChange: (position: { latitude: number; longitude: number; address?: string }) => void;
+  onSearch?: (query: string) => Promise<MapSearchOption[]>;
   title?: string;
   description?: string;
 };
@@ -23,6 +33,7 @@ export function OutletMapPicker({
   latitude,
   longitude,
   onChange,
+  onSearch,
   title = 'Pilih Titik Outlet',
   description = 'Klik peta atau geser marker untuk mengisi koordinat.',
 }: OutletMapPickerProps) {
@@ -30,6 +41,11 @@ export function OutletMapPicker({
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const onChangeRef = useRef(onChange);
+  const searchRequestRef = useRef(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const [searchResults, setSearchResults] = useState<MapSearchOption[]>([]);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -99,6 +115,44 @@ export function OutletMapPicker({
     });
   }
 
+  async function handleSearch() {
+    const query = searchQuery.trim();
+    if (!onSearch || query.length < 3) return;
+    const requestId = searchRequestRef.current + 1;
+    searchRequestRef.current = requestId;
+    setSearching(true);
+    setSearchError('');
+    try {
+      const results = await onSearch(query);
+      if (searchRequestRef.current !== requestId) return;
+      setSearchResults(results);
+      if (!results.length) setSearchError('Alamat tidak ditemukan.');
+    } catch (error) {
+      if (searchRequestRef.current !== requestId) return;
+      setSearchResults([]);
+      setSearchError(error instanceof Error ? error.message : 'Gagal mencari alamat.');
+    } finally {
+      if (searchRequestRef.current === requestId) setSearching(false);
+    }
+  }
+
+  function selectSearchResult(result: MapSearchOption) {
+    setSearchQuery(result.address);
+    setSearchResults([]);
+    setSearchError('');
+    onChangeRef.current({
+      latitude: Number(result.latitude.toFixed(7)),
+      longitude: Number(result.longitude.toFixed(7)),
+      address: result.address,
+    });
+  }
+
+  function clearSearch() {
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchError('');
+  }
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -110,6 +164,43 @@ export function OutletMapPicker({
           Pakai Lokasi Saya
         </button>
       </div>
+      {onSearch ? (
+        <div className="mb-3">
+          <div className="admin-map-search">
+            <Search size={15} />
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  void handleSearch();
+                }
+              }}
+              placeholder="Cari alamat, tempat, jalan, atau area..."
+            />
+            {searchQuery ? (
+              <button type="button" onClick={clearSearch} title="Bersihkan pencarian">
+                <X size={14} />
+              </button>
+            ) : null}
+            <button type="button" className="admin-map-search-submit" onClick={() => void handleSearch()} disabled={searching || searchQuery.trim().length < 3}>
+              {searching ? 'Mencari...' : 'Cari'}
+            </button>
+          </div>
+          {searchResults.length ? (
+            <div className="admin-map-search-results">
+              {searchResults.map((result) => (
+                <button key={result.id} type="button" onClick={() => selectSearchResult(result)}>
+                  <strong>{result.address.split(',')[0]}</strong>
+                  <span>{result.address}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {searchError ? <p className="admin-map-search-error">{searchError}</p> : null}
+        </div>
+      ) : null}
       <div ref={mapElementRef} className="h-80 overflow-hidden rounded-xl border border-slate-200 bg-white" />
     </div>
   );

@@ -550,6 +550,21 @@ export function reverseGeocodeOutlet(token: string, latitude: number, longitude:
   });
 }
 
+export type MapSearchResult = {
+  id: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  type?: string | null;
+};
+
+export function searchMapAddress(token: string, query: string) {
+  const q = new URLSearchParams({ q: query, limit: '5' });
+  return apiRequest<{ results: MapSearchResult[] }>(`/outlets/geocode/search?${q}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 export function createOutlet(token: string, payload: OutletPayload) {
   return apiRequest<{ outlet: Outlet }>('/outlets', {
     method: 'POST',

@@ -600,6 +600,36 @@ Response:
 }
 ```
 
+## GET `/outlets/geocode/search`
+
+Permission: `outlets.manage`.
+
+Dipakai frontend untuk mencari alamat/area lalu memilih titik outlet atau titik kantor dari maps. Endpoint ini memakai provider open-source berbasis OpenStreetMap: Photon sebagai pencarian utama dan Nominatim sebagai fallback. Untuk production dengan trafik tinggi, provider OSM sebaiknya dikonfigurasi/self-host agar tidak bergantung pada public endpoint gratis.
+
+Query:
+
+```txt
+q=Jl. Sudirman Surabaya
+limit=5
+```
+
+Response:
+
+```json
+{
+  "results": [
+    {
+      "id": "photon:123456",
+      "address": "Jalan Sudirman, Surabaya, Jawa Timur, Indonesia",
+      "latitude": -7.250445,
+      "longitude": 112.768845,
+      "type": "street",
+      "provider": "photon"
+    }
+  ]
+}
+```
+
 ## POST `/outlets`
 
 Permission: `outlets.manage`.

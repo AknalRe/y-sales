@@ -51,6 +51,15 @@ const searchGeocodeQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(8).default(5),
 });
 
+type MapSearchResult = {
+  id: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  type: string | null;
+  provider: 'photon' | 'nominatim';
+};
+
 function toOutletValues(body: z.infer<typeof outletPatchSchema>) {
   return {
     ...body,
@@ -62,6 +71,117 @@ function toOutletValues(body: z.infer<typeof outletPatchSchema>) {
 
 function canApproveOutletRole(user: { isSuperAdmin: boolean; roleCode: string }) {
   return user.isSuperAdmin || ['ADMINISTRATOR', 'OWNER', 'OPERATIONAL_MANAGER'].includes(user.roleCode);
+}
+
+function queryWithIndonesiaContext(query: string) {
+  return /\bindonesia\b/i.test(query) ? query : `${query}, Indonesia`;
+}
+
+function formatPhotonAddress(properties: Record<string, unknown>) {
+  const parts = [
+    properties.name,
+    properties.street,
+    properties.housenumber,
+    properties.district,
+    properties.city,
+    properties.county,
+    properties.state,
+    properties.postcode,
+    properties.country,
+  ]
+    .map((value) => (typeof value === 'string' ? value.trim() : ''))
+    .filter(Boolean);
+
+  return [...new Set(parts)].join(', ');
+}
+
+function dedupeMapResults(results: MapSearchResult[], limit: number) {
+  const seen = new Set<string>();
+  const deduped: MapSearchResult[] = [];
+  for (const result of results) {
+    const key = `${result.latitude.toFixed(5)},${result.longitude.toFixed(5)}:${result.address.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(result);
+    if (deduped.length >= limit) break;
+  }
+  return deduped;
+}
+
+async function searchPhotonAddress(query: string, limit: number): Promise<MapSearchResult[]> {
+  const url = new URL('https://photon.komoot.io/api/');
+  url.searchParams.set('q', query);
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('lang', 'id');
+
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'YukSales/0.1 outlet-address-search',
+      Accept: 'application/json',
+    },
+  });
+  if (!response.ok) throw new Error('Photon search failed');
+
+  const data = await response.json() as {
+    features?: Array<{
+      geometry?: { coordinates?: [number, number] };
+      properties?: Record<string, unknown>;
+    }>;
+  };
+
+  return (data.features ?? [])
+    .map((feature) => {
+      const coordinates = feature.geometry?.coordinates;
+      const properties = feature.properties ?? {};
+      const longitude = Number(coordinates?.[0]);
+      const latitude = Number(coordinates?.[1]);
+      return {
+        id: `photon:${String(properties.osm_id ?? `${latitude},${longitude}`)}`,
+        address: formatPhotonAddress(properties),
+        latitude,
+        longitude,
+        type: typeof properties.osm_value === 'string' ? properties.osm_value : null,
+        provider: 'photon' as const,
+      };
+    })
+    .filter((item) => item.address && Number.isFinite(item.latitude) && Number.isFinite(item.longitude));
+}
+
+async function searchNominatimAddress(query: string, limit: number): Promise<MapSearchResult[]> {
+  const url = new URL('https://nominatim.openstreetmap.org/search');
+  url.searchParams.set('format', 'jsonv2');
+  url.searchParams.set('q', query);
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('countrycodes', 'id');
+  url.searchParams.set('addressdetails', '1');
+
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'YukSales/0.1 outlet-address-search',
+      Accept: 'application/json',
+    },
+  });
+  if (!response.ok) throw new Error('Nominatim search failed');
+
+  const data = await response.json() as Array<{
+    place_id?: number;
+    display_name?: string;
+    lat?: string;
+    lon?: string;
+    type?: string;
+    class?: string;
+  }>;
+
+  return data
+    .map((item) => ({
+      id: `nominatim:${String(item.place_id ?? `${item.lat},${item.lon}`)}`,
+      address: item.display_name ?? '',
+      latitude: Number(item.lat),
+      longitude: Number(item.lon),
+      type: item.type ?? item.class ?? null,
+      provider: 'nominatim' as const,
+    }))
+    .filter((item) => item.address && Number.isFinite(item.latitude) && Number.isFinite(item.longitude));
 }
 
 export async function outletRoutes(app: FastifyInstance) {
@@ -110,40 +230,20 @@ export async function outletRoutes(app: FastifyInstance) {
 
   app.get('/outlets/geocode/search', { preHandler: requirePermission('outlets.manage') }, async (request, reply) => {
     const query = searchGeocodeQuerySchema.parse(request.query);
-    const url = new URL('https://nominatim.openstreetmap.org/search');
-    url.searchParams.set('format', 'jsonv2');
-    url.searchParams.set('q', query.q);
-    url.searchParams.set('limit', String(query.limit));
-    url.searchParams.set('countrycodes', 'id');
-    url.searchParams.set('addressdetails', '1');
 
     try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'YukSales/0.1 outlet-address-search',
-          Accept: 'application/json',
-        },
-      });
-      if (!response.ok) return reply.status(502).send({ message: 'Gagal mencari alamat dari layanan maps.' });
-      const data = await response.json() as Array<{
-        place_id?: number;
-        display_name?: string;
-        lat?: string;
-        lon?: string;
-        type?: string;
-        class?: string;
-      }>;
-      return {
-        results: data
-          .map((item) => ({
-            id: String(item.place_id ?? `${item.lat},${item.lon}`),
-            address: item.display_name ?? '',
-            latitude: Number(item.lat),
-            longitude: Number(item.lon),
-            type: item.type ?? item.class ?? null,
-          }))
-          .filter((item) => item.address && Number.isFinite(item.latitude) && Number.isFinite(item.longitude)),
-      };
+      const contextualQuery = queryWithIndonesiaContext(query.q);
+      const primaryPhotonResults = await searchPhotonAddress(query.q, query.limit).catch(() => []);
+      const contextualPhotonResults = contextualQuery === query.q
+        ? []
+        : await searchPhotonAddress(contextualQuery, query.limit).catch(() => []);
+      const photonResults = [...primaryPhotonResults, ...contextualPhotonResults];
+      const needsFallback = photonResults.length < query.limit;
+      const nominatimResults = needsFallback
+        ? await searchNominatimAddress(contextualQuery, query.limit).catch(() => [])
+        : [];
+      const results = dedupeMapResults([...photonResults, ...nominatimResults], query.limit);
+      return { results };
     } catch {
       return reply.status(502).send({ message: 'Layanan pencarian alamat maps tidak dapat diakses.' });
     }

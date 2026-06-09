@@ -556,6 +556,7 @@ export type MapSearchResult = {
   latitude: number;
   longitude: number;
   type?: string | null;
+  provider?: 'photon' | 'nominatim';
 };
 
 export function searchMapAddress(token: string, query: string) {

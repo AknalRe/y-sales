@@ -604,7 +604,14 @@ Response:
 
 Permission: `outlets.manage`.
 
-Dipakai frontend untuk mencari alamat/area lalu memilih titik outlet atau titik kantor dari maps. Endpoint ini memakai provider open-source berbasis OpenStreetMap: Photon sebagai pencarian utama dan Nominatim sebagai fallback. Untuk production dengan trafik tinggi, provider OSM sebaiknya dikonfigurasi/self-host agar tidak bergantung pada public endpoint gratis.
+Dipakai frontend untuk mencari alamat/area lalu memilih titik outlet atau titik kantor dari maps. Provider default memakai open-source berbasis OpenStreetMap: Photon sebagai pencarian utama dan Nominatim sebagai fallback. Company juga dapat mengaktifkan provider map search pada Pengaturan Operasional:
+
+- `osm`: OpenStreetMap/Photon/Nominatim, gratis/open-source tetapi kualitas POI bisnis bergantung pada data OSM.
+- `builtin_scraper`: parser bawaan aplikasi untuk membaca koordinat dari teks/link maps yang ditempel user, lalu fallback ke OSM untuk pencarian biasa.
+- `google_places`: Google Places API resmi memakai API key per company.
+- `custom_http`: endpoint pencarian eksternal milik company, misalnya layanan POI/search internal yang compliant. Aplikasi utama tidak melakukan scraping Google Maps langsung.
+
+Untuk production dengan trafik tinggi, provider OSM sebaiknya dikonfigurasi/self-host agar tidak bergantung pada public endpoint gratis.
 
 Query:
 
@@ -625,6 +632,23 @@ Response:
       "longitude": 112.768845,
       "type": "street",
       "provider": "photon"
+    }
+  ]
+}
+```
+
+Format response untuk `custom_http`:
+
+```json
+{
+  "results": [
+    {
+      "id": "external-place-id",
+      "name": "Nama toko",
+      "address": "Alamat lengkap",
+      "latitude": -7.250445,
+      "longitude": 112.768845,
+      "type": "store"
     }
   ]
 }

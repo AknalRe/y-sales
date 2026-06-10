@@ -21,33 +21,55 @@ const faceIntegrationSchema = z.object({
   timeoutMs: z.number().int().positive().max(60000).optional(),
 });
 
+const mapSearchIntegrationSchema = z.object({
+  enabled: z.boolean().optional(),
+  provider: z.enum(['osm', 'builtin_scraper', 'google_places', 'custom_http']).optional(),
+  baseUrl: z.string().url().or(z.literal('')).optional(),
+  apiKey: z.string().optional(),
+  country: z.string().min(2).max(2).optional(),
+  timeoutMs: z.number().int().positive().max(60000).optional(),
+});
+
 function maskSecret(value?: string) {
   if (!value) return '';
   if (value.length <= 8) return '********';
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
 }
 
-function publicSettings<T extends { faceIntegration?: { apiKey?: string } }>(settings: T) {
+function publicSettings<T extends { faceIntegration?: { apiKey?: string }; mapSearchIntegration?: { apiKey?: string } }>(settings: T) {
   return {
     ...settings,
     faceIntegration: settings.faceIntegration ? { ...settings.faceIntegration, apiKey: maskSecret(settings.faceIntegration.apiKey) } : settings.faceIntegration,
+    mapSearchIntegration: settings.mapSearchIntegration ? { ...settings.mapSearchIntegration, apiKey: maskSecret(settings.mapSearchIntegration.apiKey) } : settings.mapSearchIntegration,
   };
 }
 
 function mergeFaceIntegration(oldSettings: Awaited<ReturnType<typeof getGeneralSettings>>, patch: z.infer<typeof generalSettingsSchema>) {
-  if (!patch.faceIntegration) return patch;
-  const incoming = { ...patch.faceIntegration };
-  const currentApiKey = oldSettings.faceIntegration.apiKey;
-  if (!incoming.apiKey || incoming.apiKey.includes('...') || incoming.apiKey === '********') {
-    incoming.apiKey = currentApiKey;
-  }
-  return {
-    ...patch,
-    faceIntegration: {
+  const nextPatch = { ...patch };
+  if (patch.faceIntegration) {
+    const incoming = { ...patch.faceIntegration };
+    const currentApiKey = oldSettings.faceIntegration.apiKey;
+    if (!incoming.apiKey || incoming.apiKey.includes('...') || incoming.apiKey === '********') {
+      incoming.apiKey = currentApiKey;
+    }
+    nextPatch.faceIntegration = {
       ...oldSettings.faceIntegration,
       ...incoming,
-    },
-  };
+    };
+  }
+  if (patch.mapSearchIntegration) {
+    const incoming = { ...patch.mapSearchIntegration };
+    const currentApiKey = oldSettings.mapSearchIntegration.apiKey;
+    if (!incoming.apiKey || incoming.apiKey.includes('...') || incoming.apiKey === '********') {
+      incoming.apiKey = currentApiKey;
+    }
+    nextPatch.mapSearchIntegration = {
+      ...oldSettings.mapSearchIntegration,
+      ...incoming,
+      country: incoming.country?.toUpperCase() ?? oldSettings.mapSearchIntegration.country,
+    };
+  }
+  return nextPatch;
 }
 
 const generalSettingsSchema = z.object({
@@ -65,6 +87,7 @@ const generalSettingsSchema = z.object({
   requireLivenessForVisit: z.boolean().optional(),
   rejectVisitOnFaceMismatch: z.boolean().optional(),
   faceIntegration: faceIntegrationSchema.optional(),
+  mapSearchIntegration: mapSearchIntegrationSchema.optional(),
 });
 
 const enrollFaceSchema = z.object({

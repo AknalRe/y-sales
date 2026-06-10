@@ -27,6 +27,14 @@ export const generalSettingsDefaults = {
     mode: 'verify' as 'verify' | 'detect_and_verify',
     timeoutMs: 5000,
   },
+  mapSearchIntegration: {
+    enabled: false,
+    provider: 'osm' as 'osm' | 'builtin_scraper' | 'google_places' | 'custom_http',
+    baseUrl: '',
+    apiKey: '',
+    country: 'ID',
+    timeoutMs: 8000,
+  },
 };
 
 const legacyNumericDefaults = {
@@ -49,6 +57,10 @@ export async function getGeneralSettings(companyId: string): Promise<GeneralSett
     faceIntegration: {
       ...generalSettingsDefaults.faceIntegration,
       ...value.faceIntegration,
+    },
+    mapSearchIntegration: {
+      ...generalSettingsDefaults.mapSearchIntegration,
+      ...value.mapSearchIntegration,
     },
   };
 }

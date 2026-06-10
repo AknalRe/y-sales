@@ -9,7 +9,7 @@ export type MapSearchOption = {
   latitude: number;
   longitude: number;
   type?: string | null;
-  provider?: 'photon' | 'nominatim';
+  provider?: 'photon' | 'nominatim' | 'builtin_scraper' | 'google_places' | 'custom_http';
 };
 
 type OutletMapPickerProps = {

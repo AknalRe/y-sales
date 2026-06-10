@@ -392,6 +392,7 @@ Admin company:
 - Approve transaksi berarti stok langsung release/berkurang.
 - Stock page harus menampilkan quantity, reserved, available, dan movement.
 - Settings page mengatur data company, radius, GPS, foto, face policy, face provider, dan cloud storage.
+- Settings page mengatur provider pencarian maps per company: OpenStreetMap/Photon sebagai default open-source, Google Places API resmi jika company mengisi API key, atau Custom HTTP untuk layanan pencarian eksternal yang compliant.
 - Settings page harus membedakan data company, aturan operasional, dan integrasi teknis.
 
 Admin platform:

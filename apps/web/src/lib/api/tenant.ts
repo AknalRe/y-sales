@@ -257,6 +257,14 @@ export type GeneralSettings = {
     mode: 'verify' | 'detect_and_verify';
     timeoutMs: number;
   };
+  mapSearchIntegration: {
+    enabled: boolean;
+    provider: 'osm' | 'builtin_scraper' | 'google_places' | 'custom_http';
+    baseUrl: string;
+    apiKey: string;
+    country: string;
+    timeoutMs: number;
+  };
 };
 
 export type CompanyProfile = {
@@ -556,7 +564,7 @@ export type MapSearchResult = {
   latitude: number;
   longitude: number;
   type?: string | null;
-  provider?: 'photon' | 'nominatim';
+  provider?: 'photon' | 'nominatim' | 'builtin_scraper' | 'google_places' | 'custom_http';
 };
 
 export function searchMapAddress(token: string, query: string) {

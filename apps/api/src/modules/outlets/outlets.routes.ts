@@ -3,6 +3,7 @@ import { and, desc, eq, ilike, isNull, ne, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { mediaFiles, outletPhotos, outlets } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
+import { getGeneralSettings } from '../../utils/settings.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
@@ -57,7 +58,7 @@ type MapSearchResult = {
   latitude: number;
   longitude: number;
   type: string | null;
-  provider: 'photon' | 'nominatim';
+  provider: 'photon' | 'nominatim' | 'builtin_scraper' | 'google_places' | 'custom_http';
 };
 
 function toOutletValues(body: z.infer<typeof outletPatchSchema>) {
@@ -108,13 +109,23 @@ function dedupeMapResults(results: MapSearchResult[], limit: number) {
   return deduped;
 }
 
+async function fetchWithTimeout(url: URL | string, init: RequestInit = {}, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function searchPhotonAddress(query: string, limit: number): Promise<MapSearchResult[]> {
   const url = new URL('https://photon.komoot.io/api/');
   url.searchParams.set('q', query);
   url.searchParams.set('limit', String(limit));
   url.searchParams.set('lang', 'id');
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       'User-Agent': 'YukSales/0.1 outlet-address-search',
       Accept: 'application/json',
@@ -155,7 +166,7 @@ async function searchNominatimAddress(query: string, limit: number): Promise<Map
   url.searchParams.set('countrycodes', 'id');
   url.searchParams.set('addressdetails', '1');
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       'User-Agent': 'YukSales/0.1 outlet-address-search',
       Accept: 'application/json',
@@ -181,6 +192,137 @@ async function searchNominatimAddress(query: string, limit: number): Promise<Map
       type: item.type ?? item.class ?? null,
       provider: 'nominatim' as const,
     }))
+    .filter((item) => item.address && Number.isFinite(item.latitude) && Number.isFinite(item.longitude));
+}
+
+async function searchOsmAddress(query: string, limit: number): Promise<MapSearchResult[]> {
+  const contextualQuery = queryWithIndonesiaContext(query);
+  const primaryPhotonResults = await searchPhotonAddress(query, limit).catch(() => []);
+  const contextualPhotonResults = contextualQuery === query
+    ? []
+    : await searchPhotonAddress(contextualQuery, limit).catch(() => []);
+  const photonResults = [...primaryPhotonResults, ...contextualPhotonResults];
+  const needsFallback = photonResults.length < limit;
+  const nominatimResults = needsFallback
+    ? await searchNominatimAddress(contextualQuery, limit).catch(() => [])
+    : [];
+  return dedupeMapResults([...photonResults, ...nominatimResults], limit);
+}
+
+function parseCoordinatesFromText(input: string): { latitude: number; longitude: number } | null {
+  const patterns = [
+    /@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/,
+    /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
+    /(?:^|[^\d.-])(-?\d{1,2}(?:\.\d+)?)[,\s]+(-?\d{2,3}(?:\.\d+)?)(?:$|[^\d.])/,
+  ];
+  for (const pattern of patterns) {
+    const match = input.match(pattern);
+    if (!match) continue;
+    const latitude = Number(match[1]);
+    const longitude = Number(match[2]);
+    if (Number.isFinite(latitude) && Number.isFinite(longitude) && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180) {
+      return { latitude, longitude };
+    }
+  }
+  return null;
+}
+
+function searchBuiltinScraperAddress(query: string): MapSearchResult[] {
+  const coordinate = parseCoordinatesFromText(query);
+  if (!coordinate) return [];
+  return [{
+    id: `builtin_scraper:${coordinate.latitude},${coordinate.longitude}`,
+    address: `Titik dari link/maps: ${coordinate.latitude.toFixed(7)}, ${coordinate.longitude.toFixed(7)}`,
+    latitude: coordinate.latitude,
+    longitude: coordinate.longitude,
+    type: 'coordinate',
+    provider: 'builtin_scraper',
+  }];
+}
+
+async function searchGooglePlacesAddress(query: string, limit: number, apiKey: string, country: string, timeoutMs: number): Promise<MapSearchResult[]> {
+  const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
+  url.searchParams.set('query', queryWithIndonesiaContext(query));
+  url.searchParams.set('key', apiKey);
+  url.searchParams.set('region', country.toLowerCase());
+  url.searchParams.set('language', 'id');
+
+  const response = await fetchWithTimeout(url, {
+    headers: {
+      'User-Agent': 'YukSales/0.1 outlet-google-places-search',
+      Accept: 'application/json',
+    },
+  }, timeoutMs);
+  if (!response.ok) throw new Error('Google Places search failed');
+  const data = await response.json() as {
+    results?: Array<{
+      place_id?: string;
+      name?: string;
+      formatted_address?: string;
+      types?: string[];
+      geometry?: { location?: { lat?: number; lng?: number } };
+    }>;
+    status?: string;
+    error_message?: string;
+  };
+  if (data.status && !['OK', 'ZERO_RESULTS'].includes(data.status)) throw new Error(data.error_message ?? `Google Places status ${data.status}`);
+
+  return (data.results ?? [])
+    .slice(0, limit)
+    .map((item) => {
+      const latitude = Number(item.geometry?.location?.lat);
+      const longitude = Number(item.geometry?.location?.lng);
+      const address = [item.name, item.formatted_address].filter(Boolean).join(', ');
+      return {
+        id: `google_places:${item.place_id ?? `${latitude},${longitude}`}`,
+        address,
+        latitude,
+        longitude,
+        type: item.types?.[0] ?? null,
+        provider: 'google_places' as const,
+      };
+    })
+    .filter((item) => item.address && Number.isFinite(item.latitude) && Number.isFinite(item.longitude));
+}
+
+async function searchCustomMapAddress(query: string, limit: number, baseUrl: string, apiKey: string, country: string, timeoutMs: number): Promise<MapSearchResult[]> {
+  const response = await fetchWithTimeout(baseUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    },
+    body: JSON.stringify({ query, limit, country }),
+  }, timeoutMs);
+  if (!response.ok) throw new Error('Custom map search failed');
+  const data = await response.json() as {
+    results?: Array<{
+      id?: string;
+      address?: string;
+      name?: string;
+      latitude?: number | string;
+      longitude?: number | string;
+      lat?: number | string;
+      lng?: number | string;
+      type?: string | null;
+    }>;
+  };
+
+  return (data.results ?? [])
+    .map((item) => {
+      const latitude = Number(item.latitude ?? item.lat);
+      const longitude = Number(item.longitude ?? item.lng);
+      const address = item.address ?? item.name ?? '';
+      return {
+        id: `custom_http:${item.id ?? `${latitude},${longitude}`}`,
+        address,
+        latitude,
+        longitude,
+        type: item.type ?? null,
+        provider: 'custom_http' as const,
+      };
+    })
     .filter((item) => item.address && Number.isFinite(item.latitude) && Number.isFinite(item.longitude));
 }
 
@@ -229,20 +371,29 @@ export async function outletRoutes(app: FastifyInstance) {
   });
 
   app.get('/outlets/geocode/search', { preHandler: requirePermission('outlets.manage') }, async (request, reply) => {
+    const companyId = requireTenantId(request);
     const query = searchGeocodeQuerySchema.parse(request.query);
 
     try {
-      const contextualQuery = queryWithIndonesiaContext(query.q);
-      const primaryPhotonResults = await searchPhotonAddress(query.q, query.limit).catch(() => []);
-      const contextualPhotonResults = contextualQuery === query.q
-        ? []
-        : await searchPhotonAddress(contextualQuery, query.limit).catch(() => []);
-      const photonResults = [...primaryPhotonResults, ...contextualPhotonResults];
-      const needsFallback = photonResults.length < query.limit;
-      const nominatimResults = needsFallback
-        ? await searchNominatimAddress(contextualQuery, query.limit).catch(() => [])
-        : [];
-      const results = dedupeMapResults([...photonResults, ...nominatimResults], query.limit);
+      const settings = await getGeneralSettings(companyId);
+      const integration = settings.mapSearchIntegration;
+      const country = integration.country || 'ID';
+      const timeoutMs = integration.timeoutMs || 8000;
+      const directResults = searchBuiltinScraperAddress(query.q);
+      if (directResults.length) return { results: directResults.slice(0, query.limit) };
+      if (integration.enabled && integration.provider === 'builtin_scraper') {
+        const results = await searchOsmAddress(query.q, query.limit);
+        return { results };
+      }
+      if (integration.enabled && integration.provider === 'google_places' && integration.apiKey) {
+        const results = await searchGooglePlacesAddress(query.q, query.limit, integration.apiKey, country, timeoutMs);
+        return { results };
+      }
+      if (integration.enabled && integration.provider === 'custom_http' && integration.baseUrl) {
+        const results = await searchCustomMapAddress(query.q, query.limit, integration.baseUrl, integration.apiKey, country, timeoutMs);
+        return { results };
+      }
+      const results = await searchOsmAddress(query.q, query.limit);
       return { results };
     } catch {
       return reply.status(502).send({ message: 'Layanan pencarian alamat maps tidak dapat diakses.' });

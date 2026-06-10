@@ -12,6 +12,7 @@ import {
   Radar,
   ReceiptText,
   Save,
+  Search,
   ShieldCheck,
   SlidersHorizontal,
   Store,
@@ -48,7 +49,7 @@ type ToggleKey =
   | 'rejectVisitOnFaceMismatch';
 
 type MetricKey = 'defaultGeofenceRadiusM' | 'maxGpsAccuracyM' | 'faceMatchThreshold';
-type SectionKey = 'company' | 'visit' | 'attendance' | 'transaction' | 'face' | 'storage';
+type SectionKey = 'company' | 'visit' | 'attendance' | 'transaction' | 'maps' | 'face' | 'storage';
 
 type MetricItem = {
   key: MetricKey;
@@ -224,6 +225,13 @@ const sections: SettingsSection[] = [
     ],
   },
   {
+    key: 'maps',
+    title: 'Map Search',
+    eyebrow: 'Alamat dan titik',
+    description: 'Mengatur provider pencarian alamat/toko untuk penitikan outlet dan kantor.',
+    icon: Search,
+  },
+  {
     key: 'face',
     title: 'Face Verification',
     eyebrow: 'Identitas sales',
@@ -314,6 +322,16 @@ export function OperationalSettingsPage() {
       ...current,
       faceIntegration: {
         ...current.faceIntegration,
+        [key]: value,
+      },
+    } : current);
+  }
+
+  function patchMapSearchIntegration<K extends keyof GeneralSettings['mapSearchIntegration']>(key: K, value: GeneralSettings['mapSearchIntegration'][K]) {
+    setSettings((current) => current ? {
+      ...current,
+      mapSearchIntegration: {
+        ...current.mapSearchIntegration,
         [key]: value,
       },
     } : current);
@@ -622,6 +640,74 @@ export function OperationalSettingsPage() {
                   </label>
                 );
               })}
+            </div>
+          ) : null}
+
+          {activeSection === 'maps' ? (
+            <div className="settings-form-grid compact">
+              <label className="settings-check-row wide">
+                <span className="settings-toggle-icon"><Search size={19} /></span>
+                <span>
+                  <strong>Aktifkan provider map search eksternal</strong>
+                  <small>Jika nonaktif, sistem memakai OpenStreetMap/Photon/Nominatim sebagai default gratis/open-source.</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={settings.mapSearchIntegration.enabled}
+                  onChange={(e) => patchMapSearchIntegration('enabled', e.target.checked)}
+                />
+              </label>
+              <label className="settings-field">
+                <span>Provider pencarian</span>
+                <select
+                  value={settings.mapSearchIntegration.provider}
+                  onChange={(e) => patchMapSearchIntegration('provider', e.target.value as GeneralSettings['mapSearchIntegration']['provider'])}
+                >
+                  <option value="osm">OpenStreetMap / Photon</option>
+                  <option value="builtin_scraper">Built-in scraper / parser</option>
+                  <option value="google_places">Google Places API resmi</option>
+                  <option value="custom_http">Custom HTTP / compliant scraper</option>
+                </select>
+                <small>Built-in membaca koordinat dari teks/link maps yang ditempel. Google Places membutuhkan billing/API key.</small>
+              </label>
+              <label className="settings-field">
+                <span>Negara default</span>
+                <input
+                  value={settings.mapSearchIntegration.country}
+                  onChange={(e) => patchMapSearchIntegration('country', e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2))}
+                  placeholder="ID"
+                  maxLength={2}
+                />
+              </label>
+              <label className="settings-field wide">
+                <span>Base URL custom</span>
+                <input
+                  value={settings.mapSearchIntegration.baseUrl}
+                  onChange={(e) => patchMapSearchIntegration('baseUrl', e.target.value)}
+                  placeholder="https://search.company.com/maps/search"
+                />
+                <small>Dipakai hanya untuk provider Custom HTTP. Endpoint menerima POST JSON: query, limit, country.</small>
+              </label>
+              <label className="settings-field">
+                <span>API key</span>
+                <input
+                  type="password"
+                  value={settings.mapSearchIntegration.apiKey}
+                  onChange={(e) => patchMapSearchIntegration('apiKey', e.target.value)}
+                  placeholder={settings.mapSearchIntegration.apiKey ? 'Biarkan jika tidak diganti' : ''}
+                />
+                <small>Untuk Google Places atau Custom HTTP. Nilai masked akan dipertahankan backend jika tidak diganti.</small>
+              </label>
+              <label className="settings-field">
+                <span>Timeout</span>
+                <input
+                  type="number"
+                  min={1000}
+                  max={60000}
+                  value={settings.mapSearchIntegration.timeoutMs}
+                  onChange={(e) => patchMapSearchIntegration('timeoutMs', Number(e.target.value))}
+                />
+              </label>
             </div>
           ) : null}
 

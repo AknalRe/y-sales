@@ -214,7 +214,6 @@ export function OutletMapPicker({
                 <button key={result.id} type="button" onClick={() => selectSearchResult(result)}>
                   <span className="admin-map-search-result-main">
                     <strong>{result.address.split(',')[0]}</strong>
-                    {result.type ? <em>{result.type}</em> : null}
                   </span>
                   <span className="admin-map-search-result-address">{result.address}</span>
                   <span className="admin-map-search-result-meta">

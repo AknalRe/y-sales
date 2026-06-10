@@ -387,18 +387,6 @@
       color: var(--admin-foreground);
       font-size: .86rem;
     }
-
-    em {
-      border-radius: 999px;
-      background: rgba(249, 115, 22, .12);
-      color: var(--admin-accent);
-      padding: .16rem .45rem;
-      font-size: .66rem;
-      font-style: normal;
-      font-weight: 900;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
   }
 
   .admin-map-search-result-address {

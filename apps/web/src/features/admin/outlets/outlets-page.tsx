@@ -79,6 +79,12 @@ function toForm(outlet: Outlet): OutletForm {
   };
 }
 
+function toOptionalCoordinate(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === '') return null;
+  const coordinate = Number(value);
+  return Number.isFinite(coordinate) ? coordinate : null;
+}
+
 export function OutletsPage() {
   const { accessToken, user } = useAuth();
   const [outlets, setOutlets] = useState<Outlet[]>([]);
@@ -473,8 +479,8 @@ export function OutletsPage() {
               </Field>
               <div className="sm:col-span-2">
                 <OutletMapPicker
-                  latitude={Number.isFinite(Number(form.latitude)) ? Number(form.latitude) : null}
-                  longitude={Number.isFinite(Number(form.longitude)) ? Number(form.longitude) : null}
+                  latitude={toOptionalCoordinate(form.latitude)}
+                  longitude={toOptionalCoordinate(form.longitude)}
                   onChange={handleMapPositionChange}
                   onSearch={accessToken ? (query) => searchMapAddress(accessToken, query).then((result) => result.results) : undefined}
                   description="Klik peta atau geser marker untuk mengisi koordinat. Alamat akan disesuaikan dari titik maps."
@@ -495,7 +501,7 @@ export function OutletsPage() {
                   <button
                     className="admin-btn-ghost px-2.5 py-1.5 text-xs"
                     type="button"
-                    disabled={resolvingAddress || !Number.isFinite(Number(form.latitude)) || !Number.isFinite(Number(form.longitude))}
+                    disabled={resolvingAddress || toOptionalCoordinate(form.latitude) === null || toOptionalCoordinate(form.longitude) === null}
                     onClick={() => void syncAddressFromPoint(Number(form.latitude), Number(form.longitude), true)}
                   >
                     {resolvingAddress ? <RefreshCw size={13} className="spin" /> : <MapPin size={13} />}

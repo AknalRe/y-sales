@@ -30,6 +30,20 @@ const outletMarkerIcon = L.divIcon({
   iconAnchor: [11, 11],
 });
 
+function toValidCoordinate(latitude: number | null | undefined, longitude: number | null | undefined): [number, number] | null {
+  const valid = (
+    typeof latitude === 'number' &&
+    typeof longitude === 'number' &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180
+  );
+  return valid ? [latitude, longitude] : null;
+}
+
 export function OutletMapPicker({
   latitude,
   longitude,
@@ -56,10 +70,10 @@ export function OutletMapPicker({
   useEffect(() => {
     if (!mapElementRef.current || mapRef.current) return;
 
-    const hasCoordinate = typeof latitude === 'number' && typeof longitude === 'number';
+    const coordinate = toValidCoordinate(latitude, longitude);
     const map = L.map(mapElementRef.current, {
-      center: hasCoordinate ? [latitude, longitude] : defaultCenter,
-      zoom: hasCoordinate ? 16 : 5,
+      center: coordinate ?? defaultCenter,
+      zoom: coordinate ? 16 : 5,
       zoomControl: true,
     });
 
@@ -87,9 +101,10 @@ export function OutletMapPicker({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || typeof latitude !== 'number' || typeof longitude !== 'number') return;
+    const coordinate = toValidCoordinate(latitude, longitude);
+    if (!map || !coordinate) return;
 
-    const position: L.LatLngExpression = [latitude, longitude];
+    const position: L.LatLngExpression = coordinate;
     if (!markerRef.current) {
       markerRef.current = L.marker(position, { draggable: true, icon: outletMarkerIcon }).addTo(map);
       markerRef.current.on('dragend', () => {

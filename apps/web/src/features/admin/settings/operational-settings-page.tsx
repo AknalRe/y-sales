@@ -116,6 +116,12 @@ function readNumber(value: unknown, fallback: number) {
   return typeof value === 'number' ? value : fallback;
 }
 
+function toOptionalCoordinate(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === '') return null;
+  const coordinate = Number(value);
+  return Number.isFinite(coordinate) ? coordinate : null;
+}
+
 function storageToForm(integration?: CompanyIntegration): StorageForm {
   if (!integration) return defaultStorageForm;
   const config = integration.config ?? {};
@@ -586,8 +592,8 @@ export function OperationalSettingsPage() {
               </label>
               <div className="settings-map-field">
                 <OutletMapPicker
-                  latitude={Number.isFinite(Number(company.latitude)) ? Number(company.latitude) : null}
-                  longitude={Number.isFinite(Number(company.longitude)) ? Number(company.longitude) : null}
+                  latitude={toOptionalCoordinate(company.latitude)}
+                  longitude={toOptionalCoordinate(company.longitude)}
                   title="Pilih Titik Kantor"
                   description="Cari alamat, klik peta, atau geser marker untuk mengisi koordinat kantor company."
                   onSearch={accessToken ? (query) => searchMapAddress(accessToken, query).then((result) => result.results) : undefined}

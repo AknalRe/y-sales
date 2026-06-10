@@ -21,7 +21,7 @@ type OutletMapPickerProps = {
   description?: string;
 };
 
-const defaultCenter: L.LatLngExpression = [-6.2, 106.816666];
+const defaultCenter: L.LatLngExpression = [-2.548926, 118.0148634];
 
 const outletMarkerIcon = L.divIcon({
   className: '',
@@ -59,7 +59,7 @@ export function OutletMapPicker({
     const hasCoordinate = typeof latitude === 'number' && typeof longitude === 'number';
     const map = L.map(mapElementRef.current, {
       center: hasCoordinate ? [latitude, longitude] : defaultCenter,
-      zoom: hasCoordinate ? 16 : 11,
+      zoom: hasCoordinate ? 16 : 5,
       zoomControl: true,
     });
 

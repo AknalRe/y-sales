@@ -1512,6 +1512,38 @@ Response:
 
 Status: placeholder/planned.
 
+## Nota / Invoice Outlet Status
+
+Transaksi sales saat ini berjalan melalui `/sales/orders`, tetapi halaman admin Verifikasi Nota wajib memakai 4 status bisnis agar tidak membingungkan user:
+
+- `pending`: nota sudah dibuat/difoto sales dan menunggu approval.
+- `approved`: nota sudah di-approve SPV/admin dan stok sudah direlease.
+- `settlement`: nota sudah diselesaikan admin, tercetak/terlapor.
+- `rejected`: nota tidak sesuai ketentuan.
+
+Mapping dari enum transaksi existing:
+
+```txt
+submitted|pending_approval -> pending
+approved                  -> approved
+closed|validated          -> settlement
+rejected                  -> rejected
+```
+
+Endpoint list:
+
+```txt
+GET /sales/orders?noteStatus=pending|approved|settlement|rejected
+```
+
+Endpoint action:
+
+```txt
+POST /sales/orders/:id/approve  -> pending menjadi approved
+POST /sales/orders/:id/settle   -> approved menjadi settlement/closed
+POST /sales/orders/:id/reject   -> pending menjadi rejected
+```
+
 ---
 
 # Business Flow Ringkas

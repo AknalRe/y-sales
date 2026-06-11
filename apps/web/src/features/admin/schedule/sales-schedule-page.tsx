@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CalendarPlus, CheckCircle2, Clock, MapPin, RefreshCw, Search, Send, UserRound, X, XCircle } from 'lucide-react';
+import * as XLSX from 'xlsx-js-style';
+import { AlertTriangle, CalendarPlus, CheckCircle2, Clock, Download, MapPin, RefreshCw, Search, Send, UserRound, X, XCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth/auth-provider';
 import {
   approveVisitSchedule,
@@ -221,6 +222,26 @@ export function SalesSchedulePage() {
     }
   }
 
+  function exportExcel() {
+    const rows = filteredSchedules.map((schedule) => ({
+      Tanggal: schedule.scheduledDate,
+      Sales: getUserName(schedule.salesUserId),
+      Outlet: getOutletName(schedule.outletId),
+      Status: scheduleStatusLabel[schedule.status] ?? schedule.status,
+      Prioritas: schedule.priority,
+      'Jam Mulai': schedule.plannedStartTime ?? '-',
+      'Jam Selesai': schedule.plannedEndTime ?? '-',
+      'Target Closing': schedule.targetClosingCount,
+      'Target Omset': Number(schedule.targetRevenueAmount || 0),
+      Catatan: schedule.notes ?? '',
+    }));
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Tanggal: 'Tidak ada data' }]);
+    sheet['!cols'] = [{ wch: 14 }, { wch: 28 }, { wch: 34 }, { wch: 16 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 36 }];
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Jadwal Sales');
+    XLSX.writeFile(workbook, `jadwal-sales-${selectedDate || 'semua'}.xlsx`, { compression: true });
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -229,6 +250,9 @@ export function SalesSchedulePage() {
           <p className="admin-page-subtitle">Susun rute outlet harian sales, tetapkan target, lalu pantau realisasi kunjungannya.</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={exportExcel} className="admin-btn-ghost" type="button" disabled={!filteredSchedules.length}>
+            <Download size={16} /> Excel
+          </button>
           <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
             <RefreshCw size={16} className={loading ? 'spin' : ''} />
           </button>

@@ -1,45 +1,54 @@
 import { Fragment, useEffect, useState } from 'react';
-import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react';
+import * as XLSX from 'xlsx-js-style';
+import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
-import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, getTenantUsers, getSalesTransactionDetail, type SalesTransaction, type SalesTransactionDetail, type TenantUser } from '@/lib/api/tenant';
+import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, settleSalesTransaction, getTenantUsers, getSalesTransactionDetail, type SalesTransaction, type SalesTransactionDetail, type TenantUser } from '@/lib/api/tenant';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 function formatRp(v: string | number) {
   return `Rp ${Number(v || 0).toLocaleString('id-ID')}`;
 }
 
+const noteStatusLabel: Record<string, string> = {
+  pending: 'Nota Pending',
+  approved: 'Nota Approved',
+  settlement: 'Nota Settlement',
+  rejected: 'Nota Rejected',
+};
+
+function getNoteStatus(tx: SalesTransaction) {
+  if (tx.noteStatus) return tx.noteStatus;
+  if (['submitted', 'pending_approval'].includes(tx.status)) return 'pending';
+  if (tx.status === 'approved') return 'approved';
+  if (['validated', 'closed'].includes(tx.status)) return 'settlement';
+  if (tx.status === 'rejected') return 'rejected';
+  return tx.status;
+}
+
 function getStatusStyle(status: string) {
   switch (status) {
-    case 'submitted':
-      return 'bg-admin-accent-shadow text-admin-accent-light border border-admin-border';
-    case 'pending_approval':
+    case 'pending':
       return 'bg-admin-accent-shadow text-admin-accent border border-admin-border-strong';
     case 'approved':
-      return 'bg-admin-accent-shadow text-admin-accent border border-admin-border';
-    case 'validated':
+      return 'bg-admin-accent-shadow text-admin-accent-light border border-admin-border';
+    case 'settlement':
       return 'bg-admin-success-soft text-admin-success border border-admin-border';
     case 'rejected':
       return 'bg-admin-danger-soft text-admin-danger border border-admin-border';
-    case 'cancelled':
-      return 'bg-admin-bg text-admin-muted-dim border border-admin-border';
-    case 'closed':
-      return 'bg-admin-success-soft text-admin-success border border-admin-border';
-    case 'draft':
-      return 'bg-admin-bg text-admin-muted border border-admin-border';
     default:
       return 'bg-admin-bg text-admin-muted border border-admin-border';
   }
 }
 
 // Add photoUrl to the type locally since we just updated the API
-type ExtendedTransaction = SalesTransaction & { photoUrl?: string };
+type ExtendedTransaction = SalesTransaction & { photoUrl?: string; proofPhotoCount?: number };
 
 export function InvoiceReviewPage() {
   const { accessToken } = useAuth();
   const [transactions, setTransactions] = useState<ExtendedTransaction[]>([]);
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('pending_approval');
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'settlement' | 'rejected' | ''>('pending');
   const [saving, setSaving] = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<ExtendedTransaction | null>(null);
   const [rejectReason, setRejectReason] = useState('');
@@ -54,7 +63,7 @@ export function InvoiceReviewPage() {
     setLoading(true);
     try {
       const [txRes, userRes] = await Promise.all([
-        getSalesTransactions(accessToken, { status: statusFilter || undefined }),
+        getSalesTransactions(accessToken, { noteStatus: statusFilter || undefined }),
         getTenantUsers(accessToken),
       ]);
       setTransactions(txRes.orders as ExtendedTransaction[] ?? []);
@@ -70,7 +79,7 @@ export function InvoiceReviewPage() {
   useEffect(() => { load(); }, [accessToken, statusFilter]);
 
   async function handleApprove(tx: ExtendedTransaction) {
-    if (!accessToken || !confirm(`Approve transaksi ${tx.transactionNo}? Stok akan langsung dipotong.`)) return;
+    if (!accessToken || !confirm(`Setujui nota ${tx.transactionNo}? Stok akan direlease dan nota masuk status approved.`)) return;
     setSaving(tx.id);
     setError('');
     try {
@@ -103,6 +112,20 @@ export function InvoiceReviewPage() {
     return users.find(u => u.id === id)?.name ?? '—';
   }
 
+  async function handleSettlement(tx: ExtendedTransaction) {
+    if (!accessToken || !confirm(`Selesaikan nota ${tx.transactionNo}? Nota akan masuk settlement/terlapor.`)) return;
+    setSaving(tx.id);
+    setError('');
+    try {
+      await settleSalesTransaction(accessToken, tx.id);
+      await load();
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal settlement nota.');
+    } finally {
+      setSaving(null);
+    }
+  }
+
   async function toggleDetail(tx: ExtendedTransaction) {
     const nextId = expandedId === tx.id ? null : tx.id;
     setExpandedId(nextId);
@@ -118,7 +141,50 @@ export function InvoiceReviewPage() {
     }
   }
 
-  const pending = transactions.filter(t => ['submitted', 'pending_approval'].includes(t.status)).length;
+  const pending = transactions.filter(t => getNoteStatus(t) === 'pending').length;
+
+  function exportExcel() {
+    const workbook = XLSX.utils.book_new();
+    const rows = transactions.map((tx) => ({
+      'No Nota': tx.transactionNo,
+      Sales: getUser(tx.salesUserId),
+      Outlet: (tx as any).outletName ?? '-',
+      'Customer Type': tx.customerType,
+      'Metode Bayar': tx.paymentMethod,
+      'Status Nota': noteStatusLabel[getNoteStatus(tx)] ?? getNoteStatus(tx),
+      'Status Teknis': tx.status,
+      'Bukti Foto': tx.proofPhotoCount ?? (tx.photoUrl ? 1 : 0),
+      'Total Tagihan': Number(tx.totalAmount || 0),
+      'Tanggal Dibuat': new Date(tx.createdAt).toLocaleString('id-ID'),
+      'Tanggal Approved': tx.approvedAt ? new Date(tx.approvedAt).toLocaleString('id-ID') : '-',
+    }));
+    const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 'No Nota': 'Tidak ada data' }]);
+    sheet['!cols'] = [
+      { wch: 24 }, { wch: 28 }, { wch: 28 }, { wch: 16 }, { wch: 16 },
+      { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 22 }, { wch: 22 },
+    ];
+    const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:A1');
+    for (let row = range.s.r; row <= range.e.r; row += 1) {
+      for (let col = range.s.c; col <= range.e.c; col += 1) {
+        const cell = sheet[XLSX.utils.encode_cell({ r: row, c: col })];
+        if (!cell) continue;
+        cell.s = {
+          font: row === 0 ? { bold: true, color: { rgb: 'FFFFFF' } } : {},
+          fill: row === 0 ? { fgColor: { rgb: 'C75A18' } } : undefined,
+          alignment: { vertical: 'top', wrapText: true },
+          border: {
+            top: { style: 'thin', color: { rgb: 'E5E7EB' } },
+            bottom: { style: 'thin', color: { rgb: 'E5E7EB' } },
+            left: { style: 'thin', color: { rgb: 'E5E7EB' } },
+            right: { style: 'thin', color: { rgb: 'E5E7EB' } },
+          },
+        };
+      }
+    }
+    sheet['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Verifikasi Nota');
+    XLSX.writeFile(workbook, `verifikasi-nota-${statusFilter || 'semua'}-${new Date().toISOString().slice(0, 10)}.xlsx`, { compression: true });
+  }
 
   return (
     <div className="admin-page">
@@ -137,6 +203,15 @@ export function InvoiceReviewPage() {
               {pending} Perlu Review
             </div>
           )}
+          <button
+            onClick={exportExcel}
+            className="admin-btn-ghost"
+            style={{ padding: '.5rem .75rem', borderRadius: 12 }}
+            disabled={loading || !transactions.length}
+            type="button"
+          >
+            <Download size={16} /> Excel
+          </button>
           <button
             onClick={load}
             className="admin-btn-ghost"
@@ -159,16 +234,15 @@ export function InvoiceReviewPage() {
           <span className="text-admin-muted font-bold text-sm">Filter Status:</span>
           <select
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
+            onChange={e => setStatusFilter(e.target.value as typeof statusFilter)}
             className="admin-select"
             style={{ width: 'auto', minWidth: 180, borderRadius: 12 }}
           >
             <option value="">Semua Status</option>
-            <option value="pending_approval">Pending Approval</option>
-            <option value="submitted">Submitted (Legacy)</option>
-            <option value="approved">Approved</option>
-            <option value="closed">Closed (Selesai)</option>
-            <option value="rejected">Rejected</option>
+            <option value="pending">Nota Pending</option>
+            <option value="approved">Nota Approved</option>
+            <option value="settlement">Nota Settlement</option>
+            <option value="rejected">Nota Rejected</option>
           </select>
         </div>
       </div>
@@ -197,6 +271,7 @@ export function InvoiceReviewPage() {
                 {transactions.map(tx => {
                   const detail = details[tx.id];
                   const expanded = expandedId === tx.id;
+                  const noteStatus = getNoteStatus(tx);
                   return (
                   <Fragment key={tx.id}>
                   <TableRow>
@@ -254,8 +329,8 @@ export function InvoiceReviewPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(tx.status)}`}>
-                        {tx.status.toUpperCase()}
+                      <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(noteStatus)}`}>
+                        {noteStatusLabel[noteStatus] ?? noteStatus}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -270,7 +345,7 @@ export function InvoiceReviewPage() {
                           {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                           Detail
                         </button>
-                      {['submitted', 'pending_approval'].includes(tx.status) ? (
+                      {noteStatus === 'pending' ? (
                         <>
                           <button
                             onClick={() => handleApprove(tx)}
@@ -291,6 +366,16 @@ export function InvoiceReviewPage() {
                             Reject
                           </button>
                         </>
+                      ) : noteStatus === 'approved' ? (
+                        <button
+                          onClick={() => handleSettlement(tx)}
+                          disabled={saving === tx.id}
+                          className="admin-btn-primary"
+                          style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
+                          type="button"
+                        >
+                          Settlement
+                        </button>
                       ) : (
                         <span className="text-admin-subtle text-xs italic">No Action</span>
                       )}

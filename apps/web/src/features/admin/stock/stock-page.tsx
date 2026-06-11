@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx-js-style';
 import {
   AlertTriangle, ArrowRightLeft, Boxes, Edit3, History, Image as ImageIcon, Package,
-  RefreshCw, RotateCcw, Save, Trash2, Upload, Warehouse as WarehouseIcon, X,
+  Download, RefreshCw, RotateCcw, Save, Trash2, Upload, Warehouse as WarehouseIcon, X,
   BarChart3, ShoppingCart, Truck, ClipboardList, UserCircle, Send, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
@@ -298,6 +299,54 @@ export function StockPage() {
   const activeSectionDef = sections.find((s) => s.key === activeSection) ?? sections[0];
   const ActiveIcon = activeSectionDef.icon;
 
+  function exportExcel() {
+    const workbook = XLSX.utils.book_new();
+    const stockSheet = XLSX.utils.json_to_sheet(filteredBalances.map((item) => ({
+      Gudang: `${item.warehouseName} (${item.warehouseCode})`,
+      'Tipe Gudang': item.warehouseTypeLabel ?? item.warehouseType,
+      SKU: item.productSku,
+      Produk: item.productName,
+      Stok: Number(item.quantity || 0),
+      Reserved: Number(item.reservedQuantity || 0),
+      Tersedia: Number(item.quantity || 0) - Number(item.reservedQuantity || 0),
+      Update: item.updatedAt ? new Date(item.updatedAt).toLocaleString('id-ID') : '-',
+    })));
+    const productSheet = XLSX.utils.json_to_sheet(products.map((item) => ({
+      SKU: item.sku,
+      Produk: item.name,
+      Unit: item.unit,
+      Harga: Number(item.priceDefault || 0),
+      Status: item.status,
+      Gambar: item.imageUrl ?? '',
+    })));
+    const warehouseSheet = XLSX.utils.json_to_sheet(warehouses.map((item) => ({
+      Kode: item.code,
+      Gudang: item.name,
+      Tipe: item.type,
+      Status: item.status,
+      Alamat: item.address ?? '',
+    })));
+    const movementSheet = XLSX.utils.json_to_sheet(movements.map((item) => ({
+      Tanggal: item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID') : '-',
+      Gudang: item.warehouseCode,
+      SKU: item.productSku,
+      Produk: item.productName,
+      Mutasi: item.movementLabel ?? item.movementType,
+      Qty: Number(item.quantityDelta || 0),
+      Catatan: item.notes ?? '',
+    })));
+    for (const [name, sheet] of [
+      ['Stok', stockSheet],
+      ['Produk', productSheet],
+      ['Gudang', warehouseSheet],
+      ['Mutasi', movementSheet],
+    ] as const) {
+      sheet['!cols'] = [{ wch: 32 }, { wch: 18 }, { wch: 18 }, { wch: 32 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 24 }];
+      XLSX.utils.book_append_sheet(workbook, sheet, name);
+    }
+    XLSX.writeFile(workbook, `inventory-${new Date().toISOString().slice(0, 10)}.xlsx`, { compression: true });
+  }
+
   return (
     <main className="admin-page">
       {/* Sticky Header */}
@@ -307,9 +356,14 @@ export function StockPage() {
             <h1 className="admin-page-title"><Boxes size={24} className="text-admin-accent" /> Inventory</h1>
             <p className="admin-page-subtitle">CRUD produk, gudang, stok, transfer, adjustment, dan riwayat mutasi.</p>
           </div>
-          <button onClick={load} className="admin-btn-ghost" disabled={loading} type="button">
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
-          </button>
+          <div className="flex gap-2">
+            <button onClick={exportExcel} className="admin-btn-ghost" disabled={loading} type="button">
+              <Download size={16} /> Excel
+            </button>
+            <button onClick={load} className="admin-btn-ghost" disabled={loading} type="button">
+              <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            </button>
+          </div>
         </div>
 
         {message && <div className="admin-alert admin-alert-success"><Save size={15} /> {message} <button onClick={() => setMessage('')} className="admin-alert-close">×</button></div>}

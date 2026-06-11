@@ -121,6 +121,7 @@ export type SalesTransaction = {
   discountAmount: string;
   totalAmount: string;
   status: string;
+  noteStatus?: 'pending' | 'approved' | 'settlement' | 'rejected' | string;
   paymentStatus: 'unpaid' | 'partial' | 'paid';
   submittedAt?: string | null;
   approvedAt?: string | null;
@@ -183,6 +184,7 @@ export type Warehouse = {
   name: string;
   type: 'main' | 'sales_van' | 'outlet_consignment';
   status: 'active' | 'inactive';
+  address?: string | null;
   ownerUserId?: string;
 };
 
@@ -396,9 +398,10 @@ export function getTodayVisitPlan(token: string) {
 
 // ─── Sales Transaction APIs ──────────────────────────────────────────────────
 
-export function getSalesTransactions(token: string, params?: { status?: string; from?: string; to?: string; salesUserId?: string }) {
+export function getSalesTransactions(token: string, params?: { status?: string; noteStatus?: string; from?: string; to?: string; salesUserId?: string }) {
   const q = new URLSearchParams();
   if (params?.status) q.set('status', params.status);
+  if (params?.noteStatus) q.set('noteStatus', params.noteStatus);
   if (params?.from) q.set('from', params.from);
   if (params?.to) q.set('to', params.to);
   if (params?.salesUserId) q.set('salesUserId', params.salesUserId);
@@ -413,6 +416,14 @@ export function getSalesTransactionDetail(token: string, id: string) {
 
 export function approveSalesTransaction(token: string, id: string) {
   return apiRequest<{ transaction: SalesTransaction }>(`/sales/orders/${id}/approve`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  });
+}
+
+export function settleSalesTransaction(token: string, id: string) {
+  return apiRequest<{ transaction: SalesTransaction }>(`/sales/orders/${id}/settle`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({}),

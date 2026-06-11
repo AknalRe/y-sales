@@ -181,7 +181,12 @@ Status transaksi penting:
 - `pending_approval`: transaksi menunggu review admin.
 - `closed`: transaksi sudah diapprove, stok sudah release/berkurang.
 - `rejected`: transaksi ditolak, reserved stock dikembalikan.
-- Status lain seperti `draft`, `submitted`, `approved`, `validated`, `cancelled` boleh ada untuk kompatibilitas/phase lanjutan, tetapi flow saat ini memakai `pending_approval -> closed/rejected`.
+- Status teknis transaksi boleh tetap memakai enum existing, tetapi tampilan Verifikasi Nota wajib disederhanakan menjadi 4 status bisnis:
+  - `nota pending`: nota sudah dibuat sales dan/atau bukti foto nota sudah masuk, menunggu approval SPV/admin.
+  - `nota approved`: nota sudah di-approve SPV/admin dan stok sudah direlease sesuai flow transaksi.
+  - `nota settlement`: nota sudah diselesaikan admin, tercetak/terlapor, dan tidak menunggu aksi verifikasi lagi.
+  - `nota rejected`: nota tidak sesuai ketentuan dan ditolak.
+- Mapping teknis saat ini: `submitted|pending_approval -> pending`, `approved -> approved`, `closed|validated -> settlement`, `rejected -> rejected`.
 
 ### 6. Bukti Foto Transaksi
 

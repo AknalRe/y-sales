@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   consignments,
@@ -46,6 +46,7 @@ const rejectOrderSchema = z.object({
 
 const orderListQuerySchema = z.object({
   status: z.enum(['draft', 'submitted', 'pending_approval', 'approved', 'validated', 'rejected', 'cancelled', 'closed']).optional(),
+  noteStatus: z.enum(['pending', 'approved', 'settlement', 'rejected']).optional(),
   from: z.string().date().optional(),
   to: z.string().date().optional(),
   salesUserId: z.string().uuid().optional(),
@@ -102,6 +103,16 @@ function canApproveSalesOrders(user: any) {
     || ['sales.order.review', 'invoice.review'].some((permission) => user.permissions.includes(permission));
 }
 
+function noteStatusSql() {
+  return sql<string>`case
+    when ${salesTransactions.status} in ('submitted', 'pending_approval') then 'pending'
+    when ${salesTransactions.status} = 'approved' then 'approved'
+    when ${salesTransactions.status} in ('validated', 'closed') then 'settlement'
+    when ${salesTransactions.status} = 'rejected' then 'rejected'
+    else ${salesTransactions.status}
+  end`;
+}
+
 export async function salesRoutes(app: FastifyInstance) {
   app.get('/sales/orders', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
@@ -110,7 +121,11 @@ export async function salesRoutes(app: FastifyInstance) {
     if (!canReadSalesOrders(user)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.view' });
     const canReview = canReviewSalesOrders(user);
     const conditions = [eq(salesTransactions.companyId, companyId)];
-    if (query.status) conditions.push(eq(salesTransactions.status, query.status));
+    if (query.noteStatus === 'pending') conditions.push(inArray(salesTransactions.status, ['submitted', 'pending_approval']));
+    else if (query.noteStatus === 'approved') conditions.push(eq(salesTransactions.status, 'approved'));
+    else if (query.noteStatus === 'settlement') conditions.push(inArray(salesTransactions.status, ['validated', 'closed']));
+    else if (query.noteStatus === 'rejected') conditions.push(eq(salesTransactions.status, 'rejected'));
+    else if (query.status) conditions.push(eq(salesTransactions.status, query.status));
     if (query.from) conditions.push(gte(salesTransactions.createdAt, new Date(`${query.from}T00:00:00.000Z`)));
     if (query.to) conditions.push(lte(salesTransactions.createdAt, new Date(`${query.to}T23:59:59.999Z`)));
     if (canReview && query.salesUserId) {
@@ -146,6 +161,7 @@ export async function salesRoutes(app: FastifyInstance) {
         discountAmount: salesTransactions.discountAmount,
         totalAmount: salesTransactions.totalAmount,
         status: salesTransactions.status,
+        noteStatus: noteStatusSql(),
         paymentStatus: salesTransactions.paymentStatus,
         submittedAt: salesTransactions.submittedAt,
         approvedAt: salesTransactions.approvedAt,
@@ -187,6 +203,7 @@ export async function salesRoutes(app: FastifyInstance) {
         discountAmount: salesTransactions.discountAmount,
         totalAmount: salesTransactions.totalAmount,
         status: salesTransactions.status,
+        noteStatus: noteStatusSql(),
         paymentStatus: salesTransactions.paymentStatus,
         submittedAt: salesTransactions.submittedAt,
         approvedAt: salesTransactions.approvedAt,
@@ -418,18 +435,35 @@ export async function salesRoutes(app: FastifyInstance) {
       }
 
       const [approved] = await tx.update(salesTransactions).set({
-        status: 'closed',
+        status: 'approved',
         approvedByUserId: request.user!.id,
         approvedAt: new Date(),
         stockReleasedAt: new Date(),
-        closedByUserId: request.user!.id,
-        closedAt: new Date(),
         updatedAt: new Date(),
       }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id))).returning();
       return approved;
     });
 
     await writeAuditLog({ request, action: 'sales.order.approved', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    return { transaction: updated };
+  });
+
+  app.post('/sales/orders/:id/settle', { preHandler: authenticate }, async (request, reply) => {
+    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Permission denied', permission: 'invoice.review' });
+    const companyId = requireTenantId(request);
+    const params = z.object({ id: z.string().uuid() }).parse(request.params);
+    const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
+    if (!order) throw Object.assign(new Error('Order tidak ditemukan.'), { statusCode: 404 });
+    if (order.status !== 'approved') throw Object.assign(new Error('Nota hanya bisa diselesaikan setelah status approved.'), { statusCode: 400 });
+
+    const [updated] = await db.update(salesTransactions).set({
+      status: 'closed',
+      closedByUserId: request.user!.id,
+      closedAt: new Date(),
+      updatedAt: new Date(),
+    }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id))).returning();
+
+    await writeAuditLog({ request, action: 'sales.order.settled', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
     return { transaction: updated };
   });
 

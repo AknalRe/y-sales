@@ -4,16 +4,16 @@
     display: flex;
     align-items: center;
     gap: .7rem;
-    border: 1px solid var(--admin-border-strong) !important;
+    border: 1px solid var(--admin-border-strong);
     border-radius: 10px;
     padding: .85rem 1rem;
     color: var(--admin-muted);
-    background: var(--admin-surface) !important;
+    background: var(--admin-surface);
     margin-bottom: 1rem;
     transition: all 0.2s;
 
     &:focus-within {
-        border-color: var(--admin-accent) !important;
+        border-color: var(--admin-accent);
     }
 
     input {
@@ -62,9 +62,12 @@
 
 .admin-count-badge {
     color: var(--admin-muted);
-    border: 1px solid var(--admin-border-subtle);
-    padding: .65rem .9rem;
-    border-radius: 999px;
-    background: var(--admin-bg-card);
+    border: 1px solid var(--admin-border-strong);
+    padding: 0 1rem;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 10px;
+    background: var(--admin-surface);
     white-space: nowrap;
 }

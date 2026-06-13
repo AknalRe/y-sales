@@ -211,37 +211,37 @@ export function TrackingPage() {
       </section>
 
       <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
-        <div className="grid gap-3 xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
-          <input className="admin-input w-full" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} />
-          <select className="admin-select w-full" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+        <div className="grid gap-3 items-center xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
+          <input className="admin-input w-full h-[42px]" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} />
+          <select className="admin-select w-full h-[42px]" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
             <option value="">Semua sales</option>
             {users.filter((user) => user.roleCode !== 'ADMINISTRATOR').map((user) => (
               <option key={user.id} value={user.id}>{user.name}</option>
             ))}
           </select>
-          <select className="admin-select w-full" value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)}>
+          <select className="admin-select w-full h-[42px]" value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)}>
             <option value="">Semua status</option>
             {Object.entries(tab === 'sessions' ? visitStatusLabel : scheduleStatusLabel).map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
-          <div className="relative min-w-0">
-            <Search size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-admin-muted" />
+          <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
+            <Search size={18} />
             <input
-              className="admin-input admin-input-with-icon w-full"
+              className="h-full"
               placeholder="Cari sales, outlet, alamat, outcome, atau status..."
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
             {query && (
-              <button className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-admin-muted hover:bg-admin-bg" type="button" onClick={() => setQuery('')} aria-label="Bersihkan pencarian">
+              <button className="admin-search-clear" type="button" onClick={() => setQuery('')} aria-label="Bersihkan pencarian">
                 <X size={14} />
               </button>
             )}
           </div>
-          <div className="admin-tab-group justify-self-end" style={{ background: 'var(--admin-border-subtle)', padding: '.3rem', borderRadius: 14 }}>
-            <button onClick={() => { setTab('sessions'); setSelectedStatus(''); }} className={`admin-tab ${tab === 'sessions' ? 'active' : ''}`} type="button">Visit</button>
-            <button onClick={() => { setTab('schedules'); setSelectedStatus(''); }} className={`admin-tab ${tab === 'schedules' ? 'active' : ''}`} type="button">Jadwal</button>
+          <div className="admin-tab-group justify-self-end h-[42px] min-w-[160px]">
+            <button onClick={() => { setTab('sessions'); setSelectedStatus(''); }} className={`admin-tab flex-1 font-bold ${tab === 'sessions' ? 'active' : ''}`} type="button">Visit</button>
+            <button onClick={() => { setTab('schedules'); setSelectedStatus(''); }} className={`admin-tab flex-1 font-bold ${tab === 'schedules' ? 'active' : ''}`} type="button">Jadwal</button>
           </div>
         </div>
       </section>

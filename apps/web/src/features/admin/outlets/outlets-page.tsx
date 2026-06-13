@@ -320,10 +320,11 @@ export function OutletsPage() {
       </div>
 
       <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-5 shadow-sm">
-        <div className="admin-filter-row">
-          <div className="admin-search-box">
-            <Search size={15} />
+        <div className="mb-4 grid gap-3 items-center xl:grid-cols-[minmax(260px,1fr)_220px_auto]">
+          <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
+            <Search size={18} />
             <input
+              className="h-full"
               placeholder="Cari kode, nama, PIC, alamat, atau HP..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -334,7 +335,7 @@ export function OutletsPage() {
               </button>
             ) : null}
           </div>
-          <select className="admin-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+          <select className="admin-select w-full h-[42px]" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
             <option value="">Semua status</option>
             <option value="pending_verification">Menunggu Verifikasi</option>
             <option value="active">Aktif</option>
@@ -342,7 +343,7 @@ export function OutletsPage() {
             <option value="rejected">Ditolak</option>
             <option value="inactive">Nonaktif</option>
           </select>
-          <button className="admin-btn-ghost justify-center" type="button" onClick={() => { setSearch(''); setStatusFilter(''); }}>
+          <button className="admin-btn-ghost justify-center h-[42px]" type="button" onClick={() => { setSearch(''); setStatusFilter(''); }}>
             Reset Filter
           </button>
         </div>
@@ -366,11 +367,11 @@ export function OutletsPage() {
                     <div className="mb-2 flex flex-wrap items-center gap-1.5">
                       <span className="rounded-lg bg-admin-accent-shadow px-2 py-0.5 text-[11px] font-black text-admin-accent">{outlet.code}</span>
                       <span className="rounded-lg px-2 py-0.5 text-[11px] font-black" style={{ background: tone.bg, color: tone.color, border: `1px solid ${tone.border}` }}>
-                          {tone.label}
-                        </span>
+                        {tone.label}
+                      </span>
                       <span className="rounded-lg bg-admin-bg px-2 py-0.5 text-[11px] font-black text-admin-muted">
-                          {outlet.customerType === 'agent' ? 'Agent' : 'Toko'}
-                        </span>
+                        {outlet.customerType === 'agent' ? 'Agent' : 'Toko'}
+                      </span>
                     </div>
                     <h2 className="truncate text-base font-black text-admin-foreground">{outlet.name}</h2>
                     <p className="mt-1 truncate text-xs font-semibold text-admin-muted">{outlet.ownerName || 'Tanpa PIC'} {outlet.phone ? `- ${outlet.phone}` : ''}</p>
@@ -399,24 +400,24 @@ export function OutletsPage() {
                   <div className="mt-3 flex flex-wrap justify-end gap-1.5 border-t border-admin-border-subtle pt-3">
                     <button className="admin-btn-ghost px-2.5 py-1.5 text-xs" type="button" onClick={() => openEdit(outlet)}>
                       <Edit3 size={13} />
-                        Edit
+                      Edit
                     </button>
                     {canApproveOutlet && outlet.status !== 'active' ? (
                       <button className="admin-btn-ghost px-2.5 py-1.5 text-xs" type="button" disabled={saving} onClick={() => handleVerify(outlet)}>
                         <CheckCircle2 size={13} />
-                          Aktifkan
+                        Aktifkan
                       </button>
                     ) : null}
                     {canApproveOutlet && outlet.status !== 'rejected' && outlet.status !== 'inactive' ? (
                       <button className="admin-btn-ghost px-2.5 py-1.5 text-xs" type="button" disabled={saving} onClick={() => { setRejectTarget(outlet); setRejectReason(''); }}>
                         <XCircle size={13} />
-                          Reject
+                        Reject
                       </button>
                     ) : null}
                     {outlet.status !== 'inactive' ? (
                       <button className="admin-btn-ghost px-2.5 py-1.5 text-xs" type="button" disabled={saving} onClick={() => handleDeactivate(outlet)}>
                         <Trash2 size={13} />
-                          Nonaktif
+                        Nonaktif
                       </button>
                     ) : null}
                   </div>

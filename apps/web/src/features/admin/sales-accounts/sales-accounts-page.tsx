@@ -446,10 +446,11 @@ export function SalesAccountsPage() {
         </div>
       </div>
 
-      <div className="admin-filter-row admin-sales-filter-row">
-        <div className="admin-search-box">
-          <Search size={15} />
+      <div className="grid gap-3 items-center sm:grid-cols-[minmax(260px,1fr)_220px] mb-5">
+        <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
+          <Search size={18} />
           <input
+            className="h-full"
             type="text"
             placeholder="Cari nama, email, HP, kode karyawan..."
             value={search}
@@ -461,7 +462,7 @@ export function SalesAccountsPage() {
             </button>
           ) : null}
         </div>
-        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="admin-select">
+        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="admin-select w-full h-[42px]">
           <option value="">Semua Status</option>
           <option value="active">Aktif</option>
           <option value="inactive">Nonaktif</option>
@@ -499,7 +500,7 @@ export function SalesAccountsPage() {
                           <div className="admin-user-name">{sales.name}</div>
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className="admin-role-badge">{sales.roleName ?? sales.roleCode}</span>
-                            <span className={`admin-role-badge ${activeFaceTemplateByUser.has(sales.id) ? 'text-admin-success' : 'text-admin-muted'}`}>
+                            <span className={`admin-role-badge inline-flex items-center gap-1.5 whitespace-nowrap ${activeFaceTemplateByUser.has(sales.id) ? 'text-admin-success' : 'text-admin-muted'}`}>
                               <Camera size={11} />
                               {activeFaceTemplateByUser.has(sales.id) ? 'Wajah aktif' : 'Belum wajah'}
                             </span>

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   Users, Plus, Search, Trash2, RefreshCw,
-  KeyRound, AlertTriangle, CheckCircle2, UserX, Pencil, Eye, EyeOff, Camera
+  KeyRound, AlertTriangle, CheckCircle2, UserX, Pencil, Eye, EyeOff, Camera,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -321,18 +322,26 @@ export function UsersPage() {
         </div>
       )}
 
-      <div className="admin-search-row">
-        <div className="admin-search-box">
-          <Search size={15} />
+      <div className="grid gap-3 items-center sm:grid-cols-[minmax(260px,1fr)_auto] mb-5">
+        <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
+          <Search size={18} />
           <input
             id="users-search"
+            className="h-full"
             type="text"
             placeholder="Cari nama, email, atau nomor HP..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
+          {search ? (
+            <button className="admin-search-clear" type="button" onClick={() => setSearch('')} title="Bersihkan pencarian">
+              <X size={14} />
+            </button>
+          ) : null}
         </div>
-        <span className="admin-count-badge">{filtered.length} user</span>
+        <span className="admin-count-badge">
+          {filtered.length} user
+        </span>
       </div>
 
       <div className="admin-table-card">
@@ -358,13 +367,15 @@ export function UsersPage() {
                       <UserAvatar name={user.name} imageUrl={activeFaceTemplateByUser.get(user.id)?.fileUrl} />
                       <div>
                         <div className="admin-user-name">{user.name}</div>
-                        {user.employeeCode && (
-                          <div className="admin-user-code">{user.employeeCode}</div>
-                        )}
-                        <span className={`admin-role-badge ${activeFaceTemplateByUser.has(user.id) ? 'text-admin-success' : 'text-admin-muted'}`}>
-                          <Camera size={11} />
-                          {activeFaceTemplateByUser.has(user.id) ? 'Wajah aktif' : 'Belum wajah'}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                          {user.employeeCode && (
+                            <code className="admin-role-badge">{user.employeeCode}</code>
+                          )}
+                          <span className={`admin-role-badge inline-flex items-center gap-1.5 whitespace-nowrap ${activeFaceTemplateByUser.has(user.id) ? 'text-admin-success' : 'text-admin-muted'}`}>
+                            <Camera size={11} />
+                            {activeFaceTemplateByUser.has(user.id) ? 'Wajah aktif' : 'Belum wajah'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </TableCell>

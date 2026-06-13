@@ -325,32 +325,37 @@ export function AttendanceReviewPage() {
       </section>
 
       <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
-        <div className="grid gap-3 xl:grid-cols-[160px_160px_180px_220px_minmax(220px,1fr)_auto]">
-          <input className="admin-input" type="date" value={filters.from} onChange={(e) => setFilters((current) => ({ ...current, from: e.target.value }))} />
-          <input className="admin-input" type="date" value={filters.to} onChange={(e) => setFilters((current) => ({ ...current, to: e.target.value }))} />
-          <select className="admin-select" value={filters.status} onChange={(e) => setFilters((current) => ({ ...current, status: e.target.value }))}>
+        <div className="grid gap-3 items-center xl:grid-cols-[160px_160px_180px_220px_minmax(220px,1fr)_auto]">
+          <input className="admin-input w-full h-[42px]" type="date" value={filters.from} onChange={(e) => setFilters((current) => ({ ...current, from: e.target.value }))} />
+          <input className="admin-input w-full h-[42px]" type="date" value={filters.to} onChange={(e) => setFilters((current) => ({ ...current, to: e.target.value }))} />
+          <select className="admin-select w-full h-[42px]" value={filters.status} onChange={(e) => setFilters((current) => ({ ...current, status: e.target.value }))}>
             <option value="">Semua status</option>
             <option value="open">Open</option>
             <option value="closed">Closed</option>
             <option value="flagged">Tidak Disetujui</option>
           </select>
-          <select className="admin-select" value={filters.validationStatus} onChange={(e) => setFilters((current) => ({ ...current, validationStatus: e.target.value }))}>
+          <select className="admin-select w-full h-[42px]" value={filters.validationStatus} onChange={(e) => setFilters((current) => ({ ...current, validationStatus: e.target.value }))}>
             <option value="">Semua validasi</option>
             <option value="valid">Valid</option>
             <option value="invalid_location">Lokasi Tidak Valid</option>
             <option value="face_not_detected">Wajah Tidak Terdeteksi</option>
             <option value="manual_review">Manual Review</option>
           </select>
-          <div className="relative min-w-0">
-            <Search size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-admin-muted" />
+          <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
+            <Search size={18} />
             <input
-              className="admin-input admin-input-with-icon w-full"
+              className="h-full"
               placeholder="Cari sales, email, HP, kode karyawan..."
               value={filters.q}
               onChange={(e) => setFilters((current) => ({ ...current, q: e.target.value }))}
             />
+            {filters.q && (
+              <button className="admin-search-clear" type="button" onClick={() => setFilters((current) => ({ ...current, q: '' }))} aria-label="Bersihkan pencarian">
+                <X size={14} />
+              </button>
+            )}
           </div>
-          <button className="admin-btn-ghost justify-center" type="button" onClick={exportExcel} disabled={!reportRows.length && !rows.length}>
+          <button className="admin-btn-ghost justify-center h-[42px]" type="button" onClick={exportExcel} disabled={!reportRows.length && !rows.length}>
             <Download size={15} /> Excel
           </button>
         </div>

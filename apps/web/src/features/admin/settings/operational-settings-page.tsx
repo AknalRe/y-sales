@@ -650,7 +650,7 @@ export function OperationalSettingsPage() {
           ) : null}
 
           {activeSection === 'maps' ? (
-            <div className="settings-form-grid compact">
+            <div className="settings-form-grid">
               <label className="settings-check-row wide">
                 <span className="settings-toggle-icon"><Search size={19} /></span>
                 <span>

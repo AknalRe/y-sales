@@ -280,7 +280,7 @@ function TrackingStat({ label, value, icon: Icon, tone = 'default' }: { label: s
   const color = tone === 'success' ? 'var(--admin-success)' : tone === 'warning' ? 'var(--admin-warning)' : tone === 'danger' ? 'var(--admin-danger)' : 'var(--admin-accent)';
   return (
     <div className="rounded-[1.2rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center gap-2">
         <Icon size={18} style={{ color }} />
         <span className="text-xs font-black uppercase tracking-wide text-admin-muted">{label}</span>
       </div>

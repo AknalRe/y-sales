@@ -78,6 +78,7 @@
 
   // Dashboard-specific
   .dashboard-welcome {
+    margin-bottom: 1rem;
     font-size: .875rem;
     color: var(--admin-muted);
 
@@ -114,9 +115,9 @@
     z-index: 2;
     border: 1px solid var(--admin-border);
     background: var(--admin-bg-card);
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     padding: .9rem;
-    box-shadow: var(--admin-shadow-sm);
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, .035);
     margin-bottom: 1.5rem;
     overflow: hidden;
 
@@ -190,7 +191,9 @@
 
     &.active {
       border-color: var(--admin-accent) !important;
-      box-shadow: 0 10px 22px var(--admin-accent-shadow) !important;
+      box-shadow: none !important;
+      border: none !important;
+      // box-shadow: 0 10px 22px var(--admin-accent-shadow) !important;
     }
   }
 
@@ -204,7 +207,7 @@
     min-width: 260px;
     color: var(--admin-muted);
     font-size: .75rem;
-    font-weight: 800;
+    font-weight: 500;
     line-height: 1.4;
     text-align: right;
 

@@ -104,6 +104,7 @@ const permissionSeeds: Array<[string, string, string]> = [
   ['products.manage', 'Manage Products', 'products'],
   ['media.manage', 'Manage Media', 'media'],
   ['receivables.view', 'View Receivables', 'receivables'],
+  ['receivables.manage', 'Manage Receivables', 'receivables'],
   ['invoice.review', 'Review Invoices', 'invoices'],
   ['visits.review', 'Review Visits', 'visits'],
 ];
@@ -115,13 +116,13 @@ const rolePermissionSeeds: Record<string, string[]> = {
     'attendance.execute', 'attendance.review', 'visits.execute', 'visits.review',
     'transactions.execute', 'transactions.approve', 'deposits.execute', 'deposits.reconcile',
     'outlets.manage', 'outlets.verify', 'products.manage', 'inventory.manage',
-    'media.manage', 'users.manage', 'roles.manage', 'reports.view', 'receivables.view', 'invoice.review', 'settings.manage',
+    'media.manage', 'users.manage', 'roles.manage', 'reports.view', 'receivables.view', 'receivables.manage', 'invoice.review', 'settings.manage',
   ],
   OPERATIONAL_MANAGER: [
     'attendance.execute', 'attendance.review', 'visits.execute', 'visits.review',
     'transactions.execute', 'transactions.approve', 'deposits.execute', 'deposits.reconcile',
     'outlets.manage', 'outlets.verify', 'products.manage', 'inventory.manage', 'media.manage',
-    'reports.view', 'sales.view', 'sales.order.review', 'receivables.view', 'invoice.review',
+    'reports.view', 'sales.view', 'sales.order.review', 'receivables.view', 'receivables.manage', 'invoice.review',
   ],
   SUPERVISOR: [
     'attendance.execute', 'attendance.review', 'visits.execute', 'visits.review',

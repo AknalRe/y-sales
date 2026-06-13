@@ -35,7 +35,7 @@ function hashPayload(payload: unknown) {
 }
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
 }
 
 export async function syncRoutes(app: FastifyInstance) {

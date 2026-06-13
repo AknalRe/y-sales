@@ -314,7 +314,11 @@ export async function salesRoutes(app: FastifyInstance) {
       return created;
     });
 
-    await writeAuditLog({ request, action: 'sales.order.created', entityType: 'sales_transaction', entityId: order.id, newValues: order });
+    try {
+      await writeAuditLog({ request, action: 'sales.order.created', entityType: 'sales_transaction', entityId: order.id, newValues: order });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write sales order created audit log:', err);
+    }
     return { order };
   });
 
@@ -409,7 +413,7 @@ export async function salesRoutes(app: FastifyInstance) {
           customerType: order.customerType,
           principalAmount: order.totalAmount,
           outstandingAmount: order.totalAmount,
-          dueDate: addDays(new Date(), 14),
+          dueDate: addDays(new Date(), settings.defaultCreditDueDays),
           status: 'open',
         });
       }
@@ -420,7 +424,7 @@ export async function salesRoutes(app: FastifyInstance) {
           outletId: order.outletId,
           salesUserId: order.salesUserId,
           startDate: new Date().toISOString().slice(0, 10),
-          dueDate: addDays(new Date(), 14),
+          dueDate: addDays(new Date(), settings.defaultConsignmentDueDays),
           authorizedByUserId: request.user!.id,
           status: 'active',
         }).returning();
@@ -444,7 +448,11 @@ export async function salesRoutes(app: FastifyInstance) {
       return approved;
     });
 
-    await writeAuditLog({ request, action: 'sales.order.approved', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    try {
+      await writeAuditLog({ request, action: 'sales.order.approved', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write sales order approved audit log:', err);
+    }
     return { transaction: updated };
   });
 
@@ -463,7 +471,11 @@ export async function salesRoutes(app: FastifyInstance) {
       updatedAt: new Date(),
     }).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, order.id))).returning();
 
-    await writeAuditLog({ request, action: 'sales.order.settled', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    try {
+      await writeAuditLog({ request, action: 'sales.order.settled', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write sales order settled audit log:', err);
+    }
     return { transaction: updated };
   });
 
@@ -502,7 +514,11 @@ export async function salesRoutes(app: FastifyInstance) {
       return rejected;
     });
 
-    await writeAuditLog({ request, action: 'sales.order.rejected', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    try {
+      await writeAuditLog({ request, action: 'sales.order.rejected', entityType: 'sales_transaction', entityId: order.id, oldValues: order, newValues: updated });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write sales order rejected audit log:', err);
+    }
     return { transaction: updated };
   });
 }

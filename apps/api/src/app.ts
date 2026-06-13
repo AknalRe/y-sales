@@ -53,6 +53,7 @@ export async function buildApp() {
     },
   });
 
+
   app.setErrorHandler((error, request, reply) => {
     const appError = error as Error & { statusCode?: number; code?: string };
     request.log.error(appError);

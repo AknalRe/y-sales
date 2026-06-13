@@ -107,7 +107,11 @@ export async function attendanceReviewRoutes(app: FastifyInstance) {
         : { validationStatus: 'manual_review' as const, status: 'flagged' as const, updatedAt: new Date() };
 
     const [session] = await db.update(attendanceSessions).set(patch).where(and(eq(attendanceSessions.companyId, companyId), eq(attendanceSessions.id, params.id))).returning();
-    await writeAuditLog({ request, action: `attendance.review.${body.action}`, entityType: 'attendance_session', entityId: session.id, oldValues: oldSession, newValues: session });
+    try {
+      await writeAuditLog({ request, action: `attendance.review.${body.action}`, entityType: 'attendance_session', entityId: session.id, oldValues: oldSession, newValues: session });
+    } catch (err) {
+      console.error(`[AuditLog] Failed to write attendance review ${body.action} audit log:`, err);
+    }
     return { session };
   });
 

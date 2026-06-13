@@ -43,6 +43,13 @@
       "when": 1780246602885,
       "tag": "0006_true_misty_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781321869270,
+      "tag": "0007_third_puck",
+      "breakpoints": true
     }
   ]
 }

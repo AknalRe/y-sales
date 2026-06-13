@@ -63,7 +63,11 @@ export async function companyRoutes(app: FastifyInstance) {
       }
     }
     const [company] = await db.update(companies).set(toCompanyUpdate(body)).where(eq(companies.id, companyId)).returning();
-    await writeAuditLog({ request, action: 'company.profile.updated', entityType: 'company', entityId: companyId, oldValues: existing, newValues: company });
+    try {
+      await writeAuditLog({ request, action: 'company.profile.updated', entityType: 'company', entityId: companyId, oldValues: existing, newValues: company });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write company profile update audit log:', err);
+    }
     return { company };
   });
 }

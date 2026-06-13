@@ -16,7 +16,7 @@ await sql.begin(async (tx) => {
   // 1. Create enums if not exist
   await tx`DO $$ BEGIN CREATE TYPE "public"."billing_cycle" AS ENUM('monthly', 'yearly', 'lifetime'); EXCEPTION WHEN duplicate_object THEN null; END $$`;
   await tx`DO $$ BEGIN CREATE TYPE "public"."tenant_sub_status" AS ENUM('trialing', 'active', 'past_due', 'suspended', 'cancelled', 'expired'); EXCEPTION WHEN duplicate_object THEN null; END $$`;
-  await tx`DO $$ BEGIN CREATE TYPE "public"."platform_action" AS ENUM('company.created', 'company.updated', 'company.suspended', 'company.activated', 'company.cancelled', 'company.deleted', 'subscription.created', 'subscription.updated', 'subscription.cancelled', 'plan.created', 'plan.updated'); EXCEPTION WHEN duplicate_object THEN null; END $$`;
+  await tx`DO $$ BEGIN CREATE TYPE "public"."platform_action" AS ENUM('company.created', 'company.updated', 'company.suspended', 'company.activated', 'company.cancelled', 'company.deleted', 'company.lifecycle.cancelled', 'subscription.created', 'subscription.assigned', 'subscription.updated', 'subscription.cancelled', 'subscription.upgraded', 'subscription.downgraded', 'plan.created', 'plan.updated', 'plan.deleted', 'invoice.created', 'invoice.void', 'invoice.voided', 'payment.recorded', 'payment.refunded', 'feature.created', 'feature.updated', 'feature.deleted', 'user.created', 'user.updated', 'user.deleted', 'user.password_reset', 'user.suspended'); EXCEPTION WHEN duplicate_object THEN null; END $$`;
   await tx`DO $$ BEGIN CREATE TYPE "public"."platform_payment_status" AS ENUM('pending', 'succeeded', 'failed', 'refunded'); EXCEPTION WHEN duplicate_object THEN null; END $$`;
   await tx`DO $$ BEGIN CREATE TYPE "public"."platform_invoice_status" AS ENUM('draft', 'issued', 'paid', 'overdue', 'void', 'cancelled'); EXCEPTION WHEN duplicate_object THEN null; END $$`;
   await tx`DO $$ BEGIN CREATE TYPE "public"."platform_billing_reason" AS ENUM('new_subscription', 'renewal', 'upgrade', 'downgrade', 'manual_adjustment'); EXCEPTION WHEN duplicate_object THEN null; END $$`;
@@ -257,10 +257,13 @@ console.log('\n✅ SaaS schema migration complete!');
 
 // Extend platform_action enum outside transaction (PostgreSQL requires ADD VALUE outside tx)
 const newActions = [
+  'company.lifecycle.cancelled',
+  'subscription.assigned',
   'subscription.upgraded', 'subscription.downgraded',
   'plan.deleted',
-  'invoice.created', 'invoice.voided',
+  'invoice.created', 'invoice.void', 'invoice.voided',
   'payment.recorded', 'payment.refunded',
+  'feature.created', 'feature.updated', 'feature.deleted',
   'user.created', 'user.updated', 'user.deleted', 'user.password_reset', 'user.suspended',
 ];
 for (const val of newActions) {

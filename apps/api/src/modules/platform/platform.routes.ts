@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, asc, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { companies, platformInvoices, platformPayments, subscriptionFeatures, subscriptionPlans, tenantSubscriptions, users, roles } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -207,7 +207,11 @@ export async function platformRoutes(app: FastifyInstance) {
       createdByUserId: (request as any).user?.id,
       paidAt: body.status === 'paid' ? new Date() : undefined,
     }).returning();
-    await writeAuditLog({ request, action: 'invoice.created', entityType: 'platform_invoice', entityId: invoice.id, newValues: invoice });
+    try {
+      await writeAuditLog({ request, action: 'invoice.created', entityType: 'platform_invoice', entityId: invoice.id, newValues: invoice });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write invoice creation audit log:', err);
+    }
     return { invoice };
   });
 
@@ -230,7 +234,11 @@ export async function platformRoutes(app: FastifyInstance) {
       voidedAt: body.status === 'void' ? new Date() : existing.voidedAt,
       updatedAt: new Date(),
     }).where(eq(platformInvoices.id, params.id)).returning();
-    await writeAuditLog({ request, action: 'invoice.void', entityType: 'platform_invoice', entityId: invoice.id, oldValues: existing, newValues: invoice });
+    try {
+      await writeAuditLog({ request, action: 'invoice.void', entityType: 'platform_invoice', entityId: invoice.id, oldValues: existing, newValues: invoice });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write invoice void audit log:', err);
+    }
     return { invoice };
   });
 
@@ -301,7 +309,11 @@ export async function platformRoutes(app: FastifyInstance) {
         }
       }
     }
-    await writeAuditLog({ request, action: 'payment.recorded', entityType: 'platform_payment', entityId: payment.id, newValues: payment });
+    try {
+      await writeAuditLog({ request, action: 'payment.recorded', entityType: 'platform_payment', entityId: payment.id, newValues: payment });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write platform payment record audit log:', err);
+    }
     return { payment };
   });
 
@@ -320,17 +332,39 @@ export async function platformRoutes(app: FastifyInstance) {
       .limit(query.limit)
       .offset(offset);
 
-    const enriched = await Promise.all(rows.map(async (company) => {
-      const [subscription] = await db.select().from(tenantSubscriptions)
-        .where(eq(tenantSubscriptions.companyId, company.id))
-        .orderBy(desc(tenantSubscriptions.createdAt))
-        .limit(1);
+    const companyIds = rows.map((c) => c.id);
+    const allSubs = companyIds.length > 0
+      ? await db.select().from(tenantSubscriptions)
+          .where(inArray(tenantSubscriptions.companyId, companyIds))
+          .orderBy(desc(tenantSubscriptions.createdAt))
+      : [];
 
+    const latestSubMap = new Map<string, typeof tenantSubscriptions.$inferSelect>();
+    for (const sub of allSubs) {
+      if (!latestSubMap.has(sub.companyId)) {
+        latestSubMap.set(sub.companyId, sub);
+      }
+    }
+
+    const uniquePlanCodes = Array.from(new Set(
+      Array.from(latestSubMap.values()).map((sub) => sub.planCode)
+    ));
+
+    const plans = uniquePlanCodes.length > 0
+      ? await db.select().from(subscriptionPlans)
+          .where(inArray(subscriptionPlans.code, uniquePlanCodes))
+      : [];
+
+    const planMap = new Map<string, typeof subscriptionPlans.$inferSelect>();
+    for (const plan of plans) {
+      planMap.set(plan.code, plan);
+    }
+
+    const enriched = rows.map((company) => {
+      const subscription = latestSubMap.get(company.id);
       if (!subscription) return { ...company, subscriptionSummary: null };
 
-      const [plan] = await db.select().from(subscriptionPlans)
-        .where(eq(subscriptionPlans.code, subscription.planCode))
-        .limit(1);
+      const plan = planMap.get(subscription.planCode);
 
       return {
         ...company,
@@ -351,7 +385,7 @@ export async function platformRoutes(app: FastifyInstance) {
           invoiceRef: subscription.invoiceRef,
         },
       };
-    }));
+    });
 
     return { companies: enriched, page: query.page, limit: query.limit };
   });
@@ -388,7 +422,11 @@ export async function platformRoutes(app: FastifyInstance) {
       managedByUserId: actorId,
     });
 
-    await writeAuditLog({ request, action: 'company.created', entityType: 'company', entityId: company.id, newValues: company });
+    try {
+      await writeAuditLog({ request, action: 'company.created', entityType: 'company', entityId: company.id, newValues: company });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write company created audit log:', err);
+    }
 
     return { company };
   });
@@ -408,7 +446,11 @@ export async function platformRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(companies).where(eq(companies.id, params.id));
     if (!existing) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     const [updated] = await db.update(companies).set({ ...body, updatedAt: new Date() }).where(eq(companies.id, params.id)).returning();
-    await writeAuditLog({ request, action: 'company.updated', entityType: 'company', entityId: updated.id, oldValues: existing, newValues: updated });
+    try {
+      await writeAuditLog({ request, action: 'company.updated', entityType: 'company', entityId: updated.id, oldValues: existing, newValues: updated });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write company updated audit log:', err);
+    }
     return { company: updated };
   });
 
@@ -417,7 +459,11 @@ export async function platformRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(companies).where(eq(companies.id, params.id));
     if (!existing) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     await db.update(companies).set({ status: 'cancelled', updatedAt: new Date() }).where(eq(companies.id, params.id));
-    await writeAuditLog({ request, action: 'company.cancelled', entityType: 'company', entityId: params.id, oldValues: existing });
+    try {
+      await writeAuditLog({ request, action: 'company.deleted', entityType: 'company', entityId: params.id, oldValues: existing });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write company cancellation audit log:', err);
+    }
     return { success: true };
   });
 
@@ -450,7 +496,11 @@ export async function platformRoutes(app: FastifyInstance) {
     if (!company) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     await db.update(companies).set({ status: 'suspended', updatedAt: new Date() }).where(eq(companies.id, params.id));
     await db.update(tenantSubscriptions).set({ status: 'suspended', suspendedAt: new Date(), suspendReason: body.reason, updatedAt: new Date() }).where(eq(tenantSubscriptions.companyId, params.id));
-    await writeAuditLog({ request, action: 'company.suspended', entityType: 'company', entityId: params.id, oldValues: company, newValues: { ...company, status: 'suspended' } });
+    try {
+      await writeAuditLog({ request, action: 'company.suspended', entityType: 'company', entityId: params.id, oldValues: company, newValues: { ...company, status: 'suspended' } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write company suspended audit log:', err);
+    }
     return { success: true, message: `Company "${company.name}" telah disuspend.` };
   });
 
@@ -460,7 +510,11 @@ export async function platformRoutes(app: FastifyInstance) {
     if (!company) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     await db.update(companies).set({ status: 'active', updatedAt: new Date() }).where(eq(companies.id, params.id));
     await db.update(tenantSubscriptions).set({ status: 'active', suspendedAt: undefined, suspendReason: undefined, updatedAt: new Date() }).where(eq(tenantSubscriptions.companyId, params.id));
-    await writeAuditLog({ request, action: 'company.activated', entityType: 'company', entityId: params.id, oldValues: company, newValues: { ...company, status: 'active' } });
+    try {
+      await writeAuditLog({ request, action: 'company.activated', entityType: 'company', entityId: params.id, oldValues: company, newValues: { ...company, status: 'active' } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write company activated audit log:', err);
+    }
     return { success: true, message: `Company "${company.name}" telah diaktifkan kembali.` };
   });
 
@@ -471,7 +525,11 @@ export async function platformRoutes(app: FastifyInstance) {
     if (!company) return reply.status(404).send({ message: 'Company tidak ditemukan.' });
     await db.update(companies).set({ status: 'cancelled', updatedAt: new Date() }).where(eq(companies.id, params.id));
     await db.update(tenantSubscriptions).set({ status: 'cancelled', cancelledAt: new Date(), cancellationReason: body.reason, updatedAt: new Date() }).where(eq(tenantSubscriptions.companyId, params.id));
-    await writeAuditLog({ request, action: 'company.cancelled', entityType: 'company', entityId: params.id, oldValues: company });
+    try {
+      await writeAuditLog({ request, action: 'company.lifecycle.cancelled', entityType: 'company', entityId: params.id, oldValues: company });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write company lifecycle cancellation audit log:', err);
+    }
     return { success: true };
   });
 
@@ -487,7 +545,11 @@ export async function platformRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(subscriptionFeatures).where(eq(subscriptionFeatures.key, body.key)).limit(1);
     if (existing) return reply.status(409).send({ message: 'Feature key sudah digunakan.' });
     const [feature] = await db.insert(subscriptionFeatures).values(body).returning();
-    await writeAuditLog({ request, action: 'feature.created', entityType: 'subscription_feature', entityId: feature.id, newValues: feature });
+    try {
+      await writeAuditLog({ request, action: 'feature.created', entityType: 'subscription_feature', entityId: feature.id, newValues: feature });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write subscription feature created audit log:', err);
+    }
     return { feature };
   });
 
@@ -501,7 +563,11 @@ export async function platformRoutes(app: FastifyInstance) {
       if (duplicate) return reply.status(409).send({ message: 'Feature key sudah digunakan.' });
     }
     const [feature] = await db.update(subscriptionFeatures).set({ ...body, updatedAt: new Date() }).where(eq(subscriptionFeatures.id, params.id)).returning();
-    await writeAuditLog({ request, action: 'feature.updated', entityType: 'subscription_feature', entityId: feature.id, oldValues: existing, newValues: feature });
+    try {
+      await writeAuditLog({ request, action: 'feature.updated', entityType: 'subscription_feature', entityId: feature.id, oldValues: existing, newValues: feature });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write subscription feature updated audit log:', err);
+    }
     return { feature };
   });
 
@@ -510,7 +576,11 @@ export async function platformRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(subscriptionFeatures).where(eq(subscriptionFeatures.id, params.id)).limit(1);
     if (!existing) return reply.status(404).send({ message: 'Feature tidak ditemukan.' });
     await db.update(subscriptionFeatures).set({ status: 'inactive', updatedAt: new Date() }).where(eq(subscriptionFeatures.id, params.id));
-    await writeAuditLog({ request, action: 'feature.deleted', entityType: 'subscription_feature', entityId: params.id, oldValues: existing });
+    try {
+      await writeAuditLog({ request, action: 'feature.deleted', entityType: 'subscription_feature', entityId: params.id, oldValues: existing });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write subscription feature deleted audit log:', err);
+    }
     return { success: true };
   });
 
@@ -530,7 +600,11 @@ export async function platformRoutes(app: FastifyInstance) {
       limits: body.limits ?? null,
       features: body.features ?? null,
     }).returning();
-    await writeAuditLog({ request, action: 'plan.created', entityType: 'subscription_plan', entityId: plan.id, newValues: plan });
+    try {
+      await writeAuditLog({ request, action: 'plan.created', entityType: 'subscription_plan', entityId: plan.id, newValues: plan });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write subscription plan created audit log:', err);
+    }
     return { plan };
   });
 
@@ -545,7 +619,11 @@ export async function platformRoutes(app: FastifyInstance) {
       priceYearly: body.priceYearly !== undefined ? String(body.priceYearly) : undefined,
       updatedAt: new Date(),
     }).where(eq(subscriptionPlans.id, params.id)).returning();
-    await writeAuditLog({ request, action: 'plan.updated', entityType: 'subscription_plan', entityId: updated.id, oldValues: existing, newValues: updated });
+    try {
+      await writeAuditLog({ request, action: 'plan.updated', entityType: 'subscription_plan', entityId: updated.id, oldValues: existing, newValues: updated });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write subscription plan updated audit log:', err);
+    }
     return { plan: updated };
   });
 
@@ -584,12 +662,20 @@ export async function platformRoutes(app: FastifyInstance) {
         .where(eq(tenantSubscriptions.id, existing.id))
         .returning();
 
-      await writeAuditLog({ request, action: 'subscription.assigned', entityType: 'tenant_subscription', entityId: sub.id, oldValues: existing, newValues: sub });
+      try {
+        await writeAuditLog({ request, action: 'subscription.assigned', entityType: 'tenant_subscription', entityId: sub.id, oldValues: existing, newValues: sub });
+      } catch (err) {
+        console.error('[AuditLog] Failed to write subscription assigned update audit log:', err);
+      }
       return { subscription: sub };
     }
 
     const [sub] = await db.insert(tenantSubscriptions).values(subscriptionValues).returning();
-    await writeAuditLog({ request, action: 'subscription.assigned', entityType: 'tenant_subscription', entityId: sub.id, newValues: sub });
+    try {
+      await writeAuditLog({ request, action: 'subscription.assigned', entityType: 'tenant_subscription', entityId: sub.id, newValues: sub });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write subscription assigned audit log:', err);
+    }
     return { subscription: sub };
   });
 
@@ -620,7 +706,11 @@ export async function platformRoutes(app: FastifyInstance) {
       managedByUserId: request.user!.id,
       updatedAt: new Date(),
     }).where(eq(tenantSubscriptions.id, sub.id)).returning();
-    await writeAuditLog({ request, action: 'subscription.cancelled', entityType: 'tenant_subscription', entityId: updated.id, oldValues: sub, newValues: updated });
+    try {
+      await writeAuditLog({ request, action: 'subscription.updated', entityType: 'tenant_subscription', entityId: updated.id, oldValues: sub, newValues: updated });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write subscription updated audit log:', err);
+    }
     return { subscription: updated };
   });
 }

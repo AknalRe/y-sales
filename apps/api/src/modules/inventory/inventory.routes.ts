@@ -6,6 +6,8 @@ import { appSettings, auditLogs, inventoryBalances, inventoryMovements, products
 import { db } from '../../plugins/db.js';
 import { authenticate } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
+import { parsePaginationQuery } from '../../utils/pagination.js';
+import { writeAuditLog } from '../audit/audit.service.js';
 
 const defaultInventoryLabels = {
   warehouseCodePrefix: 'WH',
@@ -155,24 +157,7 @@ function nextSequentialCode(prefix: string, existingCodes: string[]) {
   return `${prefix}-${String(max + 1).padStart(3, '0')}`;
 }
 
-async function writeAudit(request: FastifyRequest, input: {
-  action: string;
-  entityType: string;
-  entityId?: string | null;
-  oldValues?: unknown;
-  newValues?: unknown;
-}) {
-  await db.insert(auditLogs).values({
-    actorUserId: request.user?.id,
-    action: input.action,
-    entityType: input.entityType,
-    entityId: input.entityId ?? null,
-    oldValues: input.oldValues,
-    newValues: input.newValues,
-    ipAddress: request.ip,
-    userAgent: request.headers['user-agent'],
-  });
-}
+
 
 async function ensureWarehouse(companyId: string, warehouseId: string) {
   const [warehouse] = await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.id, warehouseId)));
@@ -248,7 +233,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
       set: { value: labels, updatedByUserId: request.user?.id, updatedAt: new Date() },
     }).returning();
 
-    await writeAudit(request, { action: 'inventory.settings.update', entityType: 'app_settings', entityId: setting.id, oldValues: oldLabels, newValues: labels });
+    try {
+      await writeAuditLog({ request, action: 'inventory.settings.update', entityType: 'app_settings', entityId: setting.id, oldValues: oldLabels, newValues: labels });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write settings update audit log:', err);
+    }
     return { labels, scope: { companyId } };
   });
 
@@ -272,7 +261,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
       set: { ...body, status: 'active' },
     }).returning();
 
-    await writeAudit(request, { action: 'warehouse.create', entityType: 'warehouse', entityId: warehouse.id, newValues: warehouse });
+    try {
+      await writeAuditLog({ request, action: 'warehouse.create', entityType: 'warehouse', entityId: warehouse.id, newValues: warehouse });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write warehouse create audit log:', err);
+    }
     return { warehouse };
   });
 
@@ -306,7 +299,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
     if (existing) {
       if (existing.status === 'active') return { warehouse: existing, created: false };
       const [reactivated] = await db.update(warehouses).set({ status: 'active' }).where(eq(warehouses.id, existing.id)).returning();
-      await writeAudit(request, { action: 'warehouse.sales.reactivate', entityType: 'warehouse', entityId: reactivated.id, oldValues: existing, newValues: reactivated });
+      try {
+        await writeAuditLog({ request, action: 'warehouse.sales.reactivate', entityType: 'warehouse', entityId: reactivated.id, oldValues: existing, newValues: reactivated });
+      } catch (err) {
+        console.error('[AuditLog] Failed to write reactivate audit log:', err);
+      }
       return { warehouse: reactivated, created: false };
     }
 
@@ -323,7 +320,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
       status: 'active',
     }).returning();
 
-    await writeAudit(request, { action: 'warehouse.sales.create', entityType: 'warehouse', entityId: warehouse.id, newValues: warehouse });
+    try {
+      await writeAuditLog({ request, action: 'warehouse.sales.create', entityType: 'warehouse', entityId: warehouse.id, newValues: warehouse });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write sales warehouse create audit log:', err);
+    }
     return { warehouse, created: true };
   });
 
@@ -333,7 +334,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
     const body = warehouseUpdateSchema.parse(request.body);
     const oldWarehouse = await ensureWarehouse(companyId, params.id);
     const [warehouse] = await db.update(warehouses).set(body).where(and(eq(warehouses.companyId, companyId), eq(warehouses.id, params.id))).returning();
-    await writeAudit(request, { action: 'warehouse.update', entityType: 'warehouse', entityId: params.id, oldValues: oldWarehouse, newValues: warehouse });
+    try {
+      await writeAuditLog({ request, action: 'warehouse.update', entityType: 'warehouse', entityId: params.id, oldValues: oldWarehouse, newValues: warehouse });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write warehouse update audit log:', err);
+    }
     return { warehouse };
   });
 
@@ -346,7 +351,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
     }
 
     const [warehouse] = await db.update(warehouses).set({ status: 'inactive' }).where(and(eq(warehouses.companyId, companyId), eq(warehouses.id, params.id))).returning();
-    await writeAudit(request, { action: 'warehouse.deactivate', entityType: 'warehouse', entityId: params.id, oldValues: oldWarehouse, newValues: warehouse });
+    try {
+      await writeAuditLog({ request, action: 'warehouse.deactivate', entityType: 'warehouse', entityId: params.id, oldValues: oldWarehouse, newValues: warehouse });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write warehouse deactivate audit log:', err);
+    }
     return { warehouse };
   });
 
@@ -377,6 +386,7 @@ export async function inventoryRoutes(app: FastifyInstance) {
 
   app.get('/inventory/movements', { preHandler: requireInventoryAccess }, async (request) => {
     const companyId = requireTenantId(request);
+    const { page, limit, offset } = parsePaginationQuery(request.query);
     const labels = await getInventoryLabels(companyId);
     const rows = await db.select({
       id: inventoryMovements.id,
@@ -392,9 +402,23 @@ export async function inventoryRoutes(app: FastifyInstance) {
       notes: inventoryMovements.notes,
       createdByUserId: inventoryMovements.createdByUserId,
       createdAt: inventoryMovements.createdAt,
-    }).from(inventoryMovements).innerJoin(warehouses, eq(inventoryMovements.warehouseId, warehouses.id)).innerJoin(products, eq(inventoryMovements.productId, products.id)).where(eq(inventoryMovements.companyId, companyId)).orderBy(desc(inventoryMovements.createdAt)).limit(200);
+    }).from(inventoryMovements)
+      .innerJoin(warehouses, eq(inventoryMovements.warehouseId, warehouses.id))
+      .innerJoin(products, eq(inventoryMovements.productId, products.id))
+      .where(eq(inventoryMovements.companyId, companyId))
+      .orderBy(desc(inventoryMovements.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    return { movements: rows.map((row) => ({ ...row, movementLabel: movementLabel(row, labels), directionLabel: Number(row.quantityDelta) < 0 ? labels.transferOutLabel : labels.transferInLabel })) };
+    return {
+      movements: rows.map((row) => ({
+        ...row,
+        movementLabel: movementLabel(row, labels),
+        directionLabel: Number(row.quantityDelta) < 0 ? labels.transferOutLabel : labels.transferInLabel
+      })),
+      page,
+      limit
+    };
   });
 
   app.post('/inventory/adjustments', { preHandler: requireInventoryAccess }, async (request) => {
@@ -409,7 +433,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
       await tx.insert(inventoryMovements).values({ companyId, warehouseId: body.warehouseId, productId: body.productId, movementType: 'adjustment', quantityDelta: toQty(delta), referenceType: 'stock_adjustment', notes: body.notes, createdByUserId: request.user?.id });
       return balance;
     });
-    await writeAudit(request, { action: 'inventory.adjustment', entityType: 'inventory_balance', entityId: result.id, newValues: { ...body, companyId } });
+    try {
+      await writeAuditLog({ request, action: 'inventory.adjustment', entityType: 'inventory_balance', entityId: result.id, newValues: { ...body, companyId } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write adjustment audit log:', err);
+    }
     return { balance: result };
   });
 
@@ -428,7 +456,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
       await tx.insert(inventoryMovements).values({ companyId, warehouseId: body.warehouseId, productId: body.productId, movementType: 'adjustment', quantityDelta: toQty(delta), referenceType: 'stock_reset', notes: body.notes ?? `Reset stok dari ${toQty(currentQty)} ke ${toQty(targetQuantity)}`, createdByUserId: request.user?.id });
       return { balance, currentQty, targetQuantity, delta };
     });
-    await writeAudit(request, { action: 'inventory.reset', entityType: 'inventory_balance', entityId: result.balance.id, oldValues: { quantity: toQty(result.currentQty) }, newValues: { quantity: toQty(result.targetQuantity), delta: toQty(result.delta), companyId } });
+    try {
+      await writeAuditLog({ request, action: 'inventory.reset', entityType: 'inventory_balance', entityId: result.balance.id, oldValues: { quantity: toQty(result.currentQty) }, newValues: { quantity: toQty(result.targetQuantity), delta: toQty(result.delta), companyId } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write reset audit log:', err);
+    }
     return { balance: result.balance };
   });
 
@@ -449,7 +481,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
       const [reversal] = await tx.insert(inventoryMovements).values({ companyId, warehouseId: movement.warehouseId, productId: movement.productId, movementType: 'adjustment', quantityDelta: toQty(reversalDelta), referenceType: 'movement_reversal', referenceId: movement.id, notes: body.notes ?? `Reversal untuk movement ${movement.id}`, createdByUserId: request.user?.id }).returning();
       return { balance, reversal };
     });
-    await writeAudit(request, { action: 'inventory.reverse', entityType: 'inventory_movement', entityId: movement.id, oldValues: movement, newValues: result.reversal });
+    try {
+      await writeAuditLog({ request, action: 'inventory.reverse', entityType: 'inventory_movement', entityId: movement.id, oldValues: movement, newValues: result.reversal });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write reverse audit log:', err);
+    }
     return result;
   });
 
@@ -474,7 +510,11 @@ export async function inventoryRoutes(app: FastifyInstance) {
         await tx.insert(inventoryMovements).values({ companyId, warehouseId: body.toWarehouseId, productId: item.productId, movementType: 'transfer_in', quantityDelta: toQty(qty), referenceType: 'stock_transfer', referenceId: transferReferenceId, notes: body.notes, createdByUserId: request.user?.id });
       }
     });
-    await writeAudit(request, { action: 'inventory.transfer', entityType: 'inventory_transfer', entityId: transferReferenceId, newValues: { ...body, companyId, transferReferenceId } });
+    try {
+      await writeAuditLog({ request, action: 'inventory.transfer', entityType: 'inventory_transfer', entityId: transferReferenceId, newValues: { ...body, companyId, transferReferenceId } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write transfer audit log:', err);
+    }
     return { success: true, transferReferenceId };
   });
 }

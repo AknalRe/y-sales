@@ -76,7 +76,11 @@ export async function accessRoutes(app: FastifyInstance) {
       return created;
     });
 
-    await writeAuditLog({ request, action: 'role.created', entityType: 'role', entityId: role.id, newValues: role });
+    try {
+      await writeAuditLog({ request, action: 'role.created', entityType: 'role', entityId: role.id, newValues: role });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write role created audit log:', err);
+    }
     return { role };
   });
 
@@ -90,7 +94,11 @@ export async function accessRoutes(app: FastifyInstance) {
     if (existing.isSystemRole) return reply.status(403).send({ message: 'System role tidak dapat diubah.' });
 
     const [updated] = await db.update(roles).set({ ...body, updatedAt: new Date() }).where(and(eq(roles.id, params.roleId), eq(roles.companyId, companyId))).returning();
-    await writeAuditLog({ request, action: 'role.updated', entityType: 'role', entityId: updated.id, oldValues: existing, newValues: updated });
+    try {
+      await writeAuditLog({ request, action: 'role.updated', entityType: 'role', entityId: updated.id, oldValues: existing, newValues: updated });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write role updated audit log:', err);
+    }
     return { role: updated };
   });
 
@@ -109,7 +117,11 @@ export async function accessRoutes(app: FastifyInstance) {
     // Remove all permissions first, then delete role
     await db.delete(rolePermissions).where(eq(rolePermissions.roleId, params.roleId));
     await db.delete(roles).where(eq(roles.id, params.roleId));
-    await writeAuditLog({ request, action: 'role.deleted', entityType: 'role', entityId: params.roleId, oldValues: existing });
+    try {
+      await writeAuditLog({ request, action: 'role.deleted', entityType: 'role', entityId: params.roleId, oldValues: existing });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write role deleted audit log:', err);
+    }
     return { success: true };
   });
 
@@ -123,7 +135,11 @@ export async function accessRoutes(app: FastifyInstance) {
   app.post('/permissions', { preHandler: requirePermission('permissions.manage') }, async (request) => {
     const body = createPermissionSchema.parse(request.body);
     const [permission] = await db.insert(permissions).values(body).returning();
-    await writeAuditLog({ request, action: 'permission.created', entityType: 'permission', entityId: permission.id, newValues: permission });
+    try {
+      await writeAuditLog({ request, action: 'permission.created', entityType: 'permission', entityId: permission.id, newValues: permission });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write permission created audit log:', err);
+    }
     return { permission };
   });
 
@@ -160,7 +176,11 @@ export async function accessRoutes(app: FastifyInstance) {
       grantedByUserId: request.user?.id,
     }).onConflictDoNothing();
 
-    await writeAuditLog({ request, action: 'role.permission_assigned', entityType: 'role_permission', entityId: params.roleId, newValues: { roleId: params.roleId, permissionId: body.permissionId } });
+    try {
+      await writeAuditLog({ request, action: 'role.permission_assigned', entityType: 'role_permission', entityId: params.roleId, newValues: { roleId: params.roleId, permissionId: body.permissionId } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write role permission assigned audit log:', err);
+    }
     return { success: true };
   });
 
@@ -172,7 +192,11 @@ export async function accessRoutes(app: FastifyInstance) {
     if (!role) return reply.status(404).send({ message: 'Role tidak ditemukan.' });
 
     await db.delete(rolePermissions).where(and(eq(rolePermissions.roleId, params.roleId), eq(rolePermissions.permissionId, params.permissionId)));
-    await writeAuditLog({ request, action: 'role.permission_removed', entityType: 'role_permission', entityId: params.roleId, oldValues: { roleId: params.roleId, permissionId: params.permissionId } });
+    try {
+      await writeAuditLog({ request, action: 'role.permission_removed', entityType: 'role_permission', entityId: params.roleId, oldValues: { roleId: params.roleId, permissionId: params.permissionId } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write role permission removed audit log:', err);
+    }
     return { success: true };
   });
 }

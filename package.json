@@ -19,6 +19,7 @@
     "db:migrate": "pnpm --filter @yuksales/db db:migrate",
     "db:studio": "pnpm --filter @yuksales/db db:studio",
     "db:seed": "pnpm --filter @yuksales/db db:seed",
+    "db:seed:permissions": "pnpm --filter @yuksales/db db:seed:permissions",
     "db:seedcompany": "pnpm --filter @yuksales/db db:seedcompany",
     "db:reset-super-admin-password": "pnpm --filter @yuksales/db db:reset-super-admin-password",
     "db:fresh": "pnpm --filter @yuksales/db db:fresh",

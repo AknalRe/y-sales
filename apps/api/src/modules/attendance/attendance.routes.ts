@@ -286,7 +286,11 @@ export async function attendanceRoutes(app: FastifyInstance) {
       return { session: sess, face, identity };
     });
 
-    await writeAuditLog({ request, action: 'attendance.checked_in', entityType: 'attendance_session', entityId: session.id, newValues: { session, geofence, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    try {
+      await writeAuditLog({ request, action: 'attendance.checked_in', entityType: 'attendance_session', entityId: session.id, newValues: { session, geofence, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    } catch (auditErr) {
+      console.error('[AuditLog] attendance.checked_in failed:', auditErr);
+    }
 
     return reply.status(201).send({ session, geofence, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } });
   });
@@ -400,7 +404,11 @@ export async function attendanceRoutes(app: FastifyInstance) {
       return { session: sess, face, identity };
     });
 
-    await writeAuditLog({ request, action: 'attendance.checked_out', entityType: 'attendance_session', entityId: session.id, oldValues: existingSession, newValues: { session, geofence, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    try {
+      await writeAuditLog({ request, action: 'attendance.checked_out', entityType: 'attendance_session', entityId: session.id, oldValues: existingSession, newValues: { session, geofence, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    } catch (auditErr) {
+      console.error('[AuditLog] attendance.checked_out failed:', auditErr);
+    }
 
     return { session, geofence, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
   });

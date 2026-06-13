@@ -5,6 +5,7 @@ import { companies, roles, tenantSubscriptions, users } from '@yuksales/db/schem
 import { db } from '../../plugins/db.js';
 import { authenticate, hashPassword, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId, requireLimit } from '../tenant.js';
+import { parsePaginationQuery } from '../../utils/pagination.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
 const optionalText = z.preprocess(
@@ -70,6 +71,7 @@ export async function usersRoutes(app: FastifyInstance) {
     if (!canReadDirectory) return reply.status(403).send({ message: 'Permission denied', permission: 'users.manage' });
 
     const query = z.object({ status: z.string().optional() }).parse(request.query);
+    const { page, limit, offset } = parsePaginationQuery(request.query);
 
     const conditions: Parameters<typeof and>[0][] = [
       eq(users.companyId, companyId),
@@ -86,9 +88,11 @@ export async function usersRoutes(app: FastifyInstance) {
       .from(users)
       .innerJoin(roles, eq(users.roleId, roles.id))
       .where(and(...conditions))
-      .orderBy(desc(users.createdAt));
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    return { users: rows };
+    return { users: rows, page, limit };
   });
 
   app.get('/users/employee-code/suggest', { preHandler: requirePermission('users.manage') }, async (request, reply) => {
@@ -161,7 +165,11 @@ export async function usersRoutes(app: FastifyInstance) {
       status: 'active',
     }).returning();
 
-    await writeAuditLog({ request, action: 'user.created', entityType: 'user', entityId: user.id, newValues: { name: user.name, email: user.email, roleId: user.roleId } });
+    try {
+      await writeAuditLog({ request, action: 'user.created', entityType: 'user', entityId: user.id, newValues: { name: user.name, email: user.email, roleId: user.roleId } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write user created audit log:', err);
+    }
     return { user };
   });
 
@@ -211,7 +219,11 @@ export async function usersRoutes(app: FastifyInstance) {
     }
 
     const [updated] = await db.update(users).set({ ...body, updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId))).returning();
-    await writeAuditLog({ request, action: 'user.updated', entityType: 'user', entityId: updated.id, oldValues: existing, newValues: body });
+    try {
+      await writeAuditLog({ request, action: 'user.updated', entityType: 'user', entityId: updated.id, oldValues: existing, newValues: body });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write user updated audit log:', err);
+    }
     return { user: updated };
   });
 
@@ -227,7 +239,11 @@ export async function usersRoutes(app: FastifyInstance) {
     if (!existing) return reply.status(404).send({ message: 'User tidak ditemukan.' });
 
     await db.update(users).set({ status: 'inactive', deletedAt: new Date(), updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId)));
-    await writeAuditLog({ request, action: 'user.deleted', entityType: 'user', entityId: params.id, oldValues: { name: existing.name } });
+    try {
+      await writeAuditLog({ request, action: 'user.deleted', entityType: 'user', entityId: params.id, oldValues: { name: existing.name } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write user deleted audit log:', err);
+    }
     return { success: true };
   });
 
@@ -242,7 +258,11 @@ export async function usersRoutes(app: FastifyInstance) {
 
     const passwordHash = await hashPassword(body.newPassword);
     await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId)));
-    await writeAuditLog({ request, action: 'user.password_reset', entityType: 'user', entityId: params.id });
+    try {
+      await writeAuditLog({ request, action: 'user.password_reset', entityType: 'user', entityId: params.id });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write user password reset audit log:', err);
+    }
     return { success: true };
   });
 
@@ -262,7 +282,11 @@ export async function usersRoutes(app: FastifyInstance) {
       cancellationReason: body.reason,
       updatedAt: new Date(),
     }).where(eq(tenantSubscriptions.companyId, companyId));
-    await writeAuditLog({ request, action: 'subscription.cancelled', entityType: 'tenant_subscription', entityId: companyId });
+    try {
+      await writeAuditLog({ request, action: 'subscription.cancelled', entityType: 'tenant_subscription', entityId: companyId });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write subscription cancellation audit log:', err);
+    }
     return { success: true, message: 'Permintaan pembatalan langganan telah diterima.' };
   });
 }

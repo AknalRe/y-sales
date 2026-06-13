@@ -66,7 +66,11 @@ export async function integrationRoutes(app: FastifyInstance) {
       target: [companyIntegrations.companyId, companyIntegrations.type, companyIntegrations.provider],
       set: { ...body, updatedByUserId: request.user?.id, updatedAt: new Date() },
     }).returning();
-    await writeAuditLog({ request, action: 'integration.upserted', entityType: 'company_integration', entityId: integration.id, newValues: publicIntegration(integration) });
+    try {
+      await writeAuditLog({ request, action: 'integration.upserted', entityType: 'company_integration', entityId: integration.id, newValues: publicIntegration(integration) });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write integration upsert audit log:', err);
+    }
     return reply.status(201).send({ integration: publicIntegration(integration) });
   });
 
@@ -82,7 +86,11 @@ export async function integrationRoutes(app: FastifyInstance) {
       ...(body.secretConfig ? { secretConfig: mergeRecord(oldIntegration.secretConfig, body.secretConfig) } : {}),
     };
     const [integration] = await db.update(companyIntegrations).set({ ...updateBody, updatedByUserId: request.user?.id, updatedAt: new Date() }).where(eq(companyIntegrations.id, params.id)).returning();
-    await writeAuditLog({ request, action: 'integration.updated', entityType: 'company_integration', entityId: integration.id, oldValues: publicIntegration(oldIntegration), newValues: publicIntegration(integration) });
+    try {
+      await writeAuditLog({ request, action: 'integration.updated', entityType: 'company_integration', entityId: integration.id, oldValues: publicIntegration(oldIntegration), newValues: publicIntegration(integration) });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write integration update audit log:', err);
+    }
     return { integration: publicIntegration(integration) };
   });
 
@@ -92,7 +100,11 @@ export async function integrationRoutes(app: FastifyInstance) {
     const [oldIntegration] = await db.select().from(companyIntegrations).where(and(eq(companyIntegrations.companyId, companyId), eq(companyIntegrations.id, params.id)));
     if (!oldIntegration) throw Object.assign(new Error('Integrasi tidak ditemukan.'), { statusCode: 404 });
     const [integration] = await db.update(companyIntegrations).set({ status: 'inactive', updatedByUserId: request.user?.id, updatedAt: new Date() }).where(eq(companyIntegrations.id, params.id)).returning();
-    await writeAuditLog({ request, action: 'integration.disabled', entityType: 'company_integration', entityId: integration.id, oldValues: publicIntegration(oldIntegration), newValues: publicIntegration(integration) });
+    try {
+      await writeAuditLog({ request, action: 'integration.disabled', entityType: 'company_integration', entityId: integration.id, oldValues: publicIntegration(oldIntegration), newValues: publicIntegration(integration) });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write integration disable audit log:', err);
+    }
     return { integration: publicIntegration(integration) };
   });
 }

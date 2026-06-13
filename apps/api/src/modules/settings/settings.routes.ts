@@ -75,6 +75,8 @@ function mergeFaceIntegration(oldSettings: Awaited<ReturnType<typeof getGeneralS
 const generalSettingsSchema = z.object({
   defaultGeofenceRadiusM: z.number().positive().optional(),
   maxGpsAccuracyM: z.number().positive().optional(),
+  defaultCreditDueDays: z.number().int().nonnegative().optional(),
+  defaultConsignmentDueDays: z.number().int().nonnegative().optional(),
   allowMultipleAttendanceSessionsPerDay: z.boolean().optional(),
   requireAttendanceAtOffice: z.boolean().optional(),
   requireFaceForAttendance: z.boolean().optional(),
@@ -135,7 +137,11 @@ export async function settingsRoutes(app: FastifyInstance) {
       target: appSettings.key,
       set: { value: settings, updatedByUserId: request.user?.id, updatedAt: new Date() },
     }).returning();
-    await writeAuditLog({ request, action: 'settings.general.updated', entityType: 'app_settings', entityId: setting.id, oldValues: oldSettings, newValues: settings });
+    try {
+      await writeAuditLog({ request, action: 'settings.general.updated', entityType: 'app_settings', entityId: setting.id, oldValues: oldSettings, newValues: settings });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write settings update audit log:', err);
+    }
     return { settings: publicSettings(settings), scope: { companyId } };
   });
 
@@ -197,7 +203,11 @@ export async function settingsRoutes(app: FastifyInstance) {
 
       return tmpl;
     });
-    await writeAuditLog({ request, action: 'settings.face_template.enrolled', entityType: 'user_face_template', entityId: template.id, newValues: template });
+    try {
+      await writeAuditLog({ request, action: 'settings.face_template.enrolled', entityType: 'user_face_template', entityId: template.id, newValues: template });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write face template enroll audit log:', err);
+    }
     return { template };
   });
 }

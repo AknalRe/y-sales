@@ -152,7 +152,11 @@ export async function depositRoutes(app: FastifyInstance) {
       return dep;
     });
 
-    await writeAuditLog({ request, action: 'deposit.created', entityType: 'cash_deposit', entityId: deposit.id, newValues: deposit });
+    try {
+      await writeAuditLog({ request, action: 'deposit.created', entityType: 'cash_deposit', entityId: deposit.id, newValues: deposit });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write deposit creation audit log:', err);
+    }
     return reply.status(201).send({ deposit });
   });
 
@@ -183,7 +187,11 @@ export async function depositRoutes(app: FastifyInstance) {
       notes: body.notes,
     });
 
-    await writeAuditLog({ request, action: `deposit.${newStatus}`, entityType: 'cash_deposit', entityId: deposit.id, oldValues: deposit, newValues: updated });
+    try {
+      await writeAuditLog({ request, action: `deposit.${newStatus}`, entityType: 'cash_deposit', entityId: deposit.id, oldValues: deposit, newValues: updated });
+    } catch (err) {
+      console.error(`[AuditLog] Failed to write deposit reconciliation ${newStatus} audit log:`, err);
+    }
     return { deposit: updated };
   });
 }

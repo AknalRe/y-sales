@@ -4,6 +4,8 @@ import { db } from '../plugins/db.js';
 
 export const generalSettingsDefaults = {
   defaultGeofenceRadiusM: 100,
+  defaultCreditDueDays: 14,
+  defaultConsignmentDueDays: 14,
   maxGpsAccuracyM: 100,
   allowMultipleAttendanceSessionsPerDay: false,
   requireAttendanceAtOffice: false,

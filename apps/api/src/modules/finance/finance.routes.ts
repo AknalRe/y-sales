@@ -5,6 +5,7 @@ import { consignmentActions, consignmentItems, consignments, inventoryBalances, 
 import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
+import { parsePaginationQuery } from '../../utils/pagination.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
 const paymentSchema = z.object({
@@ -90,6 +91,7 @@ export async function financeRoutes(app: FastifyInstance) {
   // List receivables — filtered by companyId via salesTransactions join
   app.get('/receivables', { preHandler: requirePermission('receivables.view') }, async (request) => {
     const companyId = requireTenantId(request);
+    const { page, limit, offset } = parsePaginationQuery(request.query);
     const rows = await db
       .select({
         id: receivables.id,
@@ -108,11 +110,12 @@ export async function financeRoutes(app: FastifyInstance) {
       .innerJoin(salesTransactions, eq(receivables.transactionId, salesTransactions.id))
       .where(eq(salesTransactions.companyId, companyId))
       .orderBy(desc(receivables.createdAt))
-      .limit(200);
-    return { receivables: rows };
+      .limit(limit)
+      .offset(offset);
+    return { receivables: rows, page, limit };
   });
 
-  app.post('/receivables/:id/payments', { preHandler: requirePermission('receivables.view') }, async (request) => {
+  app.post('/receivables/:id/payments', { preHandler: requirePermission('receivables.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = paymentSchema.parse(request.body);
@@ -136,7 +139,11 @@ export async function financeRoutes(app: FastifyInstance) {
       const [updated] = await tx.update(receivables).set({ paidAmount: nextPaid.toFixed(2), outstandingAmount: outstanding.toFixed(2), status, updatedAt: new Date() }).where(eq(receivables.id, lockedReceivable.id)).returning();
       return { payment, receivable: updated };
     });
-    await writeAuditLog({ request, action: 'receivable.payment_created', entityType: 'receivable_payment', entityId: result.payment.id, newValues: result.payment });
+    try {
+      await writeAuditLog({ request, action: 'receivable.payment_created', entityType: 'receivable_payment', entityId: result.payment.id, newValues: result.payment });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write receivable payment creation audit log:', err);
+    }
     return result;
   });
 
@@ -144,6 +151,7 @@ export async function financeRoutes(app: FastifyInstance) {
   app.get('/consignments', { preHandler: requirePermission('receivables.view') }, async (request) => {
     const companyId = requireTenantId(request);
     const query = consignmentQuerySchema.parse(request.query);
+    const { page, limit, offset } = parsePaginationQuery(request.query);
     const conditions = [eq(salesTransactions.companyId, companyId)];
     if (query.outletId) conditions.push(eq(consignments.outletId, query.outletId));
     if (query.status) conditions.push(eq(consignments.status, query.status as any));
@@ -153,7 +161,8 @@ export async function financeRoutes(app: FastifyInstance) {
       .innerJoin(salesTransactions, eq(consignments.transactionId, salesTransactions.id))
       .where(and(...conditions))
       .orderBy(desc(consignments.createdAt))
-      .limit(200);
+      .limit(limit)
+      .offset(offset);
     const consignmentRows = rows.map(r => r.consignments);
     const consignmentIds = consignmentRows.map(c => c.id);
     const allItems = consignmentIds.length
@@ -171,7 +180,7 @@ export async function financeRoutes(app: FastifyInstance) {
     const grouped = new Map(allItems.map(i => [i.consignmentId, [] as typeof allItems]));
     for (const item of allItems) grouped.get(item.consignmentId)!.push(item);
     const result = consignmentRows.map(c => ({ ...c, items: grouped.get(c.id) ?? [] }));
-    return { consignments: result };
+    return { consignments: result, page, limit };
   });
 
   app.get('/sales/consignments', { preHandler: requirePermission('visits.execute') }, async (request) => {
@@ -227,7 +236,11 @@ export async function financeRoutes(app: FastifyInstance) {
       notes: body.notes,
       performedByUserId: request.user?.id,
     }).returning();
-    await writeAuditLog({ request, action: 'consignment.action_created', entityType: 'consignment_action', entityId: action.id, newValues: action });
+    try {
+      await writeAuditLog({ request, action: 'consignment.action_created', entityType: 'consignment_action', entityId: action.id, newValues: action });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write consignment action creation audit log:', err);
+    }
     return { action };
   });
 
@@ -260,7 +273,7 @@ export async function financeRoutes(app: FastifyInstance) {
     return { actions: rows };
   });
 
-  app.post('/consignment-actions/:id/approve', { preHandler: requirePermission('receivables.view') }, async (request) => {
+  app.post('/consignment-actions/:id/approve', { preHandler: requirePermission('receivables.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [row] = await db.select({ action: consignmentActions, consignment: consignments, transaction: salesTransactions })
@@ -338,11 +351,15 @@ export async function financeRoutes(app: FastifyInstance) {
       }).where(eq(consignmentActions.id, row.action.id)).returning();
       return { action, consignment };
     });
-    await writeAuditLog({ request, action: 'consignment.action_approved', entityType: 'consignment_action', entityId: result.action.id, oldValues: row.action, newValues: result.action });
+    try {
+      await writeAuditLog({ request, action: 'consignment.action_approved', entityType: 'consignment_action', entityId: result.action.id, oldValues: row.action, newValues: result.action });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write consignment action approval audit log:', err);
+    }
     return result;
   });
 
-  app.post('/consignment-actions/:id/reject', { preHandler: requirePermission('receivables.view') }, async (request) => {
+  app.post('/consignment-actions/:id/reject', { preHandler: requirePermission('receivables.manage') }, async (request) => {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = rejectActionSchema.parse(request.body);
@@ -358,7 +375,11 @@ export async function financeRoutes(app: FastifyInstance) {
       approvedAt: new Date(),
       rejectionReason: body.reason,
     }).where(eq(consignmentActions.id, params.id)).returning();
-    await writeAuditLog({ request, action: 'consignment.action_rejected', entityType: 'consignment_action', entityId: action.id, newValues: action });
+    try {
+      await writeAuditLog({ request, action: 'consignment.action_rejected', entityType: 'consignment_action', entityId: action.id, newValues: action });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write consignment action rejection audit log:', err);
+    }
     return { action };
   });
 }

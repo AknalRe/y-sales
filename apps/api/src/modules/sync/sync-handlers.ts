@@ -197,7 +197,7 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
       clientRequestId: body.clientRequestId,
     }).returning();
 
-    await writeAuditLog({ request: ctx.request, action: 'sync.attendance.check_in', entityType: 'attendance_session', entityId: session.id, newValues: session });
+    try { await writeAuditLog({ request: ctx.request, action: 'sync.attendance.check_in', entityType: 'attendance_session', entityId: session.id, newValues: session }); } catch (auditErr) { console.error('[AuditLog] sync.attendance.check_in failed:', auditErr); }
     return { success: true, entityId: session.id };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -290,7 +290,7 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
     }).returning();
 
     await db.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, schedule.id));
-    await writeAuditLog({ request: ctx.request, action: 'sync.visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: visit });
+    try { await writeAuditLog({ request: ctx.request, action: 'sync.visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: visit }); } catch (auditErr) { console.error('[AuditLog] sync.visit.check_in failed:', auditErr); }
     return { success: true, entityId: visit.id };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -361,7 +361,7 @@ async function handleVisitCheckOut(payload: unknown, ctx: SyncContext): Promise<
     }).where(eq(visitSessions.id, visit.id)).returning();
 
     if (visit.scheduleId) await db.update(visitSchedules).set({ status: 'completed', updatedAt: now }).where(eq(visitSchedules.id, visit.scheduleId));
-    await writeAuditLog({ request: ctx.request, action: 'sync.visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: updated });
+    try { await writeAuditLog({ request: ctx.request, action: 'sync.visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: updated }); } catch (auditErr) { console.error('[AuditLog] sync.visit.check_out failed:', auditErr); }
     return { success: true, entityId: updated.id };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -436,7 +436,7 @@ async function handleTransactionCreate(payload: unknown, ctx: SyncContext): Prom
       return created;
     });
 
-    await writeAuditLog({ request: ctx.request, action: 'sync.sales.order.created', entityType: 'sales_transaction', entityId: order.id, newValues: order });
+    try { await writeAuditLog({ request: ctx.request, action: 'sync.sales.order.created', entityType: 'sales_transaction', entityId: order.id, newValues: order }); } catch (auditErr) { console.error('[AuditLog] sync.sales.order.created failed:', auditErr); }
     return { success: true, entityId: order.id };
   } catch (error: any) {
     return { success: false, error: error.message };

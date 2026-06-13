@@ -421,7 +421,11 @@ export async function outletRoutes(app: FastifyInstance) {
       status: canSetStatus ? (body.status ?? 'pending_verification') : 'pending_verification',
       registeredByUserId: request.user?.id,
     }).returning();
-    await writeAuditLog({ request, action: 'outlet.created', entityType: 'outlet', entityId: outlet.id, newValues: outlet });
+    try {
+      await writeAuditLog({ request, action: 'outlet.created', entityType: 'outlet', entityId: outlet.id, newValues: outlet });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write outlet creation audit log:', err);
+    }
     return reply.status(201).send({ outlet });
   });
 
@@ -454,7 +458,11 @@ export async function outletRoutes(app: FastifyInstance) {
     if (body.ownerName) body.ownerName = body.ownerName.trim();
     if (body.phone) body.phone = body.phone.trim();
     const [outlet] = await db.update(outlets).set(toOutletValues(body)).where(and(eq(outlets.id, params.id), eq(outlets.companyId, companyId))).returning();
-    await writeAuditLog({ request, action: 'outlet.updated', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
+    try {
+      await writeAuditLog({ request, action: 'outlet.updated', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write outlet updated audit log:', err);
+    }
     return { outlet };
   });
 
@@ -464,7 +472,11 @@ export async function outletRoutes(app: FastifyInstance) {
     const [oldOutlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, params.id)));
     if (!oldOutlet || oldOutlet.deletedAt) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
     const [outlet] = await db.update(outlets).set({ status: 'inactive', deletedAt: new Date(), updatedAt: new Date() }).where(and(eq(outlets.id, params.id), eq(outlets.companyId, companyId))).returning();
-    await writeAuditLog({ request, action: 'outlet.deleted', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
+    try {
+      await writeAuditLog({ request, action: 'outlet.deleted', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write outlet deleted audit log:', err);
+    }
     return { outlet };
   });
 
@@ -496,7 +508,11 @@ export async function outletRoutes(app: FastifyInstance) {
       }).returning();
       return { media, photo };
     });
-    await writeAuditLog({ request, action: 'outlet.photo.created', entityType: 'outlet', entityId: outlet.id, newValues: result });
+    try {
+      await writeAuditLog({ request, action: 'outlet.photo.created', entityType: 'outlet', entityId: outlet.id, newValues: result });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write outlet photo created audit log:', err);
+    }
     return reply.status(201).send(result);
   });
 
@@ -509,7 +525,11 @@ export async function outletRoutes(app: FastifyInstance) {
     const [oldOutlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, params.id)));
     if (!oldOutlet || oldOutlet.deletedAt) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
     const [outlet] = await db.update(outlets).set({ status: 'active', verifiedByUserId: request.user?.id, verifiedAt: new Date(), rejectionReason: null, updatedAt: new Date() }).where(and(eq(outlets.id, params.id), eq(outlets.companyId, companyId))).returning();
-    await writeAuditLog({ request, action: 'outlet.verified', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
+    try {
+      await writeAuditLog({ request, action: 'outlet.verified', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write outlet verified audit log:', err);
+    }
     return { outlet };
   });
 
@@ -523,7 +543,11 @@ export async function outletRoutes(app: FastifyInstance) {
     const [oldOutlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, params.id)));
     if (!oldOutlet || oldOutlet.deletedAt) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
     const [outlet] = await db.update(outlets).set({ status: 'rejected', rejectionReason: body.reason, updatedAt: new Date() }).where(and(eq(outlets.id, params.id), eq(outlets.companyId, companyId))).returning();
-    await writeAuditLog({ request, action: 'outlet.rejected', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
+    try {
+      await writeAuditLog({ request, action: 'outlet.rejected', entityType: 'outlet', entityId: outlet.id, oldValues: oldOutlet, newValues: outlet });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write outlet rejected audit log:', err);
+    }
     return { outlet };
   });
 }

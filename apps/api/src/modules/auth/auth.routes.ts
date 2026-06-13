@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
+import rateLimit from '@fastify/rate-limit';
 import { and, eq, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { companies, roles, users } from '@yuksales/db/schema';
@@ -47,6 +48,16 @@ function getCookieValue(cookieHeader: string | undefined, name: string) {
 }
 
 export async function authRoutes(app: FastifyInstance) {
+  await app.register(rateLimit, {
+    max: 10,
+    timeWindow: '1 minute',
+    keyGenerator: (request) => request.ip,
+    errorResponseBuilder: (request, context) => ({
+      statusCode: 429,
+      message: `Terlalu banyak permintaan. Silakan coba lagi dalam ${context.after}.`
+    }),
+  });
+
   app.post('/auth/login', async (request, reply) => {
     const body = loginSchema.parse(request.body);
 

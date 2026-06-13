@@ -119,7 +119,11 @@ export async function mediaRoutes(app: FastifyInstance) {
       return med;
     });
 
-    await writeAuditLog({ request, action: 'media.completed', entityType: 'media_file', entityId: media.id, newValues: media });
+    try {
+      await writeAuditLog({ request, action: 'media.completed', entityType: 'media_file', entityId: media.id, newValues: media });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write media upload completion audit log:', err);
+    }
     return reply.status(201).send({ media });
   });
 
@@ -138,7 +142,11 @@ export async function mediaRoutes(app: FastifyInstance) {
     if (!media) throw Object.assign(new Error('Media tidak ditemukan.'), { statusCode: 404 });
     await deleteObject(extractObjectKey(media.fileUrl), companyId);
     await db.delete(mediaFiles).where(eq(mediaFiles.id, params.id));
-    await writeAuditLog({ request, action: 'media.deleted', entityType: 'media_file', entityId: media.id, oldValues: media });
+    try {
+      await writeAuditLog({ request, action: 'media.deleted', entityType: 'media_file', entityId: media.id, oldValues: media });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write media deletion audit log:', err);
+    }
     return { success: true };
   });
 }

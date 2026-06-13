@@ -158,7 +158,11 @@ export async function productRoutes(app: FastifyInstance) {
       return prod;
     });
 
-    await writeAuditLog({ request, action: 'product.created', entityType: 'product', entityId: product.id, newValues: product });
+    try {
+      await writeAuditLog({ request, action: 'product.created', entityType: 'product', entityId: product.id, newValues: product });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write product created audit log:', err);
+    }
 
     return { product };
   });
@@ -175,7 +179,11 @@ export async function productRoutes(app: FastifyInstance) {
       updatedAt: new Date(),
     }).where(and(eq(products.companyId, companyId), eq(products.id, params.id))).returning();
 
-    await writeAuditLog({ request, action: 'product.updated', entityType: 'product', entityId: product.id, oldValues: existing, newValues: product });
+    try {
+      await writeAuditLog({ request, action: 'product.updated', entityType: 'product', entityId: product.id, oldValues: existing, newValues: product });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write product updated audit log:', err);
+    }
 
     return { product };
   });
@@ -190,12 +198,20 @@ export async function productRoutes(app: FastifyInstance) {
     const hasStock = balances.some((balance) => Number(balance.quantity) > 0 || Number(balance.reservedQuantity) > 0);
     if (hasStock) {
       const [product] = await db.update(products).set({ status: 'inactive', updatedAt: new Date() }).where(and(eq(products.companyId, companyId), eq(products.id, params.id))).returning();
-      await writeAuditLog({ request, action: 'product.deleted', entityType: 'product', entityId: product.id, oldValues: existing, newValues: product });
+      try {
+        await writeAuditLog({ request, action: 'product.deactivated', entityType: 'product', entityId: product.id, oldValues: existing, newValues: product });
+      } catch (err) {
+        console.error('[AuditLog] Failed to write product deleted status audit log:', err);
+      }
       return { product };
     }
 
     await db.delete(products).where(and(eq(products.companyId, companyId), eq(products.id, params.id)));
-    await writeAuditLog({ request, action: 'product.deleted', entityType: 'product', entityId: params.id, oldValues: existing });
+    try {
+      await writeAuditLog({ request, action: 'product.deleted', entityType: 'product', entityId: params.id, oldValues: existing });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write product deletion audit log:', err);
+    }
     return { success: true };
   });
 }

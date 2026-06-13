@@ -7,6 +7,7 @@ import { authenticate, getUserPermissions, requirePermission } from '../auth/aut
 import { writeAuditLog } from '../audit/audit.service.js';
 import { verifyFaceIdentity } from '../face/face-verification.service.js';
 import { requireTenantId, requireFeature } from '../tenant.js';
+import { parsePaginationQuery } from '../../utils/pagination.js';
 import { getGeneralSettings } from '../../utils/settings.js';
 import { validateGeofence } from '../../utils/geofence.js';
 import { validateGpsIntegrity } from '../../utils/gps-integrity.js';
@@ -70,7 +71,7 @@ const checkOutSchema = z.object({
 });
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Jakarta' }).format(new Date());
 }
 
 function assertVisitLocationValid(geofence: ReturnType<typeof validateGeofence>) {
@@ -215,13 +216,19 @@ export async function visitRoutes(app: FastifyInstance) {
       }
       return created;
     });
-    await Promise.all(schedules.map((schedule) => writeAuditLog({
-      request,
-      action: 'visit.schedule.created',
-      entityType: 'visit_schedule',
-      entityId: schedule.id,
-      newValues: schedule,
-    })));
+    await Promise.all(schedules.map(async (schedule) => {
+      try {
+        await writeAuditLog({
+          request,
+          action: 'visit.schedule.created',
+          entityType: 'visit_schedule',
+          entityId: schedule.id,
+          newValues: schedule,
+        });
+      } catch (err) {
+        console.error('[AuditLog] Failed to write visit schedule creation audit log:', err);
+      }
+    }));
 
     return {
       schedules,
@@ -243,7 +250,11 @@ export async function visitRoutes(app: FastifyInstance) {
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = schedulePatchSchema.parse(request.body);
     const [schedule] = await db.update(visitSchedules).set({ ...body, updatedAt: new Date() }).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.id, params.id))).returning();
-    await writeAuditLog({ request, action: 'visit.schedule.updated', entityType: 'visit_schedule', entityId: schedule?.id, newValues: schedule });
+    try {
+      await writeAuditLog({ request, action: 'visit.schedule.updated', entityType: 'visit_schedule', entityId: schedule?.id, newValues: schedule });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write visit schedule update audit log:', err);
+    }
     return { schedule };
   });
 
@@ -251,7 +262,11 @@ export async function visitRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [schedule] = await db.update(visitSchedules).set({ status: 'approved', approvedByUserId: request.user?.id, approvedAt: new Date(), updatedAt: new Date() }).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.id, params.id))).returning();
-    await writeAuditLog({ request, action: 'visit.schedule.approved', entityType: 'visit_schedule', entityId: schedule?.id, newValues: schedule });
+    try {
+      await writeAuditLog({ request, action: 'visit.schedule.approved', entityType: 'visit_schedule', entityId: schedule?.id, newValues: schedule });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write visit schedule approval audit log:', err);
+    }
     return { schedule };
   });
 
@@ -259,7 +274,11 @@ export async function visitRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [schedule] = await db.update(visitSchedules).set({ status: 'cancelled', updatedAt: new Date() }).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.id, params.id))).returning();
-    await writeAuditLog({ request, action: 'visit.schedule.cancelled', entityType: 'visit_schedule', entityId: schedule?.id, newValues: schedule });
+    try {
+      await writeAuditLog({ request, action: 'visit.schedule.cancelled', entityType: 'visit_schedule', entityId: schedule?.id, newValues: schedule });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write visit schedule cancellation audit log:', err);
+    }
     return { schedule };
   });
 
@@ -295,6 +314,7 @@ export async function visitRoutes(app: FastifyInstance) {
   app.get('/visits/sessions', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
     const query = z.object({ date: z.string().date().optional(), salesUserId: z.string().uuid().optional() }).parse(request.query);
+    const { page, limit, offset } = parsePaginationQuery(request.query);
     const user = request.user!;
     const canReview = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('visits.review');
     const canExecute = user.permissions.includes('visits.execute');
@@ -346,9 +366,11 @@ export async function visitRoutes(app: FastifyInstance) {
       .innerJoin(users, eq(visitSessions.salesUserId, users.id))
       .innerJoin(outlets, eq(visitSessions.outletId, outlets.id))
       .where(and(...conditions))
-      .orderBy(desc(visitSessions.checkInAt));
+      .orderBy(desc(visitSessions.checkInAt))
+      .limit(limit)
+      .offset(offset);
 
-    return { sessions };
+    return { sessions, page, limit };
   });
 
   app.post('/visits/check-in', { preHandler: requirePermission('visits.execute') }, async (request) => {
@@ -463,7 +485,11 @@ export async function visitRoutes(app: FastifyInstance) {
       return { visit: visitResult, face: faceResult, identity: identityResult };
     });
 
-    await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    try {
+      await writeAuditLog({ request, action: 'visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write visit check-in audit log:', err);
+    }
 
     return { visit, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsAccuracy, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: hasValidFace, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } };
   });
@@ -546,7 +572,11 @@ export async function visitRoutes(app: FastifyInstance) {
     });
 
     const [orderCount] = await db.select({ count: sql<number>`count(*)::int` }).from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.visitSessionId, visit.id)));
-    await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: { ...updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    try {
+      await writeAuditLog({ request, action: 'visit.check_out', entityType: 'visit_session', entityId: updated.id, oldValues: visit, newValues: { ...updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity } } });
+    } catch (err) {
+      console.error('[AuditLog] Failed to write visit check-out audit log:', err);
+    }
     return { visit: updated, geofence: { valid: geofence.valid, distanceM: geofence.distanceMeters, radiusM: radius, reason: geofence.reason }, gpsIntegrity, face: { faceCaptureId: face.id, faceDetected: body.faceCapture.faceDetected, faceConfidence: body.faceCapture.faceConfidence ?? null, identity }, result: { durationSeconds, durationMinutes: Math.round(durationSeconds / 60), hasClosingOrder: Number(orderCount?.count ?? 0) > 0 } };
   });
 
@@ -590,7 +620,12 @@ export async function visitRoutes(app: FastifyInstance) {
 
   app.get('/visits/review', { preHandler: requirePermission('visits.review') }, async (request) => {
     const companyId = requireTenantId(request);
-    const rows = await db.select().from(visitSessions).where(eq(visitSessions.companyId, companyId)).orderBy(desc(visitSessions.createdAt)).limit(100);
-    return { visits: rows };
+    const { page, limit, offset } = parsePaginationQuery(request.query);
+    const rows = await db.select().from(visitSessions)
+      .where(eq(visitSessions.companyId, companyId))
+      .orderBy(desc(visitSessions.createdAt))
+      .limit(limit)
+      .offset(offset);
+    return { visits: rows, page, limit };
   });
 }

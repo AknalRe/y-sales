@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx-js-style';
 import {
   AlertCircle,
   Calendar,
   CheckCircle2,
   Clock,
+  Download,
   Map,
   MapPin,
   Navigation,
@@ -141,6 +143,43 @@ export function TrackingPage() {
 
   const activeRows = tab === 'sessions' ? filteredSessions.length : filteredSchedules.length;
 
+  function exportExcel() {
+    const workbook = XLSX.utils.book_new();
+    const visitRows = filteredSessions.map((session) => ({
+      Sales: session.salesName ?? getUserName(session.salesUserId),
+      Outlet: `${session.outletCode ?? ''} ${session.outletName ?? ''}`.trim(),
+      Alamat: session.outletAddress ?? '',
+      Status: visitStatusLabel[session.status] ?? session.status,
+      Outcome: session.outcome ?? '-',
+      'Check-in': session.checkInAt ? new Date(session.checkInAt).toLocaleString('id-ID') : '-',
+      'Check-out': session.checkOutAt ? new Date(session.checkOutAt).toLocaleString('id-ID') : '-',
+      Durasi: formatDuration(session.durationSeconds),
+      'Jarak Check-in': session.checkInDistanceM ?? '-',
+      'Akurasi Check-in': session.checkInAccuracyM ?? '-',
+      Maps: mapsUrl(session.checkInLatitude, session.checkInLongitude),
+    }));
+    const scheduleRows = filteredSchedules.map((schedule) => ({
+      Tanggal: schedule.scheduledDate,
+      Sales: schedule.salesName ?? getUserName(schedule.salesUserId),
+      Outlet: `${schedule.outletCode ?? ''} ${schedule.outletName ?? ''}`.trim(),
+      Alamat: schedule.outletAddress ?? '',
+      Status: scheduleStatusLabel[schedule.status] ?? schedule.status,
+      Prioritas: schedule.priority,
+      'Jam Mulai': schedule.plannedStartTime ?? '-',
+      'Jam Selesai': schedule.plannedEndTime ?? '-',
+      'Target Closing': schedule.targetClosingCount,
+      'Target Omset': Number(schedule.targetRevenueAmount || 0),
+      Catatan: schedule.notes ?? '',
+    }));
+    const visitSheet = XLSX.utils.json_to_sheet(visitRows.length ? visitRows : [{ Sales: 'Tidak ada data' }]);
+    const scheduleSheet = XLSX.utils.json_to_sheet(scheduleRows.length ? scheduleRows : [{ Tanggal: 'Tidak ada data' }]);
+    visitSheet['!cols'] = [{ wch: 28 }, { wch: 34 }, { wch: 42 }, { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 22 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 45 }];
+    scheduleSheet['!cols'] = [{ wch: 14 }, { wch: 28 }, { wch: 34 }, { wch: 42 }, { wch: 16 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 36 }];
+    XLSX.utils.book_append_sheet(workbook, visitSheet, 'Visit');
+    XLSX.utils.book_append_sheet(workbook, scheduleSheet, 'Jadwal');
+    XLSX.writeFile(workbook, `tracking-kunjungan-${selectedDate || 'semua'}.xlsx`, { compression: true });
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -151,10 +190,15 @@ export function TrackingPage() {
           </h1>
           <p className="admin-page-subtitle">Monitor pergerakan sales, status visit outlet, dan realisasi jadwal harian.</p>
         </div>
-        <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
-          <RefreshCw size={16} className={loading ? 'spin' : ''} />
-          Refresh
-        </button>
+        <div className="flex gap-2">
+          <button onClick={exportExcel} className="admin-btn-ghost" type="button" disabled={!activeRows}>
+            <Download size={16} /> Excel
+          </button>
+          <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
+            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}

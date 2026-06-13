@@ -109,7 +109,7 @@ function noteStatusSql() {
     when ${salesTransactions.status} = 'approved' then 'approved'
     when ${salesTransactions.status} in ('validated', 'closed') then 'settlement'
     when ${salesTransactions.status} = 'rejected' then 'rejected'
-    else ${salesTransactions.status}
+    else ${salesTransactions.status}::text
   end`;
 }
 

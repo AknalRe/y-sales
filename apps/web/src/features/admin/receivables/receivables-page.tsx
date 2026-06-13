@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, TrendingDown, Banknote, XCircle } from 'lucide-react';
+import * as XLSX from 'xlsx-js-style';
+import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, Download, TrendingDown, Banknote, XCircle } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState } from '@/components/ui';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -220,6 +221,54 @@ export function ReceivablesPage() {
     return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
   }
 
+  function exportExcel() {
+    const workbook = XLSX.utils.book_new();
+    const receivableRows = filtered.map((item) => ({
+      'Transaction ID': item.transactionId,
+      'Outlet ID': item.outletId ?? '-',
+      Customer: item.customerType,
+      Pokok: Number(item.principalAmount || 0),
+      Terbayar: Number(item.paidAmount || 0),
+      Outstanding: Number(item.outstandingAmount || 0),
+      'Jatuh Tempo': item.dueDate,
+      Status: item.status,
+      Dibuat: item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID') : '-',
+    }));
+    const consignmentRows = filteredCons.map((item) => ({
+      'Transaction ID': item.transactionId,
+      'Outlet ID': item.outletId,
+      'Sales User ID': item.salesUserId,
+      Mulai: item.startDate,
+      'Jatuh Tempo': item.dueDate,
+      Status: item.status,
+      'Diperpanjang s/d': item.extendedUntil ?? '-',
+      Item: (item.items ?? []).map((child) => `${child.productName}: sisa ${child.remainingQuantity}/${child.quantity}`).join('; '),
+      Dibuat: item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID') : '-',
+    }));
+    const actionRows = consignmentActions.map((item) => ({
+      'Action ID': item.id,
+      'Consignment ID': item.consignmentId,
+      'Outlet ID': item.outletId,
+      Aksi: item.actionType,
+      Produk: item.productName ?? item.productId ?? '-',
+      Qty: item.quantity ? Number(item.quantity) : '',
+      Amount: item.amount ? Number(item.amount) : '',
+      Status: item.approvalStatus,
+      Catatan: item.notes ?? '',
+      Tanggal: item.performedAt ? new Date(item.performedAt).toLocaleString('id-ID') : '-',
+    }));
+    for (const [name, rows] of [
+      ['Piutang', receivableRows],
+      ['Konsinyasi', consignmentRows],
+      ['Approval Konsinyasi', actionRows],
+    ] as const) {
+      const sheet = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Data: 'Tidak ada data' }]);
+      sheet['!cols'] = Array.from({ length: 10 }, () => ({ wch: 24 }));
+      XLSX.utils.book_append_sheet(workbook, sheet, name);
+    }
+    XLSX.writeFile(workbook, `piutang-usaha-${tab}-${new Date().toISOString().slice(0, 10)}.xlsx`, { compression: true });
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -227,7 +276,12 @@ export function ReceivablesPage() {
           <h1 className="admin-page-title"><CreditCard size={22} /> Piutang Usaha</h1>
           <p className="admin-page-subtitle">Daftar order unpaid/partial, konsinyasi, dan jadwal penagihan.</p>
         </div>
-        <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+        <div className="flex gap-2">
+          <button onClick={exportExcel} className="admin-btn-ghost" type="button" disabled={loading}>
+            <Download size={15} /> Excel
+          </button>
+          <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} /></button>
+        </div>
       </div>
 
       {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}

@@ -229,7 +229,7 @@ export function InvoiceReviewPage() {
         </div>
       )}
 
-      <div className="admin-filter-row bg-admin-bg-card border border-admin-border-subtle" style={{ padding: '1rem', borderRadius: 20, marginBottom: '1.5rem' }}>
+      <div className="admin-filter-row bg-admin-bg-card border border-admin-border-subtle border-gray-200 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]" style={{ padding: '1rem', borderRadius: 20, marginBottom: '1.5rem' }}>
         <div className="flex gap-4 items-center">
           <span className="text-admin-muted font-bold text-sm">Filter Status:</span>
           <select
@@ -273,157 +273,157 @@ export function InvoiceReviewPage() {
                   const expanded = expandedId === tx.id;
                   const noteStatus = getNoteStatus(tx);
                   return (
-                  <Fragment key={tx.id}>
-                  <TableRow>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="bg-admin-bg p-2.5 rounded-xl">
-                          <ReceiptText size={18} className="text-admin-muted" />
-                        </div>
-                        <div>
-                          <div className="text-admin-foreground font-extrabold text-sm">{tx.transactionNo}</div>
-                          <div className="text-admin-subtle flex items-center gap-1 mt-0.5" style={{ fontSize: '.75rem' }}>
-                            <Calendar size={12} /> {new Date(tx.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="text-admin-text font-bold text-sm flex items-center gap-1">
-                          <User size={12} /> {getUser(tx.salesUserId)}
-                        </div>
-                        <div className="text-admin-muted mt-1" style={{ fontSize: '.75rem' }}>
-                          {(tx as any).outletName ? `${(tx as any).outletName} · ` : ''}Tipe: <span className="capitalize">{tx.customerType}</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="inline-flex items-center gap-1 bg-admin-border-subtle text-admin-muted-dim font-bold uppercase rounded-lg" style={{ padding: '.3rem .6rem', fontSize: '.75rem' }}>
-                        {tx.paymentMethod}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-admin-accent font-extrabold text-base">{formatRp(tx.totalAmount)}</div>
-                    </TableCell>
-                    <TableCell>
-                      {tx.photoUrl ? (
-                        <button
-                          onClick={() => setViewPhoto(tx.photoUrl!)}
-                          className="border-none bg-transparent p-0 cursor-pointer relative"
-                        >
-                          <img
-                            src={tx.photoUrl}
-                            alt="Nota"
-                            className="rounded-lg border-2 border-admin-border-subtle"
-                            style={{ width: 44, height: 44, objectFit: 'cover' }}
-                          />
-                          <div className="absolute inset-0 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100" style={{ background: 'rgba(0,0,0,0.2)' }}>
-                            <Eye size={14} color="#fff" />
-                          </div>
-                        </button>
-                      ) : (
-                        <div className="w-11 h-11 rounded-lg bg-admin-border-subtle flex items-center justify-center text-admin-border">
-                          <ShoppingCart size={16} />
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(noteStatus)}`}>
-                        {noteStatusLabel[noteStatus] ?? noteStatus}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 flex-wrap">
-                        <button
-                          onClick={() => toggleDetail(tx)}
-                          disabled={loadingDetail === tx.id}
-                          className="admin-btn-ghost"
-                          style={{ padding: '.4rem .65rem', fontSize: '.75rem', borderRadius: 10 }}
-                          type="button"
-                        >
-                          {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                          Detail
-                        </button>
-                      {noteStatus === 'pending' ? (
-                        <>
-                          <button
-                            onClick={() => handleApprove(tx)}
-                            disabled={saving === tx.id}
-                            className="admin-btn-primary bg-admin-success border-admin-success"
-                            style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
-                            type="button"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => { setRejectModal(tx); setRejectReason(''); }}
-                            disabled={saving === tx.id}
-                            className="admin-btn-ghost text-admin-danger"
-                            style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
-                            type="button"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      ) : noteStatus === 'approved' ? (
-                        <button
-                          onClick={() => handleSettlement(tx)}
-                          disabled={saving === tx.id}
-                          className="admin-btn-primary"
-                          style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
-                          type="button"
-                        >
-                          Settlement
-                        </button>
-                      ) : (
-                        <span className="text-admin-subtle text-xs italic">No Action</span>
-                      )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  {expanded && (
-                    <TableRow>
-                      <TableCell colSpan={7} style={{ background: 'var(--admin-bg)' }}>
-                        {loadingDetail === tx.id && !detail ? (
-                          <div className="admin-loading"><RefreshCw size={16} className="spin" /> Memuat detail...</div>
-                        ) : detail ? (
-                          <div className="grid gap-4 lg:grid-cols-[1.5fr_.9fr]">
-                            <div className="admin-card" style={{ margin: 0, padding: '1rem' }}>
-                              <h3 className="font-extrabold text-admin-foreground mb-3">Item Transaksi</h3>
-                              <div className="grid gap-2">
-                                {detail.items.map((item) => (
-                                  <div key={item.id} className="flex items-start justify-between gap-3 rounded-xl bg-admin-surface px-3 py-2">
-                                    <div>
-                                      <strong className="text-admin-foreground text-sm">{item.productName ?? item.productId}</strong>
-                                      <p className="text-admin-muted text-xs m-0">{item.productSku ?? '-'} · {Number(item.quantity).toLocaleString('id-ID')} x {formatRp(item.unitPrice)}</p>
-                                    </div>
-                                    <strong className="text-admin-accent text-sm">{formatRp(item.lineTotal)}</strong>
-                                  </div>
-                                ))}
+                    <Fragment key={tx.id}>
+                      <TableRow>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-admin-bg p-2.5 rounded-xl">
+                              <ReceiptText size={18} className="text-admin-muted" />
+                            </div>
+                            <div>
+                              <div className="text-admin-foreground font-extrabold text-sm">{tx.transactionNo}</div>
+                              <div className="text-admin-subtle flex items-center gap-1 mt-0.5" style={{ fontSize: '.75rem' }}>
+                                <Calendar size={12} /> {new Date(tx.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                               </div>
                             </div>
-                            <div className="admin-card" style={{ margin: 0, padding: '1rem' }}>
-                              <h3 className="font-extrabold text-admin-foreground mb-3">Bukti Nota</h3>
-                              {detail.photos.length ? (
-                                <div className="grid grid-cols-3 gap-2">
-                                  {detail.photos.map((photo) => (
-                                    <button key={photo.id} onClick={() => setViewPhoto(photo.fileUrl)} className="border-none bg-transparent p-0 cursor-pointer" type="button">
-                                      <img src={photo.fileUrl} alt="Bukti nota" className="rounded-xl border border-admin-border" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover' }} />
-                                    </button>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-admin-muted text-sm">Belum ada bukti nota.</p>
-                              )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="text-admin-text font-bold text-sm flex items-center gap-1">
+                              <User size={12} /> {getUser(tx.salesUserId)}
+                            </div>
+                            <div className="text-admin-muted mt-1" style={{ fontSize: '.75rem' }}>
+                              {(tx as any).outletName ? `${(tx as any).outletName} · ` : ''}Tipe: <span className="capitalize">{tx.customerType}</span>
                             </div>
                           </div>
-                        ) : null}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  </Fragment>
-                );
+                        </TableCell>
+                        <TableCell>
+                          <div className="inline-flex items-center gap-1 bg-admin-border-subtle text-admin-muted-dim font-bold uppercase rounded-lg" style={{ padding: '.3rem .6rem', fontSize: '.75rem' }}>
+                            {tx.paymentMethod}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-admin-accent font-extrabold text-base">{formatRp(tx.totalAmount)}</div>
+                        </TableCell>
+                        <TableCell>
+                          {tx.photoUrl ? (
+                            <button
+                              onClick={() => setViewPhoto(tx.photoUrl!)}
+                              className="border-none bg-transparent p-0 cursor-pointer relative"
+                            >
+                              <img
+                                src={tx.photoUrl}
+                                alt="Nota"
+                                className="rounded-lg border-2 border-admin-border-subtle"
+                                style={{ width: 44, height: 44, objectFit: 'cover' }}
+                              />
+                              <div className="absolute inset-0 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100" style={{ background: 'rgba(0,0,0,0.2)' }}>
+                                <Eye size={14} color="#fff" />
+                              </div>
+                            </button>
+                          ) : (
+                            <div className="w-11 h-11 rounded-lg bg-admin-border-subtle flex items-center justify-center text-admin-border">
+                              <ShoppingCart size={16} />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(noteStatus)}`}>
+                            {noteStatusLabel[noteStatus] ?? noteStatus}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => toggleDetail(tx)}
+                              disabled={loadingDetail === tx.id}
+                              className="admin-btn-ghost"
+                              style={{ padding: '.4rem .65rem', fontSize: '.75rem', borderRadius: 10 }}
+                              type="button"
+                            >
+                              {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                              Detail
+                            </button>
+                            {noteStatus === 'pending' ? (
+                              <>
+                                <button
+                                  onClick={() => handleApprove(tx)}
+                                  disabled={saving === tx.id}
+                                  className="admin-btn-primary bg-admin-success border-admin-success"
+                                  style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
+                                  type="button"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => { setRejectModal(tx); setRejectReason(''); }}
+                                  disabled={saving === tx.id}
+                                  className="admin-btn-ghost text-admin-danger"
+                                  style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
+                                  type="button"
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            ) : noteStatus === 'approved' ? (
+                              <button
+                                onClick={() => handleSettlement(tx)}
+                                disabled={saving === tx.id}
+                                className="admin-btn-primary"
+                                style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
+                                type="button"
+                              >
+                                Settlement
+                              </button>
+                            ) : (
+                              <span className="text-admin-subtle text-xs italic">No Action</span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {expanded && (
+                        <TableRow>
+                          <TableCell colSpan={7} style={{ background: 'var(--admin-bg)' }}>
+                            {loadingDetail === tx.id && !detail ? (
+                              <div className="admin-loading"><RefreshCw size={16} className="spin" /> Memuat detail...</div>
+                            ) : detail ? (
+                              <div className="grid gap-4 lg:grid-cols-[1.5fr_.9fr]">
+                                <div className="admin-card" style={{ margin: 0, padding: '1rem' }}>
+                                  <h3 className="font-extrabold text-admin-foreground mb-3">Item Transaksi</h3>
+                                  <div className="grid gap-2">
+                                    {detail.items.map((item) => (
+                                      <div key={item.id} className="flex items-start justify-between gap-3 rounded-xl bg-admin-surface px-3 py-2">
+                                        <div>
+                                          <strong className="text-admin-foreground text-sm">{item.productName ?? item.productId}</strong>
+                                          <p className="text-admin-muted text-xs m-0">{item.productSku ?? '-'} · {Number(item.quantity).toLocaleString('id-ID')} x {formatRp(item.unitPrice)}</p>
+                                        </div>
+                                        <strong className="text-admin-accent text-sm">{formatRp(item.lineTotal)}</strong>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="admin-card" style={{ margin: 0, padding: '1rem' }}>
+                                  <h3 className="font-extrabold text-admin-foreground mb-3">Bukti Nota</h3>
+                                  {detail.photos.length ? (
+                                    <div className="grid grid-cols-3 gap-2">
+                                      {detail.photos.map((photo) => (
+                                        <button key={photo.id} onClick={() => setViewPhoto(photo.fileUrl)} className="border-none bg-transparent p-0 cursor-pointer" type="button">
+                                          <img src={photo.fileUrl} alt="Bukti nota" className="rounded-xl border border-admin-border" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover' }} />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-admin-muted text-sm">Belum ada bukti nota.</p>
+                                  )}
+                                </div>
+                              </div>
+                            ) : null}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  );
                 })}
                 {!transactions.length && (
                   <TableRow>

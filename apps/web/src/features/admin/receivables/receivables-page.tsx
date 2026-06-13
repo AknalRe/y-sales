@@ -287,7 +287,7 @@ export function ReceivablesPage() {
       {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}
 
       {/* Stats */}
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4">
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 mb-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
         <div className="admin-stat-card">
           <div className="admin-stat-icon bg-admin-danger-soft text-admin-danger"><TrendingDown size={18} /></div>
           <div>

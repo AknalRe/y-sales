@@ -210,7 +210,7 @@ export function TrackingPage() {
         <TrackingStat label="Invalid" value={stats.invalid} icon={AlertCircle} tone="danger" />
       </section>
 
-      <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+      <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
         <div className="grid gap-3 items-center xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
           <input className="admin-input w-full h-[42px]" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} />
           <select className="admin-select w-full h-[42px]" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
@@ -279,7 +279,7 @@ export function TrackingPage() {
 function TrackingStat({ label, value, icon: Icon, tone = 'default' }: { label: string; value: number; icon: any; tone?: 'default' | 'success' | 'warning' | 'danger' }) {
   const color = tone === 'success' ? 'var(--admin-success)' : tone === 'warning' ? 'var(--admin-warning)' : tone === 'danger' ? 'var(--admin-danger)' : 'var(--admin-accent)';
   return (
-    <div className="rounded-[1.2rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+    <div className="rounded-[1.2rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
       <div className="mb-3 flex items-center justify-between">
         <Icon size={18} style={{ color }} />
         <span className="text-xs font-black uppercase tracking-wide text-admin-muted">{label}</span>

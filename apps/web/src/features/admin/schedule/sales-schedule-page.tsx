@@ -274,27 +274,27 @@ export function SalesSchedulePage() {
 
       {/* ─── Filters ────────────────────────────── */}
       <section className="mb-4 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
-        <div className="grid gap-3 xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
-          <input className="admin-input w-full" type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
-          <select className="admin-select w-full" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
+        <div className="grid gap-3 items-center xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
+          <input className="admin-input w-full h-[42px]" type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+          <select className="admin-select w-full h-[42px]" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
             <option value="">Semua sales</option>
             {salesUsers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
-          <select className="admin-select w-full" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
+          <select className="admin-select w-full h-[42px]" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
             <option value="">Semua status</option>
             {Object.entries(scheduleStatusLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <div className="relative min-w-0">
-            <Search size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-admin-muted" />
+          <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
+            <Search size={18} />
             <input
-              className="admin-input admin-input-with-icon w-full"
+              className="h-full"
               placeholder="Cari sales, outlet, tanggal, status, atau catatan..."
               value={scheduleSearch}
               onChange={(e) => setScheduleSearch(e.target.value)}
             />
             {scheduleSearch && (
               <button
-                className="absolute right-3 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg text-admin-muted hover:bg-admin-bg"
+                className="admin-search-clear"
                 type="button"
                 onClick={() => setScheduleSearch('')}
                 aria-label="Bersihkan pencarian jadwal"
@@ -304,7 +304,7 @@ export function SalesSchedulePage() {
             )}
           </div>
           <button
-            className="admin-btn-ghost justify-center"
+            className="admin-btn-ghost justify-center h-[42px]"
             type="button"
             onClick={() => { setSelectedDate(todayStr()); setSelectedUserId(''); setSelectedStatus(''); setScheduleSearch(''); }}
           >

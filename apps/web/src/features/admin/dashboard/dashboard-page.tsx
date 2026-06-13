@@ -299,7 +299,7 @@ export function DashboardPage() {
         <div className="dashboard-filter-row">
           <label className="dashboard-filter-field">
             <span>Dari</span>
-            <Calendar size={15} className="dashboard-filter-input-icon" />
+            {/*<Calendar size={15} className="dashboard-filter-input-icon" />*/}
             <input
               className="admin-input admin-input-with-icon w-full"
               type="date"
@@ -309,7 +309,7 @@ export function DashboardPage() {
           </label>
           <label className="dashboard-filter-field">
             <span>Sampai</span>
-            <Calendar size={15} className="dashboard-filter-input-icon" />
+            {/* <Calendar size={15} className="dashboard-filter-input-icon" /> */}
             <input
               className="admin-input admin-input-with-icon w-full"
               type="date"

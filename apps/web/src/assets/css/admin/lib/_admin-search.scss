@@ -4,12 +4,17 @@
     display: flex;
     align-items: center;
     gap: .7rem;
-    border: 1px solid var(--admin-border-subtle);
-    border-radius: 18px;
+    border: 1px solid var(--admin-border-strong) !important;
+    border-radius: 10px;
     padding: .85rem 1rem;
     color: var(--admin-muted);
-    background: var(--admin-bg-card);
+    background: var(--admin-surface) !important;
     margin-bottom: 1rem;
+    transition: all 0.2s;
+
+    &:focus-within {
+        border-color: var(--admin-accent) !important;
+    }
 
     input {
         min-width: 0;

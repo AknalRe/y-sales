@@ -242,7 +242,7 @@ export function OutletMapPicker({
           {searchError ? <p className="admin-map-search-error">{searchError}</p> : null}
         </div>
       ) : null}
-      <div ref={mapElementRef} className="h-80 overflow-hidden rounded-xl border border-slate-200 bg-white" />
+      <div ref={mapElementRef} className="z-5 h-80 overflow-hidden rounded-xl border border-slate-200 bg-white" />
     </div>
   );
 }

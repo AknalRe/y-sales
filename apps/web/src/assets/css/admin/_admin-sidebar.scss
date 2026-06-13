@@ -92,6 +92,9 @@
         font-size: 1rem;
         font-weight: 900;
         letter-spacing: -0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
@@ -122,6 +125,9 @@
         color: var(--admin-sidebar-text);
         font-size: 0.72rem;
         font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
@@ -237,6 +243,9 @@
         font-weight: 900;
         letter-spacing: 0.13em;
         text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     ul {
@@ -255,6 +264,8 @@
     padding: 0.65rem 0.7rem;
     color: var(--admin-sidebar-text);
     text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
     transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease, color 180ms ease;
 
     &:hover {
@@ -289,6 +300,7 @@
     place-items: center;
     border-radius: 0.8rem;
     background: var(--admin-sidebar-icon-bg);
+    flex-shrink: 0;
 }
 
 .admin-nav-text {

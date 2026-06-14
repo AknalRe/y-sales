@@ -273,7 +273,7 @@ export function SalesSchedulePage() {
       </section>
 
       {/* ─── Filters ────────────────────────────── */}
-      <section className="mb-4 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+      <section className="mb-4 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
         <div className="grid gap-3 items-center xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
           <input className="admin-input w-full h-[42px]" type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
           <select className="admin-select w-full h-[42px]" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
@@ -511,7 +511,7 @@ function ScheduleStat({ label, value, tone = 'default' }: { label: string; value
       ? 'var(--admin-warning)'
       : 'var(--admin-accent)';
   return (
-    <div className="rounded-[1.2rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+    <div className="rounded-[1.2rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
       <p className="text-xs font-black uppercase tracking-wide text-admin-muted">{label}</p>
       <strong className="mt-1 block text-2xl font-black" style={{ color }}>{value}</strong>
     </div>

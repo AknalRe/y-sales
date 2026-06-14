@@ -551,7 +551,7 @@ export function OutletsPage() {
 
 function StatCard({ label, value, tone = 'var(--admin-accent)' }: { label: string; value: number; tone?: string }) {
   return (
-    <div className="rounded-[1.25rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+    <div className="rounded-[1.25rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
       <p className="text-xs font-black uppercase tracking-wide text-admin-muted">{label}</p>
       <strong className="mt-2 block text-2xl font-black text-admin-foreground" style={{ color: tone }}>{value}</strong>
     </div>

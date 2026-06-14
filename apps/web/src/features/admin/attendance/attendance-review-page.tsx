@@ -324,7 +324,7 @@ export function AttendanceReviewPage() {
         <StatCard label="Tidak Disetujui" value={summary?.flaggedSessions ?? 0} tone="danger" />
       </section>
 
-      <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+      <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
         <div className="grid gap-3 items-center xl:grid-cols-[160px_160px_180px_220px_minmax(220px,1fr)_auto]">
           <input className="admin-input w-full h-[42px]" type="date" value={filters.from} onChange={(e) => setFilters((current) => ({ ...current, from: e.target.value }))} />
           <input className="admin-input w-full h-[42px]" type="date" value={filters.to} onChange={(e) => setFilters((current) => ({ ...current, to: e.target.value }))} />
@@ -465,7 +465,7 @@ export function AttendanceReviewPage() {
 function StatCard({ label, value, tone = 'default' }: { label: string; value: number; tone?: 'default' | 'success' | 'warning' | 'danger' }) {
   const color = tone === 'success' ? 'var(--admin-success)' : tone === 'warning' ? 'var(--admin-warning)' : tone === 'danger' ? 'var(--admin-danger)' : 'var(--admin-accent)';
   return (
-    <div className="rounded-[1.25rem] border border-admin-border bg-admin-bg-card p-4 shadow-sm">
+    <div className="rounded-[1.25rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
       <p className="text-xs font-black uppercase tracking-wide text-admin-muted">{label}</p>
       <strong className="mt-2 block text-2xl font-black" style={{ color }}>{value}</strong>
     </div>

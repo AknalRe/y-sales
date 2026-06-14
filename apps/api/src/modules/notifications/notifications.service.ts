@@ -35,7 +35,11 @@ export class NotificationService {
       }).returning();
 
       // 2. Fetch User Device Tokens
-      const tokens = await db.select().from(userDeviceTokens).where(eq(userDeviceTokens.userId, userId));
+      const whereClause = companyId
+        ? and(eq(userDeviceTokens.userId, userId), eq(userDeviceTokens.companyId, companyId))
+        : eq(userDeviceTokens.userId, userId);
+
+      const tokens = await db.select().from(userDeviceTokens).where(whereClause);
 
       // 3. Push to Provider (Expo / FCM)
       // Here we mock the push behavior. In a production app, we would:

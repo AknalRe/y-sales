@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { notifications, userDeviceTokens } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -13,6 +13,7 @@ const registerTokenSchema = z.object({
 
 export async function notificationRoutes(app: FastifyInstance) {
   // Register a device push token
+  // TODO: Implement rate-limiting for token registration to prevent spamming the database
   app.post<{ Body: z.infer<typeof registerTokenSchema> }>(
     '/notifications/tokens',
     { preHandler: authenticate },
@@ -74,6 +75,24 @@ export async function notificationRoutes(app: FastifyInstance) {
     }
   );
 
+  // Get unread notifications count
+  app.get(
+    '/notifications/unread-count',
+    { preHandler: authenticate },
+    async (request, reply) => {
+      const user = request.user!;
+      const [result] = await db.select({ value: count() })
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.userId, user.id),
+            eq(notifications.isRead, false)
+          )
+        );
+      return { count: Number(result?.value || 0) };
+    }
+  );
+
   // Get notification inbox
   app.get<{ Querystring: { page?: string, limit?: string } }>(
     '/notifications',
@@ -84,6 +103,10 @@ export async function notificationRoutes(app: FastifyInstance) {
       const limit = Number(request.query.limit || '20');
       const offset = (page - 1) * limit;
 
+      const [totalRow] = await db.select({ value: count() })
+        .from(notifications)
+        .where(eq(notifications.userId, user.id));
+
       const list = await db.select()
         .from(notifications)
         .where(eq(notifications.userId, user.id))
@@ -91,7 +114,7 @@ export async function notificationRoutes(app: FastifyInstance) {
         .limit(limit)
         .offset(offset);
 
-      return { data: list, page, limit };
+      return { data: list, page, limit, total: Number(totalRow?.value || 0) };
     }
   );
 
@@ -121,7 +144,7 @@ export async function notificationRoutes(app: FastifyInstance) {
     { preHandler: authenticate },
     async (request, reply) => {
       const user = request.user!;
-      const { id } = request.params;
+      const { id } = z.object({ id: z.string().uuid() }).parse(request.params);
 
       const [updated] = await db.update(notifications)
         .set({ isRead: true, readAt: new Date() })

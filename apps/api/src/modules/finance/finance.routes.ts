@@ -377,12 +377,14 @@ export async function financeRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = rejectActionSchema.parse(request.body);
-    const [row] = await db.select({ actionId: consignmentActions.id })
+    const [row] = await db.select({ action: consignmentActions })
       .from(consignmentActions)
       .innerJoin(consignments, eq(consignmentActions.consignmentId, consignments.id))
       .innerJoin(salesTransactions, eq(consignments.transactionId, salesTransactions.id))
       .where(and(eq(consignmentActions.id, params.id), eq(salesTransactions.companyId, companyId)));
     if (!row) throw Object.assign(new Error('Action konsinyasi tidak ditemukan.'), { statusCode: 404 });
+    if (row.action.approvalStatus !== 'pending_approval') throw Object.assign(new Error('Action sudah diproses.'), { statusCode: 400 });
+
     const [action] = await db.update(consignmentActions).set({
       approvalStatus: 'rejected',
       approvedByUserId: request.user?.id,
@@ -394,6 +396,22 @@ export async function financeRoutes(app: FastifyInstance) {
     } catch (err) {
       console.error('[AuditLog] Failed to write consignment action rejection audit log:', err);
     }
+
+    if (row.action.performedByUserId) {
+      let actionLabel = 'tindakan konsinyasi';
+      if (row.action.actionType === 'notify_withdrawal') actionLabel = 'penarikan konsinyasi';
+      else if (row.action.actionType === 'extend') actionLabel = 'perpanjangan konsinyasi';
+
+      await NotificationService.sendNotification({
+        userId: row.action.performedByUserId,
+        companyId,
+        title: 'Permintaan Ditolak',
+        body: `Permintaan ${actionLabel} Anda ditolak: ${body.reason}`,
+        type: 'consignment_rejected',
+        referenceId: action.id,
+      });
+    }
+
     return { action };
   });
 }

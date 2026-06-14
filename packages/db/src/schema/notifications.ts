@@ -27,6 +27,5 @@ export const notifications = pgTable('notifications', {
   data: jsonb('data'), // extra payload data
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
-  index('notifications_user_idx').on(table.userId),
-  index('notifications_is_read_idx').on(table.isRead),
+  index('notifications_user_is_read_idx').on(table.userId, table.isRead),
 ]);

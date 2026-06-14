@@ -12,6 +12,8 @@ import {
   revokeRefreshToken,
   signAccessToken,
   verifyPassword,
+  verifyAccessToken,
+  verifyRefreshToken,
 } from './auth.service.js';
 
 const loginSchema = z.object({
@@ -163,7 +165,33 @@ export async function authRoutes(app: FastifyInstance) {
     }
     if (body.pushToken) {
       try {
-        await db.delete(userDeviceTokens).where(eq(userDeviceTokens.token, body.pushToken));
+        let userId: string | undefined;
+
+        const authHeader = request.headers.authorization;
+        const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+        if (accessToken) {
+          try {
+            const payload = verifyAccessToken(accessToken);
+            userId = payload.sub;
+          } catch {
+            // Ignore if access token is invalid or expired
+          }
+        }
+
+        if (!userId && refreshToken) {
+          try {
+            const payload = verifyRefreshToken(refreshToken);
+            userId = payload.sub;
+          } catch {
+            // Ignore if refresh token is invalid or expired
+          }
+        }
+
+        await db.delete(userDeviceTokens).where(
+          userId
+            ? and(eq(userDeviceTokens.token, body.pushToken), eq(userDeviceTokens.userId, userId))
+            : eq(userDeviceTokens.token, body.pushToken)
+        );
       } catch (err) {
         console.error('[Logout] Failed to remove push token:', err);
       }

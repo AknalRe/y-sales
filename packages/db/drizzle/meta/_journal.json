@@ -64,6 +64,13 @@
       "when": 1781408568247,
       "tag": "0009_exotic_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781410080651,
+      "tag": "0010_worthless_giant_girl",
+      "breakpoints": true
     }
   ]
 }

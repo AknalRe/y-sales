@@ -105,11 +105,11 @@ function canApproveSalesOrders(user: any) {
 
 function noteStatusSql() {
   return sql<string>`case
-    when ${salesTransactions.status} in ('submitted', 'pending_approval') then 'pending'
+    when ${salesTransactions.status} in ('draft', 'submitted', 'pending_approval') then 'pending'
     when ${salesTransactions.status} = 'approved' then 'approved'
     when ${salesTransactions.status} in ('validated', 'closed') then 'settlement'
-    when ${salesTransactions.status} = 'rejected' then 'rejected'
-    else ${salesTransactions.status}::text
+    when ${salesTransactions.status} in ('rejected', 'cancelled') then 'rejected'
+    else 'pending'
   end`;
 }
 
@@ -121,10 +121,10 @@ export async function salesRoutes(app: FastifyInstance) {
     if (!canReadSalesOrders(user)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.view' });
     const canReview = canReviewSalesOrders(user);
     const conditions = [eq(salesTransactions.companyId, companyId)];
-    if (query.noteStatus === 'pending') conditions.push(inArray(salesTransactions.status, ['submitted', 'pending_approval']));
+    if (query.noteStatus === 'pending') conditions.push(inArray(salesTransactions.status, ['draft', 'submitted', 'pending_approval']));
     else if (query.noteStatus === 'approved') conditions.push(eq(salesTransactions.status, 'approved'));
     else if (query.noteStatus === 'settlement') conditions.push(inArray(salesTransactions.status, ['validated', 'closed']));
-    else if (query.noteStatus === 'rejected') conditions.push(eq(salesTransactions.status, 'rejected'));
+    else if (query.noteStatus === 'rejected') conditions.push(inArray(salesTransactions.status, ['rejected', 'cancelled']));
     else if (query.status) conditions.push(eq(salesTransactions.status, query.status));
     if (query.from) conditions.push(gte(salesTransactions.createdAt, new Date(`${query.from}T00:00:00.000Z`)));
     if (query.to) conditions.push(lte(salesTransactions.createdAt, new Date(`${query.to}T23:59:59.999Z`)));

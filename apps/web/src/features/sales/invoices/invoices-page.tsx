@@ -6,13 +6,20 @@ import { EmptyState, Spinner } from '../../../components/ui';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 import { showSalesAlertToast } from '../ui/sales-alert';
 
-const orderStatusLabel: Record<string, string> = {
-  draft: 'Draft',
-  submitted: 'Menunggu Review',
-  pending_approval: 'Menunggu Approval',
-  approved: 'Disetujui',
-  rejected: 'Ditolak',
-  closed: 'Selesai',
+type NoteStatus = 'pending' | 'approved' | 'settlement' | 'rejected';
+
+const noteStatusLabel: Record<NoteStatus, string> = {
+  pending: 'Nota Pending',
+  approved: 'Nota Approved',
+  settlement: 'Nota Settlement',
+  rejected: 'Nota Rejected',
+};
+
+const noteStatusDescription: Record<NoteStatus, string> = {
+  pending: 'Nota sudah dibuat sales dan menunggu approval.',
+  approved: 'Nota sudah di-ACC dan stok sudah direlease.',
+  settlement: 'Nota selesai, tercetak, dan terlapor.',
+  rejected: 'Nota tidak sesuai ketentuan.',
 };
 
 const paymentMethodLabel: Record<string, string> = {
@@ -29,6 +36,7 @@ type OrderListItem = {
   paymentMethod: string;
   totalAmount: string;
   status: string;
+  noteStatus?: NoteStatus | string;
   paymentStatus: string;
   createdAt: string;
   photoUrl?: string | null;
@@ -70,10 +78,35 @@ function formatDate(value: string) {
   });
 }
 
+function getNoteStatus(order: Pick<OrderListItem, 'noteStatus' | 'status'>): NoteStatus {
+  if (order.noteStatus && ['pending', 'approved', 'settlement', 'rejected'].includes(order.noteStatus)) {
+    return order.noteStatus as NoteStatus;
+  }
+  if (['draft', 'submitted', 'pending_approval'].includes(order.status)) return 'pending';
+  if (order.status === 'approved') return 'approved';
+  if (['validated', 'closed'].includes(order.status)) return 'settlement';
+  if (['rejected', 'cancelled'].includes(order.status)) return 'rejected';
+  return 'pending';
+}
+
+function getNoteStatusStyle(status: NoteStatus) {
+  switch (status) {
+    case 'pending':
+      return { background: 'rgba(255, 247, 237, .95)', color: 'var(--sales-accent)', borderColor: 'rgba(194, 92, 37, .22)' };
+    case 'approved':
+      return { background: 'rgba(236, 253, 245, .95)', color: '#059669', borderColor: 'rgba(5, 150, 105, .22)' };
+    case 'settlement':
+      return { background: 'rgba(239, 246, 255, .95)', color: '#2563eb', borderColor: 'rgba(37, 99, 235, .22)' };
+    case 'rejected':
+      return { background: 'rgba(254, 242, 242, .95)', color: '#dc2626', borderColor: 'rgba(220, 38, 38, .22)' };
+  }
+}
+
 export function InvoicesPage() {
   useScrollToTop();
   const { accessToken } = useAuth();
   const [orders, setOrders] = useState<OrderListItem[]>([]);
+  const [statusFilter, setStatusFilter] = useState<NoteStatus | 'all'>('all');
   const [details, setDetails] = useState<Record<string, OrderDetail>>({});
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +115,14 @@ export function InvoicesPage() {
   const [error, setError] = useState('');
 
   const expandedOrder = useMemo(() => expandedOrderId ? details[expandedOrderId] : null, [details, expandedOrderId]);
+  const filteredOrders = useMemo(() => (
+    statusFilter === 'all' ? orders : orders.filter((order) => getNoteStatus(order) === statusFilter)
+  ), [orders, statusFilter]);
+  const statusCounts = useMemo(() => orders.reduce<Record<NoteStatus, number>>((counts, order) => {
+    const status = getNoteStatus(order);
+    counts[status] += 1;
+    return counts;
+  }, { pending: 0, approved: 0, settlement: 0, rejected: 0 }), [orders]);
 
   async function fetchOrders() {
     if (!accessToken) return;
@@ -174,12 +215,50 @@ export function InvoicesPage() {
 
       {error && <div className="sales-alert sales-alert-error" style={{ marginTop: '1rem' }}>{error}</div>}
 
+      <div
+        style={{
+          display: 'flex',
+          gap: '.5rem',
+          overflowX: 'auto',
+          padding: '.25rem .05rem .35rem',
+          marginTop: '1rem',
+          scrollbarWidth: 'none',
+        }}
+      >
+        {(['all', 'pending', 'approved', 'settlement', 'rejected'] as const).map((status) => {
+          const active = statusFilter === status;
+          const label = status === 'all' ? 'Semua Nota' : noteStatusLabel[status];
+          const count = status === 'all' ? orders.length : statusCounts[status];
+          return (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setStatusFilter(status)}
+              className={active ? 'sales-btn sales-btn-primary' : 'sales-btn sales-btn-ghost'}
+              style={{
+                flex: '0 0 auto',
+                minHeight: 40,
+                padding: '.55rem .75rem',
+                borderRadius: 999,
+                fontSize: '.76rem',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {label}
+              <span style={{ opacity: active ? .9 : .65 }}>({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem', marginTop: '1rem' }}>
         {loading ? (
           <div style={{ padding: '2rem', textAlign: 'center' }}><Spinner /></div>
-        ) : orders.map((order) => {
+        ) : filteredOrders.map((order) => {
           const isExpanded = expandedOrderId === order.id;
-          const canUploadProof = order.status === 'pending_approval';
+          const noteStatus = getNoteStatus(order);
+          const canUploadProof = noteStatus === 'pending';
+          const statusStyle = getNoteStatusStyle(noteStatus);
 
           return (
             <article key={order.id} className="sales-note-card">
@@ -190,7 +269,19 @@ export function InvoicesPage() {
                     {order.outletName || 'Outlet'} • {formatDate(order.createdAt)}
                   </span>
                 </div>
-                <span className={`platform-status-dot platform-status-${order.status}`}>{orderStatusLabel[order.status] ?? order.status}</span>
+                <span
+                  className="platform-status-dot"
+                  style={{
+                    ...statusStyle,
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    fontSize: '.68rem',
+                    fontWeight: 900,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {noteStatusLabel[noteStatus]}
+                </span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '.75rem', alignItems: 'end', marginTop: '1rem' }}>
@@ -243,6 +334,9 @@ export function InvoicesPage() {
                 {order.hasInvoice ? <CheckCircle2 size={15} /> : <ReceiptText size={15} />}
                 {order.hasInvoice ? `${order.proofPhotoCount ?? 1} bukti nota tersimpan` : 'Belum ada bukti nota'}
               </div>
+              <p className="text-sales-text-muted" style={{ margin: '.45rem 0 0', fontSize: '.72rem', lineHeight: 1.45 }}>
+                {noteStatusDescription[noteStatus]}
+              </p>
 
               {isExpanded && (
                 <section style={{ borderTop: '1px solid var(--sales-line)', marginTop: '1rem', paddingTop: '1rem' }}>
@@ -281,8 +375,12 @@ export function InvoicesPage() {
           );
         })}
 
-        {!loading && orders.length === 0 && (
-          <EmptyState icon={<ReceiptText size={48} />} title="Belum ada transaksi" description="Transaksi yang Anda buat akan muncul di sini." />
+        {!loading && filteredOrders.length === 0 && (
+          <EmptyState
+            icon={<ReceiptText size={48} />}
+            title={orders.length === 0 ? 'Belum ada transaksi' : 'Tidak ada nota di status ini'}
+            description={orders.length === 0 ? 'Transaksi yang Anda buat akan muncul di sini.' : 'Coba pilih status nota lainnya.'}
+          />
         )}
       </div>
     </main>

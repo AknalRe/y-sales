@@ -16,6 +16,13 @@ const noteStatusLabel: Record<string, string> = {
   rejected: 'Nota Rejected',
 };
 
+const noteStatusDescription: Record<string, string> = {
+  pending: 'Nota sudah difoto atau dibuat sales dan menunggu approval.',
+  approved: 'Nota sudah di-ACC SPV/admin dan stok sudah direlease.',
+  settlement: 'Nota sudah diselesaikan admin, tercetak, dan terlapor.',
+  rejected: 'Nota tidak sesuai ketentuan.',
+};
+
 function getNoteStatus(tx: SalesTransaction) {
   if (tx.noteStatus) return tx.noteStatus;
   if (['submitted', 'pending_approval'].includes(tx.status)) return 'pending';
@@ -113,7 +120,7 @@ export function InvoiceReviewPage() {
   }
 
   async function handleSettlement(tx: ExtendedTransaction) {
-    if (!accessToken || !confirm(`Selesaikan nota ${tx.transactionNo}? Nota akan masuk settlement/terlapor.`)) return;
+    if (!accessToken || !confirm(`Selesaikan nota ${tx.transactionNo}? Nota akan masuk settlement, tercetak/terlapor, dan tidak menunggu verifikasi lagi.`)) return;
     setSaving(tx.id);
     setError('');
     try {
@@ -194,7 +201,7 @@ export function InvoiceReviewPage() {
             <ReceiptText size={24} className="text-admin-accent" />
             Verifikasi Nota
           </h1>
-          <p className="admin-page-subtitle">Review bukti transaksi dan validasi order dari sales lapangan.</p>
+          <p className="admin-page-subtitle">Kelola 4 status nota: pending, approved, settlement, dan rejected.</p>
         </div>
         <div className="flex gap-3 items-center">
           {pending > 0 && (
@@ -332,6 +339,9 @@ export function InvoiceReviewPage() {
                       <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(noteStatus)}`}>
                         {noteStatusLabel[noteStatus] ?? noteStatus}
                       </span>
+                      <p className="text-admin-muted text-xs mt-2 mb-0" style={{ maxWidth: 190 }}>
+                        {noteStatusDescription[noteStatus] ?? '-'}
+                      </p>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2 flex-wrap">
@@ -354,7 +364,7 @@ export function InvoiceReviewPage() {
                             style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
                             type="button"
                           >
-                            Approve
+                            Setujui
                           </button>
                           <button
                             onClick={() => { setRejectModal(tx); setRejectReason(''); }}
@@ -363,7 +373,7 @@ export function InvoiceReviewPage() {
                             style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
                             type="button"
                           >
-                            Reject
+                            Tolak
                           </button>
                         </>
                       ) : noteStatus === 'approved' ? (
@@ -377,7 +387,7 @@ export function InvoiceReviewPage() {
                           Settlement
                         </button>
                       ) : (
-                        <span className="text-admin-subtle text-xs italic">No Action</span>
+                        <span className="text-admin-subtle text-xs italic">Final</span>
                       )}
                       </div>
                     </TableCell>
@@ -444,13 +454,13 @@ export function InvoiceReviewPage() {
         <div className="admin-modal-overlay" onClick={() => setRejectModal(null)} style={{ backdropFilter: 'blur(4px)', background: 'rgba(15, 23, 42, 0.6)' }}>
           <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 24, padding: '1.5rem' }}>
             <div className="admin-modal-header border-none p-0 mb-6">
-              <h2 className="text-lg font-extrabold">Reject Transaksi</h2>
+              <h2 className="text-lg font-extrabold">Tolak Nota</h2>
               <button onClick={() => setRejectModal(null)} className="admin-modal-close">×</button>
             </div>
             <div className="admin-modal-body p-0">
               <div className="bg-admin-danger-bg border border-admin-border p-4 rounded-2xl mb-6">
                 <p className="text-admin-danger text-sm leading-relaxed">
-                  Anda akan menolak transaksi <strong>{rejectModal.transactionNo}</strong>. Sales akan menerima notifikasi penolakan.
+                  Anda akan menolak nota <strong>{rejectModal.transactionNo}</strong>. Status nota berubah menjadi rejected dan stok reserved dikembalikan.
                 </p>
               </div>
 

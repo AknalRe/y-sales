@@ -18,6 +18,7 @@ import { salesRoutes } from './modules/sales/sales.routes.js';
 import { settingsRoutes } from './modules/settings/settings.routes.js';
 import { syncRoutes } from './modules/sync/sync.routes.js';
 import { visitRoutes } from './modules/visits/visits.routes.js';
+import { notificationRoutes } from './modules/notifications/notifications.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   await app.register(authRoutes);
@@ -39,6 +40,7 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(syncRoutes);
   await app.register(visitRoutes);
   await app.register(reportRoutes);
+  await app.register(notificationRoutes);
 }
 
 

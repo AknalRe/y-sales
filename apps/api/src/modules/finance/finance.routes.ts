@@ -7,7 +7,7 @@ import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { parsePaginationQuery } from '../../utils/pagination.js';
 import { writeAuditLog } from '../audit/audit.service.js';
-
+import { NotificationService } from '../notifications/notifications.service.js';
 const paymentSchema = z.object({
   amount: z.string().or(z.number()).transform(String),
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
@@ -351,11 +351,25 @@ export async function financeRoutes(app: FastifyInstance) {
       }).where(eq(consignmentActions.id, row.action.id)).returning();
       return { action, consignment };
     });
+
     try {
       await writeAuditLog({ request, action: 'consignment.action_approved', entityType: 'consignment_action', entityId: result.action.id, oldValues: row.action, newValues: result.action });
     } catch (err) {
       console.error('[AuditLog] Failed to write consignment action approval audit log:', err);
     }
+
+    // Trigger Push Notification if this is a withdrawal notification request
+    if (result.action.actionType === 'notify_withdrawal' && row.action.performedByUserId) {
+      await NotificationService.sendNotification({
+        userId: row.action.performedByUserId,
+        companyId,
+        title: 'Penarikan Konsinyasi',
+        body: 'Permintaan penarikan barang konsinyasi telah disetujui. Silakan tarik barang dari outlet.',
+        type: 'withdrawal_approved',
+        referenceId: result.action.id,
+      });
+    }
+
     return result;
   });
 

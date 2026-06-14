@@ -13,5 +13,5 @@ export * from './face-templates.js';
 export * from './integrations.js';
 export * from './sync.js';
 export * from './platform.js';
-
+export * from './notifications.js';
 

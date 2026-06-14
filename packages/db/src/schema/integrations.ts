@@ -3,7 +3,7 @@ import { users } from './auth.js';
 import { companies } from './companies.js';
 
 export const integrationTypeEnum = pgEnum('integration_type', ['storage', 'face_recognition', 'payment', 'notification']);
-export const integrationProviderEnum = pgEnum('integration_provider', ['cloudflare_r2', 's3', 'custom_http', 'aws_rekognition', 'azure_face', 'google_vertex', 'mock']);
+export const integrationProviderEnum = pgEnum('integration_provider', ['cloudflare_r2', 's3', 'custom_http', 'aws_rekognition', 'azure_face', 'google_vertex', 'mock', 'expo', 'fcm', 'onesignal']);
 export const integrationStatusEnum = pgEnum('integration_status', ['active', 'inactive']);
 
 export const companyIntegrations = pgTable('company_integrations', {

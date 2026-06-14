@@ -12,6 +12,7 @@ export const userDeviceTokens = pgTable('user_device_tokens', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index('user_device_tokens_user_idx').on(table.userId),
+  index('user_device_tokens_user_company_idx').on(table.userId, table.companyId),
 ]);
 
 export const notifications = pgTable('notifications', {

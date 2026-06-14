@@ -22,6 +22,7 @@ import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { getGeneralSettings } from '../../utils/settings.js';
 import { writeAuditLog } from '../audit/audit.service.js';
+import { NotificationService } from '../notifications/notifications.service.js';
 
 const itemSchema = z.object({
   productId: z.string().uuid(),
@@ -319,6 +320,7 @@ export async function salesRoutes(app: FastifyInstance) {
     } catch (err) {
       console.error('[AuditLog] Failed to write sales order created audit log:', err);
     }
+    // TODO: Send push notification to admin/manager (users with 'sales.order.review' permission) to review this new order
     return { order };
   });
 
@@ -453,6 +455,16 @@ export async function salesRoutes(app: FastifyInstance) {
     } catch (err) {
       console.error('[AuditLog] Failed to write sales order approved audit log:', err);
     }
+
+    await NotificationService.sendNotification({
+      userId: order.salesUserId,
+      companyId,
+      title: 'Order Disetujui',
+      body: `Order Anda dengan nomor ${updated.transactionNo} telah disetujui.`,
+      type: 'sales_order_approved',
+      referenceId: order.id,
+    });
+
     return { transaction: updated };
   });
 
@@ -519,6 +531,17 @@ export async function salesRoutes(app: FastifyInstance) {
     } catch (err) {
       console.error('[AuditLog] Failed to write sales order rejected audit log:', err);
     }
+
+    const reasonText = body.reason ? `: ${body.reason}` : '';
+    await NotificationService.sendNotification({
+      userId: order.salesUserId,
+      companyId,
+      title: 'Order Ditolak',
+      body: `Order Anda dengan nomor ${updated.transactionNo} telah ditolak${reasonText}.`,
+      type: 'sales_order_rejected',
+      referenceId: order.id,
+    });
+
     return { transaction: updated };
   });
 }

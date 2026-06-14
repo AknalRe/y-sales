@@ -71,6 +71,18 @@ export async function notificationRoutes(app: FastifyInstance) {
         )
       );
 
+      try {
+        await writeAuditLog({
+          request,
+          action: 'notification.token_removed',
+          entityType: 'user',
+          entityId: user.id,
+          oldValues: { token },
+        });
+      } catch (err) {
+        console.error('[AuditLog] notification.token_removed failed:', err);
+      }
+
       return { success: true, message: 'Token removed successfully' };
     }
   );
@@ -81,14 +93,17 @@ export async function notificationRoutes(app: FastifyInstance) {
     { preHandler: authenticate },
     async (request, reply) => {
       const user = request.user!;
+      const conditions = [
+        eq(notifications.userId, user.id),
+        eq(notifications.isRead, false)
+      ];
+      if (user.companyId) {
+        conditions.push(eq(notifications.companyId, user.companyId));
+      }
+
       const [result] = await db.select({ value: count() })
         .from(notifications)
-        .where(
-          and(
-            eq(notifications.userId, user.id),
-            eq(notifications.isRead, false)
-          )
-        );
+        .where(and(...conditions));
       return { count: Number(result?.value || 0) };
     }
   );
@@ -103,13 +118,18 @@ export async function notificationRoutes(app: FastifyInstance) {
       const limit = Number(request.query.limit || '20');
       const offset = (page - 1) * limit;
 
+      const conditions = [eq(notifications.userId, user.id)];
+      if (user.companyId) {
+        conditions.push(eq(notifications.companyId, user.companyId));
+      }
+
       const [totalRow] = await db.select({ value: count() })
         .from(notifications)
-        .where(eq(notifications.userId, user.id));
+        .where(and(...conditions));
 
       const list = await db.select()
         .from(notifications)
-        .where(eq(notifications.userId, user.id))
+        .where(and(...conditions))
         .orderBy(desc(notifications.createdAt))
         .limit(limit)
         .offset(offset);
@@ -124,15 +144,17 @@ export async function notificationRoutes(app: FastifyInstance) {
     { preHandler: authenticate },
     async (request, reply) => {
       const user = request.user!;
+      const conditions = [
+        eq(notifications.userId, user.id),
+        eq(notifications.isRead, false)
+      ];
+      if (user.companyId) {
+        conditions.push(eq(notifications.companyId, user.companyId));
+      }
 
       await db.update(notifications)
         .set({ isRead: true, readAt: new Date() })
-        .where(
-          and(
-            eq(notifications.userId, user.id),
-            eq(notifications.isRead, false)
-          )
-        );
+        .where(and(...conditions));
 
       return { success: true, message: 'All notifications marked as read' };
     }
@@ -146,14 +168,17 @@ export async function notificationRoutes(app: FastifyInstance) {
       const user = request.user!;
       const { id } = z.object({ id: z.string().uuid() }).parse(request.params);
 
+      const conditions = [
+        eq(notifications.id, id),
+        eq(notifications.userId, user.id)
+      ];
+      if (user.companyId) {
+        conditions.push(eq(notifications.companyId, user.companyId));
+      }
+
       const [updated] = await db.update(notifications)
         .set({ isRead: true, readAt: new Date() })
-        .where(
-          and(
-            eq(notifications.id, id),
-            eq(notifications.userId, user.id)
-          )
-        )
+        .where(and(...conditions))
         .returning();
 
       if (!updated) {

@@ -71,6 +71,13 @@
       "when": 1781410080651,
       "tag": "0010_worthless_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781412040041,
+      "tag": "0011_majestic_black_crow",
+      "breakpoints": true
     }
   ]
 }

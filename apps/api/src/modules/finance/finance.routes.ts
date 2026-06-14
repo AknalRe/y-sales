@@ -358,16 +358,52 @@ export async function financeRoutes(app: FastifyInstance) {
       console.error('[AuditLog] Failed to write consignment action approval audit log:', err);
     }
 
-    // Trigger Push Notification if this is a withdrawal notification request
-    if (result.action.actionType === 'notify_withdrawal' && row.action.performedByUserId) {
-      await NotificationService.sendNotification({
-        userId: row.action.performedByUserId,
-        companyId,
-        title: 'Penarikan Konsinyasi',
-        body: 'Permintaan penarikan barang konsinyasi telah disetujui. Silakan tarik barang dari outlet.',
-        type: 'withdrawal_approved',
-        referenceId: result.action.id,
-      });
+    // Trigger Push Notification if this was requested by a sales agent (performedByUserId is present)
+    try {
+      if (row.action.performedByUserId) {
+        let title = 'Tindakan Konsinyasi Disetujui';
+        let bodyText = 'Permintaan tindakan konsinyasi Anda telah disetujui.';
+        let type = 'consignment_action_approved';
+
+        switch (result.action.actionType) {
+          case 'notify_withdrawal':
+            title = 'Penarikan Konsinyasi';
+            bodyText = 'Permintaan penarikan barang konsinyasi telah disetujui. Silakan tarik barang dari outlet.';
+            type = 'withdrawal_approved';
+            break;
+          case 'extend':
+            title = 'Perpanjangan Konsinyasi';
+            bodyText = 'Permintaan perpanjangan jangka waktu konsinyasi telah disetujui.';
+            type = 'consignment_extend_approved';
+            break;
+          case 'withdraw':
+            title = 'Penarikan Barang Konsinyasi';
+            bodyText = 'Permintaan penarikan fisik barang konsinyasi telah disetujui.';
+            type = 'consignment_withdraw_approved';
+            break;
+          case 'report_sold':
+            title = 'Laporan Penjualan Konsinyasi';
+            bodyText = 'Laporan penjualan barang konsinyasi telah disetujui.';
+            type = 'consignment_sold_approved';
+            break;
+          case 'collect_payment':
+            title = 'Penyetoran Pembayaran Konsinyasi';
+            bodyText = 'Penyetoran pembayaran konsinyasi telah disetujui.';
+            type = 'consignment_payment_approved';
+            break;
+        }
+
+        await NotificationService.sendNotification({
+          userId: row.action.performedByUserId,
+          companyId,
+          title,
+          body: bodyText,
+          type,
+          referenceId: result.action.id,
+        });
+      }
+    } catch (err) {
+      console.error('[Notification] Failed to send consignment action approval notification:', err);
     }
 
     return result;
@@ -397,19 +433,23 @@ export async function financeRoutes(app: FastifyInstance) {
       console.error('[AuditLog] Failed to write consignment action rejection audit log:', err);
     }
 
-    if (row.action.performedByUserId) {
-      let actionLabel = 'tindakan konsinyasi';
-      if (row.action.actionType === 'notify_withdrawal') actionLabel = 'penarikan konsinyasi';
-      else if (row.action.actionType === 'extend') actionLabel = 'perpanjangan konsinyasi';
+    try {
+      if (row.action.performedByUserId) {
+        let actionLabel = 'tindakan konsinyasi';
+        if (row.action.actionType === 'notify_withdrawal') actionLabel = 'penarikan konsinyasi';
+        else if (row.action.actionType === 'extend') actionLabel = 'perpanjangan konsinyasi';
 
-      await NotificationService.sendNotification({
-        userId: row.action.performedByUserId,
-        companyId,
-        title: 'Permintaan Ditolak',
-        body: `Permintaan ${actionLabel} Anda ditolak: ${body.reason}`,
-        type: 'consignment_rejected',
-        referenceId: action.id,
-      });
+        await NotificationService.sendNotification({
+          userId: row.action.performedByUserId,
+          companyId,
+          title: 'Permintaan Ditolak',
+          body: `Permintaan ${actionLabel} Anda ditolak: ${body.reason}`,
+          type: 'consignment_rejected',
+          referenceId: action.id,
+        });
+      }
+    } catch (err) {
+      console.error('[Notification] Failed to send consignment action rejection notification:', err);
     }
 
     return { action };

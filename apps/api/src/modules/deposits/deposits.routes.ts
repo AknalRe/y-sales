@@ -11,6 +11,7 @@ import { db } from '../../plugins/db.js';
 import { requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
+import { NotificationService } from '../notifications/notifications.service.js';
 
 const depositItemSchema = z.object({
   productId: z.string().uuid(),
@@ -157,6 +158,7 @@ export async function depositRoutes(app: FastifyInstance) {
     } catch (err) {
       console.error('[AuditLog] Failed to write deposit creation audit log:', err);
     }
+    // TODO: Send push notification to finance/admin (users with 'deposits.reconcile' permission) to reconcile this new deposit
     return reply.status(201).send({ deposit });
   });
 
@@ -192,6 +194,22 @@ export async function depositRoutes(app: FastifyInstance) {
     } catch (err) {
       console.error(`[AuditLog] Failed to write deposit reconciliation ${newStatus} audit log:`, err);
     }
+
+    const title = newStatus === 'reconciled' ? 'Setoran Direkonsiliasi' : 'Setoran Ditolak';
+    const notesText = body.notes ? `: ${body.notes}` : '';
+    const bodyText = newStatus === 'reconciled'
+      ? `Setoran Anda untuk tanggal ${deposit.workDate} telah disetujui/direkonsiliasi.`
+      : `Setoran Anda untuk tanggal ${deposit.workDate} ditolak${notesText}.`;
+
+    await NotificationService.sendNotification({
+      userId: deposit.salesUserId,
+      companyId,
+      title,
+      body: bodyText,
+      type: newStatus === 'reconciled' ? 'deposit_reconciled' : 'deposit_rejected',
+      referenceId: deposit.id,
+    });
+
     return { deposit: updated };
   });
 }

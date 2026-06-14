@@ -1,0 +1,1 @@
+CREATE INDEX "user_device_tokens_user_company_idx" ON "user_device_tokens" USING btree ("user_id","company_id");

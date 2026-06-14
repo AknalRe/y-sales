@@ -377,6 +377,48 @@ export function finalizeMediaUpload(accessToken: string, payload: { ownerType: s
   });
 }
 
+export type NotificationItem = {
+  id: string;
+  companyId?: string | null;
+  userId: string;
+  title: string;
+  body: string;
+  type: string;
+  isRead: boolean;
+  readAt?: string | null;
+  referenceId?: string | null;
+  data?: Record<string, any> | null;
+  createdAt: string;
+};
+
+export function getNotificationsCount(accessToken: string) {
+  return apiRequest<{ count: number }>('/notifications/unread-count', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
+
+export function getNotifications(accessToken: string, page = 1, limit = 20) {
+  return apiRequest<{ data: NotificationItem[]; page: number; limit: number; total: number }>(
+    `/notifications?page=${page}&limit=${limit}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+}
+
+export function markAllNotificationsAsRead(accessToken: string) {
+  return apiRequest<{ success: boolean; message: string }>('/notifications/read-all', {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
+
+export function markNotificationAsRead(accessToken: string, id: string) {
+  return apiRequest<{ success: boolean; data: NotificationItem }>(`/notifications/${id}/read`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
 
 // Central API Request function is now the main export.
 // Domain-specific functions should be in platform.ts or tenant.ts.

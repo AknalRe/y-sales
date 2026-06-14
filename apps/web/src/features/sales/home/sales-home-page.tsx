@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Camera, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp, CalendarDays } from 'lucide-react';
+import { Camera, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp, CalendarDays, Bell } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
-import { apiRequest } from '../../../lib/api/client';
+import { apiRequest, getNotificationsCount } from '../../../lib/api/client';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 import { showSalesAlertToast } from '../ui/sales-alert';
 
@@ -63,16 +63,18 @@ export function SalesHomePage() {
   const [attendanceBlockedReason, setAttendanceBlockedReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
 
   async function load() {
     if (!accessToken) return;
     setLoading(true);
     try {
       const today = new Date().toISOString().slice(0, 10);
-      const [visitRes, sumRes, attRes] = await Promise.allSettled([
+      const [visitRes, sumRes, attRes, unreadRes] = await Promise.allSettled([
         apiRequest<{ sessions: VisitSession[] }>(`/visits/sessions?date=${today}`, { headers: { Authorization: `Bearer ${accessToken}` } }),
         apiRequest<{ summary: TodaySummary }>('/reports/summary', { headers: { Authorization: `Bearer ${accessToken}` } }),
         apiRequest<AttendanceTodayResponse>('/attendance/today', { headers: { Authorization: `Bearer ${accessToken}` } }),
+        getNotificationsCount(accessToken),
       ]);
 
       if (visitRes.status === 'fulfilled') setVisits(visitRes.value.sessions ?? []);
@@ -82,14 +84,47 @@ export function SalesHomePage() {
         setCanCheckInAttendance(attRes.value.canCheckIn);
         setAttendanceBlockedReason(attRes.value.checkInBlockedReason ?? null);
       }
-      const firstError = [visitRes, sumRes, attRes].find(r => r.status === 'rejected');
+      if (unreadRes.status === 'fulfilled') {
+        setUnreadCount(unreadRes.value.count ?? 0);
+      }
+      const firstError = [visitRes, sumRes, attRes, unreadRes].find(r => r.status === 'rejected');
       if (firstError) setError((firstError as PromiseRejectedResult).reason?.message || 'Gagal memuat data.');
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { load(); }, [accessToken]);
+  useEffect(() => {
+    load();
+
+    // Poll unread count every 30 seconds
+    const interval = setInterval(async () => {
+      if (!accessToken) return;
+      try {
+        const res = await getNotificationsCount(accessToken);
+        setUnreadCount(res.count ?? 0);
+      } catch (err) {
+        console.error('Failed to poll unread count:', err);
+      }
+    }, 30000);
+
+    // Event listener for manual update
+    const handleUpdate = async () => {
+      if (!accessToken) return;
+      try {
+        const res = await getNotificationsCount(accessToken);
+        setUnreadCount(res.count ?? 0);
+      } catch (err) {
+        console.error('Failed to reload unread count:', err);
+      }
+    };
+    window.addEventListener('notifications:updated', handleUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notifications:updated', handleUpdate);
+    };
+  }, [accessToken]);
 
   useEffect(() => {
     showSalesAlertToast(error, 'error');
@@ -110,6 +145,17 @@ export function SalesHomePage() {
         <div style={{ display: 'flex', gap: '.5rem' }}>
           <button onClick={load} className="sales-icon-btn" type="button" disabled={loading}>
             <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : undefined }} />
+          </button>
+          <button 
+            onClick={() => navigate('/sales/notifications')} 
+            className="sales-icon-btn relative" 
+            type="button"
+            title="Notifikasi"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+            )}
           </button>
           <Link to="/sales/profile" className="sales-icon-btn">
             <UserCircle size={16} />

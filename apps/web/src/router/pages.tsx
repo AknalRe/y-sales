@@ -15,6 +15,7 @@ import {
   CalendarPlus,
   Store,
   Clock,
+  Bell,
 } from 'lucide-react';
 import { DashboardPage } from '@/features/admin/dashboard/dashboard-page';
 import { AttendancePage } from '@/features/standalone/attendance-page';
@@ -37,6 +38,7 @@ import { SalesSchedulePage } from '@/features/admin/schedule/sales-schedule-page
 import { OutletsPage } from '@/features/admin/outlets/outlets-page';
 import { SalesAccountsPage } from '@/features/admin/sales-accounts/sales-accounts-page';
 import { SalesSchedulesPage } from '@/features/sales/schedules/sales-schedules-page';
+import { NotificationsPage } from '@/features/standalone/notifications-page';
 import { type RouteConfig } from './types';
 
 // --- ADMIN ROUTES ---
@@ -189,6 +191,16 @@ export const mainRoutes: RouteConfig[] = [
       permission: 'settings.manage',
       section: 'Pengaturan',
     }
+  },
+  {
+    path: 'notifications',
+    element: <NotificationsPage />,
+    handle: {
+      label: 'Notifikasi',
+      icon: Bell,
+      section: 'Pengaturan',
+      hidden: true
+    }
   }
 ];
 
@@ -267,6 +279,16 @@ export const salesRoutes: RouteConfig[] = [
       label: 'Profil Sales',
       icon: UserCircle,
       mobile: true
+    }
+  },
+  {
+    path: 'notifications',
+    element: <NotificationsPage />,
+    handle: {
+      label: 'Notifikasi',
+      icon: Bell,
+      mobile: true,
+      hidden: true
     }
   }
 ];

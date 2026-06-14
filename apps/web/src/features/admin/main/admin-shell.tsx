@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
-import { getPlatformCompanyView } from '@/lib/api/client';
+import { getPlatformCompanyView, getNotificationsCount } from '@/lib/api/client';
 import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-view-banner';
 import { AdminDesktopSidebar } from './admin-desktop-sidebar';
 import { AdminMobileSidebar } from './admin-mobile-sidebar';
@@ -49,12 +49,42 @@ const getNavSections = (permissions: string[], user: any, isSuperAdmin: boolean)
 
 export function AdminShell() {
   const location = useLocation();
-  const { user, permissions, isSuperAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { user, permissions, isSuperAdmin, signOut, accessToken } = useAuth();
   const isMobile = useIsMobile(820);
 
   const [open, setOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  async function loadUnreadCount() {
+    if (!accessToken) return;
+    try {
+      const res = await getNotificationsCount(accessToken);
+      setUnreadCount(res.count ?? 0);
+    } catch (err) {
+      console.error('Failed to load unread notifications count:', err);
+    }
+  }
+
+  useEffect(() => {
+    loadUnreadCount();
+
+    // Poll every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+
+    // Event listener for manual notification status update
+    const handleUpdate = () => {
+      loadUnreadCount();
+    };
+    window.addEventListener('notifications:updated', handleUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notifications:updated', handleUpdate);
+    };
+  }, [accessToken]);
 
   const { isDark, toggleTheme } = useTheme();
 
@@ -105,9 +135,15 @@ export function AdminShell() {
             <button onClick={toggleTheme} className="admin-icon-button" type="button" title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
               {isDark ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <button id="admin-notification-button" className="admin-icon-button admin-notification" type="button">
+            <button 
+              id="admin-notification-button" 
+              className="admin-icon-button admin-notification" 
+              type="button"
+              onClick={() => navigate('/admin/notifications')}
+              title="Notifikasi"
+            >
               <Bell size={18} />
-              <span />
+              {unreadCount > 0 && <span />}
             </button>
             <div className="admin-profile-trigger" onClick={() => setProfileOpen(!profileOpen)}>
               <div className="admin-avatar">

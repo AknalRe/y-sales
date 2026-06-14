@@ -146,10 +146,20 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
     setLoading(true);
     setMessage('');
 
+    let freshLocation: BrowserLocation;
+    try {
+      freshLocation = await getCurrentLocation({ fresh: true });
+      setLocation(freshLocation);
+    } catch (error) {
+      setMessage(error instanceof Error ? `Gagal mengambil GPS terbaru: ${error.message}` : 'Gagal mengambil GPS terbaru.');
+      setLoading(false);
+      return;
+    }
+
     const payload: AttendancePayload = {
       clientRequestId: crypto.randomUUID(),
       capturedAt: image.capturedAt,
-      location,
+      location: freshLocation,
       faceCapture: {
         dataUrl: image.dataUrl,
         mimeType: image.mimeType,
@@ -186,11 +196,21 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
     setLoading(true);
     setMessage('');
 
+    let freshLocation: BrowserLocation;
+    try {
+      freshLocation = await getCurrentLocation({ fresh: true });
+      setLocation(freshLocation);
+    } catch (error) {
+      setMessage(error instanceof Error ? `Gagal mengambil GPS terbaru: ${error.message}` : 'Gagal mengambil GPS terbaru.');
+      setLoading(false);
+      return;
+    }
+
     const payload: AttendancePayload & { attendanceSessionId: string } = {
       attendanceSessionId,
       clientRequestId: crypto.randomUUID(),
       capturedAt: image.capturedAt,
-      location,
+      location: freshLocation,
       faceCapture: {
         dataUrl: image.dataUrl,
         mimeType: image.mimeType,
@@ -227,10 +247,20 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
     setLoading(true);
     setMessage('');
 
+    let freshLocation: BrowserLocation;
+    try {
+      freshLocation = await getCurrentLocation({ fresh: true });
+      setLocation(freshLocation);
+    } catch (error) {
+      setMessage(error instanceof Error ? `Gagal mengambil GPS terbaru: ${error.message}` : 'Gagal mengambil GPS terbaru.');
+      setLoading(false);
+      return;
+    }
+
     const payload: AttendancePayload = {
       clientRequestId: crypto.randomUUID(),
       capturedAt: image.capturedAt,
-      location,
+      location: freshLocation,
       faceCapture: {
         dataUrl: image.dataUrl,
         mimeType: image.mimeType,

@@ -206,19 +206,29 @@ export function VisitPage() {
     setLoading(true);
     setMessage('');
 
+    let freshLocation: BrowserLocation;
+    try {
+      freshLocation = await getCurrentLocation({ fresh: true });
+      setLocation(freshLocation);
+    } catch (error: any) {
+      setMessage(`Check-in gagal mengambil GPS terbaru: ${error.message ?? 'Lokasi tidak tersedia.'}`);
+      setLoading(false);
+      return;
+    }
+
     const payload: VisitPayload = {
       clientRequestId: crypto.randomUUID(),
       outletId: selectedOutlet,
       scheduleId: selectedScheduleId || undefined,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      accuracyM: location.accuracyM,
-      locationTimestamp: location.timestamp,
-      speedMps: location.speedMps,
-      heading: location.heading,
-      altitude: location.altitude,
-      altitudeAccuracyM: location.altitudeAccuracyM,
-      isMockedLocation: location.isMocked,
+      latitude: freshLocation.latitude,
+      longitude: freshLocation.longitude,
+      accuracyM: freshLocation.accuracyM,
+      locationTimestamp: freshLocation.timestamp,
+      speedMps: freshLocation.speedMps,
+      heading: freshLocation.heading,
+      altitude: freshLocation.altitude,
+      altitudeAccuracyM: freshLocation.altitudeAccuracyM,
+      isMockedLocation: freshLocation.isMocked,
       faceCapture: {
         dataUrl: image.dataUrl,
         mimeType: image.mimeType,
@@ -263,17 +273,27 @@ export function VisitPage() {
     setLoading(true);
     setMessage('');
 
+    let freshLocation: BrowserLocation;
+    try {
+      freshLocation = await getCurrentLocation({ fresh: true });
+      setLocation(freshLocation);
+    } catch (error: any) {
+      setMessage(`Check-out gagal mengambil GPS terbaru: ${error.message ?? 'Lokasi tidak tersedia.'}`);
+      setLoading(false);
+      return;
+    }
+
     const payload: VisitCheckOutPayload = {
       visitSessionId: activeVisitId,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      accuracyM: location.accuracyM,
-      locationTimestamp: location.timestamp,
-      speedMps: location.speedMps,
-      heading: location.heading,
-      altitude: location.altitude,
-      altitudeAccuracyM: location.altitudeAccuracyM,
-      isMockedLocation: location.isMocked,
+      latitude: freshLocation.latitude,
+      longitude: freshLocation.longitude,
+      accuracyM: freshLocation.accuracyM,
+      locationTimestamp: freshLocation.timestamp,
+      speedMps: freshLocation.speedMps,
+      heading: freshLocation.heading,
+      altitude: freshLocation.altitude,
+      altitudeAccuracyM: freshLocation.altitudeAccuracyM,
+      isMockedLocation: freshLocation.isMocked,
       outcome,
       closingNotes: notes,
       faceCapture: {

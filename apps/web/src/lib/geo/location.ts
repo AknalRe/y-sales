@@ -10,7 +10,11 @@ export type BrowserLocation = {
   isMocked?: boolean;
 };
 
-export function getCurrentLocation(): Promise<BrowserLocation> {
+type LocationOptions = {
+  fresh?: boolean;
+};
+
+export function getCurrentLocation(options: LocationOptions = {}): Promise<BrowserLocation> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation tidak tersedia di browser ini'));
@@ -37,7 +41,7 @@ export function getCurrentLocation(): Promise<BrowserLocation> {
         });
       },
       (error) => reject(new Error(error.message)),
-      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 10_000 },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: options.fresh ? 0 : 10_000 },
     );
   });
 }

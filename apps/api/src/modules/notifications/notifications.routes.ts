@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { notifications, userDeviceTokens } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { writeAuditLog } from '../audit/audit.service.js';
-import { requirePermission } from '../auth/auth.service.js';
+import { authenticate } from '../auth/auth.service.js';
 
 const registerTokenSchema = z.object({
   token: z.string(),
@@ -15,7 +15,7 @@ export async function notificationRoutes(app: FastifyInstance) {
   // Register a device push token
   app.post<{ Body: z.infer<typeof registerTokenSchema> }>(
     '/notifications/tokens',
-    { preValidation: [requirePermission('tenant_user')] },
+    { preHandler: authenticate },
     async (request, reply) => {
       const user = request.user!;
       const data = registerTokenSchema.parse(request.body);
@@ -58,7 +58,7 @@ export async function notificationRoutes(app: FastifyInstance) {
   // Remove a device push token
   app.delete<{ Params: { token: string } }>(
     '/notifications/tokens/:token',
-    { preValidation: [requirePermission('tenant_user')] },
+    { preHandler: authenticate },
     async (request, reply) => {
       const user = request.user!;
       const { token } = request.params;
@@ -77,7 +77,7 @@ export async function notificationRoutes(app: FastifyInstance) {
   // Get notification inbox
   app.get<{ Querystring: { page?: string, limit?: string } }>(
     '/notifications',
-    { preValidation: [requirePermission('tenant_user')] },
+    { preHandler: authenticate },
     async (request, reply) => {
       const user = request.user!;
       const page = Number(request.query.page || '1');
@@ -95,16 +95,36 @@ export async function notificationRoutes(app: FastifyInstance) {
     }
   );
 
+  // Mark all notifications as read
+  app.patch(
+    '/notifications/read-all',
+    { preHandler: authenticate },
+    async (request, reply) => {
+      const user = request.user!;
+
+      await db.update(notifications)
+        .set({ isRead: true, readAt: new Date() })
+        .where(
+          and(
+            eq(notifications.userId, user.id),
+            eq(notifications.isRead, false)
+          )
+        );
+
+      return { success: true, message: 'All notifications marked as read' };
+    }
+  );
+
   // Mark a single notification as read
   app.patch<{ Params: { id: string } }>(
     '/notifications/:id/read',
-    { preValidation: [requirePermission('tenant_user')] },
+    { preHandler: authenticate },
     async (request, reply) => {
       const user = request.user!;
       const { id } = request.params;
 
       const [updated] = await db.update(notifications)
-        .set({ isRead: true })
+        .set({ isRead: true, readAt: new Date() })
         .where(
           and(
             eq(notifications.id, id),
@@ -118,26 +138,6 @@ export async function notificationRoutes(app: FastifyInstance) {
       }
 
       return { success: true, data: updated };
-    }
-  );
-
-  // Mark all notifications as read
-  app.patch(
-    '/notifications/read-all',
-    { preValidation: [requirePermission('tenant_user')] },
-    async (request, reply) => {
-      const user = request.user!;
-
-      await db.update(notifications)
-        .set({ isRead: true })
-        .where(
-          and(
-            eq(notifications.userId, user.id),
-            eq(notifications.isRead, false)
-          )
-        );
-
-      return { success: true, message: 'All notifications marked as read' };
     }
   );
 }

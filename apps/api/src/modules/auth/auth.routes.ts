@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import { and, eq, or } from 'drizzle-orm';
 import { z } from 'zod';
-import { companies, roles, users } from '@yuksales/db/schema';
+import { companies, roles, users, userDeviceTokens } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { env } from '../../config/env.js';
 import {
@@ -23,6 +23,7 @@ const loginSchema = z.object({
 
 const refreshSchema = z.object({
   refreshToken: z.string().min(20).optional(),
+  pushToken: z.string().optional(),
 });
 
 function cookieOptions(maxAgeSeconds: number) {
@@ -159,6 +160,13 @@ export async function authRoutes(app: FastifyInstance) {
     const refreshToken = body.refreshToken ?? getCookieValue(request.headers.cookie, env.REFRESH_COOKIE_NAME);
     if (refreshToken) {
       await revokeRefreshToken(refreshToken);
+    }
+    if (body.pushToken) {
+      try {
+        await db.delete(userDeviceTokens).where(eq(userDeviceTokens.token, body.pushToken));
+      } catch (err) {
+        console.error('[Logout] Failed to remove push token:', err);
+      }
     }
     clearRefreshCookie(reply);
     return { success: true };

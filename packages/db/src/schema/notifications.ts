@@ -7,7 +7,7 @@ export const userDeviceTokens = pgTable('user_device_tokens', {
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   companyId: uuid('company_id').references(() => companies.id, { onDelete: 'cascade' }),
   devicePlatform: varchar('device_platform', { length: 40 }).notNull(), // 'ios', 'android', 'web'
-  token: varchar('token', { length: 255 }).notNull().unique(),
+  token: text('token').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
@@ -22,6 +22,7 @@ export const notifications = pgTable('notifications', {
   body: text('body').notNull(),
   type: varchar('type', { length: 80 }).notNull(), // 'system', 'withdrawal', 'approval', etc.
   isRead: boolean('is_read').default(false).notNull(),
+  readAt: timestamp('read_at', { withTimezone: true }), // diisi saat isRead = true
   referenceId: uuid('reference_id'), // optional link to a specific entity
   data: jsonb('data'), // extra payload data
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

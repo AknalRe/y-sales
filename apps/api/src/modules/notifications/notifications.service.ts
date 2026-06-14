@@ -44,17 +44,9 @@ export class NotificationService {
       if (tokens.length > 0) {
         console.log(`[NotificationService] Pushing '${title}' to ${tokens.length} devices for user ${userId}`);
         
-        // Mock Expo Push
-        const expoPushPayload = tokens.map(t => ({
-          to: t.token,
-          sound: 'default',
-          title,
-          body,
-          data: { notificationId: notification.id, ...data },
-        }));
-        
-        // TODO: actually call Expo Push API using fetch or expo-server-sdk
-        console.log('[NotificationService] Mock payload:', JSON.stringify(expoPushPayload, null, 2));
+        // TODO: Implementasi push ke provider eksternal (Expo/FCM)
+        // Gunakan expo-server-sdk atau firebase-admin di sini
+        console.log(`[NotificationService] ${tokens.length} token(s) siap untuk push (provider belum diimplementasikan)`);
       } else {
         console.log(`[NotificationService] User ${userId} has no active device tokens. Notification stored in inbox only.`);
       }

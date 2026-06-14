@@ -9,7 +9,7 @@ import { writeAuditLog } from '../audit/audit.service.js';
 
 const integrationSchema = z.object({
   type: z.enum(['storage', 'face_recognition', 'payment', 'notification']),
-  provider: z.enum(['cloudflare_r2', 's3', 'custom_http', 'aws_rekognition', 'azure_face', 'google_vertex', 'mock']),
+  provider: z.enum(['cloudflare_r2', 's3', 'custom_http', 'aws_rekognition', 'azure_face', 'google_vertex', 'mock', 'expo', 'fcm', 'onesignal']),
   name: z.string().min(2),
   status: z.enum(['active', 'inactive']).default('inactive'),
   config: z.record(z.string(), z.unknown()).default({}),

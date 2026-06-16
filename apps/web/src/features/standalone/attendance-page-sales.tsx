@@ -138,7 +138,7 @@ export function AttendancePageSales(props: AttendanceState) {
       </div>
 
       {/* Status Masuk / Keluar Toggle */}
-      <div className="sales-step-card">
+      {/* <div className="sales-step-card">
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setMode('check-in')}
@@ -158,7 +158,6 @@ export function AttendancePageSales(props: AttendanceState) {
           </button>
         </div>
 
-        {/* Today status info */}
         {todaySession && (
           <div className="flex items-center justify-between mt-3 text-sales-muted" style={{ fontSize: '.8rem' }}>
             <div className="flex items-center gap-1.5">
@@ -181,10 +180,10 @@ export function AttendancePageSales(props: AttendanceState) {
             {checkInBlockedReason}
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Live Camera */}
-      <div className="relative mt-2">
+      <div className="relative">
         <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
         {liveFaceDetectionEnabled && <LiveFaceOverlay videoRef={videoRef} stream={stream} />}
         {location && (
@@ -211,10 +210,34 @@ export function AttendancePageSales(props: AttendanceState) {
           style={{ padding: '.85rem', fontSize: '.95rem', fontWeight: 800, cursor: stream && canStartSelectedMode ? 'pointer' : 'not-allowed', opacity: stream && canStartSelectedMode ? 1 : 0.5, transition: 'all .2s' }}
         >
           <CheckCircle2 size={20} />
-          {mode === 'check-in' ? 'Absen Masuk' : 'Absen Keluar'}
+          {todaySession?.status === 'open' ? 'Absen Keluar' : 'Absen Masuk'}
         </button>
 
-        <SalesAlert message={message} onClose={clearMessage} className="mt-2" />
+        {/* Today status info */}
+        {todaySession && (
+          <div className="flex items-center justify-between mt-3 text-sales-muted" style={{ fontSize: '.8rem' }}>
+            <div className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${todaySession.status === 'open' ? 'bg-sales-emerald' : 'bg-sales-muted'}`} />
+              <span className="font-bold">{todaySession.status === 'open' ? 'Sedang aktif' : 'Sesi hari ini selesai'}</span>
+            </div>
+            <div className="flex gap-4">
+              <span>Masuk: <strong className="text-sales-text-heading">{formatTime(todaySession.checkInAt)}</strong></span>
+              <span>Keluar: <strong className="text-sales-text-heading">{formatTime(todaySession.checkOutAt)}</strong></span>
+            </div>
+          </div>
+        )}
+        {!todaySession && !allowMultipleSessions && (
+          <div className="mt-2 text-sales-muted" style={{ fontSize: '.75rem' }}>
+            Company membatasi absensi menjadi satu sesi per hari.
+          </div>
+        )}
+        {checkInBlockedReason && todaySession?.status !== 'open' && (
+          <div className="mt-2 text-sales-amber-deep" style={{ fontSize: '.75rem' }}>
+            {checkInBlockedReason}
+          </div>
+        )}
+        {/* Sales Alert */}
+        {/* <SalesAlert message={message} onClose={clearMessage} className="mt-2" /> */}
       </div>
 
       {/* List Absensi */}
@@ -264,7 +287,7 @@ export function AttendancePageSales(props: AttendanceState) {
         <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm p-6" style={{ background: 'var(--sales-overlay-dark)' }}>
           <div className="w-full max-w-[360px] bg-sales-surface rounded-3xl p-5" style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
             <p className="text-center text-sales-text-heading font-extrabold mb-3" style={{ fontSize: '.9rem' }}>
-              Preview {mode === 'check-in' ? 'Masuk' : 'Keluar'}
+              Preview {todaySession?.status === 'open' ? 'Keluar' : 'Masuk'}
             </p>
             <img src={image.dataUrl} alt="Preview" className="w-full rounded-2xl object-cover" style={{ aspectRatio: '3/4' }} />
             {location && (

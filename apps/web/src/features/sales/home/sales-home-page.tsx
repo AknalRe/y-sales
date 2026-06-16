@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Camera, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp, CalendarDays, Bell } from 'lucide-react';
+import { Camera, ShoppingCart, MapPin, CheckCircle2, Clock, RefreshCw, AlertCircle, UserCircle, TrendingUp, CalendarDays, Bell, ReceiptText } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { apiRequest, getNotificationsCount } from '../../../lib/api/client';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
@@ -22,6 +22,7 @@ type TodaySummary = {
   todayVisits: number;
   todayOrders: number;
   todayNota: number;
+  todayNotaAmount: string;
 };
 
 type AttendanceToday = {
@@ -225,9 +226,9 @@ export function SalesHomePage() {
             <span>Transaksi</span>
           </div>
           <div className="sales-kpi-card">
-            <ShoppingCart size={16} className="text-sales-info-light" />
-            <strong>{summary.todayNota}</strong>
-            <span>Nota</span>
+            <ReceiptText size={16} className="text-sales-info-light" />
+            <strong>{formatRp(summary.todayNotaAmount)}</strong>
+            <span>{summary.todayNota} Nota Hari Ini</span>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, count, desc, eq, gte, isNull, lte, ne, sum } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, isNull, lte, ne, sum } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   attendanceSessions,
@@ -74,6 +74,14 @@ export async function reportRoutes(app: FastifyInstance) {
     const [salesToday] = await db.select({ total: sum(salesTransactions.totalAmount), count: count() })
       .from(salesTransactions)
       .where(and(...salesConditions, gte(salesTransactions.createdAt, today)));
+
+    const [todayNota] = await db.select({ total: sum(salesTransactions.totalAmount), count: count() })
+      .from(salesTransactions)
+      .where(and(
+        ...salesConditions,
+        gte(salesTransactions.createdAt, today),
+        inArray(salesTransactions.status, ['submitted', 'pending_approval', 'approved', 'validated', 'closed', 'rejected']),
+      ));
 
     const [salesPeriod] = await db.select({ total: sum(salesTransactions.totalAmount), count: count() })
       .from(salesTransactions)
@@ -213,6 +221,8 @@ export async function reportRoutes(app: FastifyInstance) {
         activeUsers: activeUserCount.count,
         todaySalesAmount: salesToday.total ?? '0',
         todayOrders: salesToday.count,
+        todayNota: todayNota.count,
+        todayNotaAmount: todayNota.total ?? '0',
         todayVisits: visitsToday.count,
         periodFrom: from,
         periodTo: to,

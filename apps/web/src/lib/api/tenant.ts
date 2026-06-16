@@ -663,6 +663,8 @@ export type ReportSummary = {
   activeUsers: number;
   todaySalesAmount: string;
   todayOrders: number;
+  todayNota: number;
+  todayNotaAmount: string;
   todayVisits: number;
 };
 

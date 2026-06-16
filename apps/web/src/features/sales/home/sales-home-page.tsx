@@ -19,8 +19,9 @@ type VisitSession = {
 
 type TodaySummary = {
   todaySalesAmount: string;
-  todayOrders: number;
   todayVisits: number;
+  todayOrders: number;
+  todayNota: number;
 };
 
 type AttendanceToday = {
@@ -76,6 +77,8 @@ export function SalesHomePage() {
         apiRequest<AttendanceTodayResponse>('/attendance/today', { headers: { Authorization: `Bearer ${accessToken}` } }),
         getNotificationsCount(accessToken),
       ]);
+
+      console.log(sumRes)
 
       if (visitRes.status === 'fulfilled') setVisits(visitRes.value.sessions ?? []);
       if (sumRes.status === 'fulfilled') setSummary(sumRes.value.summary);
@@ -146,9 +149,9 @@ export function SalesHomePage() {
           <button onClick={load} className="sales-icon-btn" type="button" disabled={loading}>
             <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : undefined }} />
           </button>
-          <button 
-            onClick={() => navigate('/sales/notifications')} 
-            className="sales-icon-btn relative" 
+          <button
+            onClick={() => navigate('/sales/notifications')}
+            className="sales-icon-btn relative"
             type="button"
             title="Notifikasi"
           >
@@ -212,20 +215,26 @@ export function SalesHomePage() {
             <span>Omset Hari Ini</span>
           </div>
           <div className="sales-kpi-card">
-            <ShoppingCart size={16} className="text-sales-info-light" />
-            <strong>{summary.todayOrders}</strong>
-            <span>Order</span>
-          </div>
-          <div className="sales-kpi-card">
             <MapPin size={16} className="text-sales-violet" />
             <strong>{todayVisitsDone}/{todayVisitsTotal}</strong>
             <span>Visit</span>
           </div>
+          <div className="sales-kpi-card">
+            <ShoppingCart size={16} className="text-sales-info-light" />
+            <strong>{summary.todayOrders}</strong>
+            <span>Transaksi</span>
+          </div>
+          <div className="sales-kpi-card">
+            <ShoppingCart size={16} className="text-sales-info-light" />
+            <strong>{summary.todayNota}</strong>
+            <span>Nota</span>
+          </div>
         </div>
       )}
 
+
       {/* Quick Actions */}
-      <div className="sales-quick-actions">
+      {/*   <div className="sales-quick-actions">
         <Link to="/sales/schedules" className="sales-action-card sales-action-primary">
           <div className="sales-action-icon"><CalendarDays size={22} /></div>
           <span>Jadwal Visit</span>
@@ -242,7 +251,7 @@ export function SalesHomePage() {
           <div className="sales-action-icon"><ShoppingCart size={22} /></div>
           <span>Transaksi</span>
         </Link>
-      </div>
+      </div> */}
 
       {/* Today's Visits */}
       <section className="sales-visits-section">

@@ -25,7 +25,7 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
           <div className="admin-sidebar-logo">
             <span>
               {companyLogo ? (
-                <img src={companyLogo} alt={companyName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+                <img className='bg-white' src={companyLogo} alt={companyName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
               ) : (
                 <Building2 size={18} />
               )}

@@ -87,7 +87,7 @@ export function LoginPage() {
         <div className="brand-glass rounded-3xl p-8">
           <div className="mb-8 text-center">
             {companyInfo?.logoUrl ? (
-              <img src={companyInfo.logoUrl} alt={displayName} className="mx-auto mb-4 h-16 w-16 rounded-2xl object-cover shadow-2xl ring-1 ring-white/20" />
+              <img src={companyInfo.logoUrl} alt={displayName} className="bg-white mx-auto mb-4 h-16 w-16 rounded-2xl object-cover shadow-2xl ring-1 ring-white/20" />
             ) : (
               <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-white/15 text-3xl font-black text-white shadow-2xl ring-1 ring-white/20">
                 {displayInitial}

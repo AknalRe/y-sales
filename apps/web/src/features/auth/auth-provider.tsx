@@ -9,7 +9,7 @@ type SessionUser = {
   employeeCode?: string;
   roleCode: string;
   isSuperAdmin: boolean;
-  company: { id: string; name: string; slug: string } | null;
+  company: { id: string; name: string; slug: string; logoUrl?: string | null } | null;
 };
 
 type AuthContextValue = {

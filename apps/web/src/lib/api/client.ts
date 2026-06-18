@@ -84,7 +84,7 @@ export function login(payload: LoginPayload) {
       phone?: string;
       roleCode: string;
       isSuperAdmin: boolean;
-      company: { id: string; name: string; slug: string } | null;
+      company: { id: string; name: string; slug: string; logoUrl?: string | null } | null;
     };
   }>('/auth/login', {
     method: 'POST',
@@ -134,7 +134,7 @@ export function getMe(accessToken: string) {
       employeeCode?: string;
       roleCode: string;
       isSuperAdmin: boolean;
-      company: { id: string; name: string; slug: string } | null;
+      company: { id: string; name: string; slug: string; logoUrl?: string | null } | null;
     };
     permissions: string[];
   }>('/auth/me', {

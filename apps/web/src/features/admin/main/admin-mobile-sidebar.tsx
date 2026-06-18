@@ -9,9 +9,10 @@ interface AdminMobileSidebarProps {
     items: any[];
   }[];
   companyName?: string;
+  companyLogo?: string | null;
 }
 
-export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSections, companyName = 'Company' }: AdminMobileSidebarProps) {
+export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSections, companyName = 'Company', companyLogo }: AdminMobileSidebarProps) {
   const location = useLocation();
 
   if (!mobileMenuOpen) return null;
@@ -22,7 +23,13 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
       <div className="relative flex w-4/5 max-w-xs flex-col h-full shadow-2xl animate-in slide-in-from-left admin-mobile-drawer">
         <div className="flex items-center justify-between p-4 admin-mobile-drawer-brand">
           <div className="admin-sidebar-logo">
-            <span><Building2 size={18} /></span>
+            <span>
+              {companyLogo ? (
+                <img src={companyLogo} alt={companyName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+              ) : (
+                <Building2 size={18} />
+              )}
+            </span>
             <div>
               <h2>{companyName}</h2>
               <p>Sales Operations</p>

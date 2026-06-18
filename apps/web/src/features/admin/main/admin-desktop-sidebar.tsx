@@ -9,9 +9,10 @@ interface AdminDesktopSidebarProps {
     items: any[];
   }[];
   companyName?: string;
+  companyLogo?: string | null;
 }
 
-export function AdminDesktopSidebar({ open, setOpen, navSections, companyName = 'Company' }: AdminDesktopSidebarProps) {
+export function AdminDesktopSidebar({ open, setOpen, navSections, companyName = 'Company', companyLogo }: AdminDesktopSidebarProps) {
   const location = useLocation();
 
   return (
@@ -19,7 +20,13 @@ export function AdminDesktopSidebar({ open, setOpen, navSections, companyName = 
       <div className="admin-sidebar-brand">
         {open && (
           <div className="admin-sidebar-logo">
-            <span><Building2 size={18} /></span>
+            <span>
+              {companyLogo ? (
+                <img src={companyLogo} alt={companyName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+              ) : (
+                <Building2 size={18} />
+              )}
+            </span>
             <div>
               <h2>{companyName}</h2>
               <p>Sales Operations</p>

@@ -94,6 +94,7 @@ export async function authRoutes(app: FastifyInstance) {
         companyId: users.companyId,
         companyName: companies.name,
         companySlug: companies.slug,
+        companyLogoUrl: companies.logoUrl,
         roleCode: roles.code,
       })
       .from(users)
@@ -128,6 +129,7 @@ export async function authRoutes(app: FastifyInstance) {
           id: user.companyId,
           name: user.companyName,
           slug: user.companySlug,
+          logoUrl: user.companyLogoUrl,
         } : null,
       },
     };
@@ -213,6 +215,7 @@ export async function authRoutes(app: FastifyInstance) {
         companyId: companies.id,
         companyName: companies.name,
         companySlug: companies.slug,
+        companyLogoUrl: companies.logoUrl,
       })
       .from(users)
       .innerJoin(roles, eq(users.roleId, roles.id))
@@ -232,6 +235,7 @@ export async function authRoutes(app: FastifyInstance) {
           id: profile.companyId,
           name: profile.companyName,
           slug: profile.companySlug,
+          logoUrl: profile.companyLogoUrl,
         } : null,
       } : null,
       permissions: authUser.permissions,

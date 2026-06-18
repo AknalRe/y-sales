@@ -103,6 +103,10 @@ export function AdminShell() {
     return cv?.name ?? 'Company';
   }, [user]);
 
+  const resolvedCompanyLogo = useMemo(() => {
+    return user?.company?.logoUrl ?? null;
+  }, [user]);
+
   const currentTitle = useMemo(() => {
     const allRoutes = [...mainRoutes, ...playgroundRoutes];
     // Special check for index route
@@ -116,7 +120,7 @@ export function AdminShell() {
     <div className="admin-command-shell">
 
       {/* Sidebar Desktop */}
-      {!isMobile && <AdminDesktopSidebar open={open} setOpen={setOpen} navSections={navSections} companyName={resolvedCompanyName} />}
+      {!isMobile && <AdminDesktopSidebar open={open} setOpen={setOpen} navSections={navSections} companyName={resolvedCompanyName} companyLogo={resolvedCompanyLogo} />}
 
       <main className={`admin-main ${open ? 'admin-main-open' : 'admin-main-closed'}`}>
         <header className="admin-topbar">
@@ -183,6 +187,7 @@ export function AdminShell() {
           setMobileMenuOpen={setMobileMenuOpen}
           navSections={navSections}
           companyName={resolvedCompanyName}
+          companyLogo={resolvedCompanyLogo}
         />
       )}
     </div>

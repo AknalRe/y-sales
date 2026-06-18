@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Home, MapPin, ReceiptText, ShoppingCart, UserRound, Clock, CalendarDays } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-view-banner';
+import PageMeta from '@/hooks/use-page-meta';
 
 const bottomNav = [
   { name: 'Beranda', href: '/sales', icon: Home },
@@ -16,9 +17,15 @@ export function SalesShell() {
   const { user } = useAuth();
 
   return (
-    <div className="flex min-h-screen justify-center bg-gray-50 text-slate-900">
-      <div className="mobile-shell relative flex flex-col overflow-hidden">
-        {/* <header className="sticky top-0 z-20 bg-[#4A2922] p-4 text-white shadow-md">
+    <>
+      <PageMeta
+        title={`Sales | ${user?.company?.name}`}
+        description="Sales Pages"
+        favicon="/sales.ico"
+      />
+      <div className="flex min-h-screen justify-center bg-gray-50 text-slate-900">
+        <div className="mobile-shell relative flex flex-col overflow-hidden">
+          {/* <header className="sticky top-0 z-20 bg-[#4A2922] p-4 text-white shadow-md">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-lg font-black">Yuksales Sales</h1>
@@ -30,26 +37,27 @@ export function SalesShell() {
           </div>
         </header> */}
 
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 pb-24">
-          <PlatformCompanyViewBanner />
-          <Outlet />
-        </main>
+          <main className="flex-1 overflow-y-auto bg-gray-50 p-4 pb-24">
+            <PlatformCompanyViewBanner />
+            <Outlet />
+          </main>
 
-        <nav className="fixed bottom-0 z-[52] flex h-16 w-full max-w-[28rem] items-center justify-around border-t border-slate-200 bg-white px-1 shadow-[0_-10px_30px_rgba(15,23,42,0.08)]">
-          {bottomNav.map((item) => {
-            const Icon = item.icon;
-            const active = location.pathname === item.href;
-            return (
-              <Link key={item.href} id={`sales-nav-${item.name.toLowerCase()}`} to={item.href} className={`relative flex h-full w-16 flex-col items-center justify-center gap-1 text-[10px] font-bold transition ${active ? 'text-sales-accent' : 'text-slate-400 hover:text-slate-700'}`}>
-                <Icon size={20} />
-                {item.name}
-                {active ? <span className="absolute bottom-0 h-1 w-8 rounded-t-full bg-sales-accent" /> : null}
-              </Link>
-            );
-          })}
-        </nav>
+          <nav className="fixed bottom-0 z-[52] flex h-16 w-full max-w-[28rem] items-center justify-around border-t border-slate-200 bg-white px-1 shadow-[0_-10px_30px_rgba(15,23,42,0.08)]">
+            {bottomNav.map((item) => {
+              const Icon = item.icon;
+              const active = location.pathname === item.href;
+              return (
+                <Link key={item.href} id={`sales-nav-${item.name.toLowerCase()}`} to={item.href} className={`relative flex h-full w-16 flex-col items-center justify-center gap-1 text-[10px] font-bold transition ${active ? 'text-sales-accent' : 'text-slate-400 hover:text-slate-700'}`}>
+                  <Icon size={20} />
+                  {item.name}
+                  {active ? <span className="absolute bottom-0 h-1 w-8 rounded-t-full bg-sales-accent" /> : null}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

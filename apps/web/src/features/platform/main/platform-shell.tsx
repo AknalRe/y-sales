@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '../../auth/auth-provider';
 import { PlatformDesktopSidebar } from './platform-desktop-sidebar';
 import { PlatformMobileSidebar } from './platform-mobile-sidebar';
+import PageMeta from '@/hooks/use-page-meta';
 
 const platformNav = [
   { path: '/platform', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -35,53 +36,60 @@ export function PlatformShell() {
   if (!isSuperAdmin) return <Navigate to="/admin" replace />;
 
   return (
-    <div className="platform-shell">
-      {/* Sidebar Desktop */}
-      {!isMobile && (
-        <PlatformDesktopSidebar
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-          platformNav={platformNav}
-          initials={initials}
-          userName={user?.name ?? 'Super Admin'}
-          userEmail={user?.email ?? ''}
-          profileOpen={profileOpen}
-          setProfileOpen={setProfileOpen}
-          signOut={signOut}
-        />
-      )}
-
-      <main className={`platform-main ${sidebarOpen ? 'platform-main-open' : 'platform-main-closed'}`}>
-        {/* Mobile menu button */}
-        {isMobile && (
-          <header className="platform-topbar">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="platform-toggle-btn"
-              type="button"
-            >
-              <Menu size={18} />
-            </button>
-            <span className="platform-brand-name">Yuksales</span>
-          </header>
+    <>
+      <PageMeta
+        title={`Platform`}
+        description="Platform Pages"
+        favicon="/platform.ico"
+      />
+      <div className="platform-shell">
+        {/* Sidebar Desktop */}
+        {!isMobile && (
+          <PlatformDesktopSidebar
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            platformNav={platformNav}
+            initials={initials}
+            userName={user?.name ?? 'Super Admin'}
+            userEmail={user?.email ?? ''}
+            profileOpen={profileOpen}
+            setProfileOpen={setProfileOpen}
+            signOut={signOut}
+          />
         )}
-        <Outlet />
-      </main>
 
-      {/* Sidebar Mobile */}
-      {isMobile && (
-        <PlatformMobileSidebar
-          mobileMenuOpen={mobileMenuOpen}
-          setMobileMenuOpen={setMobileMenuOpen}
-          platformNav={platformNav}
-          initials={initials}
-          userName={user?.name ?? 'Super Admin'}
-          userEmail={user?.email ?? ''}
-          profileOpen={profileOpen}
-          setProfileOpen={setProfileOpen}
-          signOut={signOut}
-        />
-      )}
-    </div>
+        <main className={`platform-main ${sidebarOpen ? 'platform-main-open' : 'platform-main-closed'}`}>
+          {/* Mobile menu button */}
+          {isMobile && (
+            <header className="platform-topbar">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="platform-toggle-btn"
+                type="button"
+              >
+                <Menu size={18} />
+              </button>
+              <span className="platform-brand-name">Yuksales</span>
+            </header>
+          )}
+          <Outlet />
+        </main>
+
+        {/* Sidebar Mobile */}
+        {isMobile && (
+          <PlatformMobileSidebar
+            mobileMenuOpen={mobileMenuOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+            platformNav={platformNav}
+            initials={initials}
+            userName={user?.name ?? 'Super Admin'}
+            userEmail={user?.email ?? ''}
+            profileOpen={profileOpen}
+            setProfileOpen={setProfileOpen}
+            signOut={signOut}
+          />
+        )}
+      </div>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import {
   Cloud,
   Gauge,
   KeyRound,
+  Image as ImageIcon,
   MapPin,
   Navigation,
   Radar,
@@ -16,10 +17,12 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Store,
+  Upload,
   UserCheck,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
+import { createMediaUpload, finalizeMediaUpload, uploadToStorageUrl } from '@/lib/api/client';
 import {
   createCompanyIntegration,
   getCompanyIntegrations,
@@ -120,6 +123,24 @@ function toOptionalCoordinate(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === '') return null;
   const coordinate = Number(value);
   return Number.isFinite(coordinate) ? coordinate : null;
+}
+
+async function compressCompanyImage(file: File) {
+  const bitmap = await createImageBitmap(file);
+  const maxSize = 1400;
+  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas tidak tersedia untuk kompres gambar.');
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Gagal mengompres gambar.')), 'image/jpeg', 0.82);
+  });
+  return new File([blob], `${file.name.replace(/\.[^.]+$/, '') || 'company-image'}.jpg`, { type: 'image/jpeg' });
 }
 
 function storageToForm(integration?: CompanyIntegration): StorageForm {
@@ -301,6 +322,7 @@ export function OperationalSettingsPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [activeSection, setActiveSection] = useState<SectionKey>('company');
+  const [uploadingCompanyMedia, setUploadingCompanyMedia] = useState<'logo' | 'cover' | null>(null);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -349,6 +371,36 @@ export function OperationalSettingsPage() {
 
   function patchStorage<K extends keyof StorageForm>(key: K, value: StorageForm[K]) {
     setStorageForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function handleCompanyImageUpload(kind: 'logo' | 'cover', file: File) {
+    if (!accessToken || !company) return;
+    setUploadingCompanyMedia(kind);
+    setError('');
+    setMessage('');
+    try {
+      const compressed = await compressCompanyImage(file);
+      const { uploadUrl, objectKey } = await createMediaUpload(accessToken, {
+        ownerType: 'company',
+        ownerId: company.id,
+        fileName: compressed.name,
+        mimeType: compressed.type,
+      });
+      await uploadToStorageUrl(uploadUrl, compressed);
+      const { media } = await finalizeMediaUpload(accessToken, {
+        ownerType: 'company',
+        ownerId: company.id,
+        objectKey,
+        mimeType: compressed.type,
+        sizeBytes: compressed.size,
+      });
+      patchCompany(kind === 'logo' ? 'logoUrl' : 'coverPhotoUrl', media.fileUrl);
+      setMessage(`${kind === 'logo' ? 'Logo' : 'Cover'} berhasil diupload ke storage. Klik Simpan untuk menyimpan ke profil company.`);
+    } catch (e: any) {
+      setError(e.message ?? `Gagal upload ${kind === 'logo' ? 'logo' : 'cover'} company.`);
+    } finally {
+      setUploadingCompanyMedia(null);
+    }
   }
 
   const activeSettingsSection = useMemo(
@@ -553,6 +605,80 @@ export function OperationalSettingsPage() {
                 />
                 <small>Kode ini digunakan sebagai awalan kode karyawan. Contoh: YKS-001.</small>
               </label>
+              <div className="settings-field wide">
+                <span>Logo & cover perusahaan</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                  <div style={{ border: '1px solid var(--admin-border)', borderRadius: 18, padding: '1rem', background: 'var(--admin-surface)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem' }}>
+                      <div style={{ width: 64, height: 64, borderRadius: 18, overflow: 'hidden', border: '1px solid var(--admin-border)', background: 'var(--admin-bg)', display: 'grid', placeItems: 'center', flex: '0 0 auto' }}>
+                        {company.logoUrl ? (
+                          <img src={company.logoUrl} alt="Logo company" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <ImageIcon size={22} className="text-admin-muted" />
+                        )}
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <strong className="text-admin-foreground" style={{ display: 'block', fontSize: '.9rem' }}>Logo company</strong>
+                        <small>Upload ke storage lalu URL disimpan di profil company.</small>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '.6rem', marginTop: '.9rem' }}>
+                      <label className="admin-btn-ghost" style={{ borderRadius: 12, cursor: uploadingCompanyMedia ? 'not-allowed' : 'pointer', flex: '0 0 auto' }}>
+                        <Upload size={15} /> {uploadingCompanyMedia === 'logo' ? 'Upload...' : 'Upload Logo'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          hidden
+                          disabled={!!uploadingCompanyMedia}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) void handleCompanyImageUpload('logo', file);
+                            e.currentTarget.value = '';
+                          }}
+                        />
+                      </label>
+                      <input
+                        value={company.logoUrl ?? ''}
+                        onChange={(e) => patchCompany('logoUrl', e.target.value)}
+                        placeholder="URL logo"
+                        style={{ minWidth: 0 }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ border: '1px solid var(--admin-border)', borderRadius: 18, padding: '1rem', background: 'var(--admin-surface)' }}>
+                    <div style={{ width: '100%', aspectRatio: '16 / 5', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--admin-border)', background: 'var(--admin-bg)', display: 'grid', placeItems: 'center' }}>
+                      {company.coverPhotoUrl ? (
+                        <img src={company.coverPhotoUrl} alt="Cover company" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <ImageIcon size={24} className="text-admin-muted" />
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '.6rem', marginTop: '.9rem' }}>
+                      <label className="admin-btn-ghost" style={{ borderRadius: 12, cursor: uploadingCompanyMedia ? 'not-allowed' : 'pointer', flex: '0 0 auto' }}>
+                        <Upload size={15} /> {uploadingCompanyMedia === 'cover' ? 'Upload...' : 'Upload Cover'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          hidden
+                          disabled={!!uploadingCompanyMedia}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) void handleCompanyImageUpload('cover', file);
+                            e.currentTarget.value = '';
+                          }}
+                        />
+                      </label>
+                      <input
+                        value={company.coverPhotoUrl ?? ''}
+                        onChange={(e) => patchCompany('coverPhotoUrl', e.target.value)}
+                        placeholder="URL cover"
+                        style={{ minWidth: 0 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <small>Jika Cloud Storage company nonaktif, backend memakai konfigurasi storage fallback dari environment server.</small>
+              </div>
               <label className="settings-field">
                 <span>Nama legal</span>
                 <input value={company.legalName ?? ''} onChange={(e) => patchCompany('legalName', e.target.value)} />

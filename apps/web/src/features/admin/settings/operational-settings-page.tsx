@@ -953,7 +953,12 @@ export function OperationalSettingsPage() {
               </label>
               <label className="settings-field wide">
                 <span>Public base URL</span>
-                <input value={storageForm.publicBaseUrl} onChange={(e) => patchStorage('publicBaseUrl', e.target.value)} />
+                <input
+                  value={storageForm.publicBaseUrl}
+                  onChange={(e) => patchStorage('publicBaseUrl', e.target.value)}
+                  placeholder="https://pub-xxxx.r2.dev atau https://assets.domain.com"
+                />
+                <small>Wajib berupa URL public R2 untuk preview gambar. Jangan isi dengan endpoint r2.cloudflarestorage.com.</small>
               </label>
               <label className="settings-field">
                 <span>Access key ID</span>

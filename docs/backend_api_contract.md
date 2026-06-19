@@ -311,7 +311,7 @@ Body Cloudflare R2:
     "bucket": "yuksales-assets",
     "region": "auto",
     "endpoint": "https://aea4e2f5c52c669d23de0cc66dfefd9d.r2.cloudflarestorage.com",
-    "publicBaseUrl": "",
+    "publicBaseUrl": "https://pub-xxxx.r2.dev",
     "signedUrlExpiresSeconds": 900
   },
   "secretConfig": {
@@ -361,7 +361,7 @@ STORAGE_REGION=auto
 STORAGE_ENDPOINT=https://aea4e2f5c52c669d23de0cc66dfefd9d.r2.cloudflarestorage.com
 STORAGE_ACCESS_KEY_ID=
 STORAGE_SECRET_ACCESS_KEY=
-STORAGE_PUBLIC_BASE_URL=
+STORAGE_PUBLIC_BASE_URL=https://pub-xxxx.r2.dev
 STORAGE_SIGNED_URL_EXPIRES_SECONDS=900
 ```
 

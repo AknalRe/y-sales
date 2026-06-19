@@ -28,8 +28,10 @@ const envStorageConfig: StorageConfig = {
 
 const s3Clients = new Map<string, S3Client>();
 
-function readString(value: unknown, fallback = '') {
-  return typeof value === 'string' ? value : fallback;
+function readNonEmptyString(value: unknown, fallback = '') {
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
 }
 
 function readNumber(value: unknown, fallback: number) {
@@ -50,12 +52,12 @@ export async function getStorageConfig(companyId?: string): Promise<StorageConfi
 
   return {
     driver: integration.provider,
-    bucket: readString(config.bucket, envStorageConfig.bucket),
-    region: readString(config.region, envStorageConfig.region),
-    endpoint: readString(config.endpoint, envStorageConfig.endpoint),
-    accessKeyId: readString(secretConfig.accessKeyId, envStorageConfig.accessKeyId),
-    secretAccessKey: readString(secretConfig.secretAccessKey, envStorageConfig.secretAccessKey),
-    publicBaseUrl: readString(config.publicBaseUrl, envStorageConfig.publicBaseUrl),
+    bucket: readNonEmptyString(config.bucket, envStorageConfig.bucket),
+    region: readNonEmptyString(config.region, envStorageConfig.region),
+    endpoint: readNonEmptyString(config.endpoint, envStorageConfig.endpoint),
+    accessKeyId: readNonEmptyString(secretConfig.accessKeyId, envStorageConfig.accessKeyId),
+    secretAccessKey: readNonEmptyString(secretConfig.secretAccessKey, envStorageConfig.secretAccessKey),
+    publicBaseUrl: readNonEmptyString(config.publicBaseUrl, envStorageConfig.publicBaseUrl),
     signedUrlExpiresSeconds: readNumber(config.signedUrlExpiresSeconds, envStorageConfig.signedUrlExpiresSeconds),
   };
 }

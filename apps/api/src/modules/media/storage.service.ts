@@ -113,6 +113,9 @@ export function createObjectKey(input: { companyId: string; ownerType: string; o
 
 export function getPublicUrl(objectKey: string, config: StorageConfig = envStorageConfig) {
   if (config.publicBaseUrl) return `${config.publicBaseUrl.replace(/\/$/, '')}/${objectKey}`;
+  if (config.endpoint.includes('.r2.cloudflarestorage.com')) {
+    throw Object.assign(new Error('STORAGE_PUBLIC_BASE_URL wajib diisi dengan URL public R2, misalnya https://pub-xxxx.r2.dev.'), { statusCode: 500 });
+  }
   return `${config.endpoint.replace(/\/$/, '')}/${config.bucket}/${objectKey}`;
 }
 

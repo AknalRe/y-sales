@@ -6,7 +6,7 @@ import { db } from '../../plugins/db.js';
 import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
-import { createObjectKey, createUploadUrl, deleteObject, getPublicUrl, getStorageConfig } from './storage.service.js';
+import { createObjectKey, createUploadUrl, deleteObject, getPublicUrl, getStorageConfig, uploadObject } from './storage.service.js';
 
 const ownerTypeSchema = z.enum(['user', 'outlet', 'transaction', 'attendance', 'visit', 'deposit', 'face_template', 'product', 'company']);
 
@@ -27,6 +27,12 @@ const completeSchema = z.object({
   sizeBytes: z.number().int().nonnegative().default(0),
   fileHash: z.string().optional(),
   capturedAt: z.string().datetime().optional(),
+});
+
+const binaryUploadSchema = z.object({
+  ownerType: ownerTypeSchema,
+  ownerId: z.string().uuid().optional(),
+  objectKey: z.string().min(5),
 });
 
 function extractObjectKey(fileUrl: string) {
@@ -90,6 +96,44 @@ export async function mediaRoutes(app: FastifyInstance) {
     await assertCanCreateMedia(request, companyId, body.ownerType, body.ownerId);
     const objectKey = createObjectKey({ companyId, ownerType: body.ownerType, ownerId: body.ownerId, fileName: body.fileName, mimeType: body.mimeType });
     return await createUploadUrl({ companyId, objectKey, mimeType: body.mimeType });
+  });
+
+  app.post('/media/upload-binary', { preHandler: authenticate }, async (request) => {
+    const companyId = requireTenantId(request);
+    const fields: Record<string, unknown> = {};
+    let fileBuffer: Buffer | null = null;
+    let mimeType = '';
+
+    for await (const part of request.parts()) {
+      if (part.type === 'file') {
+        const chunks: Buffer[] = [];
+        for await (const chunk of part.file) {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        }
+        fileBuffer = Buffer.concat(chunks);
+        mimeType = part.mimetype;
+      } else {
+        fields[part.fieldname] = part.value;
+      }
+    }
+
+    if (!fileBuffer) {
+      throw Object.assign(new Error('File wajib diunggah.'), { statusCode: 400 });
+    }
+
+    const body = binaryUploadSchema.parse(fields);
+    if (!body.objectKey.startsWith(`companies/${companyId}/`)) {
+      throw Object.assign(new Error('Object key tidak sesuai company aktif.'), { statusCode: 400 });
+    }
+    if (body.ownerType === 'transaction') await getTransactionForMedia(companyId, body.ownerId);
+    await assertCanCreateMedia(request, companyId, body.ownerType, body.ownerId);
+
+    return await uploadObject({
+      companyId,
+      objectKey: body.objectKey,
+      body: fileBuffer,
+      mimeType,
+    });
   });
 
   app.post('/media/complete', { preHandler: authenticate }, async (request, reply) => {

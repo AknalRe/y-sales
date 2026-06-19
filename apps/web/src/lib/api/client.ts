@@ -360,13 +360,39 @@ export function createMediaUpload(accessToken: string, payload: { ownerType: str
   });
 }
 
-export async function uploadToStorageUrl(uploadUrl: string, file: Blob | File) {
-  const response = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: { 'Content-Type': file.type },
+type StorageUploadFallback = {
+  accessToken: string;
+  ownerType: string;
+  ownerId?: string;
+  objectKey: string;
+};
+
+async function uploadToStorageViaApi(file: Blob | File, fallback: StorageUploadFallback) {
+  const form = new FormData();
+  form.append('ownerType', fallback.ownerType);
+  if (fallback.ownerId) form.append('ownerId', fallback.ownerId);
+  form.append('objectKey', fallback.objectKey);
+  form.append('file', file);
+
+  return apiRequest<{ objectKey: string; publicUrl: string; provider: string }>('/media/upload-binary', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${fallback.accessToken}` },
+    body: form,
   });
-  if (!response.ok) throw new Error('Gagal upload ke storage');
+}
+
+export async function uploadToStorageUrl(uploadUrl: string, file: Blob | File, fallback?: StorageUploadFallback) {
+  try {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    });
+    if (!response.ok) throw new Error(`Direct storage upload gagal (${response.status}).`);
+  } catch (error) {
+    if (!fallback) throw error instanceof Error ? error : new Error('Gagal upload ke storage.');
+    await uploadToStorageViaApi(file, fallback);
+  }
 }
 
 export function finalizeMediaUpload(accessToken: string, payload: { ownerType: string; ownerId?: string; objectKey: string; mimeType: string; sizeBytes: number }) {

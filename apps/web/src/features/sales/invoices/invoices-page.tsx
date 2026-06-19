@@ -183,7 +183,12 @@ export function InvoicesPage() {
         mimeType: file.type,
       });
 
-      await uploadToStorageUrl(uploadUrl, file);
+      await uploadToStorageUrl(uploadUrl, file, {
+        accessToken,
+        ownerType: 'transaction',
+        ownerId: orderId,
+        objectKey,
+      });
       await finalizeMediaUpload(accessToken, {
         ownerType: 'transaction',
         ownerId: orderId,

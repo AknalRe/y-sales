@@ -142,6 +142,25 @@ export async function createUploadUrl(input: { companyId?: string; objectKey: st
   };
 }
 
+export async function uploadObject(input: { companyId?: string; objectKey: string; body: Buffer; mimeType: string }) {
+  const config = await getStorageConfig(input.companyId);
+  if (config.driver === 'local') {
+    throw Object.assign(new Error('Local storage driver belum mendukung upload binary lewat API.'), { statusCode: 501 });
+  }
+  const command = new PutObjectCommand({
+    Bucket: config.bucket,
+    Key: input.objectKey,
+    Body: input.body,
+    ContentType: input.mimeType,
+  });
+  await getS3Client(config).send(command);
+  return {
+    objectKey: input.objectKey,
+    publicUrl: getPublicUrl(input.objectKey, config),
+    provider: config.driver,
+  };
+}
+
 export async function deleteObject(objectKey: string, companyId?: string) {
   const config = await getStorageConfig(companyId);
   const command = new DeleteObjectCommand({ Bucket: config.bucket, Key: objectKey });

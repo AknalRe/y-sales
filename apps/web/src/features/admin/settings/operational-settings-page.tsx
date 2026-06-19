@@ -386,7 +386,12 @@ export function OperationalSettingsPage() {
         fileName: compressed.name,
         mimeType: compressed.type,
       });
-      await uploadToStorageUrl(uploadUrl, compressed);
+      await uploadToStorageUrl(uploadUrl, compressed, {
+        accessToken,
+        ownerType: 'company',
+        ownerId: company.id,
+        objectKey,
+      });
       const { media } = await finalizeMediaUpload(accessToken, {
         ownerType: 'company',
         ownerId: company.id,

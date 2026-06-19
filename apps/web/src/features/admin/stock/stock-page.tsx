@@ -192,7 +192,12 @@ export function StockPage() {
         if (!productForm.imageFile) return productForm.imageUrl || null;
         const compressed = await compressProductImage(productForm.imageFile);
         const { uploadUrl, objectKey } = await createMediaUpload(accessToken, { ownerType: 'product', ownerId: productId, fileName: compressed.name, mimeType: compressed.type });
-        await uploadToStorageUrl(uploadUrl, compressed);
+        await uploadToStorageUrl(uploadUrl, compressed, {
+          accessToken,
+          ownerType: 'product',
+          ownerId: productId,
+          objectKey,
+        });
         const { media } = await finalizeMediaUpload(accessToken, { ownerType: 'product', ownerId: productId, objectKey, mimeType: compressed.type, sizeBytes: compressed.size });
         return media.fileUrl;
       };

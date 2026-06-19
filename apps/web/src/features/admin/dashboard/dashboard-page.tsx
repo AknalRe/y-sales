@@ -267,7 +267,7 @@ export function DashboardPage() {
           <h1 className="admin-page-title">Dashboard Utama</h1>
           <p className="dashboard-welcome">
             Ringkasan performa penjualan dan aktivitas operasional periode {periodLabel}.
-            {lastUpdated && <span className="dashboard-update-time">Update {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>}
+            {lastUpdated && <span className="dashboard-update-time">Diperbarui {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>}
           </p>
         </div>
         <div className="dashboard-header-actions">

@@ -68,7 +68,7 @@ export async function usersRoutes(app: FastifyInstance) {
     const canReadDirectory = user.isSuperAdmin
       || user.roleCode === 'ADMINISTRATOR'
       || ['users.manage', 'visits.review', 'sales.order.review', 'invoice.review', 'reports.view'].some((permission) => user.permissions.includes(permission));
-    if (!canReadDirectory) return reply.status(403).send({ message: 'Permission denied', permission: 'users.manage' });
+    if (!canReadDirectory) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'users.manage' });
 
     const query = z.object({ status: z.string().optional() }).parse(request.query);
     const { page, limit, offset } = parsePaginationQuery(request.query);

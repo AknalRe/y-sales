@@ -298,21 +298,21 @@ export function ReceivablesPage() {
         <div className="admin-stat-card">
           <div className="admin-stat-icon bg-admin-accent-shadow text-admin-accent"><Clock size={18} /></div>
           <div>
-            <span>Open</span>
+            <span>Terbuka</span>
             {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 30 }} /> : <strong>{stats.open}</strong>}
           </div>
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon bg-admin-danger-soft text-admin-danger"><AlertCircle size={18} /></div>
           <div>
-            <span>Overdue</span>
+            <span>Lewat Tempo</span>
             {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 30 }} /> : <strong>{stats.overdue}</strong>}
           </div>
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon bg-admin-danger-soft text-admin-danger"><Banknote size={18} /></div>
           <div>
-            <span>Overdue Amount</span>
+            <span>Nilai Lewat Tempo</span>
             {loading ? <div className="bg-admin-bg rounded mt-1" style={{ height: 22, width: 100 }} /> : <strong>{formatRp(stats.totalOverdue)}</strong>}
           </div>
         </div>
@@ -328,20 +328,20 @@ export function ReceivablesPage() {
           <option value="">Semua Status</option>
           {tab === 'receivables' ? (
             <>
-              <option value="open">Open</option>
-              <option value="partial">Partial</option>
-              <option value="overdue">Overdue</option>
-              <option value="paid">Paid</option>
-              <option value="written_off">Written Off</option>
+              <option value="open">Terbuka</option>
+              <option value="partial">Dibayar Sebagian</option>
+              <option value="overdue">Lewat Tempo</option>
+              <option value="paid">Lunas</option>
+              <option value="written_off">Dihapuskan</option>
             </>
           ) : (
             <>
-              <option value="active">Active</option>
-              <option value="overdue">Overdue</option>
-              <option value="withdrawal_required">Withdrawal Required</option>
-              <option value="extended">Extended</option>
-              <option value="withdrawn">Withdrawn</option>
-              <option value="paid">Paid</option>
+              <option value="active">Aktif</option>
+              <option value="overdue">Lewat Tempo</option>
+              <option value="withdrawal_required">Perlu Penarikan</option>
+              <option value="extended">Diperpanjang</option>
+              <option value="withdrawn">Ditarik</option>
+              <option value="paid">Lunas</option>
             </>
           )}
         </select>

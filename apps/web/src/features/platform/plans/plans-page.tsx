@@ -201,13 +201,13 @@ export function PlatformPlansPage() {
         <div className="platform-modal-overlay" onClick={() => setModal(null)}>
           <div className="platform-modal" onClick={e => e.stopPropagation()}>
             <div className="platform-modal-header">
-              <h2>{modal === 'create' ? 'Buat Plan Baru' : `Edit Plan: ${(modal as any).plan.name}`}</h2>
+              <h2>{modal === 'create' ? 'Buat Paket Baru' : `Edit Paket: ${(modal as any).plan.name}`}</h2>
               <button onClick={() => setModal(null)} className="platform-modal-close" type="button">×</button>
             </div>
             <div className="platform-modal-body">
               <div className="platform-form-grid">
                 <div className="platform-field">
-                  <label htmlFor="plan-code">Kode Plan *</label>
+                  <label htmlFor="plan-code">Kode Paket *</label>
                   <input
                     id="plan-code"
                     type="text"
@@ -219,7 +219,7 @@ export function PlatformPlansPage() {
                   />
                 </div>
                 <div className="platform-field">
-                  <label htmlFor="plan-name">Nama Plan *</label>
+                  <label htmlFor="plan-name">Nama Paket *</label>
                   <input
                     id="plan-name"
                     type="text"
@@ -281,8 +281,8 @@ export function PlatformPlansPage() {
                     onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
                     className="platform-select"
                   >
-                    <option value="active">Active</option>
-                    <option value="archived">Archived</option>
+                    <option value="active">Aktif</option>
+                    <option value="archived">Diarsipkan</option>
                   </select>
                 </div>
                 <div className="platform-field">
@@ -298,7 +298,7 @@ export function PlatformPlansPage() {
                   </label>
                 </div>
                 <div className="platform-field platform-field-full">
-                  <label>Fitur Plan</label>
+                  <label>Fitur Paket</label>
                   <div className="platform-feature-grid">
                     {features.map(feature => {
                       const checked = form.features.includes(feature.key);
@@ -318,7 +318,7 @@ export function PlatformPlansPage() {
                   </div>
                 </div>
                 <div className="platform-field platform-field-full">
-                  <label>Limit / Kuota Plan</label>
+                  <label>Limit / Kuota Paket</label>
                   <div className="platform-limit-grid">
                     {PLAN_LIMITS.map(limit => (
                       <label key={limit.key} className="platform-limit-item" htmlFor={`plan-limit-${limit.key}`}>

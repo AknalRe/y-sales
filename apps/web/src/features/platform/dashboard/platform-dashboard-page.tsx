@@ -72,10 +72,10 @@ export function PlatformDashboardPage() {
   const planPreview = [...plans].sort((a, b) => (a.level ?? 1) - (b.level ?? 1)).slice(0, 4);
 
   const kpis = [
-    { label: 'Companies Aktif', value: metrics.activeCount, icon: CheckCircle2, tone: 'green', hint: 'Tenant operasional' },
+    { label: 'Perusahaan Aktif', value: metrics.activeCount, icon: CheckCircle2, tone: 'green', hint: 'Tenant operasional' },
     { label: 'Masa Trial', value: metrics.trialCount, icon: Clock, tone: 'amber', hint: 'Perlu follow-up' },
     { label: 'Disuspend', value: metrics.suspendedCount, icon: AlertTriangle, tone: 'red', hint: 'Butuh review' },
-    { label: 'Total Plans', value: plans.length, icon: CreditCard, tone: 'violet', hint: 'Level subscription' },
+    { label: 'Total Paket', value: plans.length, icon: CreditCard, tone: 'violet', hint: 'Level subscription' },
   ];
 
   return (
@@ -83,23 +83,23 @@ export function PlatformDashboardPage() {
       <section className="platform-dashboard-hero">
         <div className="platform-hero-glow" />
         <div className="platform-hero-content">
-          <span className="platform-eyebrow"><Sparkles size={15} /> Platform Command Center</span>
-          <h1>Platform Overview</h1>
+          <span className="platform-eyebrow"><Sparkles size={15} /> Pusat Kendali Platform</span>
+          <h1>Ringkasan Platform</h1>
           <p>
             Selamat datang, <strong>{user?.name ?? 'Super Admin'}</strong>. Pantau tenant, revenue,
-            subscription, dan aktivitas billing SaaS dari satu dashboard.
+            subscription, dan aktivitas tagihan SaaS dari satu dashboard.
           </p>
           <div className="platform-hero-actions">
             <Link to="/platform/billing" className="platform-btn platform-btn-primary">
-              <ReceiptText size={16} /> Kelola Billing
+              <ReceiptText size={16} /> Kelola Tagihan
             </Link>
             <Link to="/platform/companies" className="platform-btn platform-btn-ghost">
-              <Building2 size={16} /> Kelola Companies
+              <Building2 size={16} /> Kelola Perusahaan
             </Link>
           </div>
         </div>
         <div className="platform-hero-panel">
-          <span>MRR Estimate</span>
+          <span>Estimasi MRR</span>
           <strong>{loading ? '—' : formatRupiah(metrics.estimatedMrr)}</strong>
           <small>ARR {loading ? '—' : formatRupiah(metrics.estimatedArr)}</small>
           <div className="platform-hero-meter"><span style={{ width: `${Math.min(100, Math.max(8, companies.length * 12))}%` }} /></div>
@@ -126,24 +126,24 @@ export function PlatformDashboardPage() {
         <article className="platform-card platform-revenue-card platform-dashboard-revenue">
           <div className="platform-card-header">
             <div>
-              <h2>Revenue Intelligence</h2>
-              <p className="platform-muted">Ringkasan revenue dari subscription snapshot. Histori resmi dikelola di Billing.</p>
+              <h2>Analisis Pendapatan</h2>
+              <p className="platform-muted">Ringkasan revenue dari snapshot subscription. Histori resmi dikelola di Tagihan.</p>
             </div>
-            <Link to="/platform/billing" className="platform-link-sm">Buka Billing <ArrowUpRight size={14} /></Link>
+            <Link to="/platform/billing" className="platform-link-sm">Buka Tagihan <ArrowUpRight size={14} /></Link>
           </div>
           <div className="platform-revenue-grid">
             <div>
-              <span className="platform-revenue-label">Monthly Recurring Revenue</span>
+              <span className="platform-revenue-label">Pendapatan Berulang Bulanan</span>
               <strong className="platform-revenue-value">{loading ? '—' : formatRupiah(metrics.estimatedMrr)}</strong>
               <p className="platform-muted">Dihitung dari tenant active/trialing/past_due.</p>
             </div>
             <div>
-              <span className="platform-revenue-label">Annual Run Rate</span>
+              <span className="platform-revenue-label">Proyeksi Tahunan</span>
               <strong className="platform-revenue-value">{loading ? '—' : formatRupiah(metrics.estimatedArr)}</strong>
               <p className="platform-muted">Proyeksi tahunan dari MRR saat ini.</p>
             </div>
             <div>
-              <span className="platform-revenue-label">Recorded Payment</span>
+              <span className="platform-revenue-label">Pembayaran Tercatat</span>
               <strong className="platform-revenue-value">{loading ? '—' : formatRupiah(metrics.totalRecordedRevenue)}</strong>
               <p className="platform-muted">Snapshot pembayaran/manual override terakhir.</p>
             </div>
@@ -165,13 +165,13 @@ export function PlatformDashboardPage() {
 
         <aside className="platform-quick-actions-card">
           <div className="platform-card-header">
-            <h2>Quick Actions</h2>
+            <h2>Aksi Cepat</h2>
           </div>
           <div className="platform-quick-actions">
-            <Link to="/platform/companies" className="platform-quick-action"><Plus size={17} /><span>Tambah Company</span><ChevronRight size={15} /></Link>
-            <Link to="/platform/plans" className="platform-quick-action"><CreditCard size={17} /><span>Kelola Plans</span><ChevronRight size={15} /></Link>
-            <Link to="/platform/features" className="platform-quick-action"><Layers3 size={17} /><span>Feature Catalog</span><ChevronRight size={15} /></Link>
-            <Link to="/platform/billing" className="platform-quick-action"><Banknote size={17} /><span>Invoice & Payment</span><ChevronRight size={15} /></Link>
+            <Link to="/platform/companies" className="platform-quick-action"><Plus size={17} /><span>Tambah Perusahaan</span><ChevronRight size={15} /></Link>
+            <Link to="/platform/plans" className="platform-quick-action"><CreditCard size={17} /><span>Kelola Paket</span><ChevronRight size={15} /></Link>
+            <Link to="/platform/features" className="platform-quick-action"><Layers3 size={17} /><span>Katalog Fitur</span><ChevronRight size={15} /></Link>
+            <Link to="/platform/billing" className="platform-quick-action"><Banknote size={17} /><span>Invoice & Pembayaran</span><ChevronRight size={15} /></Link>
           </div>
         </aside>
       </section>
@@ -179,7 +179,7 @@ export function PlatformDashboardPage() {
       <section className="platform-two-col platform-dashboard-lists">
         <div className="platform-card">
           <div className="platform-card-header">
-            <h2>Companies Terbaru</h2>
+            <h2>Perusahaan Terbaru</h2>
             <Link to="/platform/companies" className="platform-link-sm">Lihat semua <ArrowUpRight size={14} /></Link>
           </div>
           <div className="platform-card-body">
@@ -191,13 +191,13 @@ export function PlatformDashboardPage() {
                       <div className="platform-company-avatar-sm">{company.name.charAt(0)}</div>
                       <div className="platform-company-row-info">
                         <span className="platform-company-row-name">{company.name}</span>
-                        <small>{company.subscriptionSummary?.planName ?? 'Belum ada plan'} · {company.city ?? 'No city'}</small>
+                        <small>{company.subscriptionSummary?.planName ?? 'Belum ada paket'} · {company.city ?? 'Belum ada kota'}</small>
                       </div>
                       <span className={`platform-status-dot platform-status-${company.status}`}>{company.status}</span>
                     </div>
                   </li>
                 ))}
-                {recentCompanies.length === 0 && <li className="platform-empty-list">Belum ada company.</li>}
+                {recentCompanies.length === 0 && <li className="platform-empty-list">Belum ada perusahaan.</li>}
               </ul>
             )}
           </div>
@@ -205,7 +205,7 @@ export function PlatformDashboardPage() {
 
         <div className="platform-card">
           <div className="platform-card-header">
-            <h2>Subscription Plans</h2>
+            <h2>Paket Langganan</h2>
             <Link to="/platform/plans" className="platform-link-sm">Kelola <ArrowUpRight size={14} /></Link>
           </div>
           <div className="platform-card-body">

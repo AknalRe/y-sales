@@ -363,7 +363,7 @@ export function SalesSchedulePage() {
                         <div className="flex items-center gap-2">
                           <span className="rounded-xl px-3 py-1 text-xs font-black" style={statusStyle}>{scheduleStatusLabel[s.status] ?? s.status}</span>
                           {canApprove && <button className="admin-btn-ghost" type="button" disabled={saving} onClick={() => runScheduleAction(s.id, 'approve')}><CheckCircle2 size={14} /> Approve</button>}
-                          {canCancel && <button className="admin-btn-ghost" type="button" disabled={saving} onClick={() => runScheduleAction(s.id, 'cancel')}><XCircle size={14} /> Cancel</button>}
+                          {canCancel && <button className="admin-btn-ghost" type="button" disabled={saving} onClick={() => runScheduleAction(s.id, 'cancel')}><XCircle size={14} /> Batalkan</button>}
                         </div>
                       </div>
                     );

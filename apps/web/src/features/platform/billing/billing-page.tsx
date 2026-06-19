@@ -51,11 +51,11 @@ const formatMoney = (value: string | number) => `Rp ${Number(value || 0).toLocal
 const toIso = (value: string) => value ? new Date(value).toISOString() : undefined;
 
 const reasonLabel: Record<string, string> = {
-  renewal: 'Renewal',
-  new_subscription: 'New Subscription',
+  renewal: 'Perpanjangan',
+  new_subscription: 'Subscription Baru',
   upgrade: 'Upgrade',
   downgrade: 'Downgrade',
-  manual_adjustment: 'Manual Adjustment',
+  manual_adjustment: 'Penyesuaian Manual',
 };
 
 
@@ -230,7 +230,7 @@ export function PlatformBillingPage() {
       setPaymentModal(null);
       await load();
     } catch (e: any) {
-      setError(e.message ?? 'Gagal mencatat payment.');
+      setError(e.message ?? 'Gagal mencatat pembayaran.');
     } finally {
       setSaving(false);
     }
@@ -240,8 +240,8 @@ export function PlatformBillingPage() {
     <div className="platform-page">
       <div className="platform-page-header">
         <div>
-          <h1 className="platform-page-title"><ReceiptText size={24} /> Billing & Invoices</h1>
-          <p className="platform-page-subtitle">Source-of-truth invoice, payment, dan renewal subscription tenant.</p>
+          <h1 className="platform-page-title"><ReceiptText size={24} /> Tagihan & Invoice</h1>
+          <p className="platform-page-subtitle">Pusat data invoice, pembayaran, dan perpanjangan subscription tenant.</p>
         </div>
         <button id="platform-create-invoice-btn" onClick={() => openInvoiceModal()} className="platform-btn platform-btn-primary" type="button">
           <Plus size={16} /> Buat Invoice
@@ -250,28 +250,28 @@ export function PlatformBillingPage() {
 
       <div className="platform-stats-grid">
         <div className="platform-stat-card"><div className="platform-stat-icon"><FileText size={20} /></div><div className="platform-stat-info"><span>Total Invoice</span><strong>{summary.total}</strong></div></div>
-        <div className="platform-stat-card"><div className="platform-stat-icon"><Banknote size={20} /></div><div className="platform-stat-info"><span>Collected</span><strong>{formatMoney(summary.collected)}</strong></div></div>
-        <div className="platform-stat-card"><div className="platform-stat-icon"><ReceiptText size={20} /></div><div className="platform-stat-info"><span>Paid</span><strong>{summary.paid}</strong></div></div>
-        <div className="platform-stat-card"><div className="platform-stat-icon"><FileText size={20} /></div><div className="platform-stat-info"><span>Open</span><strong>{summary.open}</strong></div></div>
+        <div className="platform-stat-card"><div className="platform-stat-icon"><Banknote size={20} /></div><div className="platform-stat-info"><span>Terkumpul</span><strong>{formatMoney(summary.collected)}</strong></div></div>
+        <div className="platform-stat-card"><div className="platform-stat-icon"><ReceiptText size={20} /></div><div className="platform-stat-info"><span>Lunas</span><strong>{summary.paid}</strong></div></div>
+        <div className="platform-stat-card"><div className="platform-stat-icon"><FileText size={20} /></div><div className="platform-stat-info"><span>Terbuka</span><strong>{summary.open}</strong></div></div>
       </div>
 
       <div className="platform-card">
         <div className="platform-card-header">
-          <h2>Invoice Tracking</h2>
+          <h2>Tracking Invoice</h2>
           <select id="billing-status-filter" value={status} onChange={e => setStatus(e.target.value)} className="platform-select platform-filter-select">
             <option value="">Semua Status</option>
             <option value="draft">Draft</option>
-            <option value="issued">Issued</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
-            <option value="void">Void</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="issued">Diterbitkan</option>
+            <option value="paid">Lunas</option>
+            <option value="overdue">Lewat Tempo</option>
+            <option value="void">Dibatalkan</option>
+            <option value="cancelled">Dibatalkan</option>
           </select>
         </div>
         {loading ? <div className="platform-loading">Memuat invoice...</div> : (
           <div className="platform-table-wrap">
             <table className="platform-table">
-              <thead><tr><th>Invoice</th><th>Company</th><th>Plan</th><th>Reason</th><th>Amount</th><th>Due</th><th>Status</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Invoice</th><th>Perusahaan</th><th>Paket</th><th>Alasan</th><th>Nilai</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {invoices.map(invoice => (
                   <tr key={invoice.id}>
@@ -329,7 +329,7 @@ export function PlatformBillingPage() {
               <div>
                 <h2>Buat Invoice</h2>
                 <small style={{ color: 'var(--platform-subtle)' }}>
-                  {invoiceForm.billingReason === 'renewal' ? '↻ Renewal — melanjutkan plan yang sudah ada' : '✦ Ganti / Aktivasi Plan Baru'}
+                  {invoiceForm.billingReason === 'renewal' ? '↻ Perpanjangan — melanjutkan paket yang sudah ada' : '✦ Ganti / Aktivasi Paket Baru'}
                 </small>
               </div>
               <button onClick={() => setInvoiceModal(false)} className="platform-modal-close" type="button">×</button>
@@ -340,7 +340,7 @@ export function PlatformBillingPage() {
 
                 {/* Step 1: Company */}
                 <div className="platform-field platform-field-full">
-                  <label>Company</label>
+                  <label>Perusahaan</label>
                   <select value={invoiceForm.companyId} onChange={e => {
                     const selected = companies.find(c => c.id === e.target.value);
                     const sub = selected?.subscriptionSummary;
@@ -355,7 +355,7 @@ export function PlatformBillingPage() {
                   }} className="platform-select">
                     <option value="">Pilih company</option>
                     {companies.map(c => (
-                      <option key={c.id} value={c.id}>{c.name} · {c.subscriptionSummary?.planName ?? 'No plan'}</option>
+                      <option key={c.id} value={c.id}>{c.name} · {c.subscriptionSummary?.planName ?? 'Belum ada paket'}</option>
                     ))}
                   </select>
                 </div>
@@ -366,13 +366,13 @@ export function PlatformBillingPage() {
                   if (!sub) return (
                     <div className="platform-field platform-field-full">
                       <div className="invoice-sub-info-card invoice-sub-info-none">
-                        <span>⚠ Company ini belum memiliki subscription aktif</span>
+                        <span>⚠ Perusahaan ini belum memiliki subscription aktif</span>
                       </div>
                     </div>
                   );
                   return (
                     <div className="platform-field platform-field-full">
-                      <label>Subscription Saat Ini</label>
+                      <label>Langganan Saat Ini</label>
                       <div className="invoice-sub-info-card">
                         <div className="invoice-sub-info-row">
                           <div>
@@ -406,7 +406,7 @@ export function PlatformBillingPage() {
 
                 {/* Step 2: Billing Reason */}
                 <div className="platform-field">
-                  <label>Alasan Billing</label>
+                  <label>Alasan Tagihan</label>
                   <select
                     value={invoiceForm.billingReason}
                     onChange={e => {
@@ -423,11 +423,11 @@ export function PlatformBillingPage() {
                     }}
                     className="platform-select"
                   >
-                    <option value="renewal">Renewal — perpanjang plan yang sama</option>
-                    <option value="new_subscription">New Subscription — aktivasi plan baru</option>
-                    <option value="upgrade">Upgrade — naik ke plan lebih tinggi</option>
-                    <option value="downgrade">Downgrade — turun ke plan lebih rendah</option>
-                    <option value="manual_adjustment">Manual Adjustment — penyesuaian manual</option>
+                    <option value="renewal">Perpanjangan — perpanjang paket yang sama</option>
+                    <option value="new_subscription">Langganan Baru — aktivasi paket baru</option>
+                    <option value="upgrade">Upgrade — naik ke paket lebih tinggi</option>
+                    <option value="downgrade">Downgrade — turun ke paket lebih rendah</option>
+                    <option value="manual_adjustment">Penyesuaian Manual — koreksi manual</option>
                   </select>
                 </div>
 
@@ -436,16 +436,16 @@ export function PlatformBillingPage() {
                   <div className="platform-field">
                     <label>
                       {invoiceForm.billingReason === 'upgrade' ? '↑ Plan Tujuan (Upgrade)'
-                        : invoiceForm.billingReason === 'downgrade' ? '↓ Plan Tujuan (Downgrade)'
-                          : invoiceForm.billingReason === 'new_subscription' ? 'Plan yang Diaktifkan'
-                            : 'Plan'}
+                        : invoiceForm.billingReason === 'downgrade' ? '↓ Paket Tujuan (Downgrade)'
+                          : invoiceForm.billingReason === 'new_subscription' ? 'Paket yang Diaktifkan'
+                            : 'Paket'}
                     </label>
                     <select
                       value={invoiceForm.planCode}
                       onChange={e => handleFormChange({ planCode: e.target.value })}
                       className="platform-select"
                     >
-                      <option value="">Pilih plan</option>
+                      <option value="">Pilih paket</option>
                       {plans.map(plan => (
                         <option key={plan.id} value={plan.code}>
                           Level {plan.level} · {plan.name} · {Number(plan.priceMonthly) === 0 ? 'Gratis' : formatMoney(plan.priceMonthly) + '/bln'}
@@ -455,18 +455,18 @@ export function PlatformBillingPage() {
                   </div>
                 ) : (
                   <div className="platform-field">
-                    <label>Plan (Renewal)</label>
+                    <label>Paket (Perpanjangan)</label>
                     <div className="platform-input" style={{ background: 'var(--platform-hover-bg)', color: 'var(--platform-subtle)', cursor: 'not-allowed' }}>
                       {companies.find(c => c.id === invoiceForm.companyId)?.subscriptionSummary?.planName ?? invoiceForm.planCode ?? '-'}
                     </div>
-                    <small style={{ color: 'var(--platform-subtle)' }}>Plan tidak berubah saat renewal</small>
+                    <small style={{ color: 'var(--platform-subtle)' }}>Paket tidak berubah saat perpanjangan</small>
                   </div>
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', gridColumn: '1 / -1' }}>
                   {/* Billing Cycle */}
                   <div className="platform-field">
-                    <label>Billing Cycle</label>
+                    <label>Siklus Tagihan</label>
                     <div style={{ display: 'flex', gap: '.5rem' }}>
                       <input
                         type="number"
@@ -478,30 +478,30 @@ export function PlatformBillingPage() {
                         placeholder="Qty"
                       />
                       <select value={invoiceForm.billingCycle} onChange={e => handleFormChange({ billingCycle: e.target.value })} className="platform-select" style={{ flex: 1 }}>
-                        <option value="weekly">Mingguan (Weekly)</option>
-                        <option value="monthly">Bulanan (Monthly)</option>
-                        <option value="quarterly">3 Bulan (Quarterly)</option>
-                        <option value="semi_annually">6 Bulan (Semi-Annually)</option>
-                        <option value="yearly">1 Tahun (Yearly)</option>
-                        <option value="biennially">2 Tahun (Biennially)</option>
-                        <option value="lifetime">Lifetime</option>
+                        <option value="weekly">Mingguan</option>
+                        <option value="monthly">Bulanan</option>
+                        <option value="quarterly">3 Bulan</option>
+                        <option value="semi_annually">6 Bulan</option>
+                        <option value="yearly">1 Tahun</option>
+                        <option value="biennially">2 Tahun</option>
+                        <option value="lifetime">Seumur Hidup</option>
                       </select>
                     </div>
                   </div>
                   {/* Period */}
                   <div className="platform-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem' }}>
-                    <div><label>Period Start</label><input type="date" value={invoiceForm.periodStart} onChange={e => handleFormChange({ periodStart: e.target.value })} className="platform-input" style={{ width: '100%' }} /></div>
-                    <div><label>Period End</label><input type="date" value={invoiceForm.periodEnd} onChange={e => handleFormChange({ periodEnd: e.target.value })} className="platform-input" style={{ width: '100%' }} /></div>
+                    <div><label>Mulai Periode</label><input type="date" value={invoiceForm.periodStart} onChange={e => handleFormChange({ periodStart: e.target.value })} className="platform-input" style={{ width: '100%' }} /></div>
+                    <div><label>Akhir Periode</label><input type="date" value={invoiceForm.periodEnd} onChange={e => handleFormChange({ periodEnd: e.target.value })} className="platform-input" style={{ width: '100%' }} /></div>
                   </div>
                 </div>
 
-                <div className="platform-field platform-field-full" style={{ maxWidth: '50%' }}><label>Due Date</label><input type="date" value={invoiceForm.dueAt} onChange={e => handleFormChange({ dueAt: e.target.value })} className="platform-input" /></div>
+                <div className="platform-field platform-field-full" style={{ maxWidth: '50%' }}><label>Jatuh Tempo</label><input type="date" value={invoiceForm.dueAt} onChange={e => handleFormChange({ dueAt: e.target.value })} className="platform-input" /></div>
 
                 {/* Pricing */}
                 <div className="platform-field"><label>Subtotal</label><input type="number" value={invoiceForm.subtotalAmount} onChange={e => handleFormChange({ subtotalAmount: e.target.value })} className="platform-input" /></div>
                 <div className="platform-field"><label>Diskon</label><input type="number" value={invoiceForm.discountAmount} onChange={e => handleFormChange({ discountAmount: e.target.value })} className="platform-input" /></div>
                 <div className="platform-field"><label>Pajak</label><input type="number" value={invoiceForm.taxAmount} onChange={e => handleFormChange({ taxAmount: e.target.value })} className="platform-input" /></div>
-                <div className="platform-field platform-field-full"><label>Notes</label><textarea value={invoiceForm.notes} onChange={e => handleFormChange({ notes: e.target.value })} className="platform-input" rows={2} /></div>
+                <div className="platform-field platform-field-full"><label>Catatan</label><textarea value={invoiceForm.notes} onChange={e => handleFormChange({ notes: e.target.value })} className="platform-input" rows={2} /></div>
               </div>
             </div>
             <div className="platform-modal-footer">
@@ -526,11 +526,11 @@ export function PlatformBillingPage() {
             <div className="platform-modal-body">
               {error && <div className="platform-alert platform-alert-error">{error}</div>}
               <div className="platform-form-grid">
-                <div className="platform-field"><label>Amount</label><input type="number" value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} className="platform-input" /></div>
+                <div className="platform-field"><label>Nilai</label><input type="number" value={paymentForm.amount} onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} className="platform-input" /></div>
                 <div className="platform-field"><label>Tanggal Bayar</label><input type="date" value={paymentForm.paidAt} onChange={e => setPaymentForm(f => ({ ...f, paidAt: e.target.value }))} className="platform-input" /></div>
-                <div className="platform-field"><label>Method</label><input value={paymentForm.method} onChange={e => setPaymentForm(f => ({ ...f, method: e.target.value }))} className="platform-input" /></div>
-                <div className="platform-field"><label>Payment Ref</label><input value={paymentForm.paymentRef} onChange={e => setPaymentForm(f => ({ ...f, paymentRef: e.target.value }))} className="platform-input" /></div>
-                <div className="platform-field platform-field-full"><label>Notes</label><textarea value={paymentForm.notes} onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))} className="platform-input" rows={3} /></div>
+                <div className="platform-field"><label>Metode</label><input value={paymentForm.method} onChange={e => setPaymentForm(f => ({ ...f, method: e.target.value }))} className="platform-input" /></div>
+                <div className="platform-field"><label>Ref Pembayaran</label><input value={paymentForm.paymentRef} onChange={e => setPaymentForm(f => ({ ...f, paymentRef: e.target.value }))} className="platform-input" /></div>
+                <div className="platform-field platform-field-full"><label>Catatan</label><textarea value={paymentForm.notes} onChange={e => setPaymentForm(f => ({ ...f, notes: e.target.value }))} className="platform-input" rows={3} /></div>
               </div>
             </div>
             <div className="platform-modal-footer"><button onClick={() => setPaymentModal(null)} className="platform-btn platform-btn-ghost" type="button">Batal</button><button onClick={savePayment} disabled={saving || !paymentForm.amount} className="platform-btn platform-btn-primary" type="button">{saving ? 'Menyimpan...' : 'Catat Pembayaran'}</button></div>

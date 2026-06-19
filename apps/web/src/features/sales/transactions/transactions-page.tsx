@@ -296,7 +296,7 @@ export function TransactionsPage() {
       <main className="sales-home">
         <div className="sales-home-greeting">
           <div>
-            <p className="sales-greeting-label">Order Taking</p>
+            <p className="sales-greeting-label">Buat Order</p>
             <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Buat Transaksi</h1>
           </div>
           {!online && <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}><WifiOff size={14} /> Offline</span>}
@@ -351,7 +351,7 @@ export function TransactionsPage() {
       {/* Header */}
       <div className="sales-home-greeting">
         <div>
-          <p className="sales-greeting-label">Order Taking</p>
+          <p className="sales-greeting-label">Buat Order</p>
           <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Buat Transaksi</h1>
         </div>
         {!online && <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}><WifiOff size={14} /> Offline</span>}

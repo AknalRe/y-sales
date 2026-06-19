@@ -98,7 +98,7 @@ export function PlatformFeaturesPage() {
     <div className="platform-page">
       <div className="platform-page-header">
         <div>
-          <h1 className="platform-page-title"><Layers3 size={24} /> Feature Catalog</h1>
+          <h1 className="platform-page-title"><Layers3 size={24} /> Katalog Fitur</h1>
           <p className="platform-page-subtitle">CRUD fitur subscription yang bisa dipilih saat membuat atau mengubah plan.</p>
         </div>
         <button id="platform-create-feature-btn" onClick={openCreate} className="platform-btn platform-btn-primary" type="button">
@@ -164,8 +164,8 @@ export function PlatformFeaturesPage() {
                 <div className="platform-field">
                   <label>Status</label>
                   <select id="feature-status" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="platform-select">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Nonaktif</option>
                     <option value="deprecated">Deprecated</option>
                   </select>
                 </div>

@@ -320,7 +320,7 @@ export async function visitRoutes(app: FastifyInstance) {
     const canExecute = user.permissions.includes('visits.execute');
 
     if (!canReview && !canExecute) {
-      return reply.status(403).send({ message: 'Permission denied', permission: 'visits.execute' });
+      return reply.status(403).send({ message: 'Akses ditolak.', permission: 'visits.execute' });
     }
 
     const conditions = [eq(visitSessions.companyId, companyId)];
@@ -397,9 +397,9 @@ export async function visitRoutes(app: FastifyInstance) {
     let schedule: typeof visitSchedules.$inferSelect | undefined;
     if (body.scheduleId) {
       [schedule] = await db.select().from(visitSchedules).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.id, body.scheduleId), eq(visitSchedules.salesUserId, request.user!.id)));
-      if (!schedule) throw Object.assign(new Error('Schedule tidak ditemukan untuk sales ini.'), { statusCode: 404 });
-      if (schedule.outletId && schedule.outletId !== body.outletId) throw Object.assign(new Error('Outlet check-in tidak sesuai schedule.'), { statusCode: 400 });
-      if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Schedule tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
+      if (!schedule) throw Object.assign(new Error('Jadwal tidak ditemukan untuk sales ini.'), { statusCode: 404 });
+      if (schedule.outletId && schedule.outletId !== body.outletId) throw Object.assign(new Error('Outlet check-in tidak sesuai jadwal.'), { statusCode: 400 });
+      if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Jadwal tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
     } else {
       [schedule] = await db.select().from(visitSchedules).where(and(
         eq(visitSchedules.companyId, companyId),
@@ -408,7 +408,7 @@ export async function visitRoutes(app: FastifyInstance) {
         eq(visitSchedules.scheduledDate, todayDate()),
       )).orderBy(visitSchedules.priority).limit(1);
       if (!schedule) throw Object.assign(new Error('Outlet ini tidak ada di jadwal visit sales hari ini.'), { statusCode: 400 });
-      if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Schedule tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
+      if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Jadwal tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
     }
 
     const settings = await getGeneralSettings(companyId);
@@ -498,8 +498,8 @@ export async function visitRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const body = checkOutSchema.parse(request.body);
     const [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
-    if (!visit) throw Object.assign(new Error('Visit session tidak ditemukan.'), { statusCode: 404 });
-    if (!visit.checkInAt || visit.checkOutAt || !['open', 'invalid_location'].includes(visit.status)) throw Object.assign(new Error('Visit session tidak dalam status open.'), { statusCode: 400 });
+    if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan.'), { statusCode: 404 });
+    if (!visit.checkInAt || visit.checkOutAt || !['open', 'invalid_location'].includes(visit.status)) throw Object.assign(new Error('Sesi kunjungan tidak dalam status terbuka.'), { statusCode: 400 });
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, visit.outletId)));
     if (!outlet) throw Object.assign(new Error('Outlet visit tidak ditemukan.'), { statusCode: 404 });
 

@@ -134,7 +134,7 @@ export const mainRoutes: RouteConfig[] = [
     path: 'stock',
     element: <StockPage />,
     handle: {
-      label: 'Inventory',
+      label: 'Inventori',
       icon: Boxes,
       permissions: ['products.manage', 'inventory.manage'],
       section: 'Master Data',
@@ -176,7 +176,7 @@ export const mainRoutes: RouteConfig[] = [
     path: 'subscription',
     element: <SubscriptionPage />,
     handle: {
-      label: 'Subscription',
+      label: 'Langganan',
       icon: CreditCard,
       permission: 'settings.manage',
       section: 'Pengaturan',

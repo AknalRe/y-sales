@@ -9,10 +9,10 @@ import PageMeta from '@/hooks/use-page-meta';
 
 const platformNav = [
   { path: '/platform', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/platform/companies', label: 'Companies', icon: Building2 },
-  { path: '/platform/plans', label: 'Subscription Plans', icon: CreditCard },
-  { path: '/platform/features', label: 'Feature Catalog', icon: Layers3 },
-  { path: '/platform/billing', label: 'Billing', icon: Banknote },
+  { path: '/platform/companies', label: 'Perusahaan', icon: Building2 },
+  { path: '/platform/plans', label: 'Paket Subscription', icon: CreditCard },
+  { path: '/platform/features', label: 'Katalog Fitur', icon: Layers3 },
+  { path: '/platform/billing', label: 'Tagihan', icon: Banknote },
 ];
 
 export function PlatformShell() {
@@ -39,7 +39,7 @@ export function PlatformShell() {
     <>
       <PageMeta
         title={`Platform`}
-        description="Platform Pages"
+        description="Halaman Platform"
         favicon="/platform.ico"
       />
       <div className="platform-shell">

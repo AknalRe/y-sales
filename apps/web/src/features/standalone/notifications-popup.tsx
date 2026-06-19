@@ -229,7 +229,7 @@ export function NotificationsPopup({
                 <Inbox size={24} />
               </span>
               <h3 className="text-sm font-extrabold text-slate-900">Belum ada notifikasi</h3>
-              <p className="mt-1 text-xs font-medium text-slate-500">Update aktivitas akan muncul di sini.</p>
+              <p className="mt-1 text-xs font-medium text-slate-500">Pembaruan aktivitas akan muncul di sini.</p>
             </div>
           ) : (
             <div className="space-y-2">

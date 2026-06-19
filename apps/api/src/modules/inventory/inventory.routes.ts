@@ -46,7 +46,7 @@ async function requireInventoryAccess(request: FastifyRequest, reply: FastifyRep
   const allowed = user.isSuperAdmin
     || user.roleCode === 'ADMINISTRATOR'
     || ['inventory.manage', 'products.manage'].some((permission) => user.permissions.includes(permission));
-  if (!allowed) return reply.status(403).send({ message: 'Permission denied', permission: 'inventory.manage' });
+  if (!allowed) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'inventory.manage' });
 }
 
 const warehouseSchema = z.object({

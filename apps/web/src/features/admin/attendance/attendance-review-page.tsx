@@ -330,8 +330,8 @@ export function AttendanceReviewPage() {
           <input className="admin-input w-full h-[42px]" type="date" value={filters.to} onChange={(e) => setFilters((current) => ({ ...current, to: e.target.value }))} />
           <select className="admin-select w-full h-[42px]" value={filters.status} onChange={(e) => setFilters((current) => ({ ...current, status: e.target.value }))}>
             <option value="">Semua status</option>
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
+            <option value="open">Terbuka</option>
+            <option value="closed">Selesai</option>
             <option value="flagged">Tidak Disetujui</option>
           </select>
           <select className="admin-select w-full h-[42px]" value={filters.validationStatus} onChange={(e) => setFilters((current) => ({ ...current, validationStatus: e.target.value }))}>

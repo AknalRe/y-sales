@@ -156,7 +156,7 @@ export async function notificationRoutes(app: FastifyInstance) {
         .set({ isRead: true, readAt: new Date() })
         .where(and(...conditions));
 
-      return { success: true, message: 'All notifications marked as read' };
+      return { success: true, message: 'Semua notifikasi ditandai sudah dibaca.' };
     }
   );
 
@@ -182,7 +182,7 @@ export async function notificationRoutes(app: FastifyInstance) {
         .returning();
 
       if (!updated) {
-        return reply.status(404).send({ error: 'Notification not found' });
+        return reply.status(404).send({ error: 'Notifikasi tidak ditemukan.' });
       }
 
       return { success: true, data: updated };

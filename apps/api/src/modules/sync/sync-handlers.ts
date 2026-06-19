@@ -231,8 +231,8 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
         eq(visitSchedules.scheduledDate, todayDate()),
       )).limit(1);
     }
-    if (!schedule) return { success: false, error: 'Schedule tidak ditemukan' };
-    if (!['assigned', 'approved'].includes(schedule.status)) return { success: false, error: 'Schedule tidak bisa dimulai' };
+    if (!schedule) return { success: false, error: 'Jadwal tidak ditemukan' };
+    if (!['assigned', 'approved'].includes(schedule.status)) return { success: false, error: 'Jadwal tidak bisa dimulai' };
 
     const settings = await getGeneralSettings(ctx.companyId);
     const radius = outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
@@ -303,7 +303,7 @@ async function handleVisitCheckOut(payload: unknown, ctx: SyncContext): Promise<
     const [visit] = await db.select().from(visitSessions).where(
       and(eq(visitSessions.companyId, ctx.companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, ctx.userId))
     );
-    if (!visit) return { success: false, error: 'Visit session tidak ditemukan' };
+    if (!visit) return { success: false, error: 'Sesi kunjungan tidak ditemukan' };
     if (visit.checkOutAt) return { success: true, entityId: visit.id };
 
     const [outlet] = await db.select().from(outlets).where(
@@ -379,7 +379,7 @@ async function handleTransactionCreate(payload: unknown, ctx: SyncContext): Prom
     const [visit] = await db.select().from(visitSessions).where(
       and(eq(visitSessions.companyId, ctx.companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, ctx.userId))
     );
-    if (!visit) return { success: false, error: 'Visit session tidak ditemukan' };
+    if (!visit) return { success: false, error: 'Sesi kunjungan tidak ditemukan' };
     if (visit.status !== 'open') return { success: false, error: 'Visit tidak open' };
 
     const [stockWarehouse] = await db.select().from(warehouses).where(

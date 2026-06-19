@@ -58,7 +58,7 @@ export async function productRoutes(app: FastifyInstance) {
     const allowed = user.isSuperAdmin
       || user.roleCode === 'ADMINISTRATOR'
       || ['sales.view', 'products.manage', 'inventory.manage'].some((permission) => user.permissions.includes(permission));
-    if (!allowed) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.view' });
+    if (!allowed) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'sales.view' });
 
     const salesStock = db
       .select({

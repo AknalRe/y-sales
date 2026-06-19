@@ -119,7 +119,7 @@ export async function salesRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const query = orderListQuerySchema.parse(request.query);
     const user = request.user!;
-    if (!canReadSalesOrders(user)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.view' });
+    if (!canReadSalesOrders(user)) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'sales.view' });
     const canReview = canReviewSalesOrders(user);
     const conditions = [eq(salesTransactions.companyId, companyId)];
     if (query.noteStatus === 'pending') conditions.push(inArray(salesTransactions.status, ['draft', 'submitted', 'pending_approval']));
@@ -184,7 +184,7 @@ export async function salesRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const user = request.user!;
-    if (!canReadSalesOrders(user)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.view' });
+    if (!canReadSalesOrders(user)) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'sales.view' });
     const canReview = canReviewSalesOrders(user);
     const conditions = [eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)];
     if (!canReview) conditions.push(eq(salesTransactions.salesUserId, user.id));
@@ -258,8 +258,8 @@ export async function salesRoutes(app: FastifyInstance) {
     if (existing) return { order: existing, idempotent: true };
 
     const [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
-    if (!visit) throw Object.assign(new Error('Visit session tidak ditemukan untuk sales ini.'), { statusCode: 404 });
-    if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada visit yang masih open.'), { statusCode: 400 });
+    if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan untuk sales ini.'), { statusCode: 404 });
+    if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada kunjungan yang masih terbuka.'), { statusCode: 400 });
     if (body.outletId && visit.outletId !== body.outletId) throw Object.assign(new Error('Outlet order harus sama dengan outlet visit.'), { statusCode: 400 });
 
     const [stockWarehouse] = body.sourceWarehouseId
@@ -325,12 +325,12 @@ export async function salesRoutes(app: FastifyInstance) {
   });
 
   app.post('/sales/orders/:id/approve', { preHandler: authenticate }, async (request, reply) => {
-    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.order.review' });
+    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'sales.order.review' });
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
     if (!order) throw Object.assign(new Error('Order tidak ditemukan.'), { statusCode: 404 });
-    if (order.status !== 'pending_approval') throw Object.assign(new Error('Order tidak dalam status pending approval.'), { statusCode: 400 });
+    if (order.status !== 'pending_approval') throw Object.assign(new Error('Order tidak dalam status menunggu persetujuan.'), { statusCode: 400 });
 
     const settings = await getGeneralSettings(companyId);
     if (settings.requireTransactionProofPhoto) {
@@ -469,12 +469,12 @@ export async function salesRoutes(app: FastifyInstance) {
   });
 
   app.post('/sales/orders/:id/settle', { preHandler: authenticate }, async (request, reply) => {
-    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Permission denied', permission: 'invoice.review' });
+    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'invoice.review' });
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
     if (!order) throw Object.assign(new Error('Order tidak ditemukan.'), { statusCode: 404 });
-    if (order.status !== 'approved') throw Object.assign(new Error('Nota hanya bisa diselesaikan setelah status approved.'), { statusCode: 400 });
+    if (order.status !== 'approved') throw Object.assign(new Error('Nota hanya bisa diselesaikan setelah status disetujui.'), { statusCode: 400 });
 
     const [updated] = await db.update(salesTransactions).set({
       status: 'closed',
@@ -492,13 +492,13 @@ export async function salesRoutes(app: FastifyInstance) {
   });
 
   app.post('/sales/orders/:id/reject', { preHandler: authenticate }, async (request, reply) => {
-    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Permission denied', permission: 'sales.order.review' });
+    if (!canApproveSalesOrders(request.user!)) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'sales.order.review' });
     const companyId = requireTenantId(request);
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const body = rejectOrderSchema.parse(request.body ?? {});
     const [order] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.id, params.id)));
     if (!order) throw Object.assign(new Error('Order tidak ditemukan.'), { statusCode: 404 });
-    if (order.status !== 'pending_approval') throw Object.assign(new Error('Order tidak dalam status pending approval.'), { statusCode: 400 });
+    if (order.status !== 'pending_approval') throw Object.assign(new Error('Order tidak dalam status menunggu persetujuan.'), { statusCode: 400 });
     if (!order.sourceWarehouseId) throw Object.assign(new Error('Gudang sumber stok order tidak ditemukan.'), { statusCode: 400 });
 
     const items = await db.select().from(salesTransactionItems).where(and(eq(salesTransactionItems.companyId, companyId), eq(salesTransactionItems.transactionId, order.id)));

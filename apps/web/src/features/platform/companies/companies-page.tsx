@@ -231,9 +231,9 @@ export function PlatformCompaniesPage() {
             <table className="platform-table">
               <thead>
                 <tr>
-                  <th>Company</th>
+                  <th>Perusahaan</th>
                   <th>Status</th>
-                  <th>Subscription</th>
+                  <th>Langganan</th>
                   <th>Berakhir</th>
                   <th>Kota</th>
                   <th>Dibuat</th>
@@ -294,7 +294,7 @@ export function PlatformCompaniesPage() {
                             className="platform-btn-sm platform-btn-ghost"
                             type="button"
                           >
-                            <Edit2 size={13} /> Edit
+                            <Edit2 size={13} /> Ubah
                           </button>
                           {company.status === 'active' || company.status === 'trialing' ? (
                             <button
@@ -348,13 +348,13 @@ export function PlatformCompaniesPage() {
         <div className="platform-modal-overlay" onClick={() => setShowCreate(false)}>
           <div className="platform-modal" onClick={e => e.stopPropagation()}>
             <div className="platform-modal-header">
-              <h2>Tambah Company Baru</h2>
+              <h2>Tambah Perusahaan Baru</h2>
               <button onClick={() => setShowCreate(false)} className="platform-modal-close" type="button">×</button>
             </div>
             <div className="platform-modal-body">
               <div className="platform-form-grid">
                 <div className="platform-field">
-                  <label htmlFor="create-name">Nama Company *</label>
+                  <label htmlFor="create-name">Nama Perusahaan *</label>
                   <input
                     id="create-name"
                     type="text"
@@ -402,7 +402,7 @@ export function PlatformCompaniesPage() {
                   />
                 </div>
                 <div className="platform-field">
-                  <label htmlFor="create-plan">Plan Awal</label>
+                  <label htmlFor="create-plan">Paket Awal</label>
                   <select
                     id="create-plan"
                     value={form.planCode}
@@ -449,7 +449,7 @@ export function PlatformCompaniesPage() {
                 type="button"
                 disabled={!form.name}
               >
-                Buat Company
+                Buat Perusahaan
               </button>
             </div>
           </div>
@@ -461,13 +461,13 @@ export function PlatformCompaniesPage() {
         <div className="platform-modal-overlay" onClick={() => setEditDialog(null)}>
           <div className="platform-modal" onClick={e => e.stopPropagation()}>
             <div className="platform-modal-header">
-              <h2>Edit Company: {editDialog.company.name}</h2>
+              <h2>Edit Perusahaan: {editDialog.company.name}</h2>
               <button onClick={() => setEditDialog(null)} className="platform-modal-close" type="button">×</button>
             </div>
             <div className="platform-modal-body">
               <div className="platform-form-grid">
                 <div className="platform-field">
-                  <label htmlFor="edit-name">Nama Company *</label>
+                  <label htmlFor="edit-name">Nama Perusahaan *</label>
                   <input id="edit-name" type="text" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="platform-input" />
                 </div>
                 <div className="platform-field">
@@ -483,7 +483,7 @@ export function PlatformCompaniesPage() {
                   <input id="edit-city" type="text" value={editForm.city} onChange={e => setEditForm(f => ({ ...f, city: e.target.value }))} className="platform-input" />
                 </div>
                 <div className="platform-field platform-field-full">
-                  <label htmlFor="edit-plan">Plan Berlangganan</label>
+                  <label htmlFor="edit-plan">Paket Berlangganan</label>
                   <select id="edit-plan" value={editForm.planCode} onChange={e => setEditForm(f => ({ ...f, planCode: e.target.value }))} className="platform-select">
                     {plans.map(plan => (
                       <option key={plan.id} value={plan.code}>
@@ -493,22 +493,22 @@ export function PlatformCompaniesPage() {
                   </select>
                 </div>
                 <div className="platform-field">
-                  <label htmlFor="edit-billing-cycle">Billing Cycle</label>
+                  <label htmlFor="edit-billing-cycle">Siklus Tagihan</label>
                   <select id="edit-billing-cycle" value={editForm.billingCycle} onChange={e => setEditForm(f => ({ ...f, billingCycle: e.target.value }))} className="platform-select">
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                    <option value="lifetime">Lifetime</option>
+                    <option value="monthly">Bulanan</option>
+                    <option value="yearly">Tahunan</option>
+                    <option value="lifetime">Seumur Hidup</option>
                   </select>
                 </div>
                 <div className="platform-field">
-                  <label htmlFor="edit-subscription-status">Status Subscription</label>
+                  <label htmlFor="edit-subscription-status">Status Langganan</label>
                   <select id="edit-subscription-status" value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))} className="platform-select">
-                    <option value="trialing">Trialing</option>
-                    <option value="active">Active</option>
-                    <option value="past_due">Past Due</option>
+                    <option value="trialing">Trial</option>
+                    <option value="active">Aktif</option>
+                    <option value="past_due">Lewat Tempo</option>
                     <option value="suspended">Suspended</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="expired">Expired</option>
+                    <option value="cancelled">Dibatalkan</option>
+                    <option value="expired">Kedaluwarsa</option>
                   </select>
                 </div>
                 <div className="platform-field">
@@ -531,7 +531,7 @@ export function PlatformCompaniesPage() {
                   </label>
                 </div>
                 <div className="platform-field">
-                  <label>Manual Payment Override</label>
+                  <label>Override Pembayaran Manual</label>
                   <input id="edit-amount-paid" type="number" min={0} value={editForm.amountPaid} onChange={e => setEditForm(f => ({ ...f, amountPaid: e.target.value }))} placeholder="Contoh: 250000" className="platform-input" />
                 </div>
                 <div className="platform-field">
@@ -559,7 +559,7 @@ export function PlatformCompaniesPage() {
         <div className="platform-modal-overlay" onClick={() => setSuspendDialog(null)}>
           <div className="platform-modal platform-modal-sm" onClick={e => e.stopPropagation()}>
             <div className="platform-modal-header">
-              <h2>Suspend Company</h2>
+              <h2>Suspend Perusahaan</h2>
               <button onClick={() => setSuspendDialog(null)} className="platform-modal-close" type="button">×</button>
             </div>
             <div className="platform-modal-body">

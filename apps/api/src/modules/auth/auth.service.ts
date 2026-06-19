@@ -142,7 +142,7 @@ export function requirePermission(permissionCode: string) {
     const allowed = user?.isSuperAdmin || user?.roleCode === 'ADMINISTRATOR' || user?.permissions.includes(permissionCode);
 
     if (!allowed) {
-      return reply.status(403).send({ message: 'Permission denied', permission: permissionCode });
+      return reply.status(403).send({ message: 'Akses ditolak.', permission: permissionCode });
     }
   };
 }

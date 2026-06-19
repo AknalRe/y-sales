@@ -482,7 +482,7 @@ export function VisitPage() {
             <h2>2. Hasil Kunjungan</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
               <select value={outcome} onChange={e => setOutcome(e.target.value as any)} className="sales-select">
-                <option value="closed_order">Closed Order (Berhasil Jual)</option>
+                <option value="closed_order">Order Berhasil</option>
                 <option value="follow_up">Follow Up (Prospek Lanjutan)</option>
                 <option value="no_order">No Order (Tidak Beli)</option>
                 <option value="outlet_closed">Toko Tutup</option>
@@ -501,7 +501,7 @@ export function VisitPage() {
                   <div key={consignment.id} style={{ border: '1px solid rgba(74, 41, 34, .12)', borderRadius: 14, padding: '.75rem', background: '#fff' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '.75rem', marginBottom: '.5rem' }}>
                       <strong style={{ fontSize: '.85rem' }}>Konsinyasi aktif</strong>
-                      <span style={{ fontSize: '.72rem', color: '#B55925', fontWeight: 800 }}>Due {new Date(consignment.dueDate).toLocaleDateString('id-ID')}</span>
+                      <span style={{ fontSize: '.72rem', color: '#B55925', fontWeight: 800 }}>Jatuh tempo {new Date(consignment.dueDate).toLocaleDateString('id-ID')}</span>
                     </div>
                     {(consignment.items ?? []).map((item) => (
                       <button

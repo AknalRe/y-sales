@@ -358,8 +358,8 @@ export function StockPage() {
       <div className="settings-sticky-header">
         <div className="admin-page-header">
           <div>
-            <h1 className="admin-page-title"><Boxes size={24} className="text-admin-accent" /> Inventory</h1>
-            <p className="admin-page-subtitle">CRUD produk, gudang, stok, transfer, adjustment, dan riwayat mutasi.</p>
+            <h1 className="admin-page-title"><Boxes size={24} className="text-admin-accent" /> Inventori</h1>
+            <p className="admin-page-subtitle">Kelola produk, gudang, stok, transfer, penyesuaian, dan riwayat mutasi.</p>
           </div>
           <div className="flex gap-2">
             <button onClick={exportExcel} className="admin-btn-ghost" disabled={loading} type="button">
@@ -441,7 +441,7 @@ export function StockPage() {
               ) : (
                 <div className="inventory-table-shell">
                   <Table className="admin-table">
-                    <TableHeader><TableRow><TableHead>Produk</TableHead><TableHead>Gudang</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Reserved</TableHead><TableHead className="text-right">Tersedia</TableHead><TableHead>Update</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Produk</TableHead><TableHead>Gudang</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Dicadangkan</TableHead><TableHead className="text-right">Tersedia</TableHead><TableHead>Diperbarui</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {filteredBalances.map((b) => {
                         const available = Number(b.quantity) - Number(b.reservedQuantity);
@@ -535,12 +535,12 @@ function ProductFormCard({ form, saving, products, onChange, onSubmit, onCancel 
               {form.imagePreviewUrl || form.imageUrl ? <img src={form.imagePreviewUrl || form.imageUrl} alt={form.name || 'Gambar'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <ImageIcon size={28} className="text-admin-muted" />}
             </div>
             <div className="flex gap-2 flex-wrap">
-              <label className="admin-btn-ghost cursor-pointer"><Upload size={14} /> Upload<input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; onChange({ ...form, imageFile: file, imagePreviewUrl: URL.createObjectURL(file) }); e.currentTarget.value = ''; }} /></label>
+              <label className="admin-btn-ghost cursor-pointer"><Upload size={14} /> Unggah<input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; onChange({ ...form, imageFile: file, imagePreviewUrl: URL.createObjectURL(file) }); e.currentTarget.value = ''; }} /></label>
               {(form.imagePreviewUrl || form.imageUrl) && <button className="admin-btn-ghost" type="button" onClick={() => onChange({ ...form, imageUrl: '', imageFile: null, imagePreviewUrl: '' })}><X size={14} /> Hapus</button>}
             </div>
           </div>
         </Field>
-        <Field label="SKU"><div className="flex gap-2"><input className="admin-input w-full" value={form.sku} onChange={(e) => onChange({ ...form, sku: e.target.value.toUpperCase() })} placeholder="PRD-KR-001" /><button className="admin-btn-ghost" type="button" onClick={() => onChange({ ...form, sku: generateNextSku(form.name, products) })}>Generate</button></div></Field>
+        <Field label="SKU"><div className="flex gap-2"><input className="admin-input w-full" value={form.sku} onChange={(e) => onChange({ ...form, sku: e.target.value.toUpperCase() })} placeholder="PRD-KR-001" /><button className="admin-btn-ghost" type="button" onClick={() => onChange({ ...form, sku: generateNextSku(form.name, products) })}>Buat Otomatis</button></div></Field>
         <Field label="Nama Produk"><input className="admin-input w-full" value={form.name} onChange={(e) => onChange({ ...form, name: e.target.value })} /></Field>
         <Field label="Deskripsi"><textarea className="admin-input w-full" value={form.description} onChange={(e) => onChange({ ...form, description: e.target.value })} /></Field>
         <div className="grid grid-cols-2 gap-3">
@@ -548,7 +548,7 @@ function ProductFormCard({ form, saving, products, onChange, onSubmit, onCancel 
           <Field label="Harga"><input type="number" className="admin-input w-full" value={form.priceDefault} onChange={(e) => onChange({ ...form, priceDefault: e.target.value })} /></Field>
         </div>
         {!form.id && <Field label="Stok Awal Gudang Utama"><input type="number" className="admin-input w-full" value={form.initialStock} onChange={(e) => onChange({ ...form, initialStock: e.target.value })} /></Field>}
-        {form.id && <Field label="Status"><select className="admin-select w-full" value={form.status} onChange={(e) => onChange({ ...form, status: e.target.value as Product['status'] })}><option value="active">Active</option><option value="inactive">Inactive</option></select></Field>}
+        {form.id && <Field label="Status"><select className="admin-select w-full" value={form.status} onChange={(e) => onChange({ ...form, status: e.target.value as Product['status'] })}><option value="active">Aktif</option><option value="inactive">Nonaktif</option></select></Field>}
         <div className="flex gap-2">
           <button className="admin-btn-primary" type="button" disabled={saving || !form.name} onClick={onSubmit}><Save size={15} /> Simpan</button>
           {form.id && <button className="admin-btn-ghost" type="button" onClick={onCancel}>Batal</button>}
@@ -563,7 +563,7 @@ function WarehouseFormCard({ form, saving, warehouses, onChange, onSubmit, onCan
     <div className="admin-card" style={{ margin: 0 }}>
       <h3 className="font-extrabold text-admin-foreground mb-4">{form.id ? 'Edit Gudang' : 'Tambah Gudang'}</h3>
       <div className="grid gap-3">
-        <Field label="Kode"><div className="flex gap-2"><input className="admin-input w-full" value={form.code} onChange={(e) => onChange({ ...form, code: e.target.value.toUpperCase() })} placeholder="WH-GD-001" /><button className="admin-btn-ghost" type="button" onClick={() => onChange({ ...form, code: generateNextWarehouseCode(form, warehouses) })}>Generate</button></div></Field>
+        <Field label="Kode"><div className="flex gap-2"><input className="admin-input w-full" value={form.code} onChange={(e) => onChange({ ...form, code: e.target.value.toUpperCase() })} placeholder="WH-GD-001" /><button className="admin-btn-ghost" type="button" onClick={() => onChange({ ...form, code: generateNextWarehouseCode(form, warehouses) })}>Buat Otomatis</button></div></Field>
         <Field label="Nama Gudang"><input className="admin-input w-full" value={form.name} onChange={(e) => onChange({ ...form, name: e.target.value })} /></Field>
         <Field label="Tipe"><select className="admin-select w-full" value={form.type} onChange={(e) => onChange({ ...form, type: e.target.value as Warehouse['type'] })}><option value="main">Gudang Utama</option><option value="sales_van">Gudang Sales</option><option value="outlet_consignment">Konsinyasi Outlet</option></select></Field>
         <Field label="Alamat"><textarea className="admin-input w-full" value={form.address} onChange={(e) => onChange({ ...form, address: e.target.value })} /></Field>
@@ -587,7 +587,7 @@ function ProductTable({ products, onEdit, onDelete }: { products: Product[]; onE
               <TableCell><div className="flex items-center gap-3"><div className="flex items-center justify-center overflow-hidden bg-admin-bg" style={{ width: 42, height: 42, borderRadius: 12 }}>{p.imageUrl ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={18} className="text-admin-muted" />}</div><div><strong>{p.name}</strong><br /><code>{p.sku}</code></div></div></TableCell>
               <TableCell>{p.unit}</TableCell>
               <TableCell>{formatRp(p.priceDefault)}</TableCell>
-              <TableCell><span className={`admin-badge ${p.status === 'active' ? 'admin-badge-success' : ''}`}>{p.status}</span></TableCell>
+              <TableCell><span className={`admin-badge ${p.status === 'active' ? 'admin-badge-success' : ''}`}>{p.status === 'active' ? 'Aktif' : 'Nonaktif'}</span></TableCell>
               <TableCell className="text-right"><button className="admin-btn-ghost" onClick={() => onEdit(p)} type="button"><Edit3 size={14} /></button><button className="admin-btn-ghost" onClick={() => onDelete(p)} type="button"><Trash2 size={14} /></button></TableCell>
             </TableRow>
           ))}
@@ -608,7 +608,7 @@ function WarehouseTable({ warehouses, onEdit, onDelete }: { warehouses: Warehous
             <TableRow key={w.id}>
               <TableCell><strong>{w.name}</strong><br /><code>{w.code}</code></TableCell>
               <TableCell>{w.type === 'main' ? 'Utama' : w.type === 'sales_van' ? 'Sales' : 'Konsinyasi'}</TableCell>
-              <TableCell><span className={`admin-badge ${w.status === 'active' ? 'admin-badge-success' : ''}`}>{w.status}</span></TableCell>
+              <TableCell><span className={`admin-badge ${w.status === 'active' ? 'admin-badge-success' : ''}`}>{w.status === 'active' ? 'Aktif' : 'Nonaktif'}</span></TableCell>
               <TableCell className="text-right"><button className="admin-btn-ghost" onClick={() => onEdit(w)} type="button"><Edit3 size={14} /></button><button className="admin-btn-ghost" onClick={() => onDelete(w)} type="button"><Trash2 size={14} /></button></TableCell>
             </TableRow>
           ))}
@@ -624,13 +624,13 @@ function StockActionCard({ action, saving, warehouses, products, onChange, onSub
     <div className="admin-card" style={{ margin: 0, maxWidth: 760 }}>
       <h3 className="font-extrabold text-admin-foreground mb-4">Operasi Stok</h3>
       <div className="grid gap-3">
-        <Field label="Jenis Operasi"><select className="admin-select w-full" value={action.mode} onChange={(e) => onChange({ ...action, mode: e.target.value })}><option value="adjustment">Adjustment +/-</option><option value="reset">Reset Qty</option><option value="transfer">Transfer Gudang</option></select></Field>
+        <Field label="Jenis Operasi"><select className="admin-select w-full" value={action.mode} onChange={(e) => onChange({ ...action, mode: e.target.value })}><option value="adjustment">Penyesuaian +/-</option><option value="reset">Reset Qty</option><option value="transfer">Transfer Gudang</option></select></Field>
         <div className="grid sm:grid-cols-2 gap-3">
           <Field label={action.mode === 'transfer' ? 'Gudang Asal' : 'Gudang'}><select className="admin-select w-full" value={action.warehouseId} onChange={(e) => onChange({ ...action, warehouseId: e.target.value })}><option value="">Pilih gudang</option>{warehouses.map((w) => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}</select></Field>
           {action.mode === 'transfer' && <Field label="Gudang Tujuan"><select className="admin-select w-full" value={action.toWarehouseId} onChange={(e) => onChange({ ...action, toWarehouseId: e.target.value })}><option value="">Pilih tujuan</option>{warehouses.filter((w) => w.id !== action.warehouseId).map((w) => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}</select></Field>}
         </div>
         <Field label="Produk"><select className="admin-select w-full" value={action.productId} onChange={(e) => onChange({ ...action, productId: e.target.value })}><option value="">Pilih produk</option>{products.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}</select></Field>
-        <Field label={action.mode === 'reset' ? 'Target Quantity' : 'Quantity'}><input type="number" className="admin-input w-full" value={action.quantity} onChange={(e) => onChange({ ...action, quantity: e.target.value })} /></Field>
+        <Field label={action.mode === 'reset' ? 'Target Qty' : 'Qty'}><input type="number" className="admin-input w-full" value={action.quantity} onChange={(e) => onChange({ ...action, quantity: e.target.value })} /></Field>
         <Field label="Catatan"><textarea className="admin-input w-full" value={action.notes} onChange={(e) => onChange({ ...action, notes: e.target.value })} /></Field>
         <button className="admin-btn-primary" type="button" disabled={saving || !action.warehouseId || !action.productId || !action.quantity || (action.mode === 'transfer' && !action.toWarehouseId)} onClick={onSubmit}>
           {action.mode === 'reset' ? <RotateCcw size={15} /> : <ArrowRightLeft size={15} />} Proses

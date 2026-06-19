@@ -154,24 +154,24 @@ export function SubscriptionPage() {
     <div className="admin-page admin-subscription-page">
       <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-title"><CreditCard size={22} /> Subscription Saya</h1>
-          <p className="admin-page-subtitle">Informasi plan aktif, batas penggunaan, dan fitur yang tersedia untuk perusahaan Anda.</p>
+          <h1 className="admin-page-title"><CreditCard size={22} /> Langganan Saya</h1>
+          <p className="admin-page-subtitle">Informasi paket aktif, batas penggunaan, dan fitur yang tersedia untuk perusahaan Anda.</p>
         </div>
         <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
           <RefreshCw size={15} className={loading ? 'spin' : ''} />
-          Refresh
+          Muat Ulang
         </button>
       </div>
 
       {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}
 
       {loading ? (
-        <div className="admin-loading"><RefreshCw size={18} className="spin" /> Memuat info subscription...</div>
+        <div className="admin-loading"><RefreshCw size={18} className="spin" /> Memuat info langganan...</div>
       ) : !sub ? (
         <div className="subscription-empty">
           <span><CreditCard size={34} /></span>
-          <h2>Tidak ada subscription aktif</h2>
-          <p>Hubungi admin platform untuk mengaktifkan subscription perusahaan Anda.</p>
+          <h2>Tidak ada langganan aktif</h2>
+          <p>Hubungi admin platform untuk mengaktifkan langganan perusahaan Anda.</p>
         </div>
       ) : (
         <div className="subscription-layout">
@@ -179,7 +179,7 @@ export function SubscriptionPage() {
             <section className={`subscription-hero ${planStyle.tone}`}>
               <div className="subscription-plan-icon"><PlanIcon size={26} /></div>
               <div className="subscription-hero-copy">
-                <span className="admin-kicker">Plan Aktif</span>
+                <span className="admin-kicker">Paket Aktif</span>
                 <div className="subscription-title-row">
                   <h2>{plan?.name ?? sub.planCode}</h2>
                   <span className={`subscription-status ${statusInfo.tone}`}>{statusInfo.label}</span>
@@ -199,7 +199,7 @@ export function SubscriptionPage() {
               <section className="subscription-panel">
                 <div className="subscription-panel-header">
                   <div>
-                    <span className="admin-kicker">Limit Company</span>
+                    <span className="admin-kicker">Limit Perusahaan</span>
                     <h2>Batas Penggunaan</h2>
                   </div>
                   <Shield size={18} />
@@ -248,7 +248,7 @@ export function SubscriptionPage() {
               <div className="subscription-panel-header">
                 <div>
                   <span className="admin-kicker">Periode</span>
-                  <h2>Info Billing</h2>
+                  <h2>Info Tagihan</h2>
                 </div>
                 <Clock size={18} />
               </div>
@@ -266,8 +266,8 @@ export function SubscriptionPage() {
               <section className={`subscription-days ${daysLeft <= 7 ? 'urgent' : 'safe'}`}>
                 <strong>{daysLeft}</strong>
                 <span>hari tersisa</span>
-                {daysLeft <= 7 && daysLeft > 0 ? <p>Subscription segera habis. Hubungi admin untuk perpanjangan.</p> : null}
-                {daysLeft <= 0 ? <p>Subscription telah berakhir. Akses akan dibatasi.</p> : null}
+                {daysLeft <= 7 && daysLeft > 0 ? <p>Langganan segera habis. Hubungi admin untuk perpanjangan.</p> : null}
+                {daysLeft <= 0 ? <p>Langganan telah berakhir. Akses akan dibatasi.</p> : null}
               </section>
             ) : null}
 

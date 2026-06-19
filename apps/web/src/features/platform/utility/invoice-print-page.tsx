@@ -7,7 +7,7 @@ import { platformGetInvoice, type PlatformInvoiceDetail } from '@/lib/api/platfo
 const money = (value: string | number | undefined | null) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
 const date = (value?: string | null) => value ? new Date(value).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
 const statusLabel: Record<string, string> = {
-  draft: 'Draft', issued: 'Issued', paid: 'Paid', overdue: 'Overdue', void: 'Void', cancelled: 'Cancelled',
+  draft: 'Draft', issued: 'Diterbitkan', paid: 'Lunas', overdue: 'Lewat Tempo', void: 'Dibatalkan', cancelled: 'Dibatalkan',
 };
 
 export function PlatformInvoicePrintPage() {
@@ -36,7 +36,7 @@ export function PlatformInvoicePrintPage() {
     <div className="platform-page invoice-print-page-shell">
       <div className="invoice-print-toolbar no-print">
         <Link to="/platform/billing" className="platform-btn platform-btn-ghost"><ArrowLeft size={16} /> Kembali</Link>
-        <button id="print-invoice-btn" onClick={() => window.print()} className="platform-btn platform-btn-primary" type="button"><Printer size={16} /> Cetak / Save PDF</button>
+        <button id="print-invoice-btn" onClick={() => window.print()} className="platform-btn platform-btn-primary" type="button"><Printer size={16} /> Cetak / Simpan PDF</button>
       </div>
 
       <main className="invoice-print-sheet">
@@ -45,7 +45,7 @@ export function PlatformInvoicePrintPage() {
             <div className="invoice-logo"><ReceiptText size={28} /></div>
             <div>
               <h1>Yuksales</h1>
-              <p>Platform SaaS Subscription Billing</p>
+              <p>Tagihan Langganan Platform SaaS</p>
             </div>
           </div>
           <div className="invoice-title-box">
@@ -67,15 +67,15 @@ export function PlatformInvoicePrintPage() {
             <dl>
               <div><dt>Tanggal Terbit</dt><dd>{date(invoice.issuedAt)}</dd></div>
               <div><dt>Jatuh Tempo</dt><dd>{date(invoice.dueAt)}</dd></div>
-              <div><dt>Billing Cycle</dt><dd>{invoice.billingCycle}</dd></div>
-              <div><dt>Billing Reason</dt><dd>{invoice.billingReason}</dd></div>
+              <div><dt>Siklus Tagihan</dt><dd>{invoice.billingCycle}</dd></div>
+              <div><dt>Alasan Tagihan</dt><dd>{invoice.billingReason}</dd></div>
             </dl>
           </div>
         </section>
 
         <section className="invoice-period-card">
           <div><span>Periode Layanan</span><strong>{date(invoice.periodStart)} — {date(invoice.periodEnd)}</strong></div>
-          <div><span>Plan</span><strong>{invoice.subscription?.planCode ?? '-'}</strong></div>
+          <div><span>Paket</span><strong>{invoice.subscription?.planCode ?? '-'}</strong></div>
         </section>
 
         <section className="invoice-table-card">
@@ -86,7 +86,7 @@ export function PlatformInvoicePrintPage() {
             <tbody>
               <tr>
                 <td>
-                  <strong>Subscription {invoice.subscription?.planCode ?? 'Platform'}</strong>
+                  <strong>Langganan {invoice.subscription?.planCode ?? 'Platform'}</strong>
                   <small>{invoice.billingReason} · {invoice.billingCycle}</small>
                 </td>
                 <td>1</td>
@@ -125,7 +125,7 @@ export function PlatformInvoicePrintPage() {
         )}
 
         <footer className="invoice-print-footer">
-          <p>Invoice ini dibuat secara otomatis oleh Yuksales Platform Billing.</p>
+          <p>Invoice ini dibuat secara otomatis oleh sistem tagihan Yuksales.</p>
           <strong>yuksales.id</strong>
         </footer>
       </main>

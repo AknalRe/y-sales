@@ -40,7 +40,7 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
             className="p-2 rounded-full admin-mobile-close"
             type="button"
           >
-            <span className="sr-only">Close menu</span>
+            <span className="sr-only">Tutup menu</span>
             <X size={18} />
           </button>
         </div>

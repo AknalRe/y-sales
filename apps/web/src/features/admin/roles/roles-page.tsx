@@ -17,6 +17,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+const permissionModuleLabels: Record<string, string> = {
+  access: 'Akses',
+  attendance: 'Absensi',
+  deposits: 'Setoran',
+  general: 'Umum',
+  inventory: 'Inventori',
+  invoices: 'Nota',
+  media: 'Media',
+  outlets: 'Outlet',
+  products: 'Produk',
+  receivables: 'Piutang',
+  reports: 'Laporan',
+  sales: 'Sales',
+  settings: 'Pengaturan',
+  system: 'Sistem',
+  transactions: 'Transaksi',
+  users: 'User',
+  visits: 'Kunjungan',
+};
+
+function getPermissionModuleLabel(module: string) {
+  return permissionModuleLabels[module] ?? module;
+}
+
 export function RolesPage() {
   const { accessToken } = useAuth();
   const [roles, setRoles] = useState<Role[]>([]);
@@ -346,7 +370,7 @@ export function RolesPage() {
                   <div className="admin-permission-groups admin-permission-groups-compact">
                     {Object.entries(groupedPermissions).map(([module, rows]) => (
                       <section key={module} className="admin-permission-group">
-                        <h3>{module}</h3>
+                        <h3>{getPermissionModuleLabel(module)}</h3>
                         <div className="admin-permission-list">
                           {rows.map((permission) => {
                             const active = selectedCreatePermissionIds.has(permission.id);
@@ -427,7 +451,7 @@ export function RolesPage() {
                 <div className="admin-permission-groups">
                   {Object.entries(groupedPermissions).map(([module, rows]) => (
                     <section key={module} className="admin-permission-group">
-                      <h3>{module}</h3>
+                      <h3>{getPermissionModuleLabel(module)}</h3>
                       <div className="admin-permission-list">
                         {rows.map((permission) => {
                           const active = selectedPermissionIds.has(permission.id);

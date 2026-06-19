@@ -11,7 +11,8 @@ export const playgroundRoutes: RouteConfig[] = [
       label: 'Samples',
       icon: FlaskConical,
       section: 'Development',
-      badge: 'Dev'
+      badge: 'Dev',
+      hidden: true
     },
     children: [
       {
@@ -47,7 +48,8 @@ export const playgroundRoutes: RouteConfig[] = [
       label: 'UI Components',
       icon: Box,
       section: 'Development',
-      badge: 'UI'
+      badge: 'UI',
+      hidden: true
     }
   }
 ];

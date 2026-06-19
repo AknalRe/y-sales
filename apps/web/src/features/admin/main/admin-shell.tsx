@@ -23,7 +23,7 @@ import { NotificationsPopup } from '@/features/standalone/notifications-popup';
 
 // Helper to group routes by section
 const getNavSections = (permissions: string[], user: any, isSuperAdmin: boolean) => {
-  const allRoutes = [...mainRoutes, ...playgroundRoutes.filter(r => !r.handle.mobile && !r.handle.hidden)];
+  const allRoutes = [...mainRoutes, ...playgroundRoutes].filter(route => !route.handle.mobile && !route.handle.hidden);
 
   const canSee = (permission?: string) => {
     if (!permission) return true;

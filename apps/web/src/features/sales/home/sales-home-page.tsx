@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/auth-provider';
 import { apiRequest, getNotificationsCount } from '../../../lib/api/client';
 import { useScrollToTop } from '../../../hooks/use-scroll-to-top';
 import { showSalesAlertToast } from '../ui/sales-alert';
+import { NotificationsPopup } from '../../standalone/notifications-popup';
 
 type VisitSession = {
   id: string;
@@ -65,6 +66,7 @@ export function SalesHomePage() {
   const [attendanceBlockedReason, setAttendanceBlockedReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   async function load() {
@@ -78,8 +80,6 @@ export function SalesHomePage() {
         apiRequest<AttendanceTodayResponse>('/attendance/today', { headers: { Authorization: `Bearer ${accessToken}` } }),
         getNotificationsCount(accessToken),
       ]);
-
-      console.log(sumRes)
 
       if (visitRes.status === 'fulfilled') setVisits(visitRes.value.sessions ?? []);
       if (sumRes.status === 'fulfilled') setSummary(sumRes.value.summary);
@@ -151,7 +151,7 @@ export function SalesHomePage() {
             <RefreshCw size={16} style={{ animation: loading ? 'spin 1s linear infinite' : undefined }} />
           </button>
           <button
-            onClick={() => navigate('/sales/notifications')}
+            onClick={() => setNotificationsOpen(true)}
             className="sales-icon-btn relative"
             type="button"
             title="Notifikasi"
@@ -166,6 +166,14 @@ export function SalesHomePage() {
           </Link>
         </div>
       </div>
+
+      <NotificationsPopup
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+        accessToken={accessToken}
+        onUnreadCountChange={setUnreadCount}
+        variant="sales"
+      />
 
       {error && <div className="sales-alert sales-alert-error">{error}</div>}
 

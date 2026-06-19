@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -18,6 +18,7 @@ import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-v
 import { AdminDesktopSidebar } from './admin-desktop-sidebar';
 import { AdminMobileSidebar } from './admin-mobile-sidebar';
 import PageMeta from '@/hooks/use-page-meta';
+import { NotificationsPopup } from '@/features/standalone/notifications-popup';
 
 
 // Helper to group routes by section
@@ -51,13 +52,13 @@ const getNavSections = (permissions: string[], user: any, isSuperAdmin: boolean)
 
 export function AdminShell() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, permissions, isSuperAdmin, signOut, accessToken } = useAuth();
   const isMobile = useIsMobile(820);
 
   const [open, setOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   async function loadUnreadCount() {
@@ -152,7 +153,7 @@ export function AdminShell() {
                 id="admin-notification-button"
                 className="admin-icon-button admin-notification"
                 type="button"
-                onClick={() => navigate('/admin/notifications')}
+                onClick={() => setNotificationsOpen(true)}
                 title="Notifikasi"
               >
                 <Bell size={18} />
@@ -199,6 +200,14 @@ export function AdminShell() {
             companyLogo={resolvedCompanyLogo}
           />
         )}
+
+        <NotificationsPopup
+          open={notificationsOpen}
+          onClose={() => setNotificationsOpen(false)}
+          accessToken={accessToken}
+          onUnreadCountChange={setUnreadCount}
+          variant="admin"
+        />
       </div>
     </>
   );

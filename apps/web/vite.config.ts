@@ -21,8 +21,9 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      // Raise warning limit — mediapipe chunk is large but loaded lazily (camera only)
-      chunkSizeWarningLimit: 700,
+      // xlsx-js-style is inherently large (~870KB); raise limit to suppress noise.
+      // For further reduction, xlsx would need dynamic import() in the export feature.
+      chunkSizeWarningLimit: 900,
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -35,11 +36,12 @@ export default defineConfig(({ mode }) => {
             // Map / geo
             if (id.includes('leaflet')) return 'vendor-leaflet';
 
-            // Date utilities
-            if (id.includes('date-fns')) return 'vendor-datefns';
-
-            // Excel export — rarely used
+            // Excel export — rarely used, keep isolated so it never blocks initial load
             if (id.includes('xlsx-js-style')) return 'vendor-xlsx';
+
+            // NOTE: date-fns intentionally NOT chunked separately —
+            // it has transitive deps that overlap with vendor-react causing
+            // a circular chunk warning. Rollup places it automatically.
 
             // Core UI framework chunks (stable, cached aggressively by browser)
             if (id.includes('@base-ui/react')) return 'vendor-base-ui';

@@ -67,10 +67,19 @@
         .admin-nav-active {
             background: transparent;
             box-shadow: none;
+            transition: background 0s, box-shadow 0s;
 
             .admin-nav-icon {
                 background: var(--admin-sidebar-active-bg);
                 color: #ffffff;
+            }
+
+            &:hover {
+                background: transparent;
+
+                .admin-nav-icon {
+                    background: var(--admin-sidebar-active-hover);
+                }
             }
         }
     }
@@ -114,7 +123,6 @@
         border-radius: 0.95rem;
         color: #ffffff;
         background: var(--admin-sidebar-active-bg);
-        box-shadow: 0 16px 28px rgba(232, 101, 10, .2);
     }
 
     div {
@@ -279,7 +287,6 @@
 .admin-nav-active {
     color: var(--admin-sidebar-text-hover);
     background: var(--admin-sidebar-active-bg);
-    box-shadow: 0 12px 24px rgba(232, 101, 10, .18);
 
     &:hover {
         background: var(--admin-sidebar-active-hover);

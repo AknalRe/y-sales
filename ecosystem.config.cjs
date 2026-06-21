@@ -2,9 +2,20 @@ const path = require("node:path");
 const fs = require("node:fs");
 
 const cwd = __dirname;
-const facePython = process.platform === "win32"
-  ? path.join(cwd, ".venv-face", "Scripts", "python.exe")
-  : path.join(cwd, ".venv-face", "bin", "python");
+
+// Resolve Python executable: prefer .venv-face virtualenv, fall back to system python3/python
+function resolvePython() {
+  if (process.platform === "win32") {
+    const venvPath = path.join(cwd, ".venv-face", "Scripts", "python.exe");
+    return fs.existsSync(venvPath) ? venvPath : "python";
+  }
+  const venvPath = path.join(cwd, ".venv-face", "bin", "python");
+  if (fs.existsSync(venvPath)) return venvPath;
+  // Fall back to system python3 (e.g. packages installed globally via pip3)
+  return "python3";
+}
+
+const facePython = resolvePython();
 
 // Load .env file and parse FACE_SERVICE_* variables so PM2 injects them
 // into the face service process without requiring a separate config.json.

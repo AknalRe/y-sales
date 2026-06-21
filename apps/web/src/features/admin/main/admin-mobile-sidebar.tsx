@@ -15,12 +15,25 @@ interface AdminMobileSidebarProps {
 export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSections, companyName = 'Company', companyLogo }: AdminMobileSidebarProps) {
   const location = useLocation();
 
-  if (!mobileMenuOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex">
-      <div className="fixed inset-0 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setMobileMenuOpen(false)} />
-      <div className="relative flex w-4/5 max-w-xs flex-col h-full shadow-2xl animate-in slide-in-from-left admin-mobile-drawer">
+    <div 
+      className={`fixed inset-0 z-[100] flex transition-all duration-300 ${
+        mobileMenuOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
+      }`}
+      aria-hidden={!mobileMenuOpen}
+    >
+      <div 
+        className={`fixed inset-0 backdrop-blur-sm transition-opacity duration-300 ${
+          mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+        }`} 
+        style={{ background: 'rgba(0,0,0,0.4)' }} 
+        onClick={() => setMobileMenuOpen(false)} 
+      />
+      <div 
+        className={`relative flex w-4/5 max-w-xs flex-col h-full shadow-2xl transition-transform duration-300 ease-in-out admin-mobile-drawer ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <div className="admin-sidebar-brand">
           <div className="admin-sidebar-logo">
             <span>

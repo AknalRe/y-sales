@@ -137,10 +137,12 @@ async function compressCompanyImage(file: File) {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas tidak tersedia untuk kompres gambar.');
   ctx.drawImage(bitmap, 0, 0, width, height);
+  const outMime = file.type === 'image/png' ? 'image/png' : (file.type === 'image/webp' ? 'image/webp' : 'image/jpeg');
+  const outExt = file.type === 'image/png' ? 'png' : (file.type === 'image/webp' ? 'webp' : 'jpg');
   const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Gagal mengompres gambar.')), 'image/jpeg', 0.82);
+    canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Gagal mengompres gambar.')), outMime, 0.82);
   });
-  return new File([blob], `${file.name.replace(/\.[^.]+$/, '') || 'company-image'}.jpg`, { type: 'image/jpeg' });
+  return new File([blob], `${file.name.replace(/\.[^.]+$/, '') || 'company-image'}.${outExt}`, { type: outMime });
 }
 
 function storageToForm(integration?: CompanyIntegration): StorageForm {

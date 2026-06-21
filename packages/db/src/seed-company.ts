@@ -84,7 +84,7 @@ const roleSeeds = [
 const permissionSeeds: Array<[string, string, string]> = [
   ['system.manage', 'Kelola Sistem', 'system'],
   ['roles.manage', 'Kelola Role', 'access'],
-  ['permissions.manage', 'Kelola Permission', 'access'],
+  ['permissions.manage', 'Kelola Hak Akses', 'access'],
   ['settings.manage', 'Kelola Pengaturan', 'settings'],
   ['users.manage', 'Kelola User', 'users'],
   ['attendance.review', 'Review Absensi', 'attendance'],

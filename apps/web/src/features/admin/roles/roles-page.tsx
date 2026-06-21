@@ -37,8 +37,53 @@ const permissionModuleLabels: Record<string, string> = {
   visits: 'Kunjungan',
 };
 
+const permissionNameLabels: Record<string, string> = {
+  'system.manage': 'Kelola Sistem',
+  'roles.manage': 'Kelola Role',
+  'permissions.manage': 'Kelola Hak Akses',
+  'settings.manage': 'Kelola Pengaturan',
+  'users.manage': 'Kelola User',
+  'attendance.review': 'Review Absensi',
+  'attendance.execute': 'Melakukan Absensi',
+  'outlets.manage': 'Kelola Outlet',
+  'outlets.verify': 'Verifikasi Outlet',
+  'visits.execute': 'Melakukan Kunjungan',
+  'visits.review': 'Review Kunjungan',
+  'transactions.execute': 'Melakukan Transaksi',
+  'transactions.approve': 'Approval Transaksi',
+  'inventory.manage': 'Kelola Inventori',
+  'deposits.execute': 'Buat Setoran',
+  'deposits.reconcile': 'Rekonsiliasi Setoran',
+  'reports.view': 'Lihat Laporan',
+  'sales.view': 'Lihat Sales',
+  'sales.order.create': 'Buat Order Sales',
+  'sales.order.review': 'Review Order Sales',
+  'products.manage': 'Kelola Produk',
+  'media.manage': 'Kelola Media',
+  'receivables.view': 'Lihat Piutang',
+  'receivables.manage': 'Kelola Piutang',
+  'invoice.review': 'Review Nota',
+};
+
+const roleDescriptionLabels: Record<string, string> = {
+  ADMINISTRATOR: 'Akses penuh sistem termasuk manajemen role dan hak akses.',
+  OWNER: 'Pemilik bisnis dengan akses eksekutif.',
+  OPERATIONAL_MANAGER: 'Monitoring operasional dan validasi tingkat tinggi.',
+  SUPERVISOR: 'Kontrol outlet, penjadwalan, approval, dan setoran.',
+  ADMIN: 'Administrasi master data dan verifikasi operasional.',
+  SALES_AGENT: 'Absensi, kunjungan, dan transaksi sales lapangan.',
+};
+
 function getPermissionModuleLabel(module: string) {
   return permissionModuleLabels[module] ?? module;
+}
+
+function getPermissionName(permission: Permission) {
+  return permissionNameLabels[permission.code] ?? permission.name;
+}
+
+function getRoleDescription(role: Role) {
+  return roleDescriptionLabels[role.code] ?? role.description;
 }
 
 export function RolesPage() {
@@ -80,7 +125,7 @@ export function RolesPage() {
       const data = await getPermissions(accessToken);
       setPermissions(data.permissions);
     } catch (e: any) {
-      setError(e.message ?? 'Gagal memuat daftar permission.');
+      setError(e.message ?? 'Gagal memuat daftar hak akses.');
     } finally {
       setLoadingPermissions(false);
     }
@@ -140,7 +185,7 @@ export function RolesPage() {
       setPermissions(all.permissions);
       setSelectedPermissionIds(new Set(assigned.permissions.map((permission) => permission.id)));
     } catch (e: any) {
-      setError(e.message ?? 'Gagal memuat permission role.');
+      setError(e.message ?? 'Gagal memuat hak akses role.');
       setPermissionRole(null);
     } finally {
       setLoadingPermissions(false);
@@ -165,7 +210,7 @@ export function RolesPage() {
         setSelectedPermissionIds((current) => new Set(current).add(permission.id));
       }
     } catch (e: any) {
-      setError(e.message ?? 'Gagal mengubah permission role.');
+      setError(e.message ?? 'Gagal mengubah hak akses role.');
     } finally {
       setSaving(false);
     }
@@ -174,7 +219,7 @@ export function RolesPage() {
   const groupedPermissions = useMemo(() => {
     const q = permissionSearch.trim().toLowerCase();
     const filtered = permissions.filter((permission) => {
-      const haystack = `${permission.module} ${permission.code} ${permission.name} ${permission.description ?? ''}`.toLowerCase();
+      const haystack = `${permission.module} ${getPermissionModuleLabel(permission.module)} ${permission.code} ${permission.name} ${getPermissionName(permission)} ${permission.description ?? ''}`.toLowerCase();
       return !q || haystack.includes(q);
     });
     return filtered.reduce<Record<string, Permission[]>>((groups, permission) => {
@@ -257,7 +302,7 @@ export function RolesPage() {
                       variant="ghost"
                       size="icon"
                       className="admin-btn-icon-sm"
-                      title="Edit Permission"
+                      title="Edit Hak Akses"
                       type="button"
                     >
                       <Settings2 size={13} />
@@ -270,7 +315,7 @@ export function RolesPage() {
                     variant="ghost"
                     size="icon"
                     className="admin-btn-icon-sm"
-                    title="Lihat Permission"
+                    title="Lihat Hak Akses"
                     type="button"
                   >
                     <Settings2 size={13} />
@@ -290,13 +335,13 @@ export function RolesPage() {
                   </Button>
                 )}
               </div>
-              {role.description && (
-                <p className="admin-role-desc">{role.description}</p>
+              {getRoleDescription(role) && (
+                <p className="admin-role-desc">{getRoleDescription(role)}</p>
               )}
               {role.isSystemRole && (
                 <div className="admin-role-system-badge">
                   <Lock size={11} />
-                  System Role — tidak dapat dihapus
+                  Role sistem - tidak dapat dihapus
                 </div>
               )}
             </div>
@@ -314,7 +359,7 @@ export function RolesPage() {
             <div className="admin-modal-header">
               <div>
                 <h2>Buat Role Baru</h2>
-                <p className="admin-modal-subtitle">Atur identitas role dan permission dalam satu langkah.</p>
+                <p className="admin-modal-subtitle">Atur identitas role dan hak akses dalam satu langkah.</p>
               </div>
               <button onClick={() => setShowCreate(false)} className="admin-modal-close" type="button">×</button>
             </div>
@@ -354,18 +399,18 @@ export function RolesPage() {
                 />
               </div>
               <div className="admin-field">
-                <label>Permission Role</label>
+                <label>Hak Akses Role</label>
                 <div className="admin-permission-search">
                   <Search size={15} />
                   <input
                     value={permissionSearch}
                     onChange={(event) => setPermissionSearch(event.target.value)}
-                    placeholder="Cari permission, module, atau kode..."
+                    placeholder="Cari hak akses, modul, atau kode..."
                   />
                 </div>
 
                 {loadingPermissions ? (
-                  <div className="admin-loading">Memuat permission...</div>
+                  <div className="admin-loading">Memuat hak akses...</div>
                 ) : (
                   <div className="admin-permission-groups admin-permission-groups-compact">
                     {Object.entries(groupedPermissions).map(([module, rows]) => (
@@ -390,7 +435,7 @@ export function RolesPage() {
                               >
                                 <span className="admin-permission-check">{active ? <CheckCircle2 size={14} /> : null}</span>
                                 <span>
-                                  <strong>{permission.name}</strong>
+                                  <strong>{getPermissionName(permission)}</strong>
                                   <small>{permission.code}</small>
                                 </span>
                               </button>
@@ -400,12 +445,12 @@ export function RolesPage() {
                       </section>
                     ))}
                     {!Object.keys(groupedPermissions).length ? (
-                      <p className="admin-muted">Permission tidak ditemukan.</p>
+                      <p className="admin-muted">Hak akses tidak ditemukan.</p>
                     ) : null}
                   </div>
                 )}
                 <small className="admin-field-hint">
-                  Permission tetap bisa diedit kembali dari tombol pengaturan di kartu role.
+                  Hak akses tetap bisa diedit kembali dari tombol pengaturan di kartu role.
                 </small>
               </div>
             </div>
@@ -430,7 +475,7 @@ export function RolesPage() {
           <div className="admin-modal admin-permission-modal" onClick={e => e.stopPropagation()}>
             <div className="admin-modal-header">
               <div>
-                <h2>Permission Role</h2>
+                <h2>Hak Akses Role</h2>
                 <p className="admin-modal-subtitle">{permissionRole.name} · {permissionRole.code}</p>
               </div>
               <button onClick={() => setPermissionRole(null)} className="admin-modal-close" type="button">×</button>
@@ -441,12 +486,12 @@ export function RolesPage() {
                 <input
                   value={permissionSearch}
                   onChange={(event) => setPermissionSearch(event.target.value)}
-                  placeholder="Cari permission, module, atau kode..."
+                  placeholder="Cari hak akses, modul, atau kode..."
                 />
               </div>
 
               {loadingPermissions ? (
-                <div className="admin-loading">Memuat permission...</div>
+                <div className="admin-loading">Memuat hak akses...</div>
               ) : (
                 <div className="admin-permission-groups">
                   {Object.entries(groupedPermissions).map(([module, rows]) => (
@@ -465,7 +510,7 @@ export function RolesPage() {
                             >
                               <span className="admin-permission-check">{active ? <CheckCircle2 size={14} /> : null}</span>
                               <span>
-                                <strong>{permission.name}</strong>
+                                <strong>{getPermissionName(permission)}</strong>
                                 <small>{permission.code}</small>
                               </span>
                             </button>
@@ -475,7 +520,7 @@ export function RolesPage() {
                     </section>
                   ))}
                   {!Object.keys(groupedPermissions).length ? (
-                    <p className="admin-muted">Permission tidak ditemukan.</p>
+                    <p className="admin-muted">Hak akses tidak ditemukan.</p>
                   ) : null}
                 </div>
               )}

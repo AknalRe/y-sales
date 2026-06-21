@@ -166,7 +166,7 @@ export const mainRoutes: RouteConfig[] = [
     path: 'roles',
     element: <RolesPage />,
     handle: {
-      label: 'Role & Permission',
+      label: 'Role & Hak Akses',
       icon: Shield,
       permission: 'roles.manage',
       section: 'Akses',

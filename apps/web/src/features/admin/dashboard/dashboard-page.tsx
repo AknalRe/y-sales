@@ -69,9 +69,9 @@ const roleMenus = [
   { permission: 'attendance.review', title: 'Review Absensi', icon: ShieldCheck, text: 'Validasi foto wajah, GPS, dan status sesi sales.', href: '/admin/attendance/review' },
   { permission: 'invoice.review', title: 'Verifikasi Nota', icon: ShoppingCart, text: 'Approve atau reject nota transaksi outlet.', href: '/admin/invoice-review' },
   { permission: 'reports.view', title: 'Laporan Penjualan', icon: TrendingUp, text: 'KPI omset, transaksi, visit, dan export Excel.', href: '/admin/reports' },
-  { permissions: ['products.manage', 'inventory.manage'], title: 'Inventory', icon: Package, text: 'Kelola produk, gudang, stok, dan mutasi.', href: '/admin/stock' },
+  { permissions: ['products.manage', 'inventory.manage'], title: 'Inventori', icon: Package, text: 'Kelola produk, gudang, stok, dan mutasi.', href: '/admin/stock' },
   { permission: 'receivables.view', title: 'Piutang Usaha', icon: Clock, text: 'Pantau kredit dan jadwal penagihan outlet.', href: '/admin/receivables' },
-  { permission: 'roles.manage', title: 'Role & Permission', icon: Users, text: 'Atur akses fitur dan permission role.', href: '/admin/roles' },
+  { permission: 'roles.manage', title: 'Role & Hak Akses', icon: Users, text: 'Atur akses fitur dan hak akses role.', href: '/admin/roles' },
   { permission: 'settings.manage', title: 'Operasional', icon: SlidersHorizontal, text: 'Atur geofence, absensi, bukti foto, dan integrasi.', href: '/admin/settings' },
 ];
 

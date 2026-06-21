@@ -8,7 +8,7 @@ import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
 const rolePayloadSchema = z.object({
-  code: z.string().min(2).regex(/^[A-Z0-9_]+$/, 'Role code harus huruf kapital dan underscore'),
+  code: z.string().min(2).regex(/^[A-Z0-9_]+$/, 'Kode role harus huruf kapital dan underscore'),
   name: z.string().min(2),
   description: z.string().optional(),
 });
@@ -91,7 +91,7 @@ export async function accessRoutes(app: FastifyInstance) {
 
     const [existing] = await db.select().from(roles).where(and(eq(roles.id, params.roleId), eq(roles.companyId, companyId)));
     if (!existing) return reply.status(404).send({ message: 'Role tidak ditemukan.' });
-    if (existing.isSystemRole) return reply.status(403).send({ message: 'System role tidak dapat diubah.' });
+    if (existing.isSystemRole) return reply.status(403).send({ message: 'Role sistem tidak dapat diubah.' });
 
     const [updated] = await db.update(roles).set({ ...body, updatedAt: new Date() }).where(and(eq(roles.id, params.roleId), eq(roles.companyId, companyId))).returning();
     try {
@@ -108,7 +108,7 @@ export async function accessRoutes(app: FastifyInstance) {
 
     const [existing] = await db.select().from(roles).where(and(eq(roles.id, params.roleId), eq(roles.companyId, companyId)));
     if (!existing) return reply.status(404).send({ message: 'Role tidak ditemukan.' });
-    if (existing.isSystemRole) return reply.status(403).send({ message: 'System role tidak dapat dihapus.' });
+    if (existing.isSystemRole) return reply.status(403).send({ message: 'Role sistem tidak dapat dihapus.' });
 
     // Check if any users still have this role
     const [userWithRole] = await db.select({ id: users.id }).from(users).where(and(eq(users.roleId, params.roleId), eq(users.companyId, companyId), isNull(users.deletedAt)));

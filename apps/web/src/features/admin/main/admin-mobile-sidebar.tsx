@@ -21,7 +21,7 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
     <div className="fixed inset-0 z-[100] flex">
       <div className="fixed inset-0 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setMobileMenuOpen(false)} />
       <div className="relative flex w-4/5 max-w-xs flex-col h-full shadow-2xl animate-in slide-in-from-left admin-mobile-drawer">
-        <div className="flex items-center justify-between p-4 admin-mobile-drawer-brand">
+        <div className="admin-sidebar-brand">
           <div className="admin-sidebar-logo">
             <span>
               {companyLogo ? (
@@ -37,7 +37,8 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
           </div>
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="p-2 rounded-full admin-mobile-close"
+            id="admin-sidebar-toggle"
+            className="admin-icon-button"
             type="button"
           >
             <span className="sr-only">Tutup menu</span>
@@ -45,16 +46,11 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+        <nav className="flex-1 overflow-y-auto admin-nav">
           {navSections.map((section) => (
-            <div key={section.title}>
-              <h3
-                className="mb-2 text-xs font-semibold uppercase tracking-wider"
-                style={{ color: 'var(--admin-muted)' }}
-              >
-                {section.title}
-              </h3>
-              <ul className="space-y-1">
+            <section key={section.title} className="admin-nav-section">
+              <p>{section.title}</p>
+              <ul>
                 {section.items.map((item) => {
                   const Icon = item.handle.icon;
                   const href = item.index ? '/admin' : (item.path?.startsWith('/') ? item.path : `/admin/${item.path}`);
@@ -74,7 +70,7 @@ export function AdminMobileSidebar({ mobileMenuOpen, setMobileMenuOpen, navSecti
                   );
                 })}
               </ul>
-            </div>
+            </section>
           ))}
         </nav>
       </div>

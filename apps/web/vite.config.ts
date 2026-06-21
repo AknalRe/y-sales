@@ -21,13 +21,40 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      // Raise warning limit — mediapipe chunk is large but loaded lazily (camera only)
+      chunkSizeWarningLimit: 700,
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-tanstack': ['@tanstack/react-query'],
-            'vendor-base-ui': ['@base-ui/react'],
-            'vendor-ui': ['lucide-react', 'clsx', 'class-variance-authority', 'tailwind-merge'],
+          manualChunks(id) {
+            // MediaPipe — lazy loaded only when camera opens, keep isolated
+            if (id.includes('@mediapipe')) return 'vendor-mediapipe';
+
+            // Supabase realtime / auth
+            if (id.includes('@supabase')) return 'vendor-supabase';
+
+            // Map / geo
+            if (id.includes('leaflet')) return 'vendor-leaflet';
+
+            // Date utilities
+            if (id.includes('date-fns')) return 'vendor-datefns';
+
+            // Excel export — rarely used
+            if (id.includes('xlsx-js-style')) return 'vendor-xlsx';
+
+            // Core UI framework chunks (stable, cached aggressively by browser)
+            if (id.includes('@base-ui/react')) return 'vendor-base-ui';
+            if (
+              id.includes('react-dom') ||
+              id.includes('react-router') ||
+              id.includes('/react/')
+            ) return 'vendor-react';
+            if (id.includes('@tanstack')) return 'vendor-tanstack';
+            if (
+              id.includes('lucide-react') ||
+              id.includes('clsx') ||
+              id.includes('class-variance-authority') ||
+              id.includes('tailwind-merge')
+            ) return 'vendor-ui';
           },
         },
       },
@@ -47,8 +74,8 @@ export default defineConfig(({ mode }) => {
           orientation: 'portrait',
           icons: [
             { src: '/pwa-192.svg', sizes: '192x192', type: 'image/svg+xml' },
-            { src: '/pwa-512.svg', sizes: '512x512', type: 'image/svg+xml' }
-          ]
+            { src: '/pwa-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+          ],
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
@@ -67,7 +94,6 @@ export default defineConfig(({ mode }) => {
           key: fs.readFileSync(keyPath),
         },
       } : {}),
-    }
+    },
   };
 });
-

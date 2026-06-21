@@ -86,14 +86,14 @@ export function LiveFaceOverlay({ videoRef, stream }: LiveFaceOverlayProps) {
   const statusClass = !snapshot
     ? 'sales-face-live-pending'
     : !snapshot.supported
-      ? 'sales-face-live-warning'
+      ? 'sales-face-live-pending'
       : snapshot.detected
         ? 'sales-face-live-ok'
         : 'sales-face-live-danger';
   const statusText = !snapshot
     ? 'Mendeteksi wajah...'
     : !snapshot.supported
-      ? 'Live detector tidak didukung'
+      ? 'Memuat detektor...'
       : snapshot.detected
         ? `Wajah terdeteksi ${Math.round(snapshot.confidence * 100)}%`
         : 'Wajah belum terdeteksi';

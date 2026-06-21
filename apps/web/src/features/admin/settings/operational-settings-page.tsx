@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import {
   AlertTriangle,
   Camera,
@@ -325,6 +325,21 @@ export function OperationalSettingsPage() {
   const [error, setError] = useState('');
   const [activeSection, setActiveSection] = useState<SectionKey>('company');
   const [uploadingCompanyMedia, setUploadingCompanyMedia] = useState<'logo' | 'cover' | null>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!headerRef.current) return;
+      if (window.scrollY > 15) {
+        headerRef.current.classList.add('is-sticky');
+      } else {
+        headerRef.current.classList.remove('is-sticky');
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -513,7 +528,7 @@ export function OperationalSettingsPage() {
 
   return (
     <main className="admin-page">
-      <div className="settings-sticky-header">
+      <div ref={headerRef} className="settings-sticky-header">
         <div className="admin-page-header">
           <div>
             <h1 className="admin-page-title">

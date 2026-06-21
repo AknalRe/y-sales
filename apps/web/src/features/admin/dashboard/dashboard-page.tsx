@@ -430,7 +430,7 @@ export function DashboardPage() {
         </article>
       </section>
 
-      <section className="admin-card dashboard-shortcut-card">
+      <section className="admin-card dashboard-shortcut-card mt-4">
         <div className="admin-card-header">
           <div>
             <h2>Akses Cepat</h2>

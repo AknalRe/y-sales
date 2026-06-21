@@ -8,11 +8,16 @@
     border-bottom: 1px solid var(--admin-border);
     background: color-mix(in srgb, var(--admin-bg) 88%, transparent);
     backdrop-filter: blur(18px);
-    padding: 0 0 .75rem 0;
+    padding: 0 0 1rem 0;
+
+    &.is-sticky {
+      padding-top: 1.2rem;
+    }
   }
 
   .settings-sticky-header .admin-page-header {
     margin-bottom: 0;
+    padding-right: 1rem;
   }
 
   .settings-summary-grid {
@@ -20,6 +25,7 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: .9rem;
     margin-top: .75rem;
+    padding-right: 1rem;
   }
 
   .settings-summary-card {
@@ -82,7 +88,7 @@
 
   .settings-side-nav {
     position: sticky;
-    top: 18rem;
+    top: 19rem;
     align-self: start;
     display: grid;
     gap: .4rem;
@@ -94,6 +100,20 @@
     padding: .55rem;
     box-shadow: var(--admin-shadow-card);
     z-index: 10;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      margin: 0.6rem 0;
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--admin-sidebar-bg) 64%, transparent);
+    }
   }
 
   .settings-side-button {
@@ -121,7 +141,7 @@
   .settings-side-button.active {
     background: var(--admin-sidebar-active-bg);
     color: #ffffff;
-    box-shadow: 0 12px 24px rgba(232, 101, 10, .18);
+    // box-shadow: 0 12px 24px rgba(232, 101, 10, .18);
   }
 
   .settings-side-icon {

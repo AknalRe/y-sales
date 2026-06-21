@@ -44,8 +44,10 @@ export default defineConfig(({ mode }) => {
             // a circular chunk warning. Rollup places it automatically.
 
             // Core UI framework chunks (stable, cached aggressively by browser)
-            if (id.includes('@base-ui/react')) return 'vendor-base-ui';
+            // NOTE: @base-ui/react depends on react/react-dom internally,
+            // so it must live in the same chunk to avoid circular dependency warning.
             if (
+              id.includes('@base-ui/react') ||
               id.includes('react-dom') ||
               id.includes('react-router') ||
               id.includes('/react/')

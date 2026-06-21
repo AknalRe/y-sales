@@ -1,4 +1,4 @@
-import { boolean, integer, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { integer, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { users } from './auth.js';
 
 export const mediaOwnerTypeEnum = pgEnum('media_owner_type', ['user', 'outlet', 'transaction', 'attendance', 'visit', 'deposit', 'face_template', 'product', 'company']);

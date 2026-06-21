@@ -199,7 +199,8 @@ export async function verifyFaceIdentity(input: VerifyFaceIdentityInput) {
     return { status: 'manual_review' as const, confidence: input.faceConfidence ?? 0, livenessStatus: 'manual_review' as const, reason: 'ACTIVE_FACE_TEMPLATE_NOT_FOUND' };
   }
 
-  if (!input.faceDetected) {
+  const providerCanDetectFace = input.settings.faceIntegration.enabled && input.settings.faceIntegration.provider !== 'mock';
+  if (!input.faceDetected && !providerCanDetectFace) {
     console.log(`[${new Date().toISOString()}] [face-verify] REJECT reason=FACE_NOT_DETECTED userId=${input.userId}`);
     await db.update(faceCaptures).set({ identityMatchStatus: 'not_matched', identityConfidence: '0', livenessStatus: 'manual_review' }).where(eq(faceCaptures.id, input.faceCaptureId));
     return { status: 'not_matched' as const, confidence: 0, livenessStatus: 'manual_review' as const, reason: 'FACE_NOT_DETECTED' };

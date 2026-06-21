@@ -469,7 +469,7 @@ export async function platformRoutes(app: FastifyInstance) {
 
   // ─── Company Users & Stats ──────────────────────────────────────────────────
 
-  app.get('/platform/companies/:id/users', superAdminHook(), async (request, reply) => {
+  app.get('/platform/companies/:id/users', superAdminHook(), async (request) => {
     const params = z.object({ id: z.string().uuid() }).parse(request.params);
     const rows = await db.select({
       id: users.id, name: users.name, email: users.email, phone: users.phone,

@@ -24,7 +24,7 @@ export class NotificationService {
 
     try {
       // 1. Insert into DB (Notification Inbox)
-      const [notification] = await db.insert(notifications).values({
+      await db.insert(notifications).values({
         userId,
         companyId: companyId || null,
         title,
@@ -32,7 +32,7 @@ export class NotificationService {
         type,
         referenceId: referenceId || null,
         data: data || null,
-      }).returning();
+      });
 
       // 2. Fetch User Device Tokens
       const whereClause = companyId

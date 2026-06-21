@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'YukSales',
           short_name: 'YukSales',
-          description: 'PWA sales tracking, attendance, visit control, and offline order sync.',
+          description: 'PWA tracking sales, absensi, kontrol kunjungan, dan sinkronisasi order offline.',
           theme_color: '#0f172a',
           background_color: '#020617',
           display: 'standalone',
@@ -52,6 +52,10 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+          navigateFallback: '/index.html',
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
         },
       }),
     ],

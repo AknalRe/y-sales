@@ -113,6 +113,10 @@ function getGeofenceError(geofence: ReturnType<typeof validateGeofence>) {
   return '';
 }
 
+function faceProviderCanDetect(settings: Awaited<ReturnType<typeof getGeneralSettings>>) {
+  return settings.faceIntegration.enabled && settings.faceIntegration.provider !== 'mock';
+}
+
 async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Promise<HandlerResult> {
   try {
     const body = attendanceCheckInPayload.parse(payload);
@@ -151,7 +155,7 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
       accuracyMeters: body.location.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
-    if (settings.requireFaceForAttendance && !body.faceCapture.faceDetected) return { success: false, error: 'Wajah tidak terdeteksi untuk absensi.' };
+    if (settings.requireFaceForAttendance && !body.faceCapture.faceDetected && !faceProviderCanDetect(settings)) return { success: false, error: 'Wajah tidak terdeteksi untuk absensi.' };
     const attendanceGeofenceError = getGeofenceError(geofence);
     if (attendanceGeofenceError) return { success: false, error: attendanceGeofenceError };
 
@@ -177,9 +181,9 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
       livenessStatus: 'not_checked',
     }).returning();
 
-    const validationStatus = !body.faceCapture.faceDetected
+    const validationStatus = !body.faceCapture.faceDetected && !faceProviderCanDetect(settings)
       ? 'face_not_detected'
-      : geofence.valid ? 'valid' : 'invalid_location';
+      : geofence.valid ? 'manual_review' : 'invalid_location';
 
     const [session] = await db.insert(attendanceSessions).values({
       companyId: ctx.companyId,
@@ -243,7 +247,7 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
       accuracyMeters: body.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
-    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) return { success: false, error: 'Wajah tidak terdeteksi untuk check-in kunjungan.' };
+    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected && !faceProviderCanDetect(settings)) return { success: false, error: 'Wajah tidak terdeteksi untuk check-in kunjungan.' };
     const visitGeofenceError = getGeofenceError(geofence);
     if (visitGeofenceError) return { success: false, error: visitGeofenceError };
 
@@ -270,7 +274,7 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
     }).returning();
 
     const hasValidFace = body.faceCapture.faceDetected;
-    const validationStatus = !hasValidFace ? 'face_not_detected' : geofence.valid ? 'valid' : 'manual_review';
+    const validationStatus = !hasValidFace && !faceProviderCanDetect(settings) ? 'face_not_detected' : geofence.valid ? 'manual_review' : 'invalid_location';
 
     const [visit] = await db.insert(visitSessions).values({
       companyId: ctx.companyId,
@@ -319,7 +323,7 @@ async function handleVisitCheckOut(payload: unknown, ctx: SyncContext): Promise<
       accuracyMeters: body.accuracyM,
       maxAccuracyMeters: settings.maxGpsAccuracyM,
     });
-    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) return { success: false, error: 'Wajah tidak terdeteksi untuk check-out kunjungan.' };
+    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected && !faceProviderCanDetect(settings)) return { success: false, error: 'Wajah tidak terdeteksi untuk check-out kunjungan.' };
     const visitGeofenceError = getGeofenceError(geofence);
     if (visitGeofenceError) return { success: false, error: visitGeofenceError };
 

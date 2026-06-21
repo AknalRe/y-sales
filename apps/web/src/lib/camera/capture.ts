@@ -54,7 +54,7 @@ async function detectFace(canvas: HTMLCanvasElement): Promise<FaceDetectionSnaps
 }
 
 function drawVideoFrame(video: HTMLVideoElement, context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
-  context.setTransform(-1, 0, 0, 1, canvas.width, 0);
+  context.setTransform(1, 0, 0, 1, 0, 0);
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
 }
 
@@ -100,7 +100,7 @@ export async function detectFaceFromVideo(video: HTMLVideoElement): Promise<Face
 }
 
 export async function startFrontCamera(video: HTMLVideoElement) {
-  video.style.transform = 'scaleX(-1)';
+  video.style.transform = 'none';
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: 'user' },
     audio: false,

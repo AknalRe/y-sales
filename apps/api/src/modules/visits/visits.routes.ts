@@ -90,6 +90,10 @@ function assertVisitLocationValid(geofence: ReturnType<typeof validateGeofence>)
   }
 }
 
+function faceProviderCanDetect(settings: Awaited<ReturnType<typeof getGeneralSettings>>) {
+  return settings.faceIntegration.enabled && settings.faceIntegration.provider !== 'mock';
+}
+
 async function createVisitFaceCapture({
   userId,
   context,
@@ -101,7 +105,6 @@ async function createVisitFaceCapture({
   context: 'visit_check_in' | 'visit_check_out';
   location: { latitude: number; longitude: number };
   faceCapture: z.infer<typeof faceCaptureSchema>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tx?: any;
 }) {
   const executor = tx ?? db;
@@ -435,7 +438,7 @@ export async function visitRoutes(app: FastifyInstance) {
       capturedAt: body.faceCapture.capturedAt ?? new Date(),
     });
     if (!gpsIntegrity.valid) throw Object.assign(new Error(gpsIntegrity.message), { statusCode: 400, gpsIntegrity });
-    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-in kunjungan.'), { statusCode: 400 });
+    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected && !faceProviderCanDetect(settings)) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-in kunjungan.'), { statusCode: 400 });
     assertVisitLocationValid(geofence);
     const hasValidFace = body.faceCapture.faceDetected;
     const gpsAccuracy = { valid: geofence.accuracyValid, accuracyM: body.accuracyM ?? null, maxAccuracyM: settings.maxGpsAccuracyM };
@@ -461,7 +464,8 @@ export async function visitRoutes(app: FastifyInstance) {
         : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
       if (settings.rejectVisitOnFaceMismatch && identityResult.status === 'not_matched') throw Object.assign(new Error('Identitas wajah tidak cocok dengan user login.'), { statusCode: 403 });
       const identityValid = !settings.requireFaceIdentityMatchForVisit || identityResult.status === 'matched';
-      const validationStatus = !hasValidFace ? 'face_not_detected' : geofence.valid && identityValid ? 'valid' : 'manual_review';
+      const faceAccepted = hasValidFace || identityResult.status === 'matched';
+      const validationStatus = !faceAccepted ? 'face_not_detected' : geofence.valid && identityValid ? 'valid' : 'manual_review';
 
       const [visitResult] = await tx.insert(visitSessions).values({
         companyId,
@@ -532,7 +536,7 @@ export async function visitRoutes(app: FastifyInstance) {
       },
     });
     if (!gpsIntegrity.valid) throw Object.assign(new Error(gpsIntegrity.message), { statusCode: 400, gpsIntegrity });
-    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-out kunjungan.'), { statusCode: 400 });
+    if (settings.requireFaceForVisit && !body.faceCapture.faceDetected && !faceProviderCanDetect(settings)) throw Object.assign(new Error('Wajah tidak terdeteksi untuk check-out kunjungan.'), { statusCode: 400 });
     assertVisitLocationValid(geofence);
 
     const { updated, face, identity, durationSeconds } = await db.transaction(async (tx) => {
@@ -548,7 +552,8 @@ export async function visitRoutes(app: FastifyInstance) {
         : { status: 'not_checked' as const, confidence: body.faceCapture.faceConfidence ?? 0, livenessStatus: 'not_checked' as const, reason: 'DISABLED_BY_COMPANY_SETTINGS' };
       if (settings.rejectVisitOnFaceMismatch && identityResult.status === 'not_matched') throw Object.assign(new Error('Identitas wajah check-out tidak cocok dengan user login.'), { statusCode: 403 });
       const identityValid = !settings.requireFaceIdentityMatchForVisit || identityResult.status === 'matched';
-      const validationStatus = visit.validationStatus === 'valid' && geofence.valid && body.faceCapture.faceDetected && identityValid ? 'valid' : 'manual_review';
+      const faceAccepted = body.faceCapture.faceDetected || identityResult.status === 'matched';
+      const validationStatus = visit.validationStatus === 'valid' && geofence.valid && faceAccepted && identityValid ? 'valid' : 'manual_review';
 
       const now = new Date();
       const durationSeconds = Math.max(0, Math.round((now.getTime() - new Date(visit.checkInAt!).getTime()) / 1000));

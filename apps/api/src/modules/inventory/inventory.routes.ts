@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
-import { appSettings, auditLogs, inventoryBalances, inventoryMovements, products, roles, users, warehouses } from '@yuksales/db/schema';
+import { appSettings, inventoryBalances, inventoryMovements, products, roles, users, warehouses } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { authenticate } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';

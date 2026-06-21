@@ -58,7 +58,8 @@ function rejectInvalidAttendanceValidation(input: {
   geofence: ReturnType<typeof validateGeofence>;
   faceDetected: boolean;
 }) {
-  if (input.settings.requireFaceForAttendance && !input.faceDetected) {
+  const providerCanDetectFace = input.settings.faceIntegration.enabled && input.settings.faceIntegration.provider !== 'mock';
+  if (input.settings.requireFaceForAttendance && !input.faceDetected && !providerCanDetectFace) {
     return input.reply.status(400).send({
       message: 'Wajah tidak terdeteksi. Pastikan kamera menghadap wajah sebelum mengirim absensi.',
       validationStatus: 'face_not_detected',
@@ -261,7 +262,8 @@ export async function attendanceRoutes(app: FastifyInstance) {
       if (settings.requireFaceIdentityMatchForAttendance && identity.status === 'not_matched') {
         throw Object.assign(new Error(`Wajah tidak cocok dengan data registrasi (confidence: ${Math.round((identity.confidence ?? 0) * 100)}%). Silakan coba lagi.`), { statusCode: 403 });
       }
-      const validationStatus = !body.faceCapture.faceDetected
+      const faceAccepted = body.faceCapture.faceDetected || identity.status === 'matched';
+      const validationStatus = !faceAccepted
         ? 'face_not_detected'
         : geofence.valid && identityValid
           ? 'valid'
@@ -397,7 +399,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
         checkOutAccuracyM: body.location.accuracyM?.toString(),
         checkOutFaceCaptureId: face.id,
         status: 'closed',
-        validationStatus: existingSession.validationStatus === 'valid' && geofence.valid && body.faceCapture.faceDetected && identityValid ? 'valid' : 'manual_review',
+        validationStatus: existingSession.validationStatus === 'valid' && geofence.valid && (body.faceCapture.faceDetected || identity.status === 'matched') && identityValid ? 'valid' : 'manual_review',
         updatedAt: new Date(),
       }).where(and(eq(attendanceSessions.id, body.attendanceSessionId), eq(attendanceSessions.userId, authUser.id), eq(attendanceSessions.companyId, companyId))).returning();
 

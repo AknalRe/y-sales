@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { createDb } from './client.js';
 import { resolveDatabaseUrl } from './database-url.js';
 import { permissions, rolePermissions, roles } from './schema/index.js';

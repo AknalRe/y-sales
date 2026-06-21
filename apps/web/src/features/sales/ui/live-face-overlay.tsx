@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { ScanFace } from 'lucide-react';
 import { detectFaceFromVideo, type FaceDetectionSnapshot } from '../../../lib/camera/capture';
 
@@ -37,7 +37,7 @@ function getOverlayBox(video: HTMLVideoElement, snapshot: FaceDetectionSnapshot 
 
 export function LiveFaceOverlay({ videoRef, stream }: LiveFaceOverlayProps) {
   const [snapshot, setSnapshot] = useState<FaceDetectionSnapshot | null>(null);
-  const [version, setVersion] = useState(0);
+  const [box, setBox] = useState<OverlayBox | null>(null);
   const detectingRef = useRef(false);
 
   useEffect(() => {
@@ -51,8 +51,12 @@ export function LiveFaceOverlay({ videoRef, stream }: LiveFaceOverlayProps) {
       if (detectingRef.current || !videoRef.current) return;
       detectingRef.current = true;
       try {
-        const nextSnapshot = await detectFaceFromVideo(videoRef.current);
-        if (!cancelled) setSnapshot(nextSnapshot);
+        const video = videoRef.current;
+        const nextSnapshot = video ? await detectFaceFromVideo(video) : null;
+        if (!cancelled) {
+          setSnapshot(nextSnapshot);
+          setBox(video ? getOverlayBox(video, nextSnapshot) : null);
+        }
       } finally {
         detectingRef.current = false;
       }
@@ -67,15 +71,17 @@ export function LiveFaceOverlay({ videoRef, stream }: LiveFaceOverlayProps) {
   }, [stream, videoRef]);
 
   useEffect(() => {
-    const onResize = () => setVersion((current) => current + 1);
+    const onResize = () => {
+      const video = videoRef.current;
+      setBox(video ? getOverlayBox(video, snapshot) : null);
+    };
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  const box = useMemo(() => {
-    version;
-    return videoRef.current ? getOverlayBox(videoRef.current, snapshot) : null;
-  }, [snapshot, videoRef, version]);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [snapshot, videoRef]);
 
   const statusClass = !snapshot
     ? 'sales-face-live-pending'

@@ -17,7 +17,7 @@ export async function notificationRoutes(app: FastifyInstance) {
   app.post<{ Body: z.infer<typeof registerTokenSchema> }>(
     '/notifications/tokens',
     { preHandler: authenticate },
-    async (request, reply) => {
+    async (request) => {
       const user = request.user!;
       const data = registerTokenSchema.parse(request.body);
 
@@ -60,7 +60,7 @@ export async function notificationRoutes(app: FastifyInstance) {
   app.delete<{ Params: { token: string } }>(
     '/notifications/tokens/:token',
     { preHandler: authenticate },
-    async (request, reply) => {
+    async (request) => {
       const user = request.user!;
       const { token } = request.params;
 
@@ -91,7 +91,7 @@ export async function notificationRoutes(app: FastifyInstance) {
   app.get(
     '/notifications/unread-count',
     { preHandler: authenticate },
-    async (request, reply) => {
+    async (request) => {
       const user = request.user!;
       const conditions = [
         eq(notifications.userId, user.id),
@@ -112,7 +112,7 @@ export async function notificationRoutes(app: FastifyInstance) {
   app.get<{ Querystring: { page?: string, limit?: string } }>(
     '/notifications',
     { preHandler: authenticate },
-    async (request, reply) => {
+    async (request) => {
       const user = request.user!;
       const page = Number(request.query.page || '1');
       const limit = Number(request.query.limit || '20');
@@ -142,7 +142,7 @@ export async function notificationRoutes(app: FastifyInstance) {
   app.patch(
     '/notifications/read-all',
     { preHandler: authenticate },
-    async (request, reply) => {
+    async (request) => {
       const user = request.user!;
       const conditions = [
         eq(notifications.userId, user.id),

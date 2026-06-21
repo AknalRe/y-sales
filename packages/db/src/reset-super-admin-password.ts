@@ -48,12 +48,19 @@ async function main() {
         companyId: null,
         code: 'SUPER_ADMIN',
         name: 'Super Admin Platform',
-        description: 'Full platform access for managing tenants, subscriptions, and system settings.',
+        description: 'Akses penuh platform untuk mengelola tenant, langganan, dan pengaturan sistem.',
         isSystemRole: true,
       })
       .returning();
 
     console.log('Role SUPER_ADMIN belum ada, role platform berhasil dibuat.');
+  } else {
+    await db.update(roles).set({
+      name: 'Super Admin Platform',
+      description: 'Akses penuh platform untuk mengelola tenant, langganan, dan pengaturan sistem.',
+      isSystemRole: true,
+      updatedAt: new Date(),
+    }).where(eq(roles.id, superAdminRole.id));
   }
 
   const passwordHash = await bcrypt.hash(password, 12);

@@ -2,7 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { createDb } from './client.js';
 import { resolveDatabaseUrl } from './database-url.js';
 import { appSettings, companies, inventoryBalances, outlets, permissions, products, rolePermissions, roles, subscriptionFeatures, subscriptionPlans, tenantSubscriptions, users, warehouses } from './schema/index.js';
@@ -29,7 +29,7 @@ if (!defaultCompany) {
 }
 
 const roleSeeds = [
-  { code: 'ADMINISTRATOR', name: 'Administrator', description: 'Akses penuh sistem termasuk manajemen role dan permission.' },
+  { code: 'ADMINISTRATOR', name: 'Administrator', description: 'Akses penuh sistem termasuk manajemen role dan hak akses.' },
   { code: 'OWNER', name: 'Owner', description: 'Pemilik bisnis dengan akses eksekutif.' },
   { code: 'OPERATIONAL_MANAGER', name: 'Operational Manager', description: 'Monitoring operasional dan validasi tingkat tinggi.' },
   { code: 'SUPERVISOR', name: 'Supervisor', description: 'Kontrol outlet, penjadwalan, approval, dan setoran.' },
@@ -66,11 +66,11 @@ const permissionSeeds = [
 ] as const;
 
 const settingSeeds: Array<{ key: string; value: unknown; description: string }> = [
-  { key: 'default_geofence_radius_m', value: 100, description: 'Default outlet geofence radius in meters.' },
-  { key: 'max_gps_accuracy_m', value: 100, description: 'Maximum accepted GPS accuracy in meters.' },
-  { key: 'daily_visit_target', value: 20, description: 'Default daily visit target for sales agents.' },
-  { key: 'gps_log_interval_seconds', value: 300, description: 'GPS logging interval while app is active.' },
-  { key: 'face_detection_required', value: true, description: 'Require face presence detection for attendance.' },
+  { key: 'default_geofence_radius_m', value: 100, description: 'Radius geofence outlet default dalam meter.' },
+  { key: 'max_gps_accuracy_m', value: 100, description: 'Akurasi GPS maksimal yang diterima dalam meter.' },
+  { key: 'daily_visit_target', value: 20, description: 'Target kunjungan harian default untuk sales.' },
+  { key: 'gps_log_interval_seconds', value: 300, description: 'Interval pencatatan GPS saat aplikasi aktif.' },
+  { key: 'face_detection_required', value: true, description: 'Wajib mendeteksi wajah untuk absensi.' },
 ];
 
 for (const role of roleSeeds) {
@@ -81,13 +81,27 @@ for (const role of roleSeeds) {
 }
 
 // ─── Platform Super Admin Role (global, no company) ────────────────────────
-await db.insert(roles).values({
-  companyId: null,
-  code: 'SUPER_ADMIN',
-  name: 'Super Admin Platform',
-  description: 'Platform-level administrator. Has full access to all companies and system settings.',
-  isSystemRole: true,
-}).onConflictDoNothing();
+const [existingSuperAdminRole] = await db
+  .select({ id: roles.id })
+  .from(roles)
+  .where(and(eq(roles.code, 'SUPER_ADMIN'), isNull(roles.companyId)))
+  .limit(1);
+if (existingSuperAdminRole) {
+  await db.update(roles).set({
+    name: 'Super Admin Platform',
+    description: 'Administrator tingkat platform dengan akses penuh ke semua company dan pengaturan sistem.',
+    isSystemRole: true,
+    updatedAt: new Date(),
+  }).where(eq(roles.id, existingSuperAdminRole.id));
+} else {
+  await db.insert(roles).values({
+    companyId: null,
+    code: 'SUPER_ADMIN',
+    name: 'Super Admin Platform',
+    description: 'Administrator tingkat platform dengan akses penuh ke semua company dan pengaturan sistem.',
+    isSystemRole: true,
+  });
+}
 
 for (const [code, name, module] of permissionSeeds) {
   await db.insert(permissions).values({ code, name, module }).onConflictDoUpdate({
@@ -200,7 +214,7 @@ const sampleProducts = [
   { sku: 'YKS-KP-001', name: 'Kopi Robusta YukSales 250gr', description: 'Produk kopi retail premium.', unit: 'pack', priceDefault: '35000.00', status: 'active' as const },
   { sku: 'YKS-TH-001', name: 'Teh Rempah YukSales 20 pcs', description: 'Teh rempah untuk outlet dan agen.', unit: 'box', priceDefault: '28000.00', status: 'active' as const },
   { sku: 'YKS-SNK-001', name: 'Snack Singkong Original', description: 'Snack pendamping penjualan outlet.', unit: 'pack', priceDefault: '18000.00', status: 'active' as const },
-  { sku: 'YKS-GFT-001', name: 'Paket Hampers YukSales', description: 'Bundle seasonal untuk program sales.', unit: 'set', priceDefault: '125000.00', status: 'active' as const },
+  { sku: 'YKS-GFT-001', name: 'Paket Hampers YukSales', description: 'Paket musiman untuk program sales.', unit: 'set', priceDefault: '125000.00', status: 'active' as const },
 ];
 
 for (const product of sampleProducts) {
@@ -270,19 +284,19 @@ if (salesWarehouse) {
 
 // ─── Subscription Feature Catalog ───────────────────────────────────────────
 const featureSeeds = [
-  { key: 'attendance', label: 'Attendance', description: 'Absensi user tenant.', category: 'Operasional', status: 'active' },
-  { key: 'visits', label: 'Customer Visits', description: 'Pencatatan kunjungan outlet/customer.', category: 'Sales', status: 'active' },
-  { key: 'basic_reports', label: 'Basic Reports', description: 'Laporan dasar operasional dan aktivitas sales.', category: 'Reporting', status: 'active' },
-  { key: 'route_tracking', label: 'Route Tracking', description: 'Tracking rute dan aktivitas sales lapangan.', category: 'Sales', status: 'active' },
-  { key: 'face_recognition', label: 'Face Recognition', description: 'Validasi wajah untuk absensi/kunjungan.', category: 'Operasional', status: 'active' },
-  { key: 'offline_sync', label: 'Offline Sync', description: 'Sinkronisasi data saat koneksi kembali online.', category: 'Operasional', status: 'active' },
-  { key: 'order_taking', label: 'Order Taking', description: 'Pembuatan order penjualan dari aplikasi.', category: 'Sales', status: 'active' },
-  { key: 'stock_management', label: 'Stock Management', description: 'Manajemen stok, gudang, dan produk.', category: 'Operasional', status: 'active' },
-  { key: 'advanced_reports', label: 'Advanced Reports', description: 'Laporan lanjutan dan insight performa.', category: 'Reporting', status: 'active' },
-  { key: 'export_excel', label: 'Export Excel', description: 'Export data operasional ke Excel.', category: 'Reporting', status: 'active' },
-  { key: 'r2_storage', label: 'Cloud Storage', description: 'Penyimpanan file/foto berbasis object storage.', category: 'Integrasi', status: 'active' },
-  { key: 'api_access', label: 'API Access', description: 'Akses integrasi API untuk sistem eksternal.', category: 'Integrasi', status: 'active' },
-  { key: 'priority_support', label: 'Priority Support', description: 'Prioritas support untuk tenant enterprise.', category: 'Support', status: 'active' },
+  { key: 'attendance', label: 'Absensi', description: 'Absensi pengguna tenant.', category: 'Operasional', status: 'active' },
+  { key: 'visits', label: 'Kunjungan Outlet', description: 'Pencatatan kunjungan outlet/pelanggan.', category: 'Penjualan', status: 'active' },
+  { key: 'basic_reports', label: 'Laporan Dasar', description: 'Laporan dasar operasional dan aktivitas sales.', category: 'Laporan', status: 'active' },
+  { key: 'route_tracking', label: 'Pelacakan Rute', description: 'Pelacakan rute dan aktivitas sales lapangan.', category: 'Penjualan', status: 'active' },
+  { key: 'face_recognition', label: 'Pengenalan Wajah', description: 'Validasi wajah untuk absensi/kunjungan.', category: 'Operasional', status: 'active' },
+  { key: 'offline_sync', label: 'Sinkronisasi Offline', description: 'Sinkronisasi data saat koneksi kembali online.', category: 'Operasional', status: 'active' },
+  { key: 'order_taking', label: 'Pembuatan Order', description: 'Pembuatan order penjualan dari aplikasi.', category: 'Penjualan', status: 'active' },
+  { key: 'stock_management', label: 'Manajemen Stok', description: 'Manajemen stok, gudang, dan produk.', category: 'Operasional', status: 'active' },
+  { key: 'advanced_reports', label: 'Laporan Lanjutan', description: 'Laporan lanjutan dan insight performa.', category: 'Laporan', status: 'active' },
+  { key: 'export_excel', label: 'Ekspor Excel', description: 'Ekspor data operasional ke Excel.', category: 'Laporan', status: 'active' },
+  { key: 'r2_storage', label: 'Penyimpanan Cloud', description: 'Penyimpanan file/foto berbasis object storage.', category: 'Integrasi', status: 'active' },
+  { key: 'api_access', label: 'Akses API', description: 'Akses integrasi API untuk sistem eksternal.', category: 'Integrasi', status: 'active' },
+  { key: 'priority_support', label: 'Dukungan Prioritas', description: 'Prioritas dukungan untuk tenant enterprise.', category: 'Dukungan', status: 'active' },
 ] as const;
 
 for (const feature of featureSeeds) {
@@ -329,7 +343,7 @@ const planSeeds = [
   {
     code: 'enterprise',
     name: 'Enterprise',
-    description: 'Full akses semua fitur platform tanpa batasan.',
+    description: 'Akses penuh semua fitur platform tanpa batasan.',
     level: 3,
     priceMonthly: '999000',
     priceYearly: '9990000',
@@ -586,8 +600,8 @@ for (const outlet of mahasuraSampleOutlets) {
 const mahasuraSampleProducts = [
   { sku: 'MHS-PR-001', name: 'Beras Premium 5kg', description: 'Beras super premium untuk konsumsi rumah tangga.', unit: 'pack', priceDefault: '75000', status: 'active' },
   { sku: 'MHS-PR-002', name: 'Minyak Goreng 2L', description: 'Minyak sawit premium untuk memasak.', unit: 'botol', priceDefault: '28000', status: 'active' },
-  { sku: 'MHS-PR-003', name: 'Gula Pasir 1kg', description: 'Gula pasir refined untuk industri rumah tangga.', unit: 'pack', priceDefault: '14000', status: 'active' },
-  { sku: 'MHS-PR-004', name: 'Telur Ayam Kampung', description: 'Telur bebas rasakan dari peternakan lokal.', unit: 'butir (10 butir)', priceDefault: '25000', status: 'active' },
+  { sku: 'MHS-PR-003', name: 'Gula Pasir 1kg', description: 'Gula pasir rafinasi untuk industri rumah tangga.', unit: 'pack', priceDefault: '14000', status: 'active' },
+  { sku: 'MHS-PR-004', name: 'Telur Ayam Kampung', description: 'Telur ayam kampung dari peternakan lokal.', unit: 'butir (10 butir)', priceDefault: '25000', status: 'active' },
 ] as const;
 
 for (const product of mahasuraSampleProducts) {

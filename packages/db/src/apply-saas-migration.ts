@@ -75,19 +75,24 @@ await sql.begin(async (tx) => {
   `;
   await tx`
     INSERT INTO "subscription_features" ("key", "label", "description", "category") VALUES
-      ('attendance', 'Attendance', 'Absensi user tenant.', 'Operasional'),
-      ('visits', 'Customer Visits', 'Pencatatan kunjungan outlet/customer.', 'Sales'),
-      ('route_tracking', 'Route Tracking', 'Tracking rute dan aktivitas sales lapangan.', 'Sales'),
-      ('face_recognition', 'Face Recognition', 'Validasi wajah untuk absensi/kunjungan.', 'Operasional'),
-      ('offline_sync', 'Offline Sync', 'Sinkronisasi data saat koneksi kembali online.', 'Operasional'),
-      ('order_taking', 'Order Taking', 'Pembuatan order penjualan dari aplikasi.', 'Sales'),
-      ('stock_management', 'Stock Management', 'Manajemen stok, gudang, dan produk.', 'Operasional'),
-      ('advanced_reports', 'Advanced Reports', 'Laporan lanjutan dan insight performa.', 'Reporting'),
-      ('export_excel', 'Export Excel', 'Export data operasional ke Excel.', 'Reporting'),
-      ('r2_storage', 'Cloud Storage', 'Penyimpanan file/foto berbasis object storage.', 'Integrasi'),
-      ('api_access', 'API Access', 'Akses integrasi API untuk sistem eksternal.', 'Integrasi'),
-      ('priority_support', 'Priority Support', 'Prioritas support untuk tenant enterprise.', 'Support')
-    ON CONFLICT ("key") DO NOTHING
+      ('attendance', 'Absensi', 'Absensi pengguna tenant.', 'Operasional'),
+      ('visits', 'Kunjungan Outlet', 'Pencatatan kunjungan outlet/pelanggan.', 'Penjualan'),
+      ('basic_reports', 'Laporan Dasar', 'Laporan dasar operasional dan aktivitas sales.', 'Laporan'),
+      ('route_tracking', 'Pelacakan Rute', 'Pelacakan rute dan aktivitas sales lapangan.', 'Penjualan'),
+      ('face_recognition', 'Pengenalan Wajah', 'Validasi wajah untuk absensi/kunjungan.', 'Operasional'),
+      ('offline_sync', 'Sinkronisasi Offline', 'Sinkronisasi data saat koneksi kembali online.', 'Operasional'),
+      ('order_taking', 'Pembuatan Order', 'Pembuatan order penjualan dari aplikasi.', 'Penjualan'),
+      ('stock_management', 'Manajemen Stok', 'Manajemen stok, gudang, dan produk.', 'Operasional'),
+      ('advanced_reports', 'Laporan Lanjutan', 'Laporan lanjutan dan insight performa.', 'Laporan'),
+      ('export_excel', 'Ekspor Excel', 'Ekspor data operasional ke Excel.', 'Laporan'),
+      ('r2_storage', 'Penyimpanan Cloud', 'Penyimpanan file/foto berbasis object storage.', 'Integrasi'),
+      ('api_access', 'Akses API', 'Akses integrasi API untuk sistem eksternal.', 'Integrasi'),
+      ('priority_support', 'Dukungan Prioritas', 'Prioritas dukungan untuk tenant enterprise.', 'Dukungan')
+    ON CONFLICT ("key") DO UPDATE SET
+      "label" = EXCLUDED."label",
+      "description" = EXCLUDED."description",
+      "category" = EXCLUDED."category",
+      "updated_at" = now()
   `;
   console.log('✓ subscription_features table ready');
 

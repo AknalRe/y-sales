@@ -20,19 +20,19 @@ const allFeatureKeys = [
 
 // ─── Subscription Feature Catalog ───────────────────────────────────────────
 const featureSeeds = [
-  { key: 'attendance', label: 'Attendance', description: 'Absensi user tenant.', category: 'Operasional', status: 'active' },
-  { key: 'visits', label: 'Customer Visits', description: 'Pencatatan kunjungan outlet/customer.', category: 'Sales', status: 'active' },
-  { key: 'basic_reports', label: 'Basic Reports', description: 'Laporan dasar operasional dan aktivitas sales.', category: 'Reporting', status: 'active' },
-  { key: 'route_tracking', label: 'Route Tracking', description: 'Tracking rute dan aktivitas sales lapangan.', category: 'Sales', status: 'active' },
-  { key: 'face_recognition', label: 'Face Recognition', description: 'Validasi wajah untuk absensi/kunjungan.', category: 'Operasional', status: 'active' },
-  { key: 'offline_sync', label: 'Offline Sync', description: 'Sinkronisasi data saat koneksi kembali online.', category: 'Operasional', status: 'active' },
-  { key: 'order_taking', label: 'Order Taking', description: 'Pembuatan order penjualan dari aplikasi.', category: 'Sales', status: 'active' },
-  { key: 'stock_management', label: 'Stock Management', description: 'Manajemen stok, gudang, dan produk.', category: 'Operasional', status: 'active' },
-  { key: 'advanced_reports', label: 'Advanced Reports', description: 'Laporan lanjutan dan insight performa.', category: 'Reporting', status: 'active' },
-  { key: 'export_excel', label: 'Export Excel', description: 'Export data operasional ke Excel.', category: 'Reporting', status: 'active' },
-  { key: 'r2_storage', label: 'Cloud Storage', description: 'Penyimpanan file/foto berbasis object storage.', category: 'Integrasi', status: 'active' },
-  { key: 'api_access', label: 'API Access', description: 'Akses integrasi API untuk sistem eksternal.', category: 'Integrasi', status: 'active' },
-  { key: 'priority_support', label: 'Priority Support', description: 'Prioritas support untuk tenant enterprise.', category: 'Support', status: 'active' },
+  { key: 'attendance', label: 'Absensi', description: 'Absensi pengguna tenant.', category: 'Operasional', status: 'active' },
+  { key: 'visits', label: 'Kunjungan Outlet', description: 'Pencatatan kunjungan outlet/pelanggan.', category: 'Penjualan', status: 'active' },
+  { key: 'basic_reports', label: 'Laporan Dasar', description: 'Laporan dasar operasional dan aktivitas sales.', category: 'Laporan', status: 'active' },
+  { key: 'route_tracking', label: 'Pelacakan Rute', description: 'Pelacakan rute dan aktivitas sales lapangan.', category: 'Penjualan', status: 'active' },
+  { key: 'face_recognition', label: 'Pengenalan Wajah', description: 'Validasi wajah untuk absensi/kunjungan.', category: 'Operasional', status: 'active' },
+  { key: 'offline_sync', label: 'Sinkronisasi Offline', description: 'Sinkronisasi data saat koneksi kembali online.', category: 'Operasional', status: 'active' },
+  { key: 'order_taking', label: 'Pembuatan Order', description: 'Pembuatan order penjualan dari aplikasi.', category: 'Penjualan', status: 'active' },
+  { key: 'stock_management', label: 'Manajemen Stok', description: 'Manajemen stok, gudang, dan produk.', category: 'Operasional', status: 'active' },
+  { key: 'advanced_reports', label: 'Laporan Lanjutan', description: 'Laporan lanjutan dan insight performa.', category: 'Laporan', status: 'active' },
+  { key: 'export_excel', label: 'Ekspor Excel', description: 'Ekspor data operasional ke Excel.', category: 'Laporan', status: 'active' },
+  { key: 'r2_storage', label: 'Penyimpanan Cloud', description: 'Penyimpanan file/foto berbasis object storage.', category: 'Integrasi', status: 'active' },
+  { key: 'api_access', label: 'Akses API', description: 'Akses integrasi API untuk sistem eksternal.', category: 'Integrasi', status: 'active' },
+  { key: 'priority_support', label: 'Dukungan Prioritas', description: 'Prioritas dukungan untuk tenant enterprise.', category: 'Dukungan', status: 'active' },
 ] as const;
 
 // ─── Ensure Subscription Features & Plans Exist ────────────────────────────
@@ -57,7 +57,7 @@ const planSeeds = [
     features: ['visits', 'attendance', 'face_recognition', 'advanced_reports', 'offline_sync', 'r2_storage'], isPublic: true, status: 'active',
   },
   {
-    code: 'enterprise', name: 'Enterprise', description: 'Full akses semua fitur platform tanpa batasan.', level: 3,
+    code: 'enterprise', name: 'Enterprise', description: 'Akses penuh semua fitur platform tanpa batasan.', level: 3,
     priceMonthly: '999000', priceYearly: '9990000',
     limits: { users: 999999, outlets: 999999, products: 999999, warehouses: 999999, sales_reps: 999999, monthly_visits: 999999, monthly_orders: 999999, storage_gb: 999999 },
     features: [...allFeatureKeys], isPublic: true, status: 'active',
@@ -73,7 +73,7 @@ for (const plan of planSeeds) {
 console.log('  Subscription features & plans ensured.');
 
 const roleSeeds = [
-  { code: 'ADMINISTRATOR', name: 'Administrator', description: 'Akses penuh sistem termasuk manajemen role dan permission.' },
+  { code: 'ADMINISTRATOR', name: 'Administrator', description: 'Akses penuh sistem termasuk manajemen role dan hak akses.' },
   { code: 'OWNER', name: 'Owner', description: 'Pemilik bisnis dengan akses eksekutif.' },
   { code: 'OPERATIONAL_MANAGER', name: 'Operational Manager', description: 'Monitoring operasional dan validasi tingkat tinggi.' },
   { code: 'SUPERVISOR', name: 'Supervisor', description: 'Kontrol outlet, penjadwalan, approval, dan setoran.' },

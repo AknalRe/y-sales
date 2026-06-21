@@ -27,8 +27,15 @@ function getOverlayBox(video: HTMLVideoElement, snapshot: FaceDetectionSnapshot 
   const offsetX = (viewWidth - renderedWidth) / 2;
   const offsetY = (viewHeight - renderedHeight) / 2;
 
+  // Mirror the X coordinate if the video element is horizontally flipped
+  const isMirrored = video.style.transform.includes('scaleX(-1)');
+  let boxLeft = snapshot.box.x;
+  if (isMirrored) {
+    boxLeft = video.videoWidth - (snapshot.box.x + snapshot.box.width);
+  }
+
   return {
-    left: offsetX + snapshot.box.x * scale,
+    left: offsetX + boxLeft * scale,
     top: offsetY + snapshot.box.y * scale,
     width: snapshot.box.width * scale,
     height: snapshot.box.height * scale,

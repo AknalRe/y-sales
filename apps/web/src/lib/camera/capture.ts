@@ -198,7 +198,7 @@ export async function detectFaceFromVideo(video: HTMLVideoElement): Promise<Face
 }
 
 export async function startFrontCamera(video: HTMLVideoElement) {
-  video.style.transform = 'none';
+  video.style.transform = 'scaleX(-1)';
   const stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: 'user' },
     audio: false,

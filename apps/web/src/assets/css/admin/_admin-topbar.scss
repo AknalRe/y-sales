@@ -199,6 +199,11 @@
     }
 }
 
+.admin-icon-button-outlined {
+    background: var(--admin-surface);
+    box-shadow: inset 0 0 0 1px var(--admin-border);
+}
+
 // ─── Responsive (topbar) ──────────────────────────────────────────────────
 @media (max-width: 1180px) {
     .admin-command-shell .admin-content-grid {

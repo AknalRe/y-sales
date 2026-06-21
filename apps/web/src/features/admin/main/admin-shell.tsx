@@ -136,7 +136,7 @@ export function AdminShell() {
           <header className="admin-topbar">
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               {isMobile && (
-                <button onClick={() => setMobileMenuOpen(true)} className="grid place-items-center w-[2.65rem] h-[2.65rem] rounded-2xl bg-white text-slate-500 shadow-[inset_0_0_0_1px_rgba(15,23,42,0.07)]" type="button">
+                <button onClick={() => setMobileMenuOpen(true)} className="admin-icon-button admin-icon-button-outlined" type="button">
                   <Menu size={18} />
                 </button>
               )}

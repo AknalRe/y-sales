@@ -260,12 +260,6 @@ export function OutletMapPicker({
     setGmapsUrlError('');
     setGmapsUrlSuccess(`Berhasil! Koordinat: ${parsed.latitude.toFixed(6)}, ${parsed.longitude.toFixed(6)}`);
     onChangeRef.current({ latitude: parsed.latitude, longitude: parsed.longitude });
-    setGmapsUrlInput('');
-    // Auto-close panel after short delay
-    window.setTimeout(() => {
-      setShowGmapsPanel(false);
-      setGmapsUrlSuccess('');
-    }, 2200);
   }
 
   /** Handle paste event directly in the URL input — immediately try to parse. */
@@ -273,16 +267,10 @@ export function OutletMapPicker({
     const pasted = event.clipboardData.getData('text');
     const parsed = parseGoogleMapsUrl(pasted);
     if (parsed) {
-      event.preventDefault(); // prevent text insertion, we handle it ourselves
       setGmapsUrlError('');
       setGmapsUrlSuccess(`Berhasil! Koordinat: ${parsed.latitude.toFixed(6)}, ${parsed.longitude.toFixed(6)}`);
       setGmapsUrlInput(pasted);
       onChangeRef.current({ latitude: parsed.latitude, longitude: parsed.longitude });
-      window.setTimeout(() => {
-        setShowGmapsPanel(false);
-        setGmapsUrlSuccess('');
-        setGmapsUrlInput('');
-      }, 2200);
     }
   }
 

@@ -60,16 +60,16 @@ export function parseGoogleMapsUrl(input: string): { latitude: number; longitude
   // Must contain google.com/maps or maps.google
   if (!s.includes('google.com/maps') && !s.includes('maps.google')) return null;
 
-  // Pattern 1: @lat,lng (most common — appears after /place/Name/@lat,lng,zoom or after /maps/@lat,lng)
-  const atPattern = /@(-?\d+\.?\d*),(-?\d+\.?\d*)/;
-  const atMatch = atPattern.exec(s);
-  if (atMatch) {
-    const lat = parseFloat(atMatch[1]);
-    const lng = parseFloat(atMatch[2]);
+  // Priority 1: Exact Place Pin (!3dlat...!4dlng) embedded in Google Maps place data
+  const dataPinPattern = /!3d(-?\d+\.?\d*).*?!4d(-?\d+\.?\d*)/;
+  const dataPinMatch = dataPinPattern.exec(s);
+  if (dataPinMatch) {
+    const lat = parseFloat(dataPinMatch[1]);
+    const lng = parseFloat(dataPinMatch[2]);
     if (toValidCoordinate(lat, lng)) return { latitude: lat, longitude: lng };
   }
 
-  // Pattern 2: ?q=lat,lng or &q=lat,lng
+  // Priority 2: Query pin (?q=lat,lng or &q=lat,lng)
   const qPattern = /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/;
   const qMatch = qPattern.exec(s);
   if (qMatch) {
@@ -78,7 +78,7 @@ export function parseGoogleMapsUrl(input: string): { latitude: number; longitude
     if (toValidCoordinate(lat, lng)) return { latitude: lat, longitude: lng };
   }
 
-  // Pattern 3: ll=lat,lng
+  // Priority 3: Location parameter (ll=lat,lng)
   const llPattern = /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/;
   const llMatch = llPattern.exec(s);
   if (llMatch) {
@@ -87,14 +87,12 @@ export function parseGoogleMapsUrl(input: string): { latitude: number; longitude
     if (toValidCoordinate(lat, lng)) return { latitude: lat, longitude: lng };
   }
 
-  // Pattern 4: !3dlat!4dlng embedded in data= (high precision coordinates in the URL data)
-  const dataLatPattern = /!3d(-?\d+\.?\d*)/;
-  const dataLngPattern = /!4d(-?\d+\.?\d*)/;
-  const dataLatMatch = dataLatPattern.exec(s);
-  const dataLngMatch = dataLngPattern.exec(s);
-  if (dataLatMatch && dataLngMatch) {
-    const lat = parseFloat(dataLatMatch[1]);
-    const lng = parseFloat(dataLngMatch[1]);
+  // Priority 4: Fallback to Viewport / Camera Center (@lat,lng)
+  const atPattern = /@(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+  const atMatch = atPattern.exec(s);
+  if (atMatch) {
+    const lat = parseFloat(atMatch[1]);
+    const lng = parseFloat(atMatch[2]);
     if (toValidCoordinate(lat, lng)) return { latitude: lat, longitude: lng };
   }
 

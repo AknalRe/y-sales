@@ -117,7 +117,7 @@ export function LoginPage() {
                   className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none transition focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/40"
                   value={identifier}
                   onChange={(event) => setIdentifier(event.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Email / Nomor HP / Kode Karyawan"
                   required
                 />
               </label>

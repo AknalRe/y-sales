@@ -33,6 +33,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>(initial?.permissions ?? []);
 
   const clearSession = useCallback(() => {
+    const rawProfile = localStorage.getItem(profileStorageKey);
+    if (rawProfile) {
+      try {
+        const stored = JSON.parse(rawProfile);
+        const slug = stored?.user?.company?.slug;
+        if (slug) {
+          localStorage.setItem('yuksales.lastCompanySlug', slug);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
     localStorage.removeItem(profileStorageKey);
     clearStoredRefreshToken();
     clearPlatformCompanyView();

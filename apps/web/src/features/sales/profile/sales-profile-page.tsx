@@ -82,8 +82,10 @@ export function SalesProfilePage() {
   }, [error]);
 
   function handleSignOut() {
+    const lastCompany = user?.company?.slug;
     signOut();
-    navigate('/login', { replace: true });
+    const redirectPath = lastCompany ? `/login/${lastCompany}` : '/login';
+    navigate(redirectPath, { replace: true });
   }
 
   const roleCode = user?.roleCode ?? '';

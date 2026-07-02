@@ -16,7 +16,11 @@ function LoadingScreen() {
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { accessToken, initializing } = useAuth();
   if (initializing) return <LoadingScreen />;
-  if (!accessToken) return <Navigate to="/login" replace />;
+  if (!accessToken) {
+    const lastCompany = localStorage.getItem('yuksales.lastCompanySlug');
+    const redirectPath = lastCompany ? `/login/${lastCompany}` : '/login';
+    return <Navigate to={redirectPath} replace />;
+  }
   return children;
 }
 

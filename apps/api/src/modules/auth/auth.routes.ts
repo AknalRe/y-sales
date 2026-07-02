@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { companies, roles, users, userDeviceTokens } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -71,10 +71,13 @@ export async function authRoutes(app: FastifyInstance) {
       }
     }
 
+    const trimmedIdentifier = body.identifier.trim();
+    const lowerIdentifier = trimmedIdentifier.toLowerCase();
+
     const identifierConditions = [
-      eq(users.email, body.identifier),
-      eq(users.phone, body.identifier),
-      eq(users.employeeCode, body.identifier),
+      eq(sql`lower(${users.email})`, lowerIdentifier),
+      eq(users.phone, trimmedIdentifier),
+      eq(sql`lower(${users.employeeCode})`, lowerIdentifier),
     ];
 
     const conditions = [or(...identifierConditions)!];

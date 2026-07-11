@@ -277,7 +277,7 @@ export function DashboardPage() {
             </Link>
           )}
           <button onClick={loadSummary} disabled={loading || !canSeeSummary} className="admin-btn-ghost" type="button">
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             {loading ? 'Memuat' : 'Refresh'}
           </button>
         </div>
@@ -332,7 +332,7 @@ export function DashboardPage() {
             <strong>Aktif: {activeFilterLabel}</strong>
             {loading ? (
               <span className="dashboard-filter-loading">
-                <RefreshCw size={14} className="spin" />
+                <RefreshCw size={14} className="animate-spin" />
                 Memuat data dashboard...
               </span>
             ) : (

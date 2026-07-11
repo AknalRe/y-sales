@@ -307,7 +307,7 @@ export function AttendanceReviewPage() {
           <p className="admin-page-subtitle">Validasi absensi, setujui atau tidak setujui sesi, dan lihat laporan absensi sales.</p>
         </div>
         <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
-          <RefreshCw size={15} className={loading ? 'spin' : ''} />
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           Refresh
         </button>
       </div>
@@ -363,7 +363,7 @@ export function AttendanceReviewPage() {
 
       {loading && !rows.length ? (
         <div className="admin-loading">
-          <RefreshCw size={18} className="spin" />
+          <RefreshCw size={18} className="animate-spin" />
           <span>Memuat data absensi...</span>
         </div>
       ) : (

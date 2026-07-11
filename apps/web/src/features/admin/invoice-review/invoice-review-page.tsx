@@ -225,7 +225,7 @@ export function InvoiceReviewPage() {
             style={{ padding: '.5rem', borderRadius: 12 }}
             disabled={loading}
           >
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>
@@ -257,7 +257,7 @@ export function InvoiceReviewPage() {
       <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <div className="text-admin-muted" style={{ padding: '4rem', textAlign: 'center' }}>
-            <RefreshCw size={32} className="spin" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+            <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
             <p className="font-semibold">Memuat data transaksi...</p>
           </div>
         ) : (
@@ -396,7 +396,7 @@ export function InvoiceReviewPage() {
                         <TableRow>
                           <TableCell colSpan={7} style={{ background: 'var(--admin-bg)' }}>
                             {loadingDetail === tx.id && !detail ? (
-                              <div className="admin-loading"><RefreshCw size={16} className="spin" /> Memuat detail...</div>
+                              <div className="admin-loading"><RefreshCw size={16} className="animate-spin" /> Memuat detail...</div>
                             ) : detail ? (
                               <div className="grid gap-4 lg:grid-cols-[1.5fr_.9fr]">
                                 <div className="admin-card" style={{ margin: 0, padding: '1rem' }}>

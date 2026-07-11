@@ -350,7 +350,7 @@ export function ReceivablesPage() {
       <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
           <div style={{ padding: '4rem', textAlign: 'center' }}>
-            <RefreshCw size={32} className="spin text-admin-muted" style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
+            <RefreshCw size={32} className="animate-spin text-admin-muted" style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
             <p className="text-admin-muted font-semibold">Memuat data piutang...</p>
           </div>
         ) : tab === 'receivables' ? (

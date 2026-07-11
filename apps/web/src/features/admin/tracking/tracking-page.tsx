@@ -195,7 +195,7 @@ export function TrackingPage() {
             <Download size={16} /> Excel
           </button>
           <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             Refresh
           </button>
         </div>
@@ -248,7 +248,7 @@ export function TrackingPage() {
 
       {loading ? (
         <div className="admin-loading mt-5">
-          <RefreshCw size={18} className="spin" />
+          <RefreshCw size={18} className="animate-spin" />
           <span>Menyelaraskan data lapangan...</span>
         </div>
       ) : (

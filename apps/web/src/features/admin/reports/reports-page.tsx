@@ -227,7 +227,7 @@ export function ReportsPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={downloadExcel} className="admin-btn-ghost" type="button" disabled={!transactions.length}><Download size={15} /> Excel</button>
-          <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} className={loading ? 'spin' : ''} /></button>
+          <button onClick={load} className="admin-btn-ghost" type="button"><RefreshCw size={15} className={loading ? 'animate-spin' : ''} /></button>
         </div>
       </div>
 

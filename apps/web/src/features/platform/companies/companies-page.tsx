@@ -223,7 +223,7 @@ export function PlatformCompaniesPage() {
       <div className="platform-table-card">
         {loading ? (
           <div className="platform-loading">
-            <RefreshCw size={20} className="spin" />
+            <RefreshCw size={20} className="animate-spin" />
             <span>Memuat data...</span>
           </div>
         ) : (

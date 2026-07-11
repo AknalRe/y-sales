@@ -287,7 +287,7 @@ export function OutletsPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
-            <RefreshCw size={15} className={loading ? 'spin' : ''} />
+            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             Refresh
           </button>
           <button onClick={openCreate} className="admin-btn-primary" type="button">
@@ -354,7 +354,7 @@ export function OutletsPage() {
 
         {loading ? (
           <div className="admin-loading">
-            <RefreshCw size={18} className="spin" />
+            <RefreshCw size={18} className="animate-spin" />
             <span>Memuat outlet...</span>
           </div>
         ) : outlets.length ? (
@@ -505,7 +505,7 @@ export function OutletsPage() {
                     disabled={resolvingAddress || toOptionalCoordinate(form.latitude) === null || toOptionalCoordinate(form.longitude) === null}
                     onClick={() => void syncAddressFromPoint(Number(form.latitude), Number(form.longitude), true)}
                   >
-                    {resolvingAddress ? <RefreshCw size={13} className="spin" /> : <MapPin size={13} />}
+                    {resolvingAddress ? <RefreshCw size={13} className="animate-spin" /> : <MapPin size={13} />}
                     Ambil alamat dari titik
                   </button>
                 </span>
@@ -517,7 +517,7 @@ export function OutletsPage() {
             <div className="mt-6 flex justify-end gap-2">
               <button onClick={closeForm} className="admin-btn-ghost" type="button">Batal</button>
               <button className="admin-btn-primary" type="submit" disabled={saving}>
-                {saving ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}
+                {saving ? <RefreshCw size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
                 Simpan Outlet
               </button>
             </div>

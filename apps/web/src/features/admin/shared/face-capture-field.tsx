@@ -93,7 +93,7 @@ export function FaceCaptureField({ id, preview, targetName, onCapture }: FaceCap
             <video ref={videoRef} playsInline muted />
             {!cameraReady ? (
               <div className="admin-face-capture-empty">
-                {cameraLoading ? <RefreshCw size={30} className="spin" /> : cameraError ? <VideoOff size={32} /> : <Camera size={34} />}
+                {cameraLoading ? <RefreshCw size={30} className="animate-spin" /> : cameraError ? <VideoOff size={32} /> : <Camera size={34} />}
                 <strong>{cameraLoading ? 'Membuka kamera...' : cameraError ? 'Kamera belum aktif' : 'Kamera wajah'}</strong>
                 <span>{cameraError || 'Posisikan wajah di tengah frame, lalu ambil foto.'}</span>
               </div>

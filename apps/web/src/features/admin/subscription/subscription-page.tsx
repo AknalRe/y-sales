@@ -158,7 +158,7 @@ export function SubscriptionPage() {
           <p className="admin-page-subtitle">Informasi paket aktif, batas penggunaan, dan fitur yang tersedia untuk perusahaan Anda.</p>
         </div>
         <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
-          <RefreshCw size={15} className={loading ? 'spin' : ''} />
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           Muat Ulang
         </button>
       </div>
@@ -166,7 +166,7 @@ export function SubscriptionPage() {
       {error && <div className="admin-alert admin-alert-error"><AlertCircle size={15} /> {error}</div>}
 
       {loading ? (
-        <div className="admin-loading"><RefreshCw size={18} className="spin" /> Memuat info langganan...</div>
+        <div className="admin-loading"><RefreshCw size={18} className="animate-spin" /> Memuat info langganan...</div>
       ) : !sub ? (
         <div className="subscription-empty">
           <span><CreditCard size={34} /></span>

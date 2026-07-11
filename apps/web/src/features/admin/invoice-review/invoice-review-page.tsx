@@ -236,7 +236,7 @@ export function InvoiceReviewPage() {
         </div>
       )}
 
-      <div className="admin-filter-row bg-admin-bg-card border border-admin-border-subtle border-gray-200 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]" style={{ padding: '1rem', borderRadius: 20, marginBottom: '1.5rem' }}>
+      <div className="admin-filter-row bg-admin-bg-card border border-admin-border-subtle shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]" style={{ padding: '1rem', borderRadius: 20, marginBottom: '1.5rem' }}>
         <div className="flex gap-4 items-center">
           <span className="text-admin-muted font-bold text-sm">Filter Status:</span>
           <select

@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx-js-style';
 import {
   AlertTriangle, ArrowRightLeft, Boxes, Edit3, History, Image as ImageIcon, Package,
   Download, RefreshCw, RotateCcw, Save, Trash2, Upload, Warehouse as WarehouseIcon, X,
-  BarChart3, ShoppingCart, Truck, ClipboardList, UserCircle, Send, type LucideIcon,
+  Truck, ClipboardList, UserCircle, Send, type LucideIcon, Store
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -358,7 +358,7 @@ export function StockPage() {
       <div className="settings-sticky-header">
         <div className="admin-page-header">
           <div>
-            <h1 className="admin-page-title"><Boxes size={24} className="text-admin-accent" /> Inventori</h1>
+            <h1 className="admin-page-title"><Boxes size={22} /> Inventori</h1>
             <p className="admin-page-subtitle">Kelola produk, gudang, stok, transfer, penyesuaian, dan riwayat mutasi.</p>
           </div>
           <div className="flex gap-2">
@@ -366,7 +366,7 @@ export function StockPage() {
               <Download size={16} /> Excel
             </button>
             <button onClick={load} className="admin-btn-ghost" disabled={loading} type="button">
-              <RefreshCw size={16} className={loading ? 'spin' : ''} />
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
@@ -456,7 +456,7 @@ export function StockPage() {
                           </TableRow>
                         );
                       })}
-                      {!filteredBalances.length && <EmptyState colSpan={6} icon="📦" title="Stok kosong" description="Belum ada balance stok untuk filter ini." />}
+                      {!filteredBalances.length && <EmptyState colSpan={6} icon={<Package size={40} className="mx-auto text-admin-muted" />} title="Stok kosong" description="Belum ada balance stok untuk filter ini." />}
                     </TableBody>
                   </Table>
                 </div>
@@ -591,7 +591,7 @@ function ProductTable({ products, onEdit, onDelete }: { products: Product[]; onE
               <TableCell className="text-right"><button className="admin-btn-ghost" onClick={() => onEdit(p)} type="button"><Edit3 size={14} /></button><button className="admin-btn-ghost" onClick={() => onDelete(p)} type="button"><Trash2 size={14} /></button></TableCell>
             </TableRow>
           ))}
-          {!products.length && <EmptyState colSpan={5} icon="📦" title="Belum ada produk" description="Tambahkan SKU pertama." />}
+          {!products.length && <EmptyState colSpan={5} icon={<Package size={40} className="mx-auto text-admin-muted" />} title="Belum ada produk" description="Tambahkan SKU pertama." />}
         </TableBody>
       </Table>
     </div>
@@ -612,7 +612,7 @@ function WarehouseTable({ warehouses, onEdit, onDelete }: { warehouses: Warehous
               <TableCell className="text-right"><button className="admin-btn-ghost" onClick={() => onEdit(w)} type="button"><Edit3 size={14} /></button><button className="admin-btn-ghost" onClick={() => onDelete(w)} type="button"><Trash2 size={14} /></button></TableCell>
             </TableRow>
           ))}
-          {!warehouses.length && <EmptyState colSpan={4} icon="🏬" title="Belum ada gudang" description="Tambahkan gudang utama atau gudang sales." />}
+          {!warehouses.length && <EmptyState colSpan={4} icon={<Store size={40} className="mx-auto text-admin-muted" />} title="Belum ada gudang" description="Tambahkan gudang utama atau gudang sales." />}
         </TableBody>
       </Table>
     </div>
@@ -659,7 +659,7 @@ function MovementTable({ movements }: { movements: InventoryMovement[] }) {
               </TableRow>
             );
           })}
-          {!movements.length && <EmptyState colSpan={6} icon="📋" title="Belum ada mutasi" description="Riwayat pergerakan stok akan muncul di sini." />}
+          {!movements.length && <EmptyState colSpan={6} icon={<ClipboardList size={40} className="mx-auto text-admin-muted" />} title="Belum ada mutasi" description="Riwayat pergerakan stok akan muncul di sini." />}
         </TableBody>
       </Table>
     </div>

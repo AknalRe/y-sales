@@ -346,7 +346,7 @@ export function UsersPage() {
 
       <div className="admin-table-card">
         {loading ? (
-          <div className="admin-loading"><RefreshCw size={18} className="spin" /><span>Memuat...</span></div>
+          <div className="admin-loading"><RefreshCw size={18} className="animate-spin" /><span>Memuat...</span></div>
         ) : (
           <Table className="admin-table">
             <TableHeader>
@@ -445,7 +445,7 @@ export function UsersPage() {
                 </TableRow>
               ))}
               {filtered.length === 0 && (
-                <EmptyState colSpan={6} icon="👥" title="Belum ada user" description="Tambahkan user pertama Anda." />
+                <EmptyState colSpan={6} icon={<Users size={40} className="mx-auto text-admin-muted" />} title="Belum ada user" description="Tambahkan user pertama Anda." />
               )}
             </TableBody>
           </Table>

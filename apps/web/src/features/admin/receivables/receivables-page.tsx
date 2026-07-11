@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
-import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, Download, TrendingDown, Banknote, XCircle } from 'lucide-react';
+import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, Download, TrendingDown, Banknote, XCircle, Package } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState } from '@/components/ui';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -411,7 +411,7 @@ export function ReceivablesPage() {
                   );
                 })}
                 {!filtered.length && (
-                  <EmptyState colSpan={7} icon="💳" title="Tidak ada piutang" description="Belum ada piutang dengan filter yang dipilih." />
+                  <EmptyState colSpan={7} icon={<CreditCard size={40} className="mx-auto text-admin-muted" />} title="Tidak ada piutang" description="Belum ada piutang dengan filter yang dipilih." />
                 )}
               </TableBody>
             </Table>
@@ -488,7 +488,7 @@ export function ReceivablesPage() {
                   </TableRow>
                 ))}
                 {!filteredCons.length && (
-                  <EmptyState colSpan={6} icon="📦" title="Tidak ada konsinyasi" description="Belum ada data konsinyasi dengan filter yang dipilih." />
+                  <EmptyState colSpan={6} icon={<Package size={40} className="mx-auto text-admin-muted" />} title="Tidak ada konsinyasi" description="Belum ada data konsinyasi dengan filter yang dipilih." />
                 )}
               </TableBody>
             </Table>

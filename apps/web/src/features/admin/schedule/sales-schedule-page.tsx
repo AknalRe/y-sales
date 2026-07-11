@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
 import { AlertTriangle, CalendarPlus, CheckCircle2, Clock, Download, MapPin, RefreshCw, Search, Send, UserRound, X, XCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth/auth-provider';
+import { EmptyState } from '@/components/ui';
 import {
   approveVisitSchedule,
   cancelVisitSchedule,
@@ -246,7 +247,7 @@ export function SalesSchedulePage() {
     <div className="admin-page">
       <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-title"><CalendarPlus size={24} style={{ color: 'var(--admin-accent)' }} /> Jadwalkan Sales</h1>
+          <h1 className="admin-page-title"><CalendarPlus size={22} /> Jadwalkan Sales</h1>
           <p className="admin-page-subtitle">Susun rute outlet harian sales, tetapkan target, lalu pantau realisasi kunjungannya.</p>
         </div>
         <div className="flex gap-2">
@@ -254,7 +255,7 @@ export function SalesSchedulePage() {
             <Download size={16} /> Excel
           </button>
           <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           <button onClick={openModal} className="admin-btn-primary" type="button">
             <CalendarPlus size={16} /> Buat Jadwal
@@ -317,7 +318,7 @@ export function SalesSchedulePage() {
       {loading ? (
         <div className="admin-card grid place-items-center text-center text-admin-muted" style={{ padding: '3rem', minHeight: 126 }}>
           <div className="grid justify-items-center gap-3">
-            <RefreshCw size={20} className="spin" />
+            <RefreshCw size={20} className="animate-spin" />
             <span className="text-sm font-semibold">Memuat jadwal...</span>
           </div>
         </div>
@@ -375,9 +376,11 @@ export function SalesSchedulePage() {
         </div>
       ) : (
         <div className="admin-card text-center" style={{ padding: '3rem', border: '2px dashed var(--admin-border)' }}>
-          <CalendarPlus size={42} className="mx-auto mb-3 text-admin-subtle" />
-          <p className="text-base font-black text-admin-foreground">Belum ada jadwal sales</p>
-          <p className="mt-1 text-sm font-medium text-admin-muted">Klik "Buat Jadwal" untuk membuat jadwal baru.</p>
+          <EmptyState 
+            icon={<CalendarPlus size={40} className="mx-auto text-admin-muted" />} 
+            title="Belum ada jadwal sales" 
+            description='Klik "Buat Jadwal" untuk membuat jadwal baru.' 
+          />
         </div>
       )}
 
@@ -494,7 +497,7 @@ export function SalesSchedulePage() {
                 disabled={saving}
                 title={getCreateBlocker() || 'Simpan jadwal sales'}
               >
-                {saving ? <RefreshCw size={15} className="spin" /> : <Send size={15} />} Buat {selectedOutletIds.length} Jadwal
+                {saving ? <RefreshCw size={15} className="animate-spin" /> : <Send size={15} />} Buat {selectedOutletIds.length} Jadwal
               </button>
             </div>
           </div>

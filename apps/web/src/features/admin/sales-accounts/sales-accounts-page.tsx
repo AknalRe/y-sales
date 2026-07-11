@@ -378,7 +378,7 @@ export function SalesAccountsPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={load} className="admin-btn-ghost" disabled={loading} type="button" title="Refresh data">
-            <RefreshCw size={15} className={loading ? 'spin' : ''} />
+            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           </button>
           <button onClick={openCreate} className="admin-btn-primary" type="button" disabled={!salesRoles.length}>
             <Plus size={15} />
@@ -474,7 +474,7 @@ export function SalesAccountsPage() {
       <div className="admin-table-card">
         {loading ? (
           <div className="admin-loading">
-            <RefreshCw size={18} className="spin" />
+            <RefreshCw size={18} className="animate-spin" />
             <span>Memuat data akun sales...</span>
           </div>
         ) : (
@@ -552,7 +552,7 @@ export function SalesAccountsPage() {
                   </tr>
                 ))}
                 {!filtered.length && (
-                  <EmptyState colSpan={6} icon="👥" title="Tidak Ada Akun Sales" description="Belum ada akun sales yang terdaftar." />
+                  <EmptyState colSpan={6} icon={<Users size={40} className="mx-auto text-admin-muted" />} title="Tidak Ada Akun Sales" description="Belum ada akun sales yang terdaftar." />
                 )}
               </tbody>
             </table>

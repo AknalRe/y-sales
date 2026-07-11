@@ -273,11 +273,11 @@ export function OutletMapPicker({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+    <div className="rounded-2xl border border-admin-border-subtle bg-[var(--admin-surface)] p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-black text-slate-900">{title}</p>
-          <p className="text-xs font-semibold text-slate-500">{description}</p>
+          <p className="text-sm font-black text-admin-fg">{title}</p>
+          <p className="text-xs font-semibold text-admin-muted">{description}</p>
         </div>
         <div className="flex items-center gap-2">
           <button

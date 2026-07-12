@@ -137,6 +137,7 @@ export type TenantUser = {
   roleName: string;
   lastLoginAt?: string;
   createdAt: string;
+  salesCategory?: 'motoris' | 'dropping' | null;
 };
 
 export type Role = {
@@ -364,6 +365,7 @@ export function getUsers(token: string) {
 export function createUser(token: string, data: {
   roleId: string; name: string; email?: string; phone?: string;
   employeeCode?: string; password: string; supervisorId?: string;
+  salesCategory?: 'motoris' | 'dropping' | null;
 }) {
   return apiRequest<{ user: TenantUser }>(
     '/users',

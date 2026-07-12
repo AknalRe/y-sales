@@ -2,6 +2,7 @@ import { boolean, index, pgEnum, pgTable, text, timestamp, uuid, varchar, unique
 import { companies } from './companies.js';
 
 export const userStatusEnum = pgEnum('user_status', ['active', 'inactive', 'suspended']);
+export const salesCategoryEnum = pgEnum('sales_category', ['motoris', 'dropping']);
 
 export const roles = pgTable('roles', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -47,6 +48,7 @@ export const users = pgTable('users', {
   employeeCode: varchar('employee_code', { length: 80 }),
   profilePhotoUrl: text('profile_photo_url'),
   status: userStatusEnum('status').default('active').notNull(),
+  salesCategory: salesCategoryEnum('sales_category'),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -68,5 +70,3 @@ export const sessions = pgTable('sessions', {
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
-
-

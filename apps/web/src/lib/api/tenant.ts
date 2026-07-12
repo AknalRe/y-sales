@@ -83,7 +83,7 @@ export type Outlet = {
   companyId: string;
   code: string;
   name: string;
-  customerType: 'store' | 'agent';
+  customerType: 'store' | 'agent' | 'user';
   ownerName?: string | null;
   phone?: string | null;
   address: string;
@@ -98,7 +98,7 @@ export type Outlet = {
 export type OutletPayload = {
   code: string;
   name: string;
-  customerType: 'store' | 'agent';
+  customerType: 'store' | 'agent' | 'user';
   ownerName?: string;
   phone?: string;
   address: string;
@@ -126,6 +126,7 @@ export type SalesTransaction = {
   submittedAt?: string | null;
   approvedAt?: string | null;
   createdAt: string;
+  items?: SalesTransactionItem[];
 };
 
 export type SalesTransactionItem = {
@@ -398,14 +399,15 @@ export function getTodayVisitPlan(token: string) {
 
 // ─── Sales Transaction APIs ──────────────────────────────────────────────────
 
-export function getSalesTransactions(token: string, params?: { status?: string; noteStatus?: string; from?: string; to?: string; salesUserId?: string }) {
+export function getSalesTransactions(token: string, params?: { status?: string; noteStatus?: string; from?: string; to?: string; salesUserId?: string; includeItems?: boolean }) {
   const q = new URLSearchParams();
   if (params?.status) q.set('status', params.status);
   if (params?.noteStatus) q.set('noteStatus', params.noteStatus);
   if (params?.from) q.set('from', params.from);
   if (params?.to) q.set('to', params.to);
   if (params?.salesUserId) q.set('salesUserId', params.salesUserId);
-  return apiRequest<{ orders: SalesTransaction[] }>(`/sales/orders?${q}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (params?.includeItems !== undefined) q.set('includeItems', String(params.includeItems));
+  return apiRequest<{ orders: (SalesTransaction & { items?: SalesTransactionItem[] })[] }>(`/sales/orders?${q}`, { headers: { Authorization: `Bearer ${token}` } });
 }
 
 export function getSalesTransactionDetail(token: string, id: string) {

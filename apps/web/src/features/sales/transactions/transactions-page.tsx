@@ -425,6 +425,7 @@ export function TransactionsPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <strong style={{ display: 'block', fontSize: '.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</strong>
+                  <span className="text-sales-accent" style={{ display: 'block', fontSize: '.65rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(p as any).category || 'Umum'}</span>
                   <span className="text-sales-muted" style={{ display: 'block', fontSize: '.7rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.sku}</span>
                   <span className={availableStock > 0 ? 'text-sales-success-light' : 'text-sales-red'} style={{ display: 'block', fontSize: '.68rem', fontWeight: 800, marginTop: '.15rem' }}>
                     Stok: {availableStock.toLocaleString('id-ID')} {p.unit}

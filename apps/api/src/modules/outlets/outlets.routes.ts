@@ -4,14 +4,14 @@ import { z } from 'zod';
 import { mediaFiles, outletPhotos, outlets } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { getGeneralSettings } from '../../utils/settings.js';
-import { requirePermission } from '../auth/auth.service.js';
+import { authenticate, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId } from '../tenant.js';
 import { writeAuditLog } from '../audit/audit.service.js';
 
 const outletSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(2),
-  customerType: z.enum(['store', 'agent']).default('store'),
+  customerType: z.enum(['store', 'agent', 'user']).default('store'),
   ownerName: z.string().optional(),
   phone: z.string().optional(),
   address: z.string().min(3),
@@ -22,7 +22,6 @@ const outletSchema = z.object({
 });
 
 const outletPatchSchema = outletSchema.partial();
-
 const outletPhotoSchema = z.object({
   dataUrl: z.string().min(20),
   mimeType: z.string().default('image/jpeg'),
@@ -327,11 +326,22 @@ async function searchCustomMapAddress(query: string, limit: number, baseUrl: str
 }
 
 export async function outletRoutes(app: FastifyInstance) {
-  app.get('/outlets', { preHandler: requirePermission('outlets.manage') }, async (request) => {
+  app.get('/outlets', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
+    const user = request.user!;
+    const isSales = user.permissions.includes('visits.execute') && !user.isSuperAdmin && user.roleCode !== 'ADMINISTRATOR' && !user.permissions.includes('outlets.manage');
+    const isAllowed = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('outlets.manage') || user.permissions.includes('visits.execute');
+    if (!isAllowed) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'outlets.manage' });
+
     const query = outletQuerySchema.parse(request.query);
     const conditions = [eq(outlets.companyId, companyId), isNull(outlets.deletedAt)];
-    if (query.status) conditions.push(eq(outlets.status, query.status));
+    
+    if (isSales) {
+      conditions.push(eq(outlets.status, 'active'));
+    } else if (query.status) {
+      conditions.push(eq(outlets.status, query.status));
+    }
+
     if (query.q) {
       const pattern = `%${query.q}%`;
       conditions.push(or(

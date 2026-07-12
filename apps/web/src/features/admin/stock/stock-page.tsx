@@ -28,7 +28,7 @@ type InventoryMovement = {
 
 type ProductForm = {
   id?: string; sku: string; name: string; description: string; imageUrl: string;
-  imageFile?: File | null; imagePreviewUrl?: string; unit: string; priceDefault: string; initialStock: string; status: Product['status'];
+  imageFile?: File | null; imagePreviewUrl?: string; unit: string; priceDefault: string; category: string; initialStock: string; status: Product['status'];
 };
 
 type WarehouseForm = { id?: string; code: string; name: string; address: string; type: Warehouse['type'] };
@@ -47,7 +47,7 @@ type SalesUser = {
   status: string;
 };
 
-const emptyProduct: ProductForm = { sku: '', name: '', description: '', imageUrl: '', imageFile: null, imagePreviewUrl: '', unit: 'pcs', priceDefault: '0', initialStock: '', status: 'active' };
+const emptyProduct: ProductForm = { sku: '', name: '', description: '', imageUrl: '', imageFile: null, imagePreviewUrl: '', unit: 'pcs', priceDefault: '0', category: '', initialStock: '', status: 'active' };
 const emptyWarehouse: WarehouseForm = { code: '', name: '', address: '', type: 'main' };
 
 const sections: Section[] = [
@@ -176,7 +176,7 @@ export function StockPage() {
 
   function startEditProduct(product: Product) {
     setActiveSection('products');
-    setProductForm({ id: product.id, sku: product.sku, name: product.name, description: product.description ?? '', imageUrl: product.imageUrl ?? '', imageFile: null, imagePreviewUrl: product.imageUrl ?? '', unit: product.unit, priceDefault: product.priceDefault, initialStock: '', status: product.status });
+    setProductForm({ id: product.id, sku: product.sku, name: product.name, description: product.description ?? '', imageUrl: product.imageUrl ?? '', imageFile: null, imagePreviewUrl: product.imageUrl ?? '', unit: product.unit, priceDefault: product.priceDefault, category: (product as any).category ?? '', initialStock: '', status: product.status });
   }
 
   function startEditWarehouse(warehouse: Warehouse) {
@@ -542,6 +542,7 @@ function ProductFormCard({ form, saving, products, onChange, onSubmit, onCancel 
         </Field>
         <Field label="SKU"><div className="flex gap-2"><input className="admin-input w-full" value={form.sku} onChange={(e) => onChange({ ...form, sku: e.target.value.toUpperCase() })} placeholder="PRD-KR-001" /><button className="admin-btn-ghost" type="button" onClick={() => onChange({ ...form, sku: generateNextSku(form.name, products) })}>Buat Otomatis</button></div></Field>
         <Field label="Nama Produk"><input className="admin-input w-full" value={form.name} onChange={(e) => onChange({ ...form, name: e.target.value })} /></Field>
+        <Field label="Kategori"><input className="admin-input w-full" value={form.category} onChange={(e) => onChange({ ...form, category: e.target.value })} placeholder="Kategori atau Brand produk" /></Field>
         <Field label="Deskripsi"><textarea className="admin-input w-full" value={form.description} onChange={(e) => onChange({ ...form, description: e.target.value })} /></Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Unit"><input className="admin-input w-full" value={form.unit} onChange={(e) => onChange({ ...form, unit: e.target.value })} /></Field>
@@ -580,11 +581,12 @@ function ProductTable({ products, onEdit, onDelete }: { products: Product[]; onE
   return (
     <div className="inventory-table-shell">
       <Table className="admin-table">
-        <TableHeader><TableRow><TableHead>Produk</TableHead><TableHead>Unit</TableHead><TableHead>Harga</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Produk</TableHead><TableHead>Kategori</TableHead><TableHead>Unit</TableHead><TableHead>Harga</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow></TableHeader>
         <TableBody>
           {products.map((p) => (
             <TableRow key={p.id}>
               <TableCell><div className="flex items-center gap-3"><div className="flex items-center justify-center overflow-hidden bg-admin-bg" style={{ width: 42, height: 42, borderRadius: 12 }}>{p.imageUrl ? <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={18} className="text-admin-muted" />}</div><div><strong>{p.name}</strong><br /><code>{p.sku}</code></div></div></TableCell>
+              <TableCell>{(p as any).category || '—'}</TableCell>
               <TableCell>{p.unit}</TableCell>
               <TableCell>{formatRp(p.priceDefault)}</TableCell>
               <TableCell><span className={`admin-badge ${p.status === 'active' ? 'admin-badge-success' : ''}`}>{p.status === 'active' ? 'Aktif' : 'Nonaktif'}</span></TableCell>

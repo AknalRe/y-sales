@@ -26,6 +26,7 @@ const createUserSchema = z.object({
   employeeCode: optionalText,
   password: z.string().min(6),
   supervisorId: z.string().uuid().optional(),
+  salesCategory: z.enum(['motoris', 'dropping']).nullable().optional(),
 });
 
 const updateUserSchema = z.object({
@@ -36,6 +37,7 @@ const updateUserSchema = z.object({
   employeeCode: optionalText,
   supervisorId: z.string().uuid().optional(),
   status: z.enum(['active', 'inactive', 'suspended']).optional(),
+  salesCategory: z.enum(['motoris', 'dropping']).nullable().optional(),
 });
 
 const resetPasswordSchema = z.object({
@@ -82,6 +84,7 @@ export async function usersRoutes(app: FastifyInstance) {
     const rows = await db.select({
       id: users.id, name: users.name, email: users.email, phone: users.phone,
       employeeCode: users.employeeCode, status: users.status,
+      salesCategory: users.salesCategory,
       roleId: users.roleId, roleCode: roles.code, roleName: roles.name,
       lastLoginAt: users.lastLoginAt, createdAt: users.createdAt,
     })
@@ -147,6 +150,7 @@ export async function usersRoutes(app: FastifyInstance) {
       if (dup) return reply.status(409).send({ message: 'Kode karyawan sudah digunakan di company ini.' });
     }
 
+
     // Check user limit from subscription plan
     const currentUserCount = await db.select({ id: users.id }).from(users)
       .where(and(eq(users.companyId, companyId), isNull(users.deletedAt)));
@@ -163,6 +167,7 @@ export async function usersRoutes(app: FastifyInstance) {
       supervisorId: body.supervisorId,
       passwordHash,
       status: 'active',
+      salesCategory: body.salesCategory,
     }).returning();
 
     try {
@@ -180,6 +185,7 @@ export async function usersRoutes(app: FastifyInstance) {
     const [user] = await db.select({
       id: users.id, name: users.name, email: users.email, phone: users.phone,
       employeeCode: users.employeeCode, status: users.status, profilePhotoUrl: users.profilePhotoUrl,
+      salesCategory: users.salesCategory,
       roleId: users.roleId, roleCode: roles.code, roleName: roles.name,
       supervisorId: users.supervisorId, lastLoginAt: users.lastLoginAt, createdAt: users.createdAt,
     })

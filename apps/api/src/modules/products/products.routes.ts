@@ -15,6 +15,7 @@ const productSchema = z.object({
   unit: z.string().min(1).default('pcs'),
   priceDefault: z.string().or(z.number()).transform(String).default('0'),
   initialStock: z.string().or(z.number()).transform(String).optional(),
+  category: z.string().min(1).optional().nullable(),
 });
 
 const productUpdateSchema = productSchema.omit({ initialStock: true }).partial().extend({
@@ -87,6 +88,7 @@ export async function productRoutes(app: FastifyInstance) {
         imageUrl: products.imageUrl,
         unit: products.unit,
         priceDefault: products.priceDefault,
+        category: products.category,
         status: products.status,
         createdAt: products.createdAt,
         updatedAt: products.updatedAt,
@@ -118,6 +120,7 @@ export async function productRoutes(app: FastifyInstance) {
         imageUrl: body.imageUrl,
         unit: body.unit,
         priceDefault: body.priceDefault,
+        category: body.category,
         status: 'active',
       }).onConflictDoUpdate({
         target: [products.companyId, products.sku],
@@ -127,6 +130,7 @@ export async function productRoutes(app: FastifyInstance) {
           imageUrl: body.imageUrl,
           unit: body.unit,
           priceDefault: body.priceDefault,
+          category: body.category,
           updatedAt: new Date(),
         },
       }).returning();

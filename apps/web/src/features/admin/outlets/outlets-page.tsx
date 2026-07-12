@@ -18,7 +18,7 @@ import { OutletMapPicker } from './outlet-map-picker';
 type OutletForm = {
   code: string;
   name: string;
-  customerType: 'store' | 'agent';
+  customerType: 'store' | 'agent' | 'user';
   ownerName: string;
   phone: string;
   address: string;
@@ -370,7 +370,7 @@ export function OutletsPage() {
                         {tone.label}
                       </span>
                       <span className="rounded-lg bg-admin-bg px-2 py-0.5 text-[11px] font-black text-admin-muted">
-                        {outlet.customerType === 'agent' ? 'Agent' : 'Toko'}
+                        {outlet.customerType === 'agent' ? 'Agent' : outlet.customerType === 'user' ? 'User' : 'Toko'}
                       </span>
                     </div>
                     <h2 className="truncate text-base font-black text-admin-foreground">{outlet.name}</h2>
@@ -456,6 +456,7 @@ export function OutletsPage() {
                 <select className="admin-select" value={form.customerType} onChange={(event) => setForm((current) => ({ ...current, customerType: event.target.value as OutletForm['customerType'] }))}>
                   <option value="store">Toko</option>
                   <option value="agent">Agent</option>
+                  <option value="user">User</option>
                 </select>
               </Field>
               {canApproveOutlet ? (

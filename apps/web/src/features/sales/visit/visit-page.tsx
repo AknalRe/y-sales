@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone, Search } from 'lucide-react';
 import { apiRequest, checkInVisit, checkOutVisit, getMobileRuntimeSettings, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
-import { getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, type Consignment, type TodayVisitSchedule } from '../../../lib/api/tenant';
+import { getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, getOutlets, type Consignment, type TodayVisitSchedule, type Outlet } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
 import { useAuth } from '../../auth/auth-provider';
@@ -38,6 +38,47 @@ export function VisitPage() {
   const [activeOutletName, setActiveOutletName] = useState('');
   const [activeVisitId, setActiveVisitId] = useState<string | null>(null);
   const [consignments, setConsignments] = useState<Consignment[]>([]);
+
+  const [showLookup, setShowLookup] = useState(false);
+  const [lookupOutlets, setLookupOutlets] = useState<Outlet[]>([]);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupSearch, setLookupSearch] = useState('');
+  const [lookupTypeFilter, setLookupTypeFilter] = useState<'all' | 'store' | 'agent' | 'user'>('all');
+  const [lookupSortBy, setLookupSortBy] = useState<'name' | 'phone' | 'ownerName'>('name');
+
+  useEffect(() => {
+    if (showLookup && accessToken) {
+      setLookupLoading(true);
+      getOutlets(accessToken, { status: 'active' })
+        .then((res: any) => setLookupOutlets(res.outlets ?? []))
+        .catch(() => setMessage('Gagal memuat list outlet untuk pencarian.'))
+        .finally(() => setLookupLoading(false));
+    }
+  }, [showLookup, accessToken]);
+
+  const sortedLookupOutlets = useMemo(() => {
+    const filtered = lookupOutlets.filter(o => {
+      const matchesSearch = !lookupSearch || 
+        o.name.toLowerCase().includes(lookupSearch.toLowerCase()) ||
+        o.code.toLowerCase().includes(lookupSearch.toLowerCase()) ||
+        (o.phone && o.phone.toLowerCase().includes(lookupSearch.toLowerCase())) ||
+        (o.ownerName && o.ownerName.toLowerCase().includes(lookupSearch.toLowerCase()));
+
+      const matchesType = lookupTypeFilter === 'all' || o.customerType === lookupTypeFilter;
+      
+      return matchesSearch && matchesType;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (lookupSortBy === 'phone') {
+        return (a.phone || '').localeCompare(b.phone || '');
+      } else if (lookupSortBy === 'ownerName') {
+        return (a.ownerName || '').localeCompare(b.ownerName || '');
+      } else {
+        return a.name.localeCompare(b.name);
+      }
+    });
+  }, [lookupOutlets, lookupSearch, lookupTypeFilter, lookupSortBy]);
   const [consignmentForm, setConsignmentForm] = useState({ consignmentId: '', productId: '', actionType: 'report_sold' as 'report_sold' | 'withdraw', quantity: '', amount: '', notes: '' });
 
   const [outcome, setOutcome] = useState<'closed_order' | 'no_order' | 'follow_up' | 'outlet_closed' | 'rejected' | 'invalid_location'>('closed_order');
@@ -244,12 +285,13 @@ export function VisitPage() {
       const result = await checkInVisit(accessToken, payload);
       setMessage(`Check-in berhasil!`);
       setActiveVisitId(result.visit.id);
-      setActiveOutletName(selectedSchedule?.outlet.name ?? '');
+      const outletName = selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet';
+      setActiveOutletName(outletName);
       localStorage.setItem(activeVisitStorageKey, JSON.stringify({
         id: result.visit.id,
         outletId: result.visit.outletId,
-        scheduleId: selectedScheduleId,
-        outletName: selectedSchedule?.outlet.name,
+        scheduleId: selectedScheduleId || undefined,
+        outletName: outletName,
       }));
       setPreview(false);
       setImage(null);
@@ -391,7 +433,17 @@ export function VisitPage() {
         <>
           {/* Step 1: Pilih Outlet */}
           <div className="sales-step-card">
-            <h2>1. Pilih Outlet Tujuan</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.5rem' }}>
+              <h2 style={{ margin: 0 }}>1. Pilih Outlet Tujuan</h2>
+              <button
+                type="button"
+                onClick={() => setShowLookup(true)}
+                className="sales-btn-secondary"
+                style={{ fontSize: '.75rem', padding: '.35rem .75rem', display: 'flex', alignItems: 'center', gap: '.25rem', height: 'auto', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--sales-accent)', border: 'none', borderRadius: '.5rem', cursor: 'pointer' }}
+              >
+                <Search size={12} /> Cari Outlet
+              </button>
+            </div>
             {schedulesLoading ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem', padding: '1.5rem 0', color: '#94a3b8', fontSize: '.85rem' }}>
                 <Loader2 size={18} className="animate-spin" /> Memuat jadwal...
@@ -415,7 +467,22 @@ export function VisitPage() {
                 ))}
               </select>
             )}
-            {!availableSchedules.length && (
+            {selectedOutlet && !selectedScheduleId && (
+              <div style={{ marginTop: '.75rem', padding: '.75rem', borderRadius: '.75rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                <p style={{ margin: 0, fontSize: '.75rem', color: '#94a3b8', fontWeight: 600 }}>Outlet Ad-Hoc Terpilih:</p>
+                <strong style={{ fontSize: '.85rem', color: 'var(--sales-foreground)' }}>
+                  {lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet Lain'}
+                </strong>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedOutlet(''); setSelectedScheduleId(''); }}
+                  style={{ marginLeft: '.5rem', background: 'none', border: 'none', color: '#ef4444', fontSize: '.75rem', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                >
+                  Batal
+                </button>
+              </div>
+            )}
+            {!availableSchedules.length && !selectedOutlet && (
               <p className="mt-3 text-sales-muted" style={{ fontSize: '.8rem' }}>
                 Belum ada jadwal outlet yang bisa dimulai hari ini. Hubungi admin untuk membuat atau mengaktifkan jadwal sales.
               </p>
@@ -666,6 +733,141 @@ export function VisitPage() {
             <p className="text-center text-sales-muted mt-3" style={{ fontSize: '.65rem' }}>
               Browser akan meminta konfirmasi izin secara terpisah.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Lookup Outlet Modal */}
+      {showLookup && (
+        <div className="fixed inset-0 z-[65] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'var(--sales-overlay-dark)' }} onClick={() => setShowLookup(false)}>
+          <div 
+            className="w-full max-w-[480px] bg-sales-surface rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden" 
+            style={{ boxShadow: '0 -10px 25px rgba(0,0,0,0.15), 0 20px 25px rgba(0,0,0,0.1)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', borderBottom: '1px solid var(--sales-border)' }}>
+              <div>
+                <strong style={{ fontSize: '1.05rem', color: 'var(--sales-text-heading)', fontWeight: 800 }}>Lookup Outlet</strong>
+                <p style={{ margin: 0, fontSize: '.7rem', color: '#94a3b8' }}>Cari Toko, Agent, atau User</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowLookup(false)} 
+                style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '1.25rem', fontWeight: 600, cursor: 'pointer', padding: '.25rem' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Filters & Search */}
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--sales-border)', background: 'var(--sales-bg)' }}>
+              {/* Search */}
+              <div className="sales-search-box" style={{ display: 'flex', alignItems: 'center', background: 'var(--sales-surface)', borderRadius: '1rem', border: '1px solid var(--sales-border)', padding: '.35rem .75rem', marginBottom: '.75rem' }}>
+                <Search size={14} style={{ color: '#94a3b8', marginRight: '.5rem' }} />
+                <input 
+                  type="text" 
+                  placeholder="Cari nama, kode, owner, HP..." 
+                  value={lookupSearch} 
+                  onChange={e => setLookupSearch(e.target.value)}
+                  style={{ border: 'none', outline: 'none', fontSize: '.8rem', width: '100%', background: 'transparent', color: 'var(--sales-foreground)' }} 
+                />
+              </div>
+
+              {/* Grid of filters */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.5rem' }}>
+                <div>
+                  <label style={{ fontSize: '.65rem', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '.25rem' }}>Tipe Outlet</label>
+                  <select 
+                    value={lookupTypeFilter} 
+                    onChange={e => setLookupTypeFilter(e.target.value as any)}
+                    className="sales-select"
+                    style={{ padding: '.4rem', fontSize: '.75rem', borderRadius: '.75rem', width: '100%', height: 'auto', border: '1px solid var(--sales-border)' }}
+                  >
+                    <option value="all">Semua Tipe</option>
+                    <option value="store">Toko</option>
+                    <option value="agent">Agent</option>
+                    <option value="user">User</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '.65rem', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '.25rem' }}>Urutkan</label>
+                  <select 
+                    value={lookupSortBy} 
+                    onChange={e => setLookupSortBy(e.target.value as any)}
+                    className="sales-select"
+                    style={{ padding: '.4rem', fontSize: '.75rem', borderRadius: '.75rem', width: '100%', height: 'auto', border: '1px solid var(--sales-border)' }}
+                  >
+                    <option value="name">Nama Outlet</option>
+                    <option value="phone">No. Handphone</option>
+                    <option value="ownerName">Nama Owner</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* List */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '.5rem 1.25rem 1.5rem' }}>
+              {lookupLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 0', gap: '.5rem', color: '#94a3b8' }}>
+                  <Loader2 size={24} className="animate-spin text-sales-accent" />
+                  <span style={{ fontSize: '.8rem' }}>Memuat list outlet...</span>
+                </div>
+              ) : sortedLookupOutlets.length ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+                  {sortedLookupOutlets.map((outlet: Outlet) => {
+                    const typeLabel = outlet.customerType === 'agent' ? 'Agent' : outlet.customerType === 'user' ? 'User' : 'Toko';
+                    const typeBg = outlet.customerType === 'agent' ? 'rgba(99, 102, 241, 0.1)' : outlet.customerType === 'user' ? 'rgba(236, 72, 153, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+                    const typeColor = outlet.customerType === 'agent' ? 'var(--sales-accent)' : outlet.customerType === 'user' ? '#ec4899' : '#10b981';
+
+                    return (
+                      <div 
+                        key={outlet.id}
+                        onClick={() => {
+                          setSelectedOutlet(outlet.id);
+                          setSelectedScheduleId('');
+                          setShowLookup(false);
+                        }}
+                        style={{ 
+                          padding: '.75rem', 
+                          borderRadius: '1rem', 
+                          border: '1px solid var(--sales-border)', 
+                          background: selectedOutlet === outlet.id ? 'rgba(99, 102, 241, 0.04)' : 'var(--sales-surface)',
+                          borderColor: selectedOutlet === outlet.id ? 'var(--sales-accent)' : 'var(--sales-border)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '.25rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--sales-accent)', background: 'rgba(99, 102, 241, 0.1)', padding: '.1rem .35rem', borderRadius: '.35rem' }}>
+                            {outlet.code}
+                          </span>
+                          <span style={{ fontSize: '.65rem', fontWeight: 800, color: typeColor, background: typeBg, padding: '.1rem .4rem', borderRadius: '.35rem' }}>
+                            {typeLabel}
+                          </span>
+                        </div>
+                        <strong style={{ fontSize: '.85rem', color: 'var(--sales-text-heading)' }}>
+                          {outlet.name}
+                        </strong>
+                        <p style={{ margin: 0, fontSize: '.7rem', color: '#64748b' }}>
+                          Owner: <strong>{outlet.ownerName || '—'}</strong> | HP: <strong>{outlet.phone || '—'}</strong>
+                        </p>
+                        <p style={{ margin: 0, fontSize: '.65rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {outlet.address}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '3rem 0', color: '#94a3b8' }}>
+                  <Store size={36} style={{ marginBottom: '.5rem', opacity: 0.5 }} />
+                  <p style={{ margin: 0, fontSize: '.8rem' }}>Outlet tidak ditemukan</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

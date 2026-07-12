@@ -119,6 +119,7 @@ export function SalesAccountsPage() {
     employeeCode: '',
     password: '',
     roleId: '',
+    salesCategory: 'motoris' as 'motoris' | 'dropping' | '',
   });
   const [editForm, setEditForm] = useState({
     name: '',
@@ -127,6 +128,7 @@ export function SalesAccountsPage() {
     employeeCode: '',
     roleId: '',
     status: 'active' as TenantUser['status'],
+    salesCategory: 'motoris' as 'motoris' | 'dropping' | '',
   });
 
   const salesRoles = useMemo(() => roles.filter((role) => isSalesRole(role.code, role.name)), [roles]);
@@ -189,6 +191,7 @@ export function SalesAccountsPage() {
       employeeCode: '',
       password: '',
       roleId: salesRoles[0]?.id ?? '',
+      salesCategory: 'motoris',
     });
     setShowCreate(true);
   }
@@ -202,6 +205,7 @@ export function SalesAccountsPage() {
       employeeCode: sales.employeeCode ?? '',
       roleId: sales.roleId ?? salesRoles.find((role) => role.code === sales.roleCode)?.id ?? '',
       status: sales.status,
+      salesCategory: (sales as any).salesCategory ?? 'motoris',
     });
   }
 
@@ -236,6 +240,7 @@ export function SalesAccountsPage() {
         phone: form.phone.trim() || undefined,
         employeeCode: form.employeeCode.trim() || undefined,
         password: form.password,
+        salesCategory: form.salesCategory || undefined,
       });
       setShowCreate(false);
       setSuccess('Akun sales berhasil dibuat.');
@@ -259,6 +264,7 @@ export function SalesAccountsPage() {
         phone: editForm.phone.trim() || null,
         employeeCode: editForm.employeeCode.trim() || null,
         status: editForm.status,
+        salesCategory: editForm.salesCategory || null,
       });
       setEditTarget(null);
       setSelectedSales(null);
@@ -499,7 +505,7 @@ export function SalesAccountsPage() {
                         <div>
                           <div className="admin-user-name">{sales.name}</div>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="admin-role-badge">{sales.roleName ?? sales.roleCode}</span>
+                            <span className="admin-role-badge capitalize">{sales.roleName ?? sales.roleCode} ({(sales as any).salesCategory || 'motoris'})</span>
                             <span className={`admin-role-badge inline-flex items-center gap-1.5 whitespace-nowrap ${activeFaceTemplateByUser.has(sales.id) ? 'text-admin-success' : 'text-admin-muted'}`}>
                               <Camera size={11} />
                               {activeFaceTemplateByUser.has(sales.id) ? 'Wajah aktif' : 'Belum wajah'}
@@ -576,6 +582,18 @@ export function SalesAccountsPage() {
                 <TextField id="sales-name" label="Nama Sales *" value={form.name} onChange={(value) => setForm((current) => ({ ...current, name: value }))} className="admin-field-full" />
                 <TextField id="sales-email" label="Email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} type="email" />
                 <TextField id="sales-phone" label="Nomor HP" value={form.phone} onChange={(value) => setForm((current) => ({ ...current, phone: value }))} />
+                <div className="admin-field">
+                  <label htmlFor="sales-category">Kategori Sales</label>
+                  <select
+                    id="sales-category"
+                    value={form.salesCategory}
+                    onChange={(event) => setForm((current) => ({ ...current, salesCategory: event.target.value as 'motoris' | 'dropping' }))}
+                    className="admin-select"
+                  >
+                    <option value="motoris">Motoris</option>
+                    <option value="dropping">Dropping</option>
+                  </select>
+                </div>
                 <EmployeeCodeField
                   id="sales-code"
                   value={form.employeeCode}
@@ -614,6 +632,18 @@ export function SalesAccountsPage() {
                 <TextField id="edit-sales-name" label="Nama Sales *" value={editForm.name} onChange={(value) => setEditForm((current) => ({ ...current, name: value }))} className="admin-field-full" />
                 <TextField id="edit-sales-email" label="Email" value={editForm.email} onChange={(value) => setEditForm((current) => ({ ...current, email: value }))} type="email" />
                 <TextField id="edit-sales-phone" label="Nomor HP" value={editForm.phone} onChange={(value) => setEditForm((current) => ({ ...current, phone: value }))} />
+                <div className="admin-field">
+                  <label htmlFor="edit-sales-category">Kategori Sales</label>
+                  <select
+                    id="edit-sales-category"
+                    value={editForm.salesCategory}
+                    onChange={(event) => setEditForm((current) => ({ ...current, salesCategory: event.target.value as 'motoris' | 'dropping' }))}
+                    className="admin-select"
+                  >
+                    <option value="motoris">Motoris</option>
+                    <option value="dropping">Dropping</option>
+                  </select>
+                </div>
                 <EmployeeCodeField
                   id="edit-sales-code"
                   value={editForm.employeeCode}

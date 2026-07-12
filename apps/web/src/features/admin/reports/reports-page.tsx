@@ -108,7 +108,7 @@ export function ReportsPage() {
     setLoading(true);
     try {
       const [txRes, userRes, summaryRes] = await Promise.all([
-        getSalesTransactions(accessToken, { status: statusFilter || undefined, from, to, salesUserId: salesFilter || undefined }),
+        getSalesTransactions(accessToken, { status: statusFilter || undefined, from, to, salesUserId: salesFilter || undefined, includeItems: true }),
         getTenantUsers(accessToken),
         getReportSummary(accessToken),
       ]);
@@ -202,7 +202,25 @@ export function ReportsPage() {
     ];
     styleWorksheet(transactionSheet);
 
-    for (const sheet of [summarySheet, leaderboardSheet, transactionSheet]) {
+    const itemRows: any[][] = [['No Transaksi', 'Nama Produk', 'Qty', 'Harga Satuan', 'Total']];
+    for (const t of transactions) {
+      if (t.items && Array.isArray(t.items)) {
+        for (const item of t.items) {
+          itemRows.push([
+            t.transactionNo,
+            item.productName || item.productSku || '-',
+            Number(item.quantity || 0),
+            Number(item.unitPrice || 0),
+            Number(item.lineTotal || 0),
+          ]);
+        }
+      }
+    }
+    const itemSheet = XLSX.utils.aoa_to_sheet(itemRows);
+    itemSheet['!cols'] = [{ wch: 22 }, { wch: 28 }, { wch: 12 }, { wch: 18 }, { wch: 18 }];
+    styleWorksheet(itemSheet);
+
+    for (const sheet of [summarySheet, leaderboardSheet, transactionSheet, itemSheet]) {
       const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:A1');
       for (let row = range.s.r; row <= range.e.r; row += 1) {
         for (let col = range.s.c; col <= range.e.c; col += 1) {
@@ -215,6 +233,7 @@ export function ReportsPage() {
     XLSX.utils.book_append_sheet(workbook, summarySheet, 'Ringkasan');
     XLSX.utils.book_append_sheet(workbook, leaderboardSheet, 'Leaderboard');
     XLSX.utils.book_append_sheet(workbook, transactionSheet, 'Transaksi');
+    XLSX.utils.book_append_sheet(workbook, itemSheet, 'Detail Item Penjualan');
     XLSX.writeFile(workbook, `laporan-penjualan-${from}-${to}.xlsx`, { compression: true });
   }
 

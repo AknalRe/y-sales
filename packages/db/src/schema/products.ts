@@ -16,6 +16,7 @@ export const products = pgTable('products', {
   imageUrl: text('image_url'),
   unit: varchar('unit', { length: 40 }).notNull(),
   priceDefault: numeric('price_default', { precision: 14, scale: 2 }).default('0').notNull(),
+  category: varchar('category', { length: 120 }),
   status: productStatusEnum('status').default('active').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -64,5 +65,3 @@ export const inventoryMovements = pgTable('inventory_movements', {
 }, (table) => [
   index('inventory_movements_warehouse_product_idx').on(table.warehouseId, table.productId),
 ]);
-
-

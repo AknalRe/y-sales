@@ -4,7 +4,7 @@ import { companies } from './companies.js';
 import { mediaFiles } from './media.js';
 
 export const outletStatusEnum = pgEnum('outlet_status', ['draft', 'pending_verification', 'active', 'rejected', 'inactive']);
-export const outletCustomerTypeEnum = pgEnum('outlet_customer_type', ['store', 'agent']);
+export const outletCustomerTypeEnum = pgEnum('outlet_customer_type', ['store', 'agent', 'user']);
 export const assignmentStatusEnum = pgEnum('assignment_status', ['active', 'inactive']);
 
 export const outlets = pgTable('outlets', {

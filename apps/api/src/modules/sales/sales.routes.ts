@@ -51,6 +51,7 @@ const orderListQuerySchema = z.object({
   from: z.string().date().optional(),
   to: z.string().date().optional(),
   salesUserId: z.string().uuid().optional(),
+  includeItems: z.coerce.boolean().optional(),
 });
 
 function addDays(date: Date, days: number) {
@@ -176,6 +177,33 @@ export async function salesRoutes(app: FastifyInstance) {
       .where(and(...conditions))
       .orderBy(desc(salesTransactions.createdAt))
       .limit(100);
+
+    if (query.includeItems) {
+      const orderIds = rows.map((r) => r.id);
+      if (orderIds.length) {
+        const items = await db
+          .select({
+            id: salesTransactionItems.id,
+            transactionId: salesTransactionItems.transactionId,
+            productId: salesTransactionItems.productId,
+            productName: products.name,
+            productSku: products.sku,
+            quantity: salesTransactionItems.quantity,
+            unitPrice: salesTransactionItems.unitPrice,
+            discountAmount: salesTransactionItems.discountAmount,
+            lineTotal: salesTransactionItems.lineTotal,
+          })
+          .from(salesTransactionItems)
+          .innerJoin(products, eq(salesTransactionItems.productId, products.id))
+          .where(and(eq(salesTransactionItems.companyId, companyId), inArray(salesTransactionItems.transactionId, orderIds)));
+
+        const ordersWithItems = rows.map((row) => ({
+          ...row,
+          items: items.filter((item) => item.transactionId === row.id),
+        }));
+        return { orders: ordersWithItems };
+      }
+    }
 
     return { orders: rows };
   });

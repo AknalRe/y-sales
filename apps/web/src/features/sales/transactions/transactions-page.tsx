@@ -423,6 +423,14 @@ export function TransactionsPage() {
         .sales-modern-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(181, 89, 37, .68);
         }
+        .sales-chips-scroll {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          -webkit-overflow-scrolling: touch;
+        }
+        .sales-chips-scroll::-webkit-scrollbar {
+          display: none;
+        }
       `}</style>
       {/* Header */}
       <div className="sales-home-greeting">
@@ -486,13 +494,8 @@ export function TransactionsPage() {
         {/* Category Filter Chips */}
         {categories.length > 1 && (
           <div
-            className="flex gap-2 overflow-x-auto"
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch',
-              paddingBottom: '2px',
-            }}
+            className="sales-chips-scroll flex gap-2 overflow-x-auto"
+            style={{ paddingBottom: '2px' }}
           >
             {categories.map((cat) => {
               const isSelected = selectedCategory === cat;

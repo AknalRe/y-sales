@@ -11,60 +11,29 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 const db = createDb(resolveDatabaseUrl());
 
-// ─── Resolve YukSales Company ─────────────────────────────────────────────────
-const [company] = await db.select().from(companies).where(eq(companies.slug, 'yuksales'));
-if (!company) {
-  console.error('❌ Company YukSales tidak ditemukan. Jalankan seed.ts terlebih dahulu.');
-  process.exit(1);
+// ─── Helper Functions for Stock Quantities ─────────────────────────────────
+function getMainStock(category: string | null): number {
+  switch (category) {
+    case 'Rokok': return 200;
+    case 'Mi & Pasta': return 500;
+    case 'Minuman': return 120;
+    case 'Beras & Serealia': return 80;
+    case 'Sabun & Deterjen': return 100;
+    case 'Personal Care': return 80;
+    default: return 100;
+  }
 }
 
-console.log(`✅ Company: ${company.name} (${company.id})`);
-
-// ─── Ensure Gudang Utama & Sales Van ─────────────────────────────────────────
-const [mainWarehouse] = await db
-  .insert(warehouses)
-  .values({
-    companyId: company.id,
-    code: 'YK-WH-MAIN',
-    name: 'Gudang Utama YukSales',
-    address: 'Gudang pusat operasional YukSales',
-    type: 'main',
-    status: 'active',
-  })
-  .onConflictDoUpdate({
-    target: [warehouses.companyId, warehouses.code],
-    set: { name: 'Gudang Utama YukSales', status: 'active' },
-  })
-  .returning();
-
-const [salesAgent] = await db
-  .select({ id: users.id })
-  .from(users)
-  .innerJoin(roles, eq(users.roleId, roles.id))
-  .where(and(eq(users.companyId, company.id), eq(roles.code, 'SALES_AGENT')))
-  .limit(1);
-
-const salesAgentUserId = salesAgent?.id ?? null;
-
-const [salesVanWarehouse] = await db
-  .insert(warehouses)
-  .values({
-    companyId: company.id,
-    code: 'YK-WH-SALES-001',
-    name: 'Gudang Sales Van 001',
-    address: 'Stok canvas sales default',
-    type: 'sales_van',
-    ownerUserId: salesAgentUserId,
-    status: 'active',
-  })
-  .onConflictDoUpdate({
-    target: [warehouses.companyId, warehouses.code],
-    set: { name: 'Gudang Sales Van 001', ownerUserId: salesAgentUserId, status: 'active' },
-  })
-  .returning();
-
-console.log(`✅ Gudang Utama : ${mainWarehouse?.name}`);
-console.log(`✅ Gudang Sales : ${salesVanWarehouse?.name} (Owner ID: ${salesAgentUserId})`);
+// ─── Helper Functions for Sales Stock Quantities ───────────────────────────
+function getSalesStock(category: string | null): number {
+  switch (category) {
+    case 'Rokok': return 80;
+    case 'Mi & Pasta': return 150;
+    case 'Minuman': return 40;
+    case 'Beras & Serealia': return 20;
+    default: return 30;
+  }
+}
 
 // ─── Product Seeds ────────────────────────────────────────────────────────────
 type ProductSeed = {
@@ -165,7 +134,7 @@ const productSeeds: ProductSeed[] = [
   { sku: 'SNK-REGALMAR', name: 'Biskuit Regal Marie 200g', description: 'Biskuit Marie Regal 200 gram.', unit: 'bungkus', priceDefault: '9000', category: 'Snack & Camilan' },
   { sku: 'SNK-OREO133', name: 'Oreo Sandwich Coklat 133g', description: 'Biskuit Oreo sandwich coklat 133 gram.', unit: 'bungkus', priceDefault: '11000', category: 'Snack & Camilan' },
 
-  // ── SUSU ───────────────────────────────────────────────────────────────────
+  // ── SUSU & PRODUK SUSU ─────────────────────────────────────────────────────
   { sku: 'SSU-INDOMLK400', name: 'Indomilk Kental Manis 400g', description: 'Susu kental manis Indomilk 400 gram.', unit: 'kaleng', priceDefault: '12000', category: 'Susu & Produk Susu' },
   { sku: 'SSU-FRISIAN1L', name: 'Susu Frisian Flag 1L', description: 'Susu pasteurisasi Frisian Flag full cream 1L.', unit: 'kotak', priceDefault: '18000', category: 'Susu & Produk Susu' },
   { sku: 'SSU-ULTRA1L', name: 'Susu Ultra Milk 1L', description: 'Susu UHT Ultra Milk full cream 1 liter.', unit: 'kotak', priceDefault: '17000', category: 'Susu & Produk Susu' },
@@ -181,91 +150,152 @@ const productSeeds: ProductSeed[] = [
   { sku: 'PLK-OXO100', name: 'Kantong Plastik OXO S', description: 'Kantong plastik Oxo ukuran S 100 lembar.', unit: 'roll', priceDefault: '8000', category: 'Tissue & Kebersihan' },
 ];
 
-// ─── Insert / Update Products ────────────────────────────────────────────────
-console.log(`\n🛒 Memasukkan ${productSeeds.length} produk ke YukSales...`);
-let insertedCount = 0;
-let updatedCount = 0;
+// ─── Resolve All Companies ─────────────────────────────────────────────────
+const allCompanies = await db.select().from(companies);
 
-for (const seed of productSeeds) {
-  const [existing] = await db
-    .select({ id: products.id })
-    .from(products)
-    .where(and(eq(products.companyId, company.id), eq(products.sku, seed.sku)));
+console.log(`✅ Ditemukan ${allCompanies.length} company di DB.`);
 
-  if (existing) {
-    await db.update(products)
-      .set({ name: seed.name, description: seed.description, unit: seed.unit, priceDefault: seed.priceDefault, category: seed.category, updatedAt: new Date() })
-      .where(eq(products.id, existing.id));
-    updatedCount++;
-  } else {
-    await db.insert(products).values({ ...seed, companyId: company.id, status: 'active' });
-    insertedCount++;
-  }
-}
+for (const company of allCompanies) {
+  console.log(`\n🏢 Processing Company: ${company.name} (${company.slug})`);
 
-console.log(`  ✅ Inserted: ${insertedCount} produk baru`);
-console.log(`  ♻️  Updated:  ${updatedCount} produk lama`);
-
-// ─── Seed Inventory Balances ─────────────────────────────────────────────────
-const allProducts = await db.select().from(products).where(eq(products.companyId, company.id));
-
-function getMainStock(category: string | null): number {
-  switch (category) {
-    case 'Rokok': return 200;
-    case 'Mi & Pasta': return 500;
-    case 'Minuman': return 120;
-    case 'Beras & Serealia': return 80;
-    case 'Sabun & Deterjen': return 100;
-    case 'Personal Care': return 80;
-    default: return 100;
-  }
-}
-
-function getSalesStock(category: string | null): number {
-  switch (category) {
-    case 'Rokok': return 80;
-    case 'Mi & Pasta': return 150;
-    case 'Minuman': return 40;
-    case 'Beras & Serealia': return 20;
-    default: return 30;
-  }
-}
-
-if (mainWarehouse) {
-  console.log(`\n📦 Seeding stok gudang utama: ${mainWarehouse.name}`);
-  for (const product of allProducts) {
-    const qty = getMainStock((product as any).category ?? null);
-    await db.insert(inventoryBalances).values({
+  // ─── Ensure Gudang Utama ─────────────────────────────────────────
+  const mainWarehouseCode = `${company.slug.toUpperCase()}-WH-MAIN`;
+  const [mainWarehouse] = await db
+    .insert(warehouses)
+    .values({
       companyId: company.id,
-      warehouseId: mainWarehouse.id,
-      productId: product.id,
-      quantity: String(qty),
-      reservedQuantity: '0',
-    }).onConflictDoUpdate({
-      target: [inventoryBalances.warehouseId, inventoryBalances.productId],
-      set: { quantity: String(qty), reservedQuantity: '0', updatedAt: new Date() },
-    });
+      code: mainWarehouseCode,
+      name: `Gudang Utama ${company.name}`,
+      address: `Gudang pusat operasional ${company.name}`,
+      type: 'main',
+      status: 'active',
+    })
+    .onConflictDoUpdate({
+      target: [warehouses.companyId, warehouses.code],
+      set: { name: `Gudang Utama ${company.name}`, status: 'active' },
+    })
+    .returning();
+
+  console.log(`  ✅ Gudang Utama : ${mainWarehouse?.name}`);
+
+  // ─── Ensure Gudang Sales Van per Sales Agent ─────────────────────
+  const agents = await db
+    .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .innerJoin(roles, eq(users.roleId, roles.id))
+    .where(and(eq(users.companyId, company.id), eq(roles.code, 'SALES_AGENT')));
+
+  console.log(`  👥 Menemukan ${agents.length} Sales Agent.`);
+
+  const salesVanWarehouses = [];
+  for (const agent of agents) {
+    // Cek jika sudah punya gudang sales_van
+    const [existingWarehouse] = await db
+      .select()
+      .from(warehouses)
+      .where(and(
+        eq(warehouses.companyId, company.id),
+        eq(warehouses.ownerUserId, agent.id),
+        eq(warehouses.type, 'sales_van')
+      ))
+      .limit(1);
+
+    if (existingWarehouse) {
+      console.log(`  🚐 Agent ${agent.email ?? 'unknown'} sudah memiliki gudang: ${existingWarehouse.name}`);
+      salesVanWarehouses.push(existingWarehouse);
+    } else {
+      const emailPrefix = agent.email ? agent.email.split('@')[0] : 'agent';
+      const salesWarehouseCode = `${company.slug.toUpperCase()}-WH-SALES-${agent.id.substring(0, 8).toUpperCase()}`;
+      const [newWarehouse] = await db
+        .insert(warehouses)
+        .values({
+          companyId: company.id,
+          code: salesWarehouseCode,
+          name: `Gudang Sales Van ${agent.name || emailPrefix}`,
+          address: `Stok canvas sales agent ${agent.name || agent.email || 'unknown'}`,
+          type: 'sales_van',
+          ownerUserId: agent.id,
+          status: 'active',
+        })
+        .onConflictDoUpdate({
+          target: [warehouses.companyId, warehouses.code],
+          set: { name: `Gudang Sales Van ${agent.name || emailPrefix}`, ownerUserId: agent.id, status: 'active' },
+        })
+        .returning();
+
+      console.log(`  🚐 Dibuat gudang baru untuk ${agent.email}: ${newWarehouse?.name}`);
+      salesVanWarehouses.push(newWarehouse);
+    }
   }
-  console.log(`  ✅ ${allProducts.length} produk di-stok di gudang utama`);
+
+  // ─── Insert / Update Products ────────────────────────────────────────────────
+  console.log(`  🛒 Memasukkan ${productSeeds.length} produk ke company ${company.name}...`);
+  let insertedCount = 0;
+  let updatedCount = 0;
+
+  for (const seed of productSeeds) {
+    const [existing] = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(and(eq(products.companyId, company.id), eq(products.sku, seed.sku)));
+
+    if (existing) {
+      await db.update(products)
+        .set({ name: seed.name, description: seed.description, unit: seed.unit, priceDefault: seed.priceDefault, category: seed.category, updatedAt: new Date() })
+        .where(eq(products.id, existing.id));
+      updatedCount++;
+    } else {
+      await db.insert(products).values({ ...seed, companyId: company.id, status: 'active' });
+      insertedCount++;
+    }
+  }
+
+  console.log(`    ✅ Inserted: ${insertedCount} produk baru`);
+  console.log(`    ♻️  Updated:  ${updatedCount} produk lama`);
+
+  // ─── Seed Inventory Balances ─────────────────────────────────────────────────
+  const allProducts = await db.select().from(products).where(eq(products.companyId, company.id));
+
+  // Seed main warehouse
+  if (mainWarehouse) {
+    console.log(`    📦 Seeding stok gudang utama: ${mainWarehouse.name}`);
+    for (const product of allProducts) {
+      const qty = getMainStock((product as any).category ?? null);
+      await db.insert(inventoryBalances).values({
+        companyId: company.id,
+        warehouseId: mainWarehouse.id,
+        productId: product.id,
+        quantity: String(qty),
+        reservedQuantity: '0',
+      }).onConflictDoUpdate({
+        target: [inventoryBalances.warehouseId, inventoryBalances.productId],
+        set: { quantity: String(qty), reservedQuantity: '0', updatedAt: new Date() },
+      });
+    }
+    console.log(`    ✅ ${allProducts.length} produk di-stok di gudang utama`);
+  }
+
+  // Seed all sales warehouses
+  if (salesVanWarehouses.length > 0) {
+    console.log(`    🚐 Seeding stok untuk ${salesVanWarehouses.length} gudang sales...`);
+    for (const wh of salesVanWarehouses) {
+      for (const product of allProducts) {
+        const qty = getSalesStock((product as any).category ?? null);
+        await db.insert(inventoryBalances).values({
+          companyId: company.id,
+          warehouseId: wh.id,
+          productId: product.id,
+          quantity: String(qty),
+          reservedQuantity: '0',
+        }).onConflictDoUpdate({
+          target: [inventoryBalances.warehouseId, inventoryBalances.productId],
+          set: { quantity: String(qty), reservedQuantity: '0', updatedAt: new Date() },
+        });
+      }
+      console.log(`      ✅ ${allProducts.length} produk di-stok di ${wh.name}`);
+    }
+  }
 }
 
-if (salesVanWarehouse) {
-  console.log(`\n🚐 Seeding stok gudang sales: ${salesVanWarehouse.name}`);
-  for (const product of allProducts) {
-    const qty = getSalesStock((product as any).category ?? null);
-    await db.insert(inventoryBalances).values({
-      companyId: company.id,
-      warehouseId: salesVanWarehouse.id,
-      productId: product.id,
-      quantity: String(qty),
-      reservedQuantity: '0',
-    }).onConflictDoUpdate({
-      target: [inventoryBalances.warehouseId, inventoryBalances.productId],
-      set: { quantity: String(qty), reservedQuantity: '0', updatedAt: new Date() },
-    });
-  }
-  console.log(`  ✅ ${allProducts.length} produk di-stok di gudang sales`);
-}
-
-console.log('\n🎉 Seed produk YukSales selesai!');
-console.log(`   Total produk di database: ${allProducts.length}`);
+console.log('\n🎉 Seed produk selesai untuk semua company!');
+process.exit(0);

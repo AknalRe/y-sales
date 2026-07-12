@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone, Search } from 'lucide-react';
-import { apiRequest, checkInVisit, checkOutVisit, getMobileRuntimeSettings, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
+import { apiRequest, checkInVisit, checkOutVisit, getMobileRuntimeSettings, getActiveVisitSession, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
 import { getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, getOutlets, type Consignment, type TodayVisitSchedule, type Outlet } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
@@ -121,18 +121,45 @@ export function VisitPage() {
   }, []);
 
   useEffect(() => {
-    const raw = localStorage.getItem(activeVisitStorageKey);
-    if (!raw) return;
-    try {
-      const activeVisit = JSON.parse(raw) as { id: string; outletId: string; scheduleId?: string; outletName?: string };
-      setActiveVisitId(activeVisit.id);
-      setSelectedOutlet(activeVisit.outletId);
-      setSelectedScheduleId(activeVisit.scheduleId ?? '');
-      setActiveOutletName(activeVisit.outletName ?? '');
-    } catch {
-      localStorage.removeItem(activeVisitStorageKey);
+    let cancelled = false;
+
+    async function restoreActiveVisit() {
+      const raw = localStorage.getItem(activeVisitStorageKey);
+      if (raw) {
+        try {
+          const stored = JSON.parse(raw) as { id: string; outletId: string; scheduleId?: string; outletName?: string };
+          if (!cancelled) {
+            setActiveVisitId(stored.id);
+            setSelectedOutlet(stored.outletId);
+            setSelectedScheduleId(stored.scheduleId ?? '');
+            setActiveOutletName(stored.outletName ?? '');
+          }
+        } catch {
+          localStorage.removeItem(activeVisitStorageKey);
+        }
+        return;
+      }
+
+      // localStorage kosong — tanya server apakah ada visit aktif hari ini
+      if (!accessToken) return;
+      try {
+        const res = await getActiveVisitSession(accessToken);
+        if (cancelled) return;
+        if (res.activeVisit) {
+          const av = res.activeVisit;
+          const visitData = { id: av.id, outletId: av.outletId, scheduleId: av.scheduleId ?? undefined, outletName: av.outletName ?? undefined };
+          localStorage.setItem(activeVisitStorageKey, JSON.stringify(visitData));
+          setActiveVisitId(av.id);
+          setSelectedOutlet(av.outletId);
+          setSelectedScheduleId(av.scheduleId ?? '');
+          setActiveOutletName(av.outletName ?? '');
+        }
+      } catch { /* gagal fetch — biarkan form check-in tampil */ }
     }
-  }, []);
+
+    restoreActiveVisit();
+    return () => { cancelled = true; };
+  }, [accessToken]);
 
   useEffect(() => {
     if (accessToken) {
@@ -299,6 +326,12 @@ export function VisitPage() {
       if (!navigator.onLine || error.message === 'offline') {
         await enqueueVisit({ type: 'check-in', accessToken, payload });
         await refreshQueueCount();
+        // Simpan state lokal agar halaman lain (Transaksi) tahu ada kunjungan aktif
+        const outletName = selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet';
+        const tempVisitData = { id: `offline-${payload.clientRequestId}`, outletId: payload.outletId, scheduleId: selectedScheduleId || undefined, outletName };
+        localStorage.setItem(activeVisitStorageKey, JSON.stringify(tempVisitData));
+        setActiveVisitId(tempVisitData.id);
+        setActiveOutletName(outletName);
         setMessage('Check-in disimpan offline dan akan tersinkron saat online.');
         setPreview(false);
         setImage(null);

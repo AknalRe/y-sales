@@ -317,8 +317,6 @@ export async function visitRoutes(app: FastifyInstance) {
   // Return active (open) visit session for today's logged-in sales user
   app.get('/visits/active', { preHandler: requirePermission('visits.execute') }, async (request) => {
     const companyId = requireTenantId(request);
-    const todayStart = new Date(`${todayDate()}T00:00:00.000+07:00`);
-    const todayEnd = new Date(`${todayDate()}T23:59:59.999+07:00`);
     const [session] = await db
       .select({
         id: visitSessions.id,
@@ -334,8 +332,6 @@ export async function visitRoutes(app: FastifyInstance) {
         eq(visitSessions.companyId, companyId),
         eq(visitSessions.salesUserId, request.user!.id),
         eq(visitSessions.status, 'open'),
-        gte(visitSessions.checkInAt, todayStart),
-        lte(visitSessions.checkInAt, todayEnd),
       ))
       .orderBy(desc(visitSessions.checkInAt))
       .limit(1);

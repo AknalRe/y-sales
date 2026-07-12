@@ -47,7 +47,7 @@ export function TransactionsPage() {
   const categories = useMemo(() => {
     const catSet = new Set<string>();
     products.forEach((p) => {
-      if (p.category) catSet.add(p.category);
+      catSet.add(p.category || 'Umum'); // null/undefined → 'Umum'
     });
     return ['Semua', ...Array.from(catSet).sort()];
   }, [products]);
@@ -55,7 +55,8 @@ export function TransactionsPage() {
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { Semua: products.length };
     products.forEach((p) => {
-      if (p.category) counts[p.category] = (counts[p.category] ?? 0) + 1;
+      const cat = p.category || 'Umum';
+      counts[cat] = (counts[cat] ?? 0) + 1;
     });
     return counts;
   }, [products]);
@@ -234,7 +235,8 @@ export function TransactionsPage() {
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = selectedCategory === 'Semua' || p.category === selectedCategory;
+      const productCat = p.category || 'Umum';
+      const matchesCategory = selectedCategory === 'Semua' || productCat === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [products, search, selectedCategory]);

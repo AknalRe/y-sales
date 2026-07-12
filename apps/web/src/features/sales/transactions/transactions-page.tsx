@@ -455,8 +455,9 @@ export function TransactionsPage() {
 
       <SalesAlert message={offlineMessage} onClose={() => setOfflineMessage('')} />
 
-      {/* Search */}
-      <div className="sales-card" style={{ margin: 0, padding: 0, borderRadius: 15 }}>
+      {/* Search + Category Filter — single wrapper to avoid stacking context issues */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+        {/* Search */}
         <div className="flex items-center gap-2 border border-sales-border-brand bg-sales-surface-input px-4 py-2.5 rounded-2xl">
           <Search size={18} className="text-sales-brand-muted" />
           <input
@@ -479,64 +480,63 @@ export function TransactionsPage() {
             </button>
           )}
         </div>
-      </div>
 
-      {/* Category Filter Chips */}
-      {categories.length > 1 && (
-        <div
-          className="sales-modern-scrollbar flex gap-2 overflow-x-auto"
-          style={{
-            marginTop: '.5rem',
-            paddingBottom: '2px',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {categories.map((cat) => {
-            const isSelected = selectedCategory === cat;
-            const count = categoryCounts[cat] ?? 0;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className="shrink-0 flex items-center gap-1.5 rounded-full font-bold transition-all"
-                style={{
-                  padding: '.35rem .85rem',
-                  fontSize: '.75rem',
-                  backgroundColor: isSelected ? 'var(--sales-accent)' : 'var(--sales-surface)',
-                  color: isSelected ? '#fff' : 'var(--sales-text-heading)',
-                  border: isSelected ? '1.5px solid var(--sales-accent)' : '1.5px solid var(--sales-border-brand)',
-                  boxShadow: isSelected ? '0 2px 8px rgba(181,89,37,.28)' : 'none',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {cat}
-                <span
+        {/* Category Filter Chips */}
+        {categories.length > 1 && (
+          <div
+            className="flex gap-2 overflow-x-auto"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: '2px',
+            }}
+          >
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat;
+              const count = categoryCounts[cat] ?? 0;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className="shrink-0 flex items-center gap-1.5 rounded-full font-bold transition-all"
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minWidth: 18,
-                    height: 18,
-                    borderRadius: 99,
-                    fontSize: '.65rem',
-                    fontWeight: 800,
-                    padding: '0 5px',
-                    backgroundColor: isSelected ? 'rgba(255,255,255,.25)' : 'var(--sales-accent-bg)',
-                    color: isSelected ? '#fff' : 'var(--sales-accent)',
-                    lineHeight: 1,
+                    padding: '.35rem .85rem',
+                    fontSize: '.75rem',
+                    backgroundColor: isSelected ? 'var(--sales-accent)' : 'var(--sales-surface)',
+                    color: isSelected ? '#fff' : 'var(--sales-text-heading)',
+                    border: isSelected ? '1.5px solid var(--sales-accent)' : '1.5px solid var(--sales-border-brand)',
+                    boxShadow: isSelected ? '0 2px 8px rgba(181,89,37,.28)' : 'none',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+                  {cat}
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: 18,
+                      height: 18,
+                      borderRadius: 99,
+                      fontSize: '.65rem',
+                      fontWeight: 800,
+                      padding: '0 5px',
+                      backgroundColor: isSelected ? 'rgba(255,255,255,.25)' : 'var(--sales-accent-bg)',
+                      color: isSelected ? '#fff' : 'var(--sales-accent)',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Product Grid */}
       <div ref={productGridRef} className="sales-modern-scrollbar grid grid-cols-3 gap-1" style={productGridStyle}>

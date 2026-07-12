@@ -125,6 +125,17 @@ function superAdminHook() {
 
 export async function platformRoutes(app: FastifyInstance) {
 
+  // ─── Public Plan Catalog (accessible by any authenticated user) ─────────────
+  // Tenant admin dapat melihat daftar paket untuk halaman subscription mereka
+
+  app.get('/platform/plans', { preHandler: authenticate }, async () => {
+    const plans = await db
+      .select()
+      .from(subscriptionPlans)
+      .orderBy(asc(subscriptionPlans.level), asc(subscriptionPlans.priceMonthly));
+    return { plans };
+  });
+
   // ─── Billing: Invoices & Payments ──────────────────────────────────────────
 
   app.get('/platform/billing/invoices', superAdminHook(), async (request) => {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff, Store, X, XCircle } from 'lucide-react';
 import { getProducts, createOrder } from '../../../lib/api/tenant';
+import { getActiveVisitSession } from '../../../lib/api/client';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState, Spinner } from '../../../components/ui';
 import { enqueueTransaction, getTransactionQueueCount } from '../../../lib/offline/transaction-queue';
@@ -90,31 +91,61 @@ export function TransactionsPage() {
   }, [error]);
 
   useEffect(() => {
-    const raw = localStorage.getItem(activeVisitStorageKey);
-    if (raw) {
-      try {
-        const visit = JSON.parse(raw) as ActiveVisit;
-        setActiveVisit(visit);
-        const draftRaw = localStorage.getItem(transactionDraftStorageKey);
-        if (draftRaw) {
-          const draft = JSON.parse(draftRaw) as TransactionDraft;
-          if (draft.visitId === visit.id && draft.outletId === visit.outletId) {
-            setCart(draft.cart ?? []);
-            setPaymentMethod(draft.paymentMethod ?? 'cash');
-          } else {
-            localStorage.removeItem(transactionDraftStorageKey);
+    let cancelled = false;
+
+    async function syncActiveVisit() {
+      const raw = localStorage.getItem(activeVisitStorageKey);
+      if (raw) {
+        try {
+          const visit = JSON.parse(raw) as ActiveVisit;
+          if (!cancelled) {
+            setActiveVisit(visit);
+            const draftRaw = localStorage.getItem(transactionDraftStorageKey);
+            if (draftRaw) {
+              const draft = JSON.parse(draftRaw) as TransactionDraft;
+              if (draft.visitId === visit.id && draft.outletId === visit.outletId) {
+                setCart(draft.cart ?? []);
+                setPaymentMethod(draft.paymentMethod ?? 'cash');
+              } else {
+                localStorage.removeItem(transactionDraftStorageKey);
+              }
+            }
           }
+        } catch {
+          localStorage.removeItem(activeVisitStorageKey);
+          localStorage.removeItem(transactionDraftStorageKey);
+          if (!cancelled) setActiveVisit(null);
         }
-      } catch {
-        localStorage.removeItem(activeVisitStorageKey);
+      } else if (accessToken) {
+        // localStorage kosong — tanya server apakah ada visit aktif hari ini
+        try {
+          const res = await getActiveVisitSession(accessToken);
+          if (!cancelled) {
+            if (res.activeVisit) {
+              const visit: ActiveVisit = {
+                id: res.activeVisit.id,
+                outletId: res.activeVisit.outletId,
+                outletName: res.activeVisit.outletName ?? undefined,
+                scheduleId: res.activeVisit.scheduleId ?? undefined,
+              };
+              localStorage.setItem(activeVisitStorageKey, JSON.stringify(visit));
+              setActiveVisit(visit);
+            } else {
+              setActiveVisit(null);
+              localStorage.removeItem(transactionDraftStorageKey);
+            }
+          }
+        } catch {
+          if (!cancelled) setActiveVisit(null);
+        }
+      } else {
+        if (!cancelled) setActiveVisit(null);
         localStorage.removeItem(transactionDraftStorageKey);
-        setActiveVisit(null);
       }
-    } else {
-      setActiveVisit(null);
-      localStorage.removeItem(transactionDraftStorageKey);
+      if (!cancelled) setDraftReady(true);
     }
-    setDraftReady(true);
+
+    syncActiveVisit();
 
     if (accessToken) {
       getProducts(accessToken)
@@ -122,6 +153,25 @@ export function TransactionsPage() {
         .catch(e => setError(e.message || 'Gagal memuat produk.'))
         .finally(() => setLoading(false));
     }
+
+    // Cross-tab sync: update state saat tab lain mengubah localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key !== activeVisitStorageKey) return;
+      if (e.newValue) {
+        try {
+          const visit = JSON.parse(e.newValue) as ActiveVisit;
+          setActiveVisit(visit);
+        } catch { /* invalid json */ }
+      } else {
+        setActiveVisit(null);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [accessToken, location.pathname]);
 
   useEffect(() => {

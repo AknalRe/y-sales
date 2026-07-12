@@ -314,6 +314,34 @@ export async function visitRoutes(app: FastifyInstance) {
     return { schedules: [], target: null };
   });
 
+  // Return active (open) visit session for today's logged-in sales user
+  app.get('/visits/active', { preHandler: requirePermission('visits.execute') }, async (request) => {
+    const companyId = requireTenantId(request);
+    const todayStart = new Date(`${todayDate()}T00:00:00.000+07:00`);
+    const todayEnd = new Date(`${todayDate()}T23:59:59.999+07:00`);
+    const [session] = await db
+      .select({
+        id: visitSessions.id,
+        outletId: visitSessions.outletId,
+        scheduleId: visitSessions.scheduleId,
+        outletName: outlets.name,
+        status: visitSessions.status,
+        checkInAt: visitSessions.checkInAt,
+      })
+      .from(visitSessions)
+      .innerJoin(outlets, eq(visitSessions.outletId, outlets.id))
+      .where(and(
+        eq(visitSessions.companyId, companyId),
+        eq(visitSessions.salesUserId, request.user!.id),
+        eq(visitSessions.status, 'open'),
+        gte(visitSessions.checkInAt, todayStart),
+        lte(visitSessions.checkInAt, todayEnd),
+      ))
+      .orderBy(desc(visitSessions.checkInAt))
+      .limit(1);
+    return { activeVisit: session ?? null };
+  });
+
   app.get('/visits/sessions', { preHandler: authenticate }, async (request, reply) => {
     const companyId = requireTenantId(request);
     const query = z.object({ date: z.string().date().optional(), salesUserId: z.string().uuid().optional() }).parse(request.query);

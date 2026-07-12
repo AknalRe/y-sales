@@ -360,6 +360,21 @@ export function createMediaUpload(accessToken: string, payload: { ownerType: str
   });
 }
 
+export type ActiveVisitSession = {
+  id: string;
+  outletId: string;
+  scheduleId?: string | null;
+  outletName?: string | null;
+  status: string;
+  checkInAt?: string | null;
+};
+
+export function getActiveVisitSession(accessToken: string) {
+  return apiRequest<{ activeVisit: ActiveVisitSession | null }>('/visits/active', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+}
+
 type StorageUploadFallback = {
   accessToken: string;
   ownerType: string;

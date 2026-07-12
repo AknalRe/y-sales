@@ -101,6 +101,7 @@ export function ReportsPage() {
   const [to, setTo] = useState(range.to);
   const [statusFilter, setStatusFilter] = useState('');
   const [salesFilter, setSalesFilter] = useState('');
+  const [salesCategoryFilter, setSalesCategoryFilter] = useState<'all' | 'motoris' | 'dropping'>('all');
   const [kpiTab, setKpiTab] = useState<'penjualan' | 'kunjungan'>('penjualan');
 
   async function load() {
@@ -126,8 +127,20 @@ export function ReportsPage() {
 
   useEffect(() => { load(); }, [accessToken, from, to, statusFilter, salesFilter]);
 
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      const user = users.find(u => u.id === t.salesUserId);
+      if (salesCategoryFilter !== 'all') {
+        if (!user || user.salesCategory !== salesCategoryFilter) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [transactions, users, salesCategoryFilter]);
+
   const stats = useMemo(() => {
-    const closed = transactions.filter(t => ['closed', 'approved', 'validated'].includes(t.status));
+    const closed = filteredTransactions.filter(t => ['closed', 'approved', 'validated'].includes(t.status));
     const totalRevenue = closed.reduce((s, t) => s + Number(t.totalAmount || 0), 0);
     const avgOrder = closed.length ? totalRevenue / closed.length : 0;
 
@@ -141,8 +154,8 @@ export function ReportsPage() {
     }
     const leaderboard = Object.values(byUser).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
 
-    return { totalRevenue, avgOrder, closed: closed.length, total: transactions.length, leaderboard };
-  }, [transactions, users]);
+    return { totalRevenue, avgOrder, closed: closed.length, total: filteredTransactions.length, leaderboard };
+  }, [filteredTransactions, users]);
 
   function downloadExcel() {
     const workbook = XLSX.utils.book_new();
@@ -180,7 +193,7 @@ export function ReportsPage() {
 
     const transactionSheet = XLSX.utils.aoa_to_sheet([
       ['No Transaksi', 'Sales', 'Outlet ID', 'Customer Type', 'Payment Method', 'Payment Status', 'Subtotal', 'Diskon', 'Total', 'Status', 'Submitted At', 'Approved At', 'Tanggal Dibuat'],
-      ...transactions.map((transaction) => [
+      ...filteredTransactions.map((transaction) => [
         transaction.transactionNo,
         users.find((user) => user.id === transaction.salesUserId)?.name ?? '-',
         transaction.outletId ?? '-',
@@ -203,7 +216,7 @@ export function ReportsPage() {
     styleWorksheet(transactionSheet);
 
     const itemRows: any[][] = [['No Transaksi', 'Nama Produk', 'Qty', 'Harga Satuan', 'Total']];
-    for (const t of transactions) {
+    for (const t of filteredTransactions) {
       if (t.items && Array.isArray(t.items)) {
         for (const item of t.items) {
           itemRows.push([
@@ -330,15 +343,20 @@ export function ReportsPage() {
               <input type="date" value={to} onChange={e => setTo(e.target.value)} className="admin-input" />
             </div>
             <div className="flex items-center gap-2">
+              <select value={salesCategoryFilter} onChange={e => { setSalesCategoryFilter(e.target.value as any); setSalesFilter(''); }} className="admin-select">
+                <option value="all">Semua Kategori Sales</option>
+                <option value="motoris">Sales Motoris</option>
+                <option value="dropping">Sales Dropping</option>
+              </select>
               <select value={salesFilter} onChange={e => setSalesFilter(e.target.value)} className="admin-select">
                 <option value="">Semua Sales</option>
-                {users.filter(u => u.status === 'active').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                {users.filter(u => u.status === 'active' && (salesCategoryFilter === 'all' || u.salesCategory === salesCategoryFilter)).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
               </select>
               <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select">
                 <option value="">Semua Status</option>
                 {Object.entries(statusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
-              <span className="admin-count-badge">{transactions.length} transaksi</span>
+              <span className="admin-count-badge">{filteredTransactions.length} transaksi</span>
             </div>
           </div>
 
@@ -381,7 +399,7 @@ export function ReportsPage() {
 
             {/* ─── Transaction List ───────────────────────────── */}
             <div className="admin-card">
-              <div className="admin-card-header"><h2>Daftar Transaksi ({transactions.length})</h2></div>
+              <div className="admin-card-header"><h2>Daftar Transaksi ({filteredTransactions.length})</h2></div>
               {loading ? <div className="admin-loading">Memuat...</div> : (
                 <div className="admin-table-wrap" style={{ maxHeight: 420, overflowY: 'auto' }}>
                   <Table className="admin-table">
@@ -395,7 +413,7 @@ export function ReportsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {transactions.map(t => {
+                      {filteredTransactions.map(t => {
                         return (
                           <TableRow key={t.id}>
                             <TableCell><strong style={{ fontSize: '.75rem' }}>{t.transactionNo}</strong></TableCell>
@@ -410,7 +428,7 @@ export function ReportsPage() {
                           </TableRow>
                         );
                       })}
-                      {!transactions.length && (
+                      {!filteredTransactions.length && (
                         <TableRow>
                           <TableCell colSpan={5} className="admin-empty">Tidak ada transaksi.</TableCell>
                         </TableRow>

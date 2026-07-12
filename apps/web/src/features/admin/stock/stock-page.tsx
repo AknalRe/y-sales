@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
 import {
   AlertTriangle, ArrowRightLeft, Boxes, Edit3, History, Image as ImageIcon, Package,
-  Download, RefreshCw, RotateCcw, Save, Trash2, Upload, Warehouse as WarehouseIcon, X,
+  Download, FileUp, RefreshCw, RotateCcw, Save, Trash2, Upload, Warehouse as WarehouseIcon, X,
   Truck, ClipboardList, UserCircle, Send, type LucideIcon, Store
 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
@@ -137,6 +137,9 @@ export function StockPage() {
   const [stockAction, setStockAction] = useState({ mode: 'adjustment' as 'adjustment' | 'reset' | 'transfer', warehouseId: '', toWarehouseId: '', productId: '', quantity: '', notes: '' });
   const [salesUsers, setSalesUsers] = useState<SalesUser[]>([]);
   const [transferForm, setTransferForm] = useState({ sourceWarehouseId: '', salesUserId: '', warehouseId: '', productId: '', quantity: '', notes: '' });
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ ok: number; skipped: number; errors: string[] } | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const load = useCallback(async () => {
     if (!accessToken) return;
@@ -203,10 +206,10 @@ export function StockPage() {
       };
       if (productForm.id) {
         const imageUrl = await uploadImage(productForm.id);
-        await updateProduct(accessToken, productForm.id, { sku: productForm.sku.trim() || undefined, name: productForm.name, description: productForm.description, imageUrl, unit: productForm.unit, priceDefault: productForm.priceDefault, status: productForm.status });
+        await updateProduct(accessToken, productForm.id, { sku: productForm.sku.trim() || undefined, name: productForm.name, description: productForm.description, imageUrl, unit: productForm.unit, priceDefault: productForm.priceDefault, category: productForm.category || null, status: productForm.status });
         setMessage('Produk berhasil diperbarui.');
       } else {
-        const created = await createProduct(accessToken, { sku: productForm.sku.trim() || undefined, name: productForm.name, description: productForm.description, unit: productForm.unit, priceDefault: productForm.priceDefault, initialStock: productForm.initialStock || undefined });
+        const created = await createProduct(accessToken, { sku: productForm.sku.trim() || undefined, name: productForm.name, description: productForm.description, unit: productForm.unit, priceDefault: productForm.priceDefault, category: productForm.category || null, initialStock: productForm.initialStock || undefined });
         const imageUrl = await uploadImage(created.product.id);
         if (imageUrl) await updateProduct(accessToken, created.product.id, { imageUrl });
         setMessage('Produk baru berhasil dibuat.');
@@ -304,6 +307,81 @@ export function StockPage() {
   const activeSectionDef = sections.find((s) => s.key === activeSection) ?? sections[0];
   const ActiveIcon = activeSectionDef.icon;
 
+  /** Download template Excel kosong untuk import produk */
+  function downloadImportTemplate() {
+    const templateRows = [
+      { SKU: 'PRD-CONTOH-001', 'Nama Produk': 'Contoh Produk 1', Kategori: 'Kebutuhan Rumah Tangga', Unit: 'pcs', Harga: 10000, Deskripsi: 'Deskripsi produk opsional' },
+      { SKU: 'PRD-CONTOH-002', 'Nama Produk': 'Contoh Produk 2', Kategori: 'Rokok', Unit: 'bungkus', Harga: 25000, Deskripsi: '' },
+    ];
+    const sheet = XLSX.utils.json_to_sheet(templateRows);
+    sheet['!cols'] = [{ wch: 20 }, { wch: 32 }, { wch: 28 }, { wch: 12 }, { wch: 12 }, { wch: 40 }];
+    // Style header row
+    const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:F1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+      if (cell) cell.s = { font: { bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: 'C75A18' } }, alignment: { horizontal: 'center' } };
+    }
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Produk');
+    XLSX.writeFile(workbook, 'template-import-produk.xlsx');
+  }
+
+  /** Handle import Excel produk */
+  async function handleImportExcel(file: File) {
+    if (!accessToken) return;
+    setImporting(true);
+    setImportResult(null);
+    setError('');
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheetName = workbook.SheetNames.find((n) => n.toLowerCase().includes('produk')) ?? workbook.SheetNames[0];
+      if (!sheetName) throw new Error('Sheet tidak ditemukan di file Excel.');
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName]);
+      if (!rows.length) throw new Error('File Excel kosong atau tidak ada data produk.');
+
+      let ok = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowNum = i + 2; // Excel row (1-indexed + header)
+        const name = String(row['Nama Produk'] ?? row['nama_produk'] ?? row['name'] ?? '').trim();
+        if (!name) { skipped++; continue; }
+
+        const sku = String(row['SKU'] ?? row['sku'] ?? '').trim() || undefined;
+        const category = String(row['Kategori'] ?? row['kategori'] ?? row['category'] ?? '').trim() || undefined;
+        const unit = String(row['Unit'] ?? row['unit'] ?? 'pcs').trim();
+        const priceRaw = row['Harga'] ?? row['harga'] ?? row['price'] ?? 0;
+        const priceDefault = String(Math.round(Number(priceRaw)));
+        const description = String(row['Deskripsi'] ?? row['deskripsi'] ?? row['description'] ?? '').trim();
+
+        try {
+          const existing = products.find((p) => sku ? p.sku === sku : p.name === name);
+          if (existing) {
+            await updateProduct(accessToken, existing.id, { name, category: category ?? null, unit, priceDefault, description: description || undefined });
+          } else {
+            await createProduct(accessToken, { sku, name, category: category ?? null, unit, priceDefault, description: description || undefined });
+          }
+          ok++;
+        } catch (e: any) {
+          errors.push(`Baris ${rowNum} (${name}): ${e.message ?? 'Gagal simpan'}`);
+        }
+      }
+
+      setImportResult({ ok, skipped, errors });
+      if (ok > 0) {
+        setMessage(`Import selesai: ${ok} produk berhasil, ${skipped} dilewati, ${errors.length} error.`);
+        await load();
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal membaca file Excel.');
+    } finally {
+      setImporting(false);
+    }
+  }
+
   function exportExcel() {
     const workbook = XLSX.utils.book_new();
     const stockSheet = XLSX.utils.json_to_sheet(filteredBalances.map((item) => ({
@@ -318,9 +396,11 @@ export function StockPage() {
     })));
     const productSheet = XLSX.utils.json_to_sheet(products.map((item) => ({
       SKU: item.sku,
-      Produk: item.name,
+      'Nama Produk': item.name,
+      Kategori: (item as any).category ?? '',
       Unit: item.unit,
       Harga: Number(item.priceDefault || 0),
+      Deskripsi: item.description ?? '',
       Status: item.status,
       Gambar: item.imageUrl ?? '',
     })));
@@ -361,9 +441,24 @@ export function StockPage() {
             <h1 className="admin-page-title"><Boxes size={22} /> Inventori</h1>
             <p className="admin-page-subtitle">Kelola produk, gudang, stok, transfer, penyesuaian, dan riwayat mutasi.</p>
           </div>
-          <div className="flex gap-2">
-            <button onClick={exportExcel} className="admin-btn-ghost" disabled={loading} type="button">
-              <Download size={16} /> Excel
+          <div className="flex gap-2 flex-wrap">
+            {/* Hidden import input */}
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleImportExcel(f); e.currentTarget.value = ''; }}
+            />
+            <button onClick={downloadImportTemplate} className="admin-btn-ghost" type="button" title="Unduh template Excel untuk import produk">
+              <Download size={15} /> Template
+            </button>
+            <button onClick={() => importInputRef.current?.click()} className="admin-btn-ghost" disabled={importing} type="button" title="Import produk dari file Excel">
+              {importing ? <RefreshCw size={15} className="animate-spin" /> : <FileUp size={15} />}
+              {importing ? 'Importing...' : 'Import'}
+            </button>
+            <button onClick={exportExcel} className="admin-btn-ghost" disabled={loading} type="button" title="Export data inventori ke Excel">
+              <Download size={16} /> Export
             </button>
             <button onClick={load} className="admin-btn-ghost" disabled={loading} type="button">
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -373,6 +468,19 @@ export function StockPage() {
 
         {message && <div className="admin-alert admin-alert-success"><Save size={15} /> {message} <button onClick={() => setMessage('')} className="admin-alert-close">×</button></div>}
         {error && <div className="admin-alert admin-alert-error"><AlertTriangle size={15} /> {error} <button onClick={() => setError('')} className="admin-alert-close">×</button></div>}
+        {importResult && importResult.errors.length > 0 && (
+          <div className="admin-alert admin-alert-error">
+            <AlertTriangle size={15} />
+            <div>
+              <strong>Import selesai dengan {importResult.errors.length} error:</strong>
+              <ul className="mt-1 list-disc pl-5 text-xs">
+                {importResult.errors.slice(0, 5).map((err, i) => <li key={i}>{err}</li>)}
+                {importResult.errors.length > 5 && <li>...dan {importResult.errors.length - 5} error lainnya</li>}
+              </ul>
+            </div>
+            <button onClick={() => setImportResult(null)} className="admin-alert-close">×</button>
+          </div>
+        )}
 
         <section className="settings-summary-grid">
           <div className="settings-summary-card accent">

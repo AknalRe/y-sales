@@ -102,6 +102,7 @@ export function SalesAccountsPage() {
   const [success, setSuccess] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [salesCategoryFilter, setSalesCategoryFilter] = useState('');
   const [selectedSales, setSelectedSales] = useState<SalesAccount | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState<SalesAccount | null>(null);
@@ -140,6 +141,7 @@ export function SalesAccountsPage() {
   const filtered = useMemo(() => {
     return salesAccounts.filter((sales) => {
       if (statusFilter && sales.status !== statusFilter) return false;
+      if (salesCategoryFilter && sales.salesCategory !== salesCategoryFilter) return false;
       if (!search) return true;
 
       const q = search.toLowerCase();
@@ -452,7 +454,7 @@ export function SalesAccountsPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 items-center sm:grid-cols-[minmax(260px,1fr)_220px] mb-5">
+      <div className="grid gap-3 items-center sm:grid-cols-[minmax(260px,1fr)_160px_160px] mb-5">
         <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
           <Search size={18} />
           <input
@@ -468,13 +470,17 @@ export function SalesAccountsPage() {
             </button>
           ) : null}
         </div>
+        <select value={salesCategoryFilter} onChange={(event) => setSalesCategoryFilter(event.target.value)} className="admin-select w-full h-[42px]">
+          <option value="">Semua Kategori</option>
+          <option value="motoris">Motoris</option>
+          <option value="dropping">Dropping</option>
+        </select>
         <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="admin-select w-full h-[42px]">
           <option value="">Semua Status</option>
           <option value="active">Aktif</option>
           <option value="inactive">Nonaktif</option>
           <option value="suspended">Suspended</option>
         </select>
-        {/* <span className="admin-count-badge">{filtered.length} akun sales</span> */}
       </div>
 
       <div className="admin-table-card">

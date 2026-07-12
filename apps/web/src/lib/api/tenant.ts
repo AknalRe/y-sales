@@ -76,6 +76,7 @@ export type TenantUser = {
   roleName: string;
   lastLoginAt?: string | null;
   createdAt: string;
+  salesCategory?: 'motoris' | 'dropping' | null;
 };
 
 export type Outlet = {
@@ -161,6 +162,7 @@ export type Product = {
   imageUrl?: string | null;
   unit: string;
   priceDefault: string;
+  category?: string | null;
   status: 'active' | 'inactive';
   createdAt: string;
   salesStockQuantity?: string;
@@ -175,6 +177,7 @@ export type ProductPayload = {
   imageUrl?: string | null;
   unit: string;
   priceDefault: string;
+  category?: string | null;
   initialStock?: string;
 };
 

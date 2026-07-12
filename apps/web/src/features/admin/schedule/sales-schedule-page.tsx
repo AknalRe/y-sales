@@ -279,7 +279,7 @@ export function SalesSchedulePage() {
           <input className="admin-input w-full h-[42px]" type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
           <select className="admin-select w-full h-[42px]" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
             <option value="">Semua sales</option>
-            {salesUsers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+            {salesUsers.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.salesCategory || 'motoris'})</option>)}
           </select>
           <select className="admin-select w-full h-[42px]" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
             <option value="">Semua status</option>
@@ -403,7 +403,7 @@ export function SalesSchedulePage() {
                 <label>Sales *</label>
                 <select className="admin-input" value={form.salesUserId} onChange={(e) => setForm((c) => ({ ...c, salesUserId: e.target.value }))} required>
                   <option value="">Pilih sales</option>
-                  {salesUsers.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.roleName})</option>)}
+                  {salesUsers.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.roleName} - {u.salesCategory || 'motoris'})</option>)}
                 </select>
               </div>
 

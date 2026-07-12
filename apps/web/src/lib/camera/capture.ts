@@ -147,9 +147,21 @@ async function detectFace(canvas: HTMLCanvasElement): Promise<FaceDetectionSnaps
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function drawVideoFrame(video: HTMLVideoElement, context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+/** Draw the video frame as-is (no transform) — used for live face detection. */
+function drawVideoFrameNormal(video: HTMLVideoElement, context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
+}
+
+/**
+ * Draw the video frame mirrored horizontally — used when capturing a selfie
+ * photo so that the saved image matches what the user sees in the live preview
+ * (front camera is displayed with scaleX(-1) on the <video> element).
+ */
+function drawVideoFrameMirrored(video: HTMLVideoElement, context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+  context.setTransform(-1, 0, 0, 1, canvas.width, 0);
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  context.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -162,8 +174,12 @@ export async function captureFromVideo(video: HTMLVideoElement): Promise<Capture
 
   if (!context) throw new Error('Camera canvas is not available');
 
-  drawVideoFrame(video, context, canvas);
+  // Use the normal (unflipped) frame for face detection so coordinates are accurate.
+  drawVideoFrameNormal(video, context, canvas);
   const face = await detectFace(canvas);
+
+  // Now redraw the frame mirrored so the captured photo matches the live preview.
+  drawVideoFrameMirrored(video, context, canvas);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
   const sizeBytes = Math.round((dataUrl.length * 3) / 4);
 
@@ -193,7 +209,10 @@ export async function detectFaceFromVideo(video: HTMLVideoElement): Promise<Face
     return { supported: true, detected: false, confidence: 0, checkedAt: new Date().toISOString() };
   }
 
-  drawVideoFrame(video, context, canvas);
+  // Use unflipped frame so face-detection bounding box coordinates are in
+  // the same space as the original video — getOverlayBox() in LiveFaceOverlay
+  // already accounts for the CSS scaleX(-1) mirror on the <video> element.
+  drawVideoFrameNormal(video, context, canvas);
   return detectFace(canvas);
 }
 

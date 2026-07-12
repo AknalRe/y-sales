@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronUp, ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff, Store, X, XCircle } from 'lucide-react';
 import { getProducts, createOrder } from '../../../lib/api/tenant';
 import { useAuth } from '../../auth/auth-provider';
@@ -35,6 +35,7 @@ export function TransactionsPage() {
   useScrollToTop();
   const { accessToken } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const cartSheetRef = useRef<HTMLDivElement | null>(null);
   const productGridRef = useRef<HTMLDivElement | null>(null);
   const [products, setProducts] = useState<any[]>([]);
@@ -107,8 +108,10 @@ export function TransactionsPage() {
       } catch {
         localStorage.removeItem(activeVisitStorageKey);
         localStorage.removeItem(transactionDraftStorageKey);
+        setActiveVisit(null);
       }
     } else {
+      setActiveVisit(null);
       localStorage.removeItem(transactionDraftStorageKey);
     }
     setDraftReady(true);
@@ -119,7 +122,7 @@ export function TransactionsPage() {
         .catch(e => setError(e.message || 'Gagal memuat produk.'))
         .finally(() => setLoading(false));
     }
-  }, [accessToken]);
+  }, [accessToken, location.pathname]);
 
   useEffect(() => {
     if (!draftReady) return;

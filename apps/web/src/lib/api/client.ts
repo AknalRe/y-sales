@@ -369,10 +369,25 @@ export type ActiveVisitSession = {
   checkInAt?: string | null;
 };
 
-export function getActiveVisitSession(accessToken: string) {
-  return apiRequest<{ activeVisit: ActiveVisitSession | null }>('/visits/active', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+export async function getActiveVisitSession(accessToken: string): Promise<{ activeVisit: ActiveVisitSession | null }> {
+  // Coba endpoint baru dulu (/visits/active), jika 404 gunakan endpoint yang sudah ada (/visits/sessions)
+  try {
+    const res = await apiRequest<{ activeVisit: ActiveVisitSession | null }>('/visits/active', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return res;
+  } catch {
+    // Fallback ke /visits/sessions yang sudah ada — cari session dengan status 'open'
+    try {
+      const res = await apiRequest<{ sessions: Array<ActiveVisitSession & { outletId: string }> }>('/visits/sessions', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const openSession = res.sessions?.find(s => s.status === 'open') ?? null;
+      return { activeVisit: openSession };
+    } catch {
+      return { activeVisit: null };
+    }
+  }
 }
 
 type StorageUploadFallback = {

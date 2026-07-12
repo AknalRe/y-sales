@@ -99,6 +99,7 @@ export function SalesSchedulesPage() {
             const statusInfo = STATUS_LABEL[schedule.status] ?? STATUS_LABEL.draft;
             const isDone = schedule.status === 'completed';
             const isCancelled = schedule.status === 'cancelled' || schedule.status === 'missed';
+            const isInProgress = schedule.status === 'in_progress';
             const canNavigate = schedule.outlet.latitude && schedule.outlet.longitude;
 
             return (
@@ -217,7 +218,8 @@ export function SalesSchedulesPage() {
                       <Navigation size={16} /> Buka Maps
                     </button>
                   )}
-                  {!isDone && !isCancelled && (
+                  {/* Tombol Check-In (hanya jika belum dalam kunjungan) */}
+                  {!isDone && !isCancelled && !isInProgress && (
                     <button
                       onClick={() => navigate('/sales/visit')}
                       className="flex items-center justify-center gap-1.5 rounded-xl border-none"
@@ -234,6 +236,26 @@ export function SalesSchedulesPage() {
                       }}
                     >
                       <MapPin size={16} /> Check-In
+                    </button>
+                  )}
+                  {/* Tombol Lanjut Check-Out (saat sedang dikunjungi) */}
+                  {isInProgress && (
+                    <button
+                      onClick={() => navigate('/sales/visit')}
+                      className="flex items-center justify-center gap-1.5 rounded-xl border-none"
+                      style={{
+                        flex: 1,
+                        padding: '.7rem',
+                        fontSize: '.82rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        background: 'var(--sales-amber)',
+                        color: '#fff',
+                        border: 'none',
+                        transition: 'all .18s',
+                      }}
+                    >
+                      <MapPin size={16} /> Lanjut Check-Out
                     </button>
                   )}
                 </div>

@@ -52,6 +52,14 @@ export function TransactionsPage() {
     return ['Semua', ...Array.from(catSet).sort()];
   }, [products]);
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { Semua: products.length };
+    products.forEach((p) => {
+      if (p.category) counts[p.category] = (counts[p.category] ?? 0) + 1;
+    });
+    return counts;
+  }, [products]);
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeVisit, setActiveVisit] = useState<ActiveVisit | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'credit' | 'consignment'>('cash');
@@ -473,34 +481,57 @@ export function TransactionsPage() {
         </div>
       </div>
 
-      {/* Category Slider */}
+      {/* Category Filter Chips */}
       {categories.length > 1 && (
-        <div 
-          className="sales-modern-scrollbar flex gap-2 overflow-x-auto py-1" 
-          style={{ 
-            marginTop: '.75rem', 
-            scrollbarWidth: 'none', 
+        <div
+          className="sales-modern-scrollbar flex gap-2 overflow-x-auto"
+          style={{
+            marginTop: '.5rem',
+            paddingBottom: '2px',
+            scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch',
           }}
         >
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat;
+            const count = categoryCounts[cat] ?? 0;
             return (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className="shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all"
+                className="shrink-0 flex items-center gap-1.5 rounded-full font-bold transition-all"
                 style={{
+                  padding: '.35rem .85rem',
+                  fontSize: '.75rem',
                   backgroundColor: isSelected ? 'var(--sales-accent)' : 'var(--sales-surface)',
-                  color: isSelected ? 'var(--sales-surface)' : 'var(--sales-text-heading)',
-                  border: isSelected ? '1px solid var(--sales-accent)' : '1px solid rgba(74, 41, 34, 0.12)',
-                  boxShadow: isSelected ? '0 2px 8px rgba(181, 89, 37, 0.25)' : 'none',
+                  color: isSelected ? '#fff' : 'var(--sales-text-heading)',
+                  border: isSelected ? '1.5px solid var(--sales-accent)' : '1.5px solid var(--sales-border-brand)',
+                  boxShadow: isSelected ? '0 2px 8px rgba(181,89,37,.28)' : 'none',
                   cursor: 'pointer',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {cat}
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 18,
+                    height: 18,
+                    borderRadius: 99,
+                    fontSize: '.65rem',
+                    fontWeight: 800,
+                    padding: '0 5px',
+                    backgroundColor: isSelected ? 'rgba(255,255,255,.25)' : 'var(--sales-accent-bg)',
+                    color: isSelected ? '#fff' : 'var(--sales-accent)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {count}
+                </span>
               </button>
             );
           })}

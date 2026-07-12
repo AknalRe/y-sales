@@ -40,6 +40,15 @@ export function TransactionsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Semua');
+
+  const categories = useMemo(() => {
+    const catSet = new Set<string>();
+    products.forEach((p) => {
+      if (p.category) catSet.add(p.category);
+    });
+    return ['Semua', ...Array.from(catSet).sort()];
+  }, [products]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeVisit, setActiveVisit] = useState<ActiveVisit | null>(null);
@@ -162,8 +171,12 @@ export function TransactionsPage() {
   }, [cart.length, cartSheetHeight, cartExpanded, products.length, search]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
-  }, [products, search]);
+    return products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = selectedCategory === 'Semua' || p.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, search, selectedCategory]);
 
   const totalAmount = useMemo(() => {
     return cart.reduce((sum, item) => sum + (Number(item.product.priceDefault) * item.quantity), 0);
@@ -406,6 +419,40 @@ export function TransactionsPage() {
           )}
         </div>
       </div>
+
+      {/* Category Slider */}
+      {categories.length > 1 && (
+        <div 
+          className="sales-modern-scrollbar flex gap-2 overflow-x-auto py-1" 
+          style={{ 
+            marginTop: '.75rem', 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className="shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all"
+                style={{
+                  backgroundColor: isSelected ? 'var(--sales-accent)' : 'var(--sales-surface)',
+                  color: isSelected ? 'var(--sales-surface)' : 'var(--sales-text-heading)',
+                  border: isSelected ? '1px solid var(--sales-accent)' : '1px solid rgba(74, 41, 34, 0.12)',
+                  boxShadow: isSelected ? '0 2px 8px rgba(181, 89, 37, 0.25)' : 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Product Grid */}
       <div ref={productGridRef} className="sales-modern-scrollbar grid grid-cols-3 gap-1" style={productGridStyle}>

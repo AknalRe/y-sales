@@ -337,12 +337,12 @@ export function ReportsPage() {
       {kpiTab === 'penjualan' && (
         <>
           {/* ─── Filters ────────────────────────────────────── */}
-          <div className="admin-filter-row !flex-nowrap !justify-between">
+          <div className="admin-filter-row !justify-between">
             <div className="flex items-center gap-2">
               <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="admin-input" />
               <input type="date" value={to} onChange={e => setTo(e.target.value)} className="admin-input" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <select value={salesCategoryFilter} onChange={e => { setSalesCategoryFilter(e.target.value as any); setSalesFilter(''); }} className="admin-select">
                 <option value="all">Semua Kategori Sales</option>
                 <option value="motoris">Sales Motoris</option>
@@ -362,80 +362,80 @@ export function ReportsPage() {
 
           <div className="admin-content-grid-half">
             {/* ─── Leaderboard ────────────────────────────────── */}
-            <div className="admin-card">
-              <div className="admin-card-header"><h2>Leaderboard Sales</h2></div>
-              <div className="admin-table-wrap">
+            <div className="admin-table-card">
+              <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--admin-border-subtle)', background: 'var(--admin-bg-card)' }}>
+                <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--admin-foreground)' }}>Leaderboard Sales</h2>
+              </div>
+              <Table className="admin-table">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>#</TableHead>
+                    <TableHead>Sales</TableHead>
+                    <TableHead>Transaksi</TableHead>
+                    <TableHead>Omset</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.leaderboard.map((s, i) => (
+                    <TableRow key={s.name}>
+                      <TableCell>
+                        <strong className={i === 0 ? 'text-admin-accent' : i === 1 ? 'text-admin-muted' : i === 2 ? 'text-admin-accent-light' : 'text-admin-foreground'}>
+                          {i + 1}
+                        </strong>
+                      </TableCell>
+                      <TableCell>{s.name}</TableCell>
+                      <TableCell>{s.count}</TableCell>
+                      <TableCell><strong>{formatRp(s.revenue)}</strong></TableCell>
+                    </TableRow>
+                  ))}
+                  {!stats.leaderboard.length && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="admin-empty">Belum ada data.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* ─── Transaction List ───────────────────────────── */}
+            <div className="admin-table-card">
+              <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--admin-border-subtle)', background: 'var(--admin-bg-card)' }}>
+                <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--admin-foreground)' }}>Daftar Transaksi ({filteredTransactions.length})</h2>
+              </div>
+              {loading ? <div className="admin-loading">Memuat...</div> : (
                 <Table className="admin-table">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>#</TableHead>
+                      <TableHead>No</TableHead>
                       <TableHead>Sales</TableHead>
-                      <TableHead>Transaksi</TableHead>
-                      <TableHead>Omset</TableHead>
+                      <TableHead>Outlet</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {stats.leaderboard.map((s, i) => (
-                      <TableRow key={s.name}>
-                        <TableCell>
-                          <strong className={i === 0 ? 'text-admin-accent' : i === 1 ? 'text-admin-muted' : i === 2 ? 'text-admin-accent-light' : 'text-admin-foreground'}>
-                            {i + 1}
-                          </strong>
-                        </TableCell>
-                        <TableCell>{s.name}</TableCell>
-                        <TableCell>{s.count}</TableCell>
-                        <TableCell><strong>{formatRp(s.revenue)}</strong></TableCell>
-                      </TableRow>
-                    ))}
-                    {!stats.leaderboard.length && (
+                    {filteredTransactions.map(t => {
+                      return (
+                        <TableRow key={t.id}>
+                          <TableCell><strong style={{ fontSize: '.75rem' }}>{t.transactionNo}</strong></TableCell>
+                          <TableCell>{users.find(u => u.id === t.salesUserId)?.name ?? '—'}</TableCell>
+                          <TableCell>{t.outletName ?? '—'}</TableCell>
+                          <TableCell>{formatRp(t.totalAmount)}</TableCell>
+                          <TableCell>
+                            <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(t.status)}`}>
+                              {statusLabel[t.status] ?? t.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {!filteredTransactions.length && (
                       <TableRow>
-                        <TableCell colSpan={4} className="admin-empty">Belum ada data.</TableCell>
+                        <TableCell colSpan={5} className="admin-empty">Tidak ada transaksi.</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
                 </Table>
-              </div>
-            </div>
-
-            {/* ─── Transaction List ───────────────────────────── */}
-            <div className="admin-card">
-              <div className="admin-card-header"><h2>Daftar Transaksi ({filteredTransactions.length})</h2></div>
-              {loading ? <div className="admin-loading">Memuat...</div> : (
-                <div className="admin-table-wrap" style={{ maxHeight: 420, overflowY: 'auto' }}>
-                  <Table className="admin-table">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>No</TableHead>
-                        <TableHead>Sales</TableHead>
-                        <TableHead>Outlet</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTransactions.map(t => {
-                        return (
-                          <TableRow key={t.id}>
-                            <TableCell><strong style={{ fontSize: '.75rem' }}>{t.transactionNo}</strong></TableCell>
-                            <TableCell>{users.find(u => u.id === t.salesUserId)?.name ?? '—'}</TableCell>
-                            <TableCell>{t.outletName ?? '—'}</TableCell>
-                            <TableCell>{formatRp(t.totalAmount)}</TableCell>
-                            <TableCell>
-                              <span className={`admin-badge font-extrabold px-2 py-1 rounded-full ${getStatusStyle(t.status)}`}>
-                                {statusLabel[t.status] ?? t.status}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      {!filteredTransactions.length && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="admin-empty">Tidak ada transaksi.</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
               )}
             </div>
           </div>

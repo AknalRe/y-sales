@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
 import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
+import { EmptyState } from '@/components/ui';
 import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, settleSalesTransaction, getTenantUsers, getSalesTransactionDetail, type SalesTransaction, type SalesTransactionDetail, type TenantUser } from '@/lib/api/tenant';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
@@ -362,7 +363,7 @@ export function InvoiceReviewPage() {
                                   disabled={saving === tx.id}
                                   className="admin-btn-primary bg-admin-success border-admin-success"
                                   style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
-                                 type="button"
+                                  type="button"
                                 >
                                   Setujui
                                 </button>
@@ -371,7 +372,7 @@ export function InvoiceReviewPage() {
                                   disabled={saving === tx.id}
                                   className="admin-btn-ghost text-admin-danger"
                                   style={{ padding: '.4rem .75rem', fontSize: '.75rem', borderRadius: 10 }}
-                                 type="button"
+                                  type="button"
                                 >
                                   Tolak
                                 </button>
@@ -436,12 +437,7 @@ export function InvoiceReviewPage() {
                   );
                 })}
                 {!transactions.length && (
-                  <TableRow>
-                    <TableCell colSpan={7} style={{ padding: '4rem', textAlign: 'center' }}>
-                      <div className="opacity-20 mb-4"><ShoppingBag size={48} className="mx-auto" /></div>
-                      <p className="text-admin-muted font-semibold">Tidak ada transaksi untuk direview.</p>
-                    </TableCell>
-                  </TableRow>
+                  <EmptyState colSpan={7} icon={<ShoppingBag size={40} className="mx-auto text-admin-muted" />} title="Tidak ada transaksi" description="Tidak ada transaksi untuk direview." />
                 )}
               </TableBody>
             </Table>

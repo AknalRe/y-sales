@@ -4,6 +4,7 @@ import {
   AlertTriangle, Camera, CheckCircle2, Clock, Download, Eye, MapPin, RefreshCw,
   RotateCcw, Search, ShieldAlert, ShieldCheck, X, XCircle,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui';
 
 import {
   getAttendanceReport,
@@ -362,9 +363,11 @@ export function AttendanceReviewPage() {
       </section>
 
       {loading && !rows.length ? (
-        <div className="admin-loading">
-          <RefreshCw size={18} className="animate-spin" />
-          <span>Memuat data absensi...</span>
+        <div className="admin-card admin-card--static grid place-items-center text-center text-admin-muted" style={{ padding: '3rem', minHeight: 126 }}>
+          <div className="grid justify-items-center gap-3">
+            <RefreshCw size={20} className="animate-spin" />
+            <span className="text-sm font-semibold">Memuat data absensi...</span>
+          </div>
         </div>
       ) : (
         <div className="mt-4 grid gap-2.5">
@@ -441,10 +444,12 @@ export function AttendanceReviewPage() {
           ))}
 
           {!rows.length && (
-            <div className="rounded-[2rem] border-2 border-dashed border-admin-border py-20 text-center text-admin-muted">
-              <ShieldAlert size={46} className="mx-auto mb-4 opacity-30" />
-              <p className="text-base font-black text-admin-foreground">Belum ada data absensi</p>
-              <p className="text-sm">Ubah filter atau tunggu sales melakukan absensi.</p>
+            <div className="admin-card admin-card--static text-center" style={{ padding: '3rem', border: '2px dashed var(--admin-border)' }}>
+              <EmptyState 
+                icon={<ShieldAlert size={40} className="mx-auto text-admin-muted" />} 
+                title="Belum ada data absensi" 
+                description="Ubah filter atau tunggu sales melakukan absensi." 
+              />
             </div>
           )}
         </div>

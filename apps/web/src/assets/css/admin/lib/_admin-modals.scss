@@ -162,6 +162,14 @@
   }
 }
 
+// Fix: icon kalender selalu gelap karena platform modal selalu dark
+.platform-input[type="date"],
+.platform-input[type="time"],
+.platform-input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+
 .admin-input,
 .admin-select {
   width: 100%;

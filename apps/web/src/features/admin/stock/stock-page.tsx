@@ -545,7 +545,7 @@ export function StockPage() {
           {activeSection === 'stock' && (
             <div className="inventory-section-body inventory-section-body--topless">
               {loading ? (
-                <div className="admin-card text-center text-admin-muted" style={{ padding: '3rem' }}>Memuat stok...</div>
+                <div className="admin-card admin-card--static text-center text-admin-muted" style={{ padding: '3rem' }}>Memuat stok...</div>
               ) : (
                 <div className="inventory-table-shell">
                   <Table className="admin-table">

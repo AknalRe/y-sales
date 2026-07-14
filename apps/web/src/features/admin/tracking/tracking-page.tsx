@@ -15,6 +15,7 @@ import {
   User,
   X,
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui';
 
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -247,9 +248,11 @@ export function TrackingPage() {
       </section>
 
       {loading ? (
-        <div className="admin-loading mt-5">
-          <RefreshCw size={18} className="animate-spin" />
-          <span>Menyelaraskan data lapangan...</span>
+        <div className="admin-card admin-card--static grid place-items-center text-center text-admin-muted" style={{ padding: '3rem', minHeight: 126 }}>
+          <div className="grid justify-items-center gap-3">
+            <RefreshCw size={20} className="animate-spin" />
+            <span className="text-sm font-semibold">Menyelaraskan data lapangan...</span>
+          </div>
         </div>
       ) : (
         <section className="mt-5 grid gap-3">
@@ -264,10 +267,12 @@ export function TrackingPage() {
           ))}
 
           {!activeRows && (
-            <div className="rounded-[2rem] border-2 border-dashed border-admin-border py-20 text-center text-admin-muted">
-              <Map size={46} className="mx-auto mb-4 opacity-30" />
-              <p className="text-base font-black text-admin-foreground">Tidak ada data tracking</p>
-              <p className="text-sm">Ubah filter atau tunggu sales melakukan kunjungan.</p>
+            <div className="admin-card admin-card--static text-center" style={{ padding: '3rem', border: '2px dashed var(--admin-border)' }}>
+              <EmptyState 
+                icon={<Map size={40} className="mx-auto text-admin-muted" />} 
+                title="Tidak ada data tracking" 
+                description="Ubah filter atau tunggu sales melakukan kunjungan." 
+              />
             </div>
           )}
         </section>

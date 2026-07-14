@@ -50,6 +50,10 @@
     place-items: center;
     color: white;
     background: linear-gradient(135deg, var(--admin-foreground), var(--admin-accent-teal));
+
+    :root.dark & {
+        background: var(--admin-accent);
+    }
 }
 
 .admin-panel-avatar {

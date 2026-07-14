@@ -316,7 +316,7 @@ export function SalesSchedulePage() {
 
       {/* ─── Schedule List ──────────────────────── */}
       {loading ? (
-        <div className="admin-card grid place-items-center text-center text-admin-muted" style={{ padding: '3rem', minHeight: 126 }}>
+        <div className="admin-card admin-card--static grid place-items-center text-center text-admin-muted" style={{ padding: '3rem', minHeight: 126 }}>
           <div className="grid justify-items-center gap-3">
             <RefreshCw size={20} className="animate-spin" />
             <span className="text-sm font-semibold">Memuat jadwal...</span>
@@ -375,7 +375,7 @@ export function SalesSchedulePage() {
           })}
         </div>
       ) : (
-        <div className="admin-card text-center" style={{ padding: '3rem', border: '2px dashed var(--admin-border)' }}>
+        <div className="admin-card admin-card--static text-center" style={{ padding: '3rem', border: '2px dashed var(--admin-border)' }}>
           <EmptyState 
             icon={<CalendarPlus size={40} className="mx-auto text-admin-muted" />} 
             title="Belum ada jadwal sales" 

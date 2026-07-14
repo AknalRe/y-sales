@@ -30,3 +30,18 @@
     cursor: pointer;
     min-width: 160px;
 }
+
+// Fix: icon kalender/jam tetap hitam di dark mode
+// `color-scheme` memberitahu browser untuk render widget (termasuk icon)
+// sesuai tema — light by default, dark ketika class .dark ada di <html>
+.admin-input[type="date"],
+.admin-input[type="time"],
+.admin-input[type="datetime-local"] {
+    color-scheme: light;
+}
+
+:root.dark .admin-input[type="date"],
+:root.dark .admin-input[type="time"],
+:root.dark .admin-input[type="datetime-local"] {
+    color-scheme: dark;
+}

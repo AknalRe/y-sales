@@ -1,0 +1,56 @@
+// ─── Admin Theme Scope ───────────────────────────────────────────────────────
+// Remaps the generic Tailwind tokens (--background, --primary, --card, ...)
+// to the Admin palette so shared UI components (bg-primary, bg-card,
+// border-border, text-foreground, ...) adapt automatically inside the admin
+// shell — without any changes to the components themselves.
+// Dark mode flows through because --admin-* already defines .dark overrides
+// and the variables are resolved at use time via CSS cascade.
+// Scoped to BOTH the shell class and :root[data-theme="admin"] so that
+// portaled components (Dialog, Select, Toast, ...) also inherit the theme
+// — portals mount on <html>, which is the ancestor of everything.
+
+:root[data-theme="admin"],
+.admin-command-shell {
+  --background: var(--admin-bg);
+  --foreground: var(--admin-foreground);
+  --card: var(--admin-bg-card);
+  --card-foreground: var(--admin-foreground);
+  --popover: var(--admin-surface);
+  --popover-foreground: var(--admin-foreground);
+  --primary: var(--admin-accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--admin-surface);
+  --secondary-foreground: var(--admin-foreground);
+  --muted: var(--admin-surface-hover);
+  --muted-foreground: var(--admin-muted);
+  --accent: var(--admin-surface-hover);
+  --accent-foreground: var(--admin-foreground);
+  --border: var(--admin-border);
+  --input: var(--admin-border);
+  --ring: var(--admin-accent);
+  --destructive: var(--admin-danger);
+  --success: var(--admin-success);
+  --warning: var(--admin-modal-amber);
+  --info: var(--admin-accent-blue);
+  --header: var(--admin-surface);
+  --sidebar: var(--admin-sidebar-bg);
+  --sidebar-foreground: var(--admin-sidebar-text);
+  --sidebar-primary: var(--admin-accent);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--admin-sidebar-hover);
+  --sidebar-accent-foreground: var(--admin-sidebar-text-hover);
+  --sidebar-border: var(--admin-sidebar-border);
+  --sidebar-ring: var(--admin-accent);
+
+  // Rich text editor
+  --editor-bg: var(--admin-bg-card);
+  --editor-foreground: var(--admin-foreground);
+  --editor-muted-foreground: var(--admin-muted);
+  --editor-border: var(--admin-border);
+  --editor-toolbar-bg: var(--admin-surface);
+  --editor-toolbar-button: var(--admin-muted-dim);
+  --editor-toolbar-button-hover: var(--admin-surface-hover);
+  --editor-toolbar-button-selected: var(--admin-accent);
+  --editor-toolbar-button-active: #ffffff;
+  --editor-counter: var(--admin-muted);
+}

@@ -307,7 +307,7 @@ export default function PlaygroundUiComponent() {
                                             <FormFieldError>Name is required.</FormFieldError>
                                         </FormField>
                                         <FormAction>
-                                            <FormButton type="submit">
+                                            <FormButton type="submit" variant="primary">
                                                 Submit
                                             </FormButton>
                                             <DialogClose>

@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/hooks/use-theme';
+import { useThemeScope } from '@/hooks/use-theme-scope';
 import {
   Bell,
   LogOut,
@@ -90,6 +91,7 @@ export function AdminShell() {
   }, [accessToken]);
 
   const { isDark, toggleTheme } = useTheme();
+  useThemeScope('admin');
 
   useEffect(() => {
     if (isMobile) {

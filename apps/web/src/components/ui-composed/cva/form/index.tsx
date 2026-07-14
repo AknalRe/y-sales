@@ -19,7 +19,7 @@ type FormActionProps = React.HTMLAttributes<HTMLDivElement> & { children?: React
 // ====================
 // CVA Props
 // ====================
-type ButtonProps = React.ComponentProps<typeof UIButton> & VariantProps<typeof button>;
+type ButtonProps = Omit<React.ComponentProps<typeof UIButton>, 'variant' | 'size'> & VariantProps<typeof button>;
 
 
 
@@ -108,7 +108,7 @@ export function FormAction({ className, children, ...props }: FormActionProps) {
 // ====================
 
 function FormButton({ variant, size, className, ...props }: ButtonProps) {
-  return <UIButton {...props} className={cn(button({ variant, size }), className)} />
+  return <UIButton {...props} noStyle className={cn(button({ variant, size }), className)} />;
 }
 
 export {

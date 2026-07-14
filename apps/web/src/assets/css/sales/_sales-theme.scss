@@ -1,0 +1,45 @@
+// ─── Sales Theme Scope ───────────────────────────────────────────────────────
+// Remaps the generic Tailwind tokens to the Sales palette so shared UI
+// components adapt automatically inside the sales shell.
+// NOTE: the Sales dark palette (palete-color-sales.css .dark block) is
+// currently commented out, so in dark mode these resolve to the light
+// values. Enable the sales .dark block to fully support dark mode.
+// Scoped to BOTH the shell class and :root[data-theme="sales"] so portaled
+// components also inherit the theme.
+
+:root[data-theme="sales"],
+.mobile-shell {
+  --background: var(--sales-bg);
+  --foreground: var(--sales-foreground);
+  --card: var(--sales-bg-card);
+  --card-foreground: var(--sales-text);
+  --popover: var(--sales-surface);
+  --popover-foreground: var(--sales-text);
+  --primary: var(--sales-accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--sales-surface);
+  --secondary-foreground: var(--sales-text);
+  --muted: var(--sales-surface-hover);
+  --muted-foreground: var(--sales-muted);
+  --accent: var(--sales-surface-hover);
+  --accent-foreground: var(--sales-text);
+  --border: var(--sales-border);
+  --input: var(--sales-border);
+  --ring: var(--sales-accent);
+  --destructive: var(--sales-danger);
+  --success: var(--sales-success);
+  --warning: var(--sales-amber);
+  --info: var(--sales-info);
+
+  // Rich text editor
+  --editor-bg: var(--sales-bg-card);
+  --editor-foreground: var(--sales-text);
+  --editor-muted-foreground: var(--sales-text-muted);
+  --editor-border: var(--sales-border);
+  --editor-toolbar-bg: var(--sales-surface);
+  --editor-toolbar-button: var(--sales-text-label);
+  --editor-toolbar-button-hover: var(--sales-accent-subtle);
+  --editor-toolbar-button-selected: var(--sales-accent);
+  --editor-toolbar-button-active: #ffffff;
+  --editor-counter: var(--sales-muted);
+}

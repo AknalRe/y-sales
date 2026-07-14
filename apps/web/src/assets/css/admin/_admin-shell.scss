@@ -7,6 +7,9 @@
 @use "admin-sidebar";
 @use "admin-topbar";
 
+// Theme scope — remaps generic tokens to the Admin palette
+@use "admin-theme";
+
 // Lib components (reusable)
 @use "./lib/admin-heading";
 @use "./lib/admin-button";

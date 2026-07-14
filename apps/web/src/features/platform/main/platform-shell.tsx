@@ -6,6 +6,7 @@ import { useAuth } from '../../auth/auth-provider';
 import { PlatformDesktopSidebar } from './platform-desktop-sidebar';
 import { PlatformMobileSidebar } from './platform-mobile-sidebar';
 import PageMeta from '@/hooks/use-page-meta';
+import { useThemeScope } from '@/hooks/use-theme-scope';
 
 const platformNav = [
   { path: '/platform', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -27,6 +28,9 @@ export function PlatformShell() {
     setSidebarOpen(!isMobile);
     if (!isMobile) setMobileMenuOpen(false);
   }, [isMobile]);
+
+  // Apply the Platform theme at the document level so portaled UI inherits it.
+  useThemeScope('platform');
 
   const initials = useMemo(() =>
     user?.name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() ?? 'SA',

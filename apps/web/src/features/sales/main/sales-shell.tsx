@@ -3,6 +3,7 @@ import { Home, MapPin, ReceiptText, ShoppingCart, UserRound, Clock, CalendarDays
 import { useAuth } from '../../auth/auth-provider';
 import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-view-banner';
 import PageMeta from '@/hooks/use-page-meta';
+import { useThemeScope } from '@/hooks/use-theme-scope';
 
 const bottomNav = [
   { name: 'Beranda', href: '/sales', icon: Home },
@@ -15,6 +16,7 @@ const bottomNav = [
 export function SalesShell() {
   const location = useLocation();
   const { user } = useAuth();
+  useThemeScope('sales');
 
   return (
     <>
@@ -23,7 +25,7 @@ export function SalesShell() {
         description="Sales Pages"
         favicon="/sales.ico"
       />
-      <div className="flex min-h-screen justify-center bg-gray-50 text-slate-900">
+      <div className="flex min-h-screen justify-center bg-sales-bg text-sales-foreground">
         <div className="mobile-shell relative flex flex-col overflow-hidden">
           {/* <header className="sticky top-0 z-20 bg-[#4A2922] p-4 text-white shadow-md">
           <div className="flex items-center justify-between">

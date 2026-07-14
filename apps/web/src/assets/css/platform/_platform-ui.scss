@@ -1,4 +1,45 @@
-.platform-shell {
+.platform-shell,
+:root[data-theme="platform"] {
+  // Remap generic Tailwind tokens to the Platform palette so shared UI
+  // components adapt automatically. Dark mode flows through via the
+  // .dark overrides already defined in palete-color-platform.css.
+  // Scoped to BOTH the shell class and :root[data-theme="platform"] so
+  // portaled components also inherit the theme.
+  --background: var(--platform-bg);
+  --foreground: var(--platform-text);
+  --card: var(--platform-panel-strong);
+  --card-foreground: var(--platform-text);
+  --popover: var(--platform-panel);
+  --popover-foreground: var(--platform-text);
+  --primary: var(--platform-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--platform-panel);
+  --secondary-foreground: var(--platform-text);
+  --muted: var(--platform-surface-hover);
+  --muted-foreground: var(--platform-subtle);
+  --accent: var(--platform-surface-hover);
+  --accent-foreground: var(--platform-text);
+  --border: var(--platform-border);
+  --input: var(--platform-border);
+  --ring: var(--platform-primary);
+  --destructive: var(--platform-danger);
+  --success: var(--platform-success);
+  --warning: var(--platform-warning);
+  --info: var(--platform-info);
+  --header: var(--platform-panel);
+
+  // Rich text editor
+  --editor-bg: var(--platform-panel-strong);
+  --editor-foreground: var(--platform-text);
+  --editor-muted-foreground: var(--platform-subtle);
+  --editor-border: var(--platform-border);
+  --editor-toolbar-bg: var(--platform-panel);
+  --editor-toolbar-button: var(--platform-text-muted);
+  --editor-toolbar-button-hover: var(--platform-hover-bg);
+  --editor-toolbar-button-selected: var(--platform-primary);
+  --editor-toolbar-button-active: #ffffff;
+  --editor-counter: var(--platform-subtle);
+
   min-height: 100vh;
   color: var(--platform-text);
   background:

@@ -103,6 +103,7 @@
     --admin-sidebar-active-bg: #e8650a;
     --admin-sidebar-active-hover: #f07a1a;
     --admin-sidebar-active-badge: rgba(255, 255, 255, .22);
+    --admin-sidebar-active-badge-text: rgba(255, 255, 255, .9);
     --admin-sidebar-badge-bg: rgba(15, 23, 42, .08);
     --admin-sidebar-badge-text: rgba(255, 255, 255, .75);
     --admin-sidebar-label: rgba(255, 255, 255, .45);
@@ -218,7 +219,8 @@
     --admin-sidebar-hover: rgba(148, 163, 184, .08);
     --admin-sidebar-active-bg: var(--admin-accent);
     --admin-sidebar-active-hover: var(--admin-accent-hover);
-    --admin-sidebar-active-badge: rgba(148, 163, 184, .22);
+    --admin-sidebar-active-badge: rgba(255, 255, 255, .22);
+    --admin-sidebar-active-badge-text: rgba(255, 255, 255, .9);
     --admin-sidebar-badge-bg: rgba(148, 163, 184, .1);
     --admin-sidebar-badge-text: var(--admin-muted);
     --admin-sidebar-label: var(--admin-muted-dim);

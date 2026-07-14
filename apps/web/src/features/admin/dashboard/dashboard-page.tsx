@@ -276,7 +276,7 @@ export function DashboardPage() {
               <Clock size={14} /> Review Nota ({summary.pendingApprovals})
             </Link>
           )}
-          <button onClick={loadSummary} disabled={loading || !canSeeSummary} className="admin-btn-ghost" type="button">
+          <button onClick={loadSummary} disabled={loading || !canSeeSummary} className="admin-btn-ghost mb-3 -mt-2 xl:mb-0 xl:mt-0" type="button">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             {loading ? 'Memuat' : 'Refresh'}
           </button>

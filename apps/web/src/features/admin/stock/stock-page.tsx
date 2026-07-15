@@ -1175,7 +1175,7 @@ function SalesTransferSection({
               onValueChange={(nextValue) => onChange({ ...transferForm, sourceWarehouseId: String(nextValue) })}
               disabled={!transferForm.salesUserId}
             >
-              <SelectTrigger className="admin-select w-full">
+              <SelectTrigger className="admin-select w-full" disabled={!transferForm.salesUserId}>
                 <SelectValue />
                 <SelectIcon>
                   <SelectChevronUpDownIcon />
@@ -1200,16 +1200,6 @@ function SalesTransferSection({
                 </SelectPositioner>
               </SelectPortal>
             </Select>
-            {transferForm.salesUserId && selectedSourceWarehouse && (
-              <span style={{ display: 'block', marginTop: 6, color: 'var(--admin-muted)', fontSize: '.75rem', fontWeight: 700 }}>
-                Stok akan keluar dari {selectedSourceWarehouse.name}.
-              </span>
-            )}
-            {transferForm.salesUserId && sourceOptions.length === 0 && (
-              <span style={{ display: 'block', marginTop: 6, color: 'var(--admin-danger)', fontSize: '.75rem', fontWeight: 700 }}>
-                Tidak ada gudang sumber lain yang bisa dipilih.
-              </span>
-            )}
           </Field>
 
           <Field label="Produk">

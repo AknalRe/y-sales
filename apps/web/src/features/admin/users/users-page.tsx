@@ -23,6 +23,24 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { EmptyState } from '@/components/ui';
 import { FaceCaptureField } from '../shared/face-capture-field';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 const statusIcon = {
   active: <CheckCircle2 size={13} className="text-admin-success" />,
   inactive: <UserX size={13} className="text-admin-muted" />,
@@ -464,17 +482,42 @@ export function UsersPage() {
               <div className="admin-form-grid">
                 <div className="admin-field admin-field-full">
                   <label htmlFor="user-role">Role *</label>
-                  <select
-                    id="user-role"
+                  <Select
+                    items={[
+                      { value: '', label: '— Pilih Role —' },
+                      ...roles.map(r => ({ value: r.id, label: `${r.name} (${r.code})` })),
+                    ]}
                     value={form.roleId}
-                    onChange={e => setForm(f => ({ ...f, roleId: e.target.value }))}
-                    className="admin-select"
+                    onValueChange={(nextValue) => setForm(f => ({ ...f, roleId: String(nextValue) }))}
                   >
-                    <option value="">— Pilih Role —</option>
-                    {roles.map(r => (
-                      <option key={r.id} value={r.id}>{r.name} ({r.code})</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="admin-select" id="user-role">
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {[
+                              { value: '', label: '— Pilih Role —' },
+                              ...roles.map(r => ({ value: r.id, label: `${r.name} (${r.code})` })),
+                            ].map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </div>
                 <div className="admin-field admin-field-full">
                   <label htmlFor="user-name">Nama Lengkap *</label>
@@ -586,17 +629,42 @@ export function UsersPage() {
               <div className="admin-form-grid">
                 <div className="admin-field admin-field-full">
                   <label htmlFor="edit-user-role">Role *</label>
-                  <select
-                    id="edit-user-role"
+                  <Select
+                    items={[
+                      { value: '', label: '— Pilih Role —' },
+                      ...roles.map(r => ({ value: r.id, label: `${r.name} (${r.code})` })),
+                    ]}
                     value={editForm.roleId}
-                    onChange={e => setEditForm(f => ({ ...f, roleId: e.target.value }))}
-                    className="admin-select"
+                    onValueChange={(nextValue) => setEditForm(f => ({ ...f, roleId: String(nextValue) }))}
                   >
-                    <option value="">— Pilih Role —</option>
-                    {roles.map(r => (
-                      <option key={r.id} value={r.id}>{r.name} ({r.code})</option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="admin-select" id="edit-user-role">
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {[
+                              { value: '', label: '— Pilih Role —' },
+                              ...roles.map(r => ({ value: r.id, label: `${r.name} (${r.code})` })),
+                            ].map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </div>
                 <div className="admin-field admin-field-full">
                   <label htmlFor="edit-user-name">Nama Lengkap *</label>
@@ -653,16 +721,44 @@ export function UsersPage() {
                 </div>
                 <div className="admin-field">
                   <label htmlFor="edit-user-status">Status</label>
-                  <select
-                    id="edit-user-status"
+                  <Select
+                    items={[
+                      { value: 'active', label: 'Aktif' },
+                      { value: 'inactive', label: 'Nonaktif' },
+                      { value: 'suspended', label: 'Suspended' },
+                    ]}
                     value={editForm.status}
-                    onChange={e => setEditForm(f => ({ ...f, status: e.target.value as TenantUser['status'] }))}
-                    className="admin-select"
+                    onValueChange={(nextValue) => setEditForm(f => ({ ...f, status: nextValue as TenantUser['status'] }))}
                   >
-                    <option value="active">Aktif</option>
-                    <option value="inactive">Nonaktif</option>
-                    <option value="suspended">Suspended</option>
-                  </select>
+                    <SelectTrigger className="admin-select" id="edit-user-status">
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {[
+                              { value: 'active', label: 'Aktif' },
+                              { value: 'inactive', label: 'Nonaktif' },
+                              { value: 'suspended', label: 'Suspended' },
+                            ].map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </div>
               </div>
             </div>

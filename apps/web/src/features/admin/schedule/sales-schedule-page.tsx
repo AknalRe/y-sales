@@ -137,6 +137,15 @@ export function SalesSchedulePage() {
     ...Object.entries(scheduleStatusLabel).map(([value, label]) => ({ value, label })),
   ];
 
+  const salesModalOptions = salesUsers.map((u) => ({ value: u.id, label: `${u.name} (${u.roleName} - ${u.salesCategory || 'motoris'})` }));
+
+  const priorityOptions = [
+    { value: '1', label: '1 - Sangat tinggi' },
+    { value: '2', label: '2 - Tinggi' },
+    { value: '3', label: '3 - Normal' },
+    { value: '4', label: '4 - Rendah' },
+    { value: '5', label: '5 - Fleksibel' },
+  ];
 
   const filteredOutlets = useMemo(() => {
     const q = outletSearch.trim().toLowerCase();
@@ -478,15 +487,44 @@ export function SalesSchedulePage() {
               <button onClick={() => setShowModal(false)} className="admin-modal-close" type="button" disabled={saving}>×</button>
             </div>
 
-            <form id="sales-schedule-create-form" onSubmit={handleCreate} className="admin-modal-body">
+            <form id="sales-schedule-create-form" onSubmit={handleCreate} className="admin-modal-body flex flex-col gap-4">
               {error && <div className="admin-alert admin-alert-error mb-3"><AlertTriangle size={15} />{error}</div>}
 
               <div className="admin-field">
                 <label>Sales *</label>
-                <select className="admin-input" value={form.salesUserId} onChange={(e) => setForm((c) => ({ ...c, salesUserId: e.target.value }))} required>
-                  <option value="">Pilih sales</option>
-                  {salesUsers.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.roleName} - {u.salesCategory || 'motoris'})</option>)}
-                </select>
+                <Select
+                  items={salesModalOptions}
+                  value={form.salesUserId}
+                  onValueChange={(nextValue) => setForm((c) => ({ ...c, salesUserId: String(nextValue) }))}
+                >
+                  <SelectTrigger className="admin-input">
+                    <SelectValue />
+                    <SelectIcon>
+                      <SelectChevronUpDownIcon />
+                    </SelectIcon>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectPositioner sideOffset={8}>
+                      <SelectPopup>
+                        <SelectScrollUpArrow />
+                        <SelectList>
+                          <SelectItem value="">
+                            <SelectItemText>Pilih sales</SelectItemText>
+                          </SelectItem>
+                          {salesModalOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <SelectItemIndicator>
+                                <SelectCheckIcon />
+                              </SelectItemIndicator>
+                              <SelectItemText>{option.label}</SelectItemText>
+                            </SelectItem>
+                          ))}
+                        </SelectList>
+                        <SelectScrollDownArrow />
+                      </SelectPopup>
+                    </SelectPositioner>
+                  </SelectPortal>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -496,13 +534,36 @@ export function SalesSchedulePage() {
                 </div>
                 <div className="admin-field">
                   <label>Prioritas</label>
-                  <select className="admin-input" value={form.priority} onChange={(e) => setForm((c) => ({ ...c, priority: Number(e.target.value) }))}>
-                    <option value={1}>1 - Sangat tinggi</option>
-                    <option value={2}>2 - Tinggi</option>
-                    <option value={3}>3 - Normal</option>
-                    <option value={4}>4 - Rendah</option>
-                    <option value={5}>5 - Fleksibel</option>
-                  </select>
+                  <Select
+                    items={priorityOptions}
+                    value={String(form.priority)}
+                    onValueChange={(nextValue) => setForm((c) => ({ ...c, priority: Number(nextValue) }))}
+                  >
+                    <SelectTrigger className="admin-input">
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {priorityOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </div>
               </div>
 

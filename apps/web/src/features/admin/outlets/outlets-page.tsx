@@ -130,6 +130,19 @@ export function OutletsPage() {
     { value: 'inactive', label: 'Nonaktif' },
   ];
 
+  const customerTypeOptions = [
+    { value: 'store', label: 'Toko' },
+    { value: 'agent', label: 'Agent' },
+    { value: 'user', label: 'User' },
+  ];
+
+  const statusModalOptions = [
+    { value: 'pending_verification', label: 'Menunggu Verifikasi' },
+    { value: 'active', label: 'Aktif' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'inactive', label: 'Nonaktif' },
+  ];
+
   async function load() {
     if (!accessToken) return;
     setLoading(true);
@@ -502,20 +515,69 @@ export function OutletsPage() {
                 <input className="admin-input" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
               </Field>
               <Field label="Tipe Customer">
-                <select className="admin-select" value={form.customerType} onChange={(event) => setForm((current) => ({ ...current, customerType: event.target.value as OutletForm['customerType'] }))}>
-                  <option value="store">Toko</option>
-                  <option value="agent">Agent</option>
-                  <option value="user">User</option>
-                </select>
+                <Select
+                  items={customerTypeOptions}
+                  value={form.customerType}
+                  onValueChange={(nextValue) => setForm((current) => ({ ...current, customerType: nextValue as OutletForm['customerType'] }))}
+                >
+                  <SelectTrigger className="admin-select">
+                    <SelectValue />
+                    <SelectIcon>
+                      <SelectChevronUpDownIcon />
+                    </SelectIcon>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectPositioner sideOffset={8}>
+                      <SelectPopup>
+                        <SelectScrollUpArrow />
+                        <SelectList>
+                          {customerTypeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <SelectItemIndicator>
+                                <SelectCheckIcon />
+                              </SelectItemIndicator>
+                              <SelectItemText>{option.label}</SelectItemText>
+                            </SelectItem>
+                          ))}
+                        </SelectList>
+                        <SelectScrollDownArrow />
+                      </SelectPopup>
+                    </SelectPositioner>
+                  </SelectPortal>
+                </Select>
               </Field>
               {canApproveOutlet ? (
                 <Field label="Status">
-                  <select className="admin-select" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as OutletForm['status'] }))}>
-                    <option value="pending_verification">Menunggu Verifikasi</option>
-                    <option value="active">Aktif</option>
-                    <option value="draft">Draft</option>
-                    <option value="inactive">Nonaktif</option>
-                  </select>
+                  <Select
+                    items={statusModalOptions}
+                    value={form.status}
+                    onValueChange={(nextValue) => setForm((current) => ({ ...current, status: nextValue as OutletForm['status'] }))}
+                  >
+                    <SelectTrigger className="admin-select">
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {statusModalOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </Field>
               ) : (
                 <div className="rounded-2xl border border-admin-border bg-admin-bg px-4 py-3 text-sm font-semibold text-admin-muted">

@@ -68,7 +68,7 @@
 
 .Positioner {
   outline: 0;
-  z-index: 50;
+  z-index: 9999;
   user-select: none;
 }
 

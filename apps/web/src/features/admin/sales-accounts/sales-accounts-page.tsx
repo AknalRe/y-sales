@@ -867,15 +867,44 @@ export function SalesAccountsPage() {
 }
 
 function SalesRoleField(props: { id: string; value: string; roles: Role[]; onChange: (value: string) => void }) {
+  const options = [
+    { value: '', label: '— Pilih Role Sales —' },
+    ...props.roles.map((role) => ({ value: role.id, label: `${role.name} (${role.code})` })),
+  ];
+
   return (
     <div className="admin-field admin-field-full">
       <label htmlFor={props.id}>Role Sales *</label>
-      <select id={props.id} value={props.value} onChange={(event) => props.onChange(event.target.value)} className="admin-select">
-        <option value="">— Pilih Role Sales —</option>
-        {props.roles.map((role) => (
-          <option key={role.id} value={role.id}>{role.name} ({role.code})</option>
-        ))}
-      </select>
+      <Select
+        items={options}
+        value={props.value}
+        onValueChange={(nextValue) => props.onChange(String(nextValue))}
+      >
+        <SelectTrigger className="admin-select" id={props.id}>
+          <SelectValue />
+          <SelectIcon>
+            <SelectChevronUpDownIcon />
+          </SelectIcon>
+        </SelectTrigger>
+        <SelectPortal>
+          <SelectPositioner sideOffset={8}>
+            <SelectPopup>
+              <SelectScrollUpArrow />
+              <SelectList>
+                {options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <SelectItemIndicator>
+                      <SelectCheckIcon />
+                    </SelectItemIndicator>
+                    <SelectItemText>{option.label}</SelectItemText>
+                  </SelectItem>
+                ))}
+              </SelectList>
+              <SelectScrollDownArrow />
+            </SelectPopup>
+          </SelectPositioner>
+        </SelectPortal>
+      </Select>
     </div>
   );
 }

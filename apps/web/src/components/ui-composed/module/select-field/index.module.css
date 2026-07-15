@@ -60,6 +60,13 @@
     outline: 2px solid var(--color-ring);
     outline-offset: -1px;
   }
+
+  &:disabled,
+  &[data-disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 }
 
 .SelectIcon {

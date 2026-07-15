@@ -3,6 +3,25 @@ import * as XLSX from 'xlsx-js-style';
 import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, Download, TrendingDown, Banknote, XCircle, Package } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState } from '@/components/ui';
+
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { apiRequest } from '@/lib/api/client';
 
@@ -124,6 +143,26 @@ export function ReceivablesPage() {
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState<'cash' | 'qris' | 'credit'>('cash');
   const [saving, setSaving] = useState(false);
+
+  const receivableStatusOptions = [
+    { value: '', label: 'Semua Status' },
+    { value: 'open', label: 'Terbuka' },
+    { value: 'partial', label: 'Dibayar Sebagian' },
+    { value: 'overdue', label: 'Lewat Tempo' },
+    { value: 'paid', label: 'Lunas' },
+    { value: 'written_off', label: 'Dihapuskan' },
+  ];
+
+  const consignmentStatusOptions = [
+    { value: '', label: 'Semua Status' },
+    { value: 'active', label: 'Aktif' },
+    { value: 'overdue', label: 'Lewat Tempo' },
+    { value: 'withdrawal_required', label: 'Perlu Penarikan' },
+    { value: 'extended', label: 'Diperpanjang' },
+    { value: 'withdrawn', label: 'Ditarik' },
+    { value: 'paid', label: 'Lunas' },
+  ];
+
 
   async function load() {
     if (!accessToken) return;
@@ -324,27 +363,36 @@ export function ReceivablesPage() {
           <button onClick={() => { setTab('receivables'); setStatusFilter(''); }} className={`admin-tab ${tab === 'receivables' ? 'active' : ''}`}>Piutang (Kredit)</button>
           <button onClick={() => { setTab('consignments'); setStatusFilter(''); }} className={`admin-tab ${tab === 'consignments' ? 'active' : ''}`}>Konsinyasi</button>
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select">
-          <option value="">Semua Status</option>
-          {tab === 'receivables' ? (
-            <>
-              <option value="open">Terbuka</option>
-              <option value="partial">Dibayar Sebagian</option>
-              <option value="overdue">Lewat Tempo</option>
-              <option value="paid">Lunas</option>
-              <option value="written_off">Dihapuskan</option>
-            </>
-          ) : (
-            <>
-              <option value="active">Aktif</option>
-              <option value="overdue">Lewat Tempo</option>
-              <option value="withdrawal_required">Perlu Penarikan</option>
-              <option value="extended">Diperpanjang</option>
-              <option value="withdrawn">Ditarik</option>
-              <option value="paid">Lunas</option>
-            </>
-          )}
-        </select>
+        <Select
+          items={tab === 'receivables' ? receivableStatusOptions : consignmentStatusOptions}
+          value={statusFilter}
+          onValueChange={(nextValue) => setStatusFilter(String(nextValue))}
+        >
+          <SelectTrigger className="admin-select">
+            <SelectValue />
+            <SelectIcon>
+              <SelectChevronUpDownIcon />
+            </SelectIcon>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner sideOffset={8}>
+              <SelectPopup>
+                <SelectScrollUpArrow />
+                <SelectList>
+                  {(tab === 'receivables' ? receivableStatusOptions : consignmentStatusOptions).map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <SelectItemIndicator>
+                        <SelectCheckIcon />
+                      </SelectItemIndicator>
+                      <SelectItemText>{option.label}</SelectItemText>
+                    </SelectItem>
+                  ))}
+                </SelectList>
+                <SelectScrollDownArrow />
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </Select>
       </div>
 
       <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>

@@ -7,6 +7,24 @@ import {
 import { EmptyState } from '@/components/ui';
 
 import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
+import {
   getAttendanceReport,
   getAttendanceReview,
   updateAttendanceReview,
@@ -141,6 +159,21 @@ export function AttendanceReviewPage() {
     validationStatus: '',
     q: '',
   });
+
+  const statusOptions = [
+    { value: '', label: 'Semua status' },
+    { value: 'open', label: 'Terbuka' },
+    { value: 'closed', label: 'Selesai' },
+    { value: 'flagged', label: 'Tidak Disetujui' },
+  ];
+
+  const validationStatusOptions = [
+    { value: '', label: 'Semua validasi' },
+    { value: 'valid', label: 'Valid' },
+    { value: 'invalid_location', label: 'Lokasi Tidak Valid' },
+    { value: 'face_not_detected', label: 'Wajah Tidak Terdeteksi' },
+    { value: 'manual_review', label: 'Manual Review' },
+  ];
 
   const params = useMemo<AttendanceReviewParams>(() => ({
     from: filters.from || undefined,
@@ -329,19 +362,66 @@ export function AttendanceReviewPage() {
         <div className="grid gap-3 items-center xl:grid-cols-[160px_160px_180px_220px_minmax(220px,1fr)_auto]">
           <input className="admin-input w-full h-[42px]" type="date" value={filters.from} onChange={(e) => setFilters((current) => ({ ...current, from: e.target.value }))} />
           <input className="admin-input w-full h-[42px]" type="date" value={filters.to} onChange={(e) => setFilters((current) => ({ ...current, to: e.target.value }))} />
-          <select className="admin-select w-full h-[42px]" value={filters.status} onChange={(e) => setFilters((current) => ({ ...current, status: e.target.value }))}>
-            <option value="">Semua status</option>
-            <option value="open">Terbuka</option>
-            <option value="closed">Selesai</option>
-            <option value="flagged">Tidak Disetujui</option>
-          </select>
-          <select className="admin-select w-full h-[42px]" value={filters.validationStatus} onChange={(e) => setFilters((current) => ({ ...current, validationStatus: e.target.value }))}>
-            <option value="">Semua validasi</option>
-            <option value="valid">Valid</option>
-            <option value="invalid_location">Lokasi Tidak Valid</option>
-            <option value="face_not_detected">Wajah Tidak Terdeteksi</option>
-            <option value="manual_review">Manual Review</option>
-          </select>
+          <Select
+            items={statusOptions}
+            value={filters.status}
+            onValueChange={(nextValue) => setFilters((current) => ({ ...current, status: String(nextValue) }))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
+          <Select
+            items={validationStatusOptions}
+            value={filters.validationStatus}
+            onValueChange={(nextValue) => setFilters((current) => ({ ...current, validationStatus: String(nextValue) }))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {validationStatusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
           <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
             <Search size={18} />
             <input

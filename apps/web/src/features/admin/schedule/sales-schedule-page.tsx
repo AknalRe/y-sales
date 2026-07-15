@@ -3,6 +3,25 @@ import * as XLSX from 'xlsx-js-style';
 import { AlertTriangle, CalendarPlus, CheckCircle2, Clock, Download, MapPin, RefreshCw, Search, Send, UserRound, X, XCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth/auth-provider';
 import { EmptyState } from '@/components/ui';
+
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 import {
   approveVisitSchedule,
   cancelVisitSchedule,
@@ -107,6 +126,17 @@ export function SalesSchedulePage() {
     const filtered = users.filter((u) => u.status === 'active' && isSalesUser(u));
     return filtered.length ? filtered : users.filter((u) => u.status === 'active' && u.roleCode !== 'ADMINISTRATOR');
   }, [users]);
+
+  const salesFilterOptions = [
+    { value: '', label: 'Semua sales' },
+    ...salesUsers.map((u) => ({ value: u.id, label: `${u.name} (${u.salesCategory || 'motoris'})` })),
+  ];
+
+  const statusFilterOptions = [
+    { value: '', label: 'Semua status' },
+    ...Object.entries(scheduleStatusLabel).map(([value, label]) => ({ value, label })),
+  ];
+
 
   const filteredOutlets = useMemo(() => {
     const q = outletSearch.trim().toLowerCase();
@@ -277,14 +307,66 @@ export function SalesSchedulePage() {
       <section className="mb-4 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
         <div className="grid gap-3 items-center xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
           <input className="admin-input w-full h-[42px]" type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
-          <select className="admin-select w-full h-[42px]" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
-            <option value="">Semua sales</option>
-            {salesUsers.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.salesCategory || 'motoris'})</option>)}
-          </select>
-          <select className="admin-select w-full h-[42px]" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
-            <option value="">Semua status</option>
-            {Object.entries(scheduleStatusLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
+          <Select
+            items={salesFilterOptions}
+            value={selectedUserId}
+            onValueChange={(nextValue) => setSelectedUserId(String(nextValue))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {salesFilterOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
+          <Select
+            items={statusFilterOptions}
+            value={selectedStatus}
+            onValueChange={(nextValue) => setSelectedStatus(String(nextValue))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {statusFilterOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
           <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
             <Search size={18} />
             <input
@@ -376,10 +458,10 @@ export function SalesSchedulePage() {
         </div>
       ) : (
         <div className="admin-card admin-card--static text-center" style={{ padding: '3rem', border: '2px dashed var(--admin-border)' }}>
-          <EmptyState 
-            icon={<CalendarPlus size={40} className="mx-auto text-admin-muted" />} 
-            title="Belum ada jadwal sales" 
-            description='Klik "Buat Jadwal" untuk membuat jadwal baru.' 
+          <EmptyState
+            icon={<CalendarPlus size={40} className="mx-auto text-admin-muted" />}
+            title="Belum ada jadwal sales"
+            description='Klik "Buat Jadwal" untuk membuat jadwal baru.'
           />
         </div>
       )}

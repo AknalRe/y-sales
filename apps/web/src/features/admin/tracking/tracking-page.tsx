@@ -12,10 +12,27 @@ import {
   RefreshCw,
   Search,
   Timer,
-  User,
   X,
 } from 'lucide-react';
 import { EmptyState } from '@/components/ui';
+
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
 
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -89,6 +106,20 @@ export function TrackingPage() {
   const [tab, setTab] = useState<'sessions' | 'schedules'>('sessions');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const salesOptions = [
+    { value: '', label: 'Semua sales' },
+    ...users
+      .filter((user) => user.roleCode !== 'ADMINISTRATOR')
+      .map((user) => ({ value: user.id, label: user.name })),
+  ];
+
+  const statusOptions = [
+    { value: '', label: 'Semua status' },
+    ...(tab === 'sessions'
+      ? Object.entries(visitStatusLabel).map(([value, label]) => ({ value, label }))
+      : Object.entries(scheduleStatusLabel).map(([value, label]) => ({ value, label }))),
+  ];
 
   async function load() {
     if (!accessToken) return;
@@ -214,18 +245,66 @@ export function TrackingPage() {
       <section className="mt-5 rounded-[1.5rem] border border-admin-border bg-admin-bg-card p-4 shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]">
         <div className="grid gap-3 items-center xl:grid-cols-[160px_220px_190px_minmax(260px,1fr)_auto]">
           <input className="admin-input w-full h-[42px]" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} />
-          <select className="admin-select w-full h-[42px]" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
-            <option value="">Semua sales</option>
-            {users.filter((user) => user.roleCode !== 'ADMINISTRATOR').map((user) => (
-              <option key={user.id} value={user.id}>{user.name}</option>
-            ))}
-          </select>
-          <select className="admin-select w-full h-[42px]" value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)}>
-            <option value="">Semua status</option>
-            {Object.entries(tab === 'sessions' ? visitStatusLabel : scheduleStatusLabel).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
+          <Select
+            items={salesOptions}
+            value={selectedUserId}
+            onValueChange={(nextValue) => setSelectedUserId(String(nextValue))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {salesOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
+          <Select
+            items={statusOptions}
+            value={selectedStatus}
+            onValueChange={(nextValue) => setSelectedStatus(String(nextValue))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
           <div className="admin-search-box !mb-0 h-[42px] !py-0 px-3">
             <Search size={18} />
             <input

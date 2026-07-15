@@ -3,6 +3,25 @@ import * as XLSX from 'xlsx-js-style';
 import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState } from '@/components/ui';
+
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, settleSalesTransaction, getTenantUsers, getSalesTransactionDetail, type SalesTransaction, type SalesTransactionDetail, type TenantUser } from '@/lib/api/tenant';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
@@ -65,6 +84,14 @@ export function InvoiceReviewPage() {
   const [details, setDetails] = useState<Record<string, SalesTransactionDetail>>({});
   const [loadingDetail, setLoadingDetail] = useState<string | null>(null);
   const [error, setError] = useState('');
+
+  const noteStatusOptions = [
+    { value: '', label: 'Semua Status' },
+    { value: 'pending', label: 'Nota Pending' },
+    { value: 'approved', label: 'Nota Approved' },
+    { value: 'settlement', label: 'Nota Settlement' },
+    { value: 'rejected', label: 'Nota Rejected' },
+  ];
 
   async function load() {
     if (!accessToken) return;
@@ -240,18 +267,36 @@ export function InvoiceReviewPage() {
       <div className="admin-filter-row bg-admin-bg-card border border-admin-border-subtle shadow-[0_1px_1px_0_rgba(0,_0,_0,_0.025)]" style={{ padding: '1rem', borderRadius: 20, marginBottom: '1.5rem' }}>
         <div className="flex gap-4 items-center">
           <span className="text-admin-muted font-bold text-sm">Filter Status:</span>
-          <select
+          <Select
+            items={noteStatusOptions}
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="admin-select"
-            style={{ width: 'auto', minWidth: 180, borderRadius: 12 }}
+            onValueChange={(nextValue) => setStatusFilter(nextValue as typeof statusFilter)}
           >
-            <option value="">Semua Status</option>
-            <option value="pending">Nota Pending</option>
-            <option value="approved">Nota Approved</option>
-            <option value="settlement">Nota Settlement</option>
-            <option value="rejected">Nota Rejected</option>
-          </select>
+            <SelectTrigger className="admin-select" style={{ width: 'auto', minWidth: 180, borderRadius: 12 }}>
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {noteStatusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
         </div>
       </div>
 

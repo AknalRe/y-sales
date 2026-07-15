@@ -584,16 +584,44 @@ export function ReceivablesPage() {
                 </div>
                 <div>
                   <label className="text-admin-muted-dim text-sm font-extrabold block mb-1">Metode Pembayaran</label>
-                  <select
+                  <Select
+                    items={[
+                      { value: 'cash', label: 'Cash' },
+                      { value: 'qris', label: 'QRIS' },
+                      { value: 'credit', label: 'Transfer' },
+                    ]}
                     value={payMethod}
-                    onChange={e => setPayMethod(e.target.value as 'cash' | 'qris' | 'credit')}
-                    className="admin-select"
-                    style={{ width: '100%' }}
+                    onValueChange={(nextValue) => setPayMethod(nextValue as 'cash' | 'qris' | 'credit')}
                   >
-                    <option value="cash">Cash</option>
-                    <option value="qris">QRIS</option>
-                    <option value="credit">Transfer</option>
-                  </select>
+                    <SelectTrigger className="admin-select" style={{ width: '100%' }}>
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {[
+                              { value: 'cash', label: 'Cash' },
+                              { value: 'qris', label: 'QRIS' },
+                              { value: 'credit', label: 'Transfer' },
+                            ].map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </div>
               </div>
             </div>

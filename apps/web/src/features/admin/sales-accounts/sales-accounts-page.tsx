@@ -670,15 +670,42 @@ export function SalesAccountsPage() {
                 <TextField id="sales-phone" label="Nomor HP" value={form.phone} onChange={(value) => setForm((current) => ({ ...current, phone: value }))} />
                 <div className="admin-field">
                   <label htmlFor="sales-category">Kategori Sales</label>
-                  <select
-                    id="sales-category"
+                  <Select
+                    items={[
+                      { value: 'motoris', label: 'Motoris' },
+                      { value: 'dropping', label: 'Dropping' },
+                    ]}
                     value={form.salesCategory}
-                    onChange={(event) => setForm((current) => ({ ...current, salesCategory: event.target.value as 'motoris' | 'dropping' }))}
-                    className="admin-select"
+                    onValueChange={(nextValue) => setForm((current) => ({ ...current, salesCategory: nextValue as 'motoris' | 'dropping' }))}
                   >
-                    <option value="motoris">Motoris</option>
-                    <option value="dropping">Dropping</option>
-                  </select>
+                    <SelectTrigger className="admin-select" id="sales-category">
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {[
+                              { value: 'motoris', label: 'Motoris' },
+                              { value: 'dropping', label: 'Dropping' },
+                            ].map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </div>
                 <EmployeeCodeField
                   id="sales-code"
@@ -720,15 +747,42 @@ export function SalesAccountsPage() {
                 <TextField id="edit-sales-phone" label="Nomor HP" value={editForm.phone} onChange={(value) => setEditForm((current) => ({ ...current, phone: value }))} />
                 <div className="admin-field">
                   <label htmlFor="edit-sales-category">Kategori Sales</label>
-                  <select
-                    id="edit-sales-category"
+                  <Select
+                    items={[
+                      { value: 'motoris', label: 'Motoris' },
+                      { value: 'dropping', label: 'Dropping' },
+                    ]}
                     value={editForm.salesCategory}
-                    onChange={(event) => setEditForm((current) => ({ ...current, salesCategory: event.target.value as 'motoris' | 'dropping' }))}
-                    className="admin-select"
+                    onValueChange={(nextValue) => setEditForm((current) => ({ ...current, salesCategory: nextValue as 'motoris' | 'dropping' }))}
                   >
-                    <option value="motoris">Motoris</option>
-                    <option value="dropping">Dropping</option>
-                  </select>
+                    <SelectTrigger className="admin-select" id="edit-sales-category">
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {[
+                              { value: 'motoris', label: 'Motoris' },
+                              { value: 'dropping', label: 'Dropping' },
+                            ].map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </div>
                 <EmployeeCodeField
                   id="edit-sales-code"
@@ -741,16 +795,44 @@ export function SalesAccountsPage() {
                 />
                 <div className="admin-field">
                   <label htmlFor="edit-sales-status">Status</label>
-                  <select
-                    id="edit-sales-status"
+                  <Select
+                    items={[
+                      { value: 'active', label: 'Aktif' },
+                      { value: 'inactive', label: 'Nonaktif' },
+                      { value: 'suspended', label: 'Suspended' },
+                    ]}
                     value={editForm.status}
-                    onChange={(event) => setEditForm((current) => ({ ...current, status: event.target.value as TenantUser['status'] }))}
-                    className="admin-select"
+                    onValueChange={(nextValue) => setEditForm((current) => ({ ...current, status: nextValue as TenantUser['status'] }))}
                   >
-                    <option value="active">Aktif</option>
-                    <option value="inactive">Nonaktif</option>
-                    <option value="suspended">Suspended</option>
-                  </select>
+                    <SelectTrigger className="admin-select" id="edit-sales-status">
+                      <SelectValue />
+                      <SelectIcon>
+                        <SelectChevronUpDownIcon />
+                      </SelectIcon>
+                    </SelectTrigger>
+                    <SelectPortal>
+                      <SelectPositioner sideOffset={8}>
+                        <SelectPopup>
+                          <SelectScrollUpArrow />
+                          <SelectList>
+                            {[
+                              { value: 'active', label: 'Aktif' },
+                              { value: 'inactive', label: 'Nonaktif' },
+                              { value: 'suspended', label: 'Suspended' },
+                            ].map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <SelectItemIndicator>
+                                  <SelectCheckIcon />
+                                </SelectItemIndicator>
+                                <SelectItemText>{option.label}</SelectItemText>
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                          <SelectScrollDownArrow />
+                        </SelectPopup>
+                      </SelectPositioner>
+                    </SelectPortal>
+                  </Select>
                 </div>
               </div>
             </div>

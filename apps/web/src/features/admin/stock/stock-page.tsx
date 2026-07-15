@@ -15,6 +15,24 @@ import { apiRequest, createMediaUpload, finalizeMediaUpload, uploadToStorageUrl 
 import { EmptyState } from '@/components/ui';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 type InventoryBalance = {
   id: string; warehouseId: string; warehouseCode: string; warehouseName: string;
   warehouseType: string; warehouseTypeLabel?: string; productId: string;
@@ -176,6 +194,11 @@ export function StockPage() {
     lowStock: balances.filter((b) => Number(b.quantity) < 10 && Number(b.quantity) > 0).length,
     outOfStock: balances.filter((b) => Number(b.quantity) === 0).length,
   }), [balances, products, warehouses]);
+
+  const warehouseFilterOptions = [
+    { value: '', label: 'Semua Gudang' },
+    ...warehouses.map((w) => ({ value: w.id, label: `${w.name} (${w.code})` })),
+  ];
 
   function startEditProduct(product: Product) {
     setActiveSection('products');
@@ -533,10 +556,36 @@ export function StockPage() {
           {/* Warehouse filter for stock tab */}
           {activeSection === 'stock' && (
             <div className="inventory-filter-row">
-              <select value={selectedWH} onChange={(e) => setSelectedWH(e.target.value)} className="admin-select">
-                <option value="">Semua Gudang</option>
-                {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
-              </select>
+              <Select
+                items={warehouseFilterOptions}
+                value={selectedWH}
+                onValueChange={(nextValue) => setSelectedWH(String(nextValue))}
+              >
+                <SelectTrigger className="admin-select">
+                  <SelectValue />
+                  <SelectIcon>
+                    <SelectChevronUpDownIcon />
+                  </SelectIcon>
+                </SelectTrigger>
+                <SelectPortal>
+                  <SelectPositioner sideOffset={8}>
+                    <SelectPopup>
+                      <SelectScrollUpArrow />
+                      <SelectList>
+                        {warehouseFilterOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <SelectItemIndicator>
+                              <SelectCheckIcon />
+                            </SelectItemIndicator>
+                            <SelectItemText>{option.label}</SelectItemText>
+                          </SelectItem>
+                        ))}
+                      </SelectList>
+                      <SelectScrollDownArrow />
+                    </SelectPopup>
+                  </SelectPositioner>
+                </SelectPortal>
+              </Select>
               <input value={searchProduct} onChange={(e) => setSearchProduct(e.target.value)} className="admin-input" placeholder="Cari SKU / produk..." />
             </div>
           )}
@@ -657,7 +706,46 @@ function ProductFormCard({ form, saving, products, onChange, onSubmit, onCancel 
           <Field label="Harga"><input type="number" className="admin-input w-full" value={form.priceDefault} onChange={(e) => onChange({ ...form, priceDefault: e.target.value })} /></Field>
         </div>
         {!form.id && <Field label="Stok Awal Gudang Utama"><input type="number" className="admin-input w-full" value={form.initialStock} onChange={(e) => onChange({ ...form, initialStock: e.target.value })} /></Field>}
-        {form.id && <Field label="Status"><select className="admin-select w-full" value={form.status} onChange={(e) => onChange({ ...form, status: e.target.value as Product['status'] })}><option value="active">Aktif</option><option value="inactive">Nonaktif</option></select></Field>}
+        {form.id && (
+          <Field label="Status">
+            <Select
+              items={[
+                { value: 'active', label: 'Aktif' },
+                { value: 'inactive', label: 'Nonaktif' },
+              ]}
+              value={form.status}
+              onValueChange={(nextValue) => onChange({ ...form, status: nextValue as Product['status'] })}
+            >
+              <SelectTrigger className="admin-select w-full">
+                <SelectValue />
+                <SelectIcon>
+                  <SelectChevronUpDownIcon />
+                </SelectIcon>
+              </SelectTrigger>
+              <SelectPortal>
+                <SelectPositioner sideOffset={8}>
+                  <SelectPopup>
+                    <SelectScrollUpArrow />
+                    <SelectList>
+                      {[
+                        { value: 'active', label: 'Aktif' },
+                        { value: 'inactive', label: 'Nonaktif' },
+                      ].map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <SelectItemIndicator>
+                            <SelectCheckIcon />
+                          </SelectItemIndicator>
+                          <SelectItemText>{option.label}</SelectItemText>
+                        </SelectItem>
+                      ))}
+                    </SelectList>
+                    <SelectScrollDownArrow />
+                  </SelectPopup>
+                </SelectPositioner>
+              </SelectPortal>
+            </Select>
+          </Field>
+        )}
         <div className="flex gap-2">
           <button className="admin-btn-primary" type="button" disabled={saving || !form.name} onClick={onSubmit}><Save size={15} /> Simpan</button>
           {form.id && <button className="admin-btn-ghost" type="button" onClick={onCancel}>Batal</button>}
@@ -674,7 +762,46 @@ function WarehouseFormCard({ form, saving, warehouses, onChange, onSubmit, onCan
       <div className="grid gap-3">
         <Field label="Kode"><div className="flex gap-2"><input className="admin-input w-full" value={form.code} onChange={(e) => onChange({ ...form, code: e.target.value.toUpperCase() })} placeholder="WH-GD-001" /><button className="admin-btn-ghost" type="button" onClick={() => onChange({ ...form, code: generateNextWarehouseCode(form, warehouses) })}>Buat Otomatis</button></div></Field>
         <Field label="Nama Gudang"><input className="admin-input w-full" value={form.name} onChange={(e) => onChange({ ...form, name: e.target.value })} /></Field>
-        <Field label="Tipe"><select className="admin-select w-full" value={form.type} onChange={(e) => onChange({ ...form, type: e.target.value as Warehouse['type'] })}><option value="main">Gudang Utama</option><option value="sales_van">Gudang Sales</option><option value="outlet_consignment">Konsinyasi Outlet</option></select></Field>
+        <Field label="Tipe">
+          <Select
+            items={[
+              { value: 'main', label: 'Gudang Utama' },
+              { value: 'sales_van', label: 'Gudang Sales' },
+              { value: 'outlet_consignment', label: 'Konsinyasi Outlet' },
+            ]}
+            value={form.type}
+            onValueChange={(nextValue) => onChange({ ...form, type: nextValue as Warehouse['type'] })}
+          >
+            <SelectTrigger className="admin-select w-full">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {[
+                      { value: 'main', label: 'Gudang Utama' },
+                      { value: 'sales_van', label: 'Gudang Sales' },
+                      { value: 'outlet_consignment', label: 'Konsinyasi Outlet' },
+                    ].map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
+        </Field>
         <Field label="Alamat"><textarea className="admin-input w-full" value={form.address} onChange={(e) => onChange({ ...form, address: e.target.value })} /></Field>
         <div className="flex gap-2">
           <button className="admin-btn-primary" type="button" disabled={saving || !form.name} onClick={onSubmit}><Save size={15} /> Simpan</button>
@@ -730,16 +857,156 @@ function WarehouseTable({ warehouses, onEdit, onDelete }: { warehouses: Warehous
 }
 
 function StockActionCard({ action, saving, warehouses, products, onChange, onSubmit }: { action: { mode: 'adjustment' | 'reset' | 'transfer'; warehouseId: string; toWarehouseId: string; productId: string; quantity: string; notes: string }; saving: boolean; warehouses: Warehouse[]; products: Product[]; onChange: (a: any) => void; onSubmit: () => void }) {
+  const modeOptions = [
+    { value: 'adjustment', label: 'Penyesuaian +/-' },
+    { value: 'reset', label: 'Reset Qty' },
+    { value: 'transfer', label: 'Transfer Gudang' },
+  ];
+  const warehouseOptions = [
+    { value: '', label: 'Pilih gudang' },
+    ...warehouses.map((w) => ({ value: w.id, label: `${w.name} (${w.code})` })),
+  ];
+  const productOptions = [
+    { value: '', label: 'Pilih produk' },
+    ...products.map((p) => ({ value: p.id, label: `${p.name} (${p.sku})` })),
+  ];
+
   return (
     <div className="admin-card" style={{ margin: 0, maxWidth: 760 }}>
       <h3 className="font-extrabold text-admin-foreground mb-4">Operasi Stok</h3>
       <div className="grid gap-3">
-        <Field label="Jenis Operasi"><select className="admin-select w-full" value={action.mode} onChange={(e) => onChange({ ...action, mode: e.target.value })}><option value="adjustment">Penyesuaian +/-</option><option value="reset">Reset Qty</option><option value="transfer">Transfer Gudang</option></select></Field>
+        <Field label="Jenis Operasi">
+          <Select
+            items={modeOptions}
+            value={action.mode}
+            onValueChange={(nextValue) => onChange({ ...action, mode: nextValue })}
+          >
+            <SelectTrigger className="admin-select w-full">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {modeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
+        </Field>
         <div className="grid sm:grid-cols-2 gap-3">
-          <Field label={action.mode === 'transfer' ? 'Gudang Asal' : 'Gudang'}><select className="admin-select w-full" value={action.warehouseId} onChange={(e) => onChange({ ...action, warehouseId: e.target.value })}><option value="">Pilih gudang</option>{warehouses.map((w) => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}</select></Field>
-          {action.mode === 'transfer' && <Field label="Gudang Tujuan"><select className="admin-select w-full" value={action.toWarehouseId} onChange={(e) => onChange({ ...action, toWarehouseId: e.target.value })}><option value="">Pilih tujuan</option>{warehouses.filter((w) => w.id !== action.warehouseId).map((w) => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}</select></Field>}
+          <Field label={action.mode === 'transfer' ? 'Gudang Asal' : 'Gudang'}>
+            <Select
+              items={warehouseOptions}
+              value={action.warehouseId}
+              onValueChange={(nextValue) => onChange({ ...action, warehouseId: String(nextValue) })}
+            >
+              <SelectTrigger className="admin-select w-full">
+                <SelectValue />
+                <SelectIcon>
+                  <SelectChevronUpDownIcon />
+                </SelectIcon>
+              </SelectTrigger>
+              <SelectPortal>
+                <SelectPositioner sideOffset={8}>
+                  <SelectPopup>
+                    <SelectScrollUpArrow />
+                    <SelectList>
+                      {warehouseOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <SelectItemIndicator>
+                            <SelectCheckIcon />
+                          </SelectItemIndicator>
+                          <SelectItemText>{option.label}</SelectItemText>
+                        </SelectItem>
+                      ))}
+                    </SelectList>
+                    <SelectScrollDownArrow />
+                  </SelectPopup>
+                </SelectPositioner>
+              </SelectPortal>
+            </Select>
+          </Field>
+          {action.mode === 'transfer' && (
+            <Field label="Gudang Tujuan">
+              <Select
+                items={warehouseOptions.filter((option) => option.value !== action.warehouseId)}
+                value={action.toWarehouseId}
+                onValueChange={(nextValue) => onChange({ ...action, toWarehouseId: String(nextValue) })}
+              >
+                <SelectTrigger className="admin-select w-full">
+                  <SelectValue />
+                  <SelectIcon>
+                    <SelectChevronUpDownIcon />
+                  </SelectIcon>
+                </SelectTrigger>
+                <SelectPortal>
+                  <SelectPositioner sideOffset={8}>
+                    <SelectPopup>
+                      <SelectScrollUpArrow />
+                      <SelectList>
+                        {warehouseOptions.filter((option) => option.value !== action.warehouseId).map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <SelectItemIndicator>
+                              <SelectCheckIcon />
+                            </SelectItemIndicator>
+                            <SelectItemText>{option.label}</SelectItemText>
+                          </SelectItem>
+                        ))}
+                      </SelectList>
+                      <SelectScrollDownArrow />
+                    </SelectPopup>
+                  </SelectPositioner>
+                </SelectPortal>
+              </Select>
+            </Field>
+          )}
         </div>
-        <Field label="Produk"><select className="admin-select w-full" value={action.productId} onChange={(e) => onChange({ ...action, productId: e.target.value })}><option value="">Pilih produk</option>{products.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}</select></Field>
+        <Field label="Produk">
+          <Select
+            items={productOptions}
+            value={action.productId}
+            onValueChange={(nextValue) => onChange({ ...action, productId: String(nextValue) })}
+          >
+            <SelectTrigger className="admin-select w-full">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {productOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
+        </Field>
         <Field label={action.mode === 'reset' ? 'Target Qty' : 'Qty'}><input type="number" className="admin-input w-full" value={action.quantity} onChange={(e) => onChange({ ...action, quantity: e.target.value })} /></Field>
         <Field label="Catatan"><textarea className="admin-input w-full" value={action.notes} onChange={(e) => onChange({ ...action, notes: e.target.value })} /></Field>
         <button className="admin-btn-primary" type="button" disabled={saving || !action.warehouseId || !action.productId || !action.quantity || (action.mode === 'transfer' && !action.toWarehouseId)} onClick={onSubmit}>
@@ -810,6 +1077,27 @@ function SalesTransferSection({
   const selectedTargetBalance = selectedWHBalances.find((b) => b.productId === transferForm.productId);
   const selectedTargetAvailable = selectedTargetBalance ? Number(selectedTargetBalance.quantity) - Number(selectedTargetBalance.reservedQuantity) : 0;
 
+  const salesUserOptions = [
+    { value: '', label: 'Pilih sales' },
+    ...salesWithWarehouses.map(({ user, warehouse }) => ({
+      value: user.id,
+      label: `${user.name} ${user.employeeCode ? `(${user.employeeCode})` : ''} — ${warehouse ? warehouse.code : 'Belum ada gudang'}`,
+    })),
+  ];
+
+  const sourceWarehouseOptions = [
+    { value: '', label: 'Pilih gudang sumber' },
+    ...sourceOptions.map((warehouse) => ({
+      value: warehouse.id,
+      label: `${warehouse.name} (${warehouse.code}) — ${warehouse.type === 'main' ? 'Gudang utama' : warehouse.type === 'sales_van' ? 'Gudang sales' : 'Konsinyasi outlet'}`,
+    })),
+  ];
+
+  const transferProductOptions = [
+    { value: '', label: 'Pilih produk' },
+    ...products.map((p) => ({ value: p.id, label: `${p.name} (${p.sku})` })),
+  ];
+
   return (
     <div className="inventory-transfer-layout">
       {/* Transfer Form */}
@@ -823,11 +1111,11 @@ function SalesTransferSection({
         </div>
         <div className="grid gap-3">
           <Field label="Tujuan sales">
-            <select
-              className="admin-select w-full"
+            <Select
+              items={salesUserOptions}
               value={transferForm.salesUserId}
-              onChange={(e) => {
-                const uid = e.target.value;
+              onValueChange={(nextValue) => {
+                const uid = String(nextValue);
                 const wh = salesWarehouses.find((w) => w.ownerUserId === uid);
                 const currentSourceId = transferForm.sourceWarehouseId || mainWarehouse?.id || '';
                 onChange({
@@ -838,13 +1126,31 @@ function SalesTransferSection({
                 });
               }}
             >
-              <option value="">Pilih sales</option>
-              {salesWithWarehouses.map(({ user, warehouse }) => (
-                <option key={user.id} value={user.id}>
-                  {user.name} {user.employeeCode ? `(${user.employeeCode})` : ''} — {warehouse ? warehouse.code : 'Belum ada gudang'}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="admin-select w-full">
+                <SelectValue />
+                <SelectIcon>
+                  <SelectChevronUpDownIcon />
+                </SelectIcon>
+              </SelectTrigger>
+              <SelectPortal>
+                <SelectPositioner sideOffset={8}>
+                  <SelectPopup>
+                    <SelectScrollUpArrow />
+                    <SelectList>
+                      {salesUserOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <SelectItemIndicator>
+                            <SelectCheckIcon />
+                          </SelectItemIndicator>
+                          <SelectItemText>{option.label}</SelectItemText>
+                        </SelectItem>
+                      ))}
+                    </SelectList>
+                    <SelectScrollDownArrow />
+                  </SelectPopup>
+                </SelectPositioner>
+              </SelectPortal>
+            </Select>
           </Field>
 
           {transferForm.salesUserId && selectedSales && !selectedSales.warehouse && (
@@ -863,19 +1169,37 @@ function SalesTransferSection({
           )}
 
           <Field label="Sumber gudang">
-            <select
-              className="admin-select w-full"
+            <Select
+              items={sourceWarehouseOptions}
               value={selectedSourceWarehouseId}
-              onChange={(e) => onChange({ ...transferForm, sourceWarehouseId: e.target.value })}
+              onValueChange={(nextValue) => onChange({ ...transferForm, sourceWarehouseId: String(nextValue) })}
               disabled={!transferForm.salesUserId}
             >
-              <option value="">Pilih gudang sumber</option>
-              {sourceOptions.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name} ({warehouse.code}) — {warehouse.type === 'main' ? 'Gudang utama' : warehouse.type === 'sales_van' ? 'Gudang sales' : 'Konsinyasi outlet'}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="admin-select w-full">
+                <SelectValue />
+                <SelectIcon>
+                  <SelectChevronUpDownIcon />
+                </SelectIcon>
+              </SelectTrigger>
+              <SelectPortal>
+                <SelectPositioner sideOffset={8}>
+                  <SelectPopup>
+                    <SelectScrollUpArrow />
+                    <SelectList>
+                      {sourceWarehouseOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <SelectItemIndicator>
+                            <SelectCheckIcon />
+                          </SelectItemIndicator>
+                          <SelectItemText>{option.label}</SelectItemText>
+                        </SelectItem>
+                      ))}
+                    </SelectList>
+                    <SelectScrollDownArrow />
+                  </SelectPopup>
+                </SelectPositioner>
+              </SelectPortal>
+            </Select>
             {transferForm.salesUserId && selectedSourceWarehouse && (
               <span style={{ display: 'block', marginTop: 6, color: 'var(--admin-muted)', fontSize: '.75rem', fontWeight: 700 }}>
                 Stok akan keluar dari {selectedSourceWarehouse.name}.
@@ -889,10 +1213,36 @@ function SalesTransferSection({
           </Field>
 
           <Field label="Produk">
-            <select className="admin-select w-full" value={transferForm.productId} onChange={(e) => onChange({ ...transferForm, productId: e.target.value })}>
-              <option value="">Pilih produk</option>
-              {products.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
-            </select>
+            <Select
+              items={transferProductOptions}
+              value={transferForm.productId}
+              onValueChange={(nextValue) => onChange({ ...transferForm, productId: String(nextValue) })}
+            >
+              <SelectTrigger className="admin-select w-full">
+                <SelectValue />
+                <SelectIcon>
+                  <SelectChevronUpDownIcon />
+                </SelectIcon>
+              </SelectTrigger>
+              <SelectPortal>
+                <SelectPositioner sideOffset={8}>
+                  <SelectPopup>
+                    <SelectScrollUpArrow />
+                    <SelectList>
+                      {transferProductOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <SelectItemIndicator>
+                            <SelectCheckIcon />
+                          </SelectItemIndicator>
+                          <SelectItemText>{option.label}</SelectItemText>
+                        </SelectItem>
+                      ))}
+                    </SelectList>
+                    <SelectScrollDownArrow />
+                  </SelectPopup>
+                </SelectPositioner>
+              </SelectPortal>
+            </Select>
             {transferForm.productId && selectedSourceWarehouse && (
               <span style={{ display: 'block', marginTop: 6, color: selectedSourceAvailable > 0 ? 'var(--admin-muted)' : 'var(--admin-danger)', fontSize: '.75rem', fontWeight: 700 }}>
                 Stok tersedia di gudang sumber: {formatQty(selectedSourceAvailable)}

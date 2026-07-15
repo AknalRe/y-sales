@@ -39,6 +39,24 @@ import {
 import { Spinner } from '@/components/ui';
 import { OutletMapPicker } from '../outlets/outlet-map-picker';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 type ToggleKey =
   | 'requireFaceForAttendance'
   | 'allowMultipleAttendanceSessionsPerDay'
@@ -326,6 +344,32 @@ export function OperationalSettingsPage() {
   const [activeSection, setActiveSection] = useState<SectionKey>('company');
   const [uploadingCompanyMedia, setUploadingCompanyMedia] = useState<'logo' | 'cover' | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+
+  const mapSearchProviderOptions = [
+    { value: 'osm', label: 'OpenStreetMap / Photon' },
+    { value: 'builtin_scraper', label: 'Built-in scraper / parser' },
+    { value: 'google_places', label: 'Google Places API resmi' },
+    { value: 'custom_http', label: 'Custom HTTP / compliant scraper' },
+  ];
+
+  const faceProviderOptions = [
+    { value: 'mock', label: 'Mock / internal test' },
+    { value: 'internal_python', label: 'Internal Python service' },
+    { value: 'custom_http', label: 'Custom HTTP' },
+    { value: 'aws_rekognition', label: 'AWS Rekognition' },
+    { value: 'azure_face', label: 'Azure Face' },
+    { value: 'google_vertex', label: 'Google Vertex' },
+  ];
+
+  const faceModeOptions = [
+    { value: 'verify', label: 'Verify' },
+    { value: 'detect_and_verify', label: 'Detect and verify' },
+  ];
+
+  const storageProviderOptions = [
+    { value: 'cloudflare_r2', label: 'Cloudflare R2' },
+    { value: 's3', label: 'S3 compatible' },
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -813,15 +857,36 @@ export function OperationalSettingsPage() {
               </label>
               <label className="settings-field">
                 <span>Provider pencarian</span>
-                <select
+                <Select
+                  items={mapSearchProviderOptions}
                   value={settings.mapSearchIntegration.provider}
-                  onChange={(e) => patchMapSearchIntegration('provider', e.target.value as GeneralSettings['mapSearchIntegration']['provider'])}
+                  onValueChange={(nextValue) => patchMapSearchIntegration('provider', nextValue as GeneralSettings['mapSearchIntegration']['provider'])}
                 >
-                  <option value="osm">OpenStreetMap / Photon</option>
-                  <option value="builtin_scraper">Built-in scraper / parser</option>
-                  <option value="google_places">Google Places API resmi</option>
-                  <option value="custom_http">Custom HTTP / compliant scraper</option>
-                </select>
+                  <SelectTrigger className="admin-select">
+                    <SelectValue />
+                    <SelectIcon>
+                      <SelectChevronUpDownIcon />
+                    </SelectIcon>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectPositioner sideOffset={8}>
+                      <SelectPopup>
+                        <SelectScrollUpArrow />
+                        <SelectList>
+                          {mapSearchProviderOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <SelectItemIndicator>
+                                <SelectCheckIcon />
+                              </SelectItemIndicator>
+                              <SelectItemText>{option.label}</SelectItemText>
+                            </SelectItem>
+                          ))}
+                        </SelectList>
+                        <SelectScrollDownArrow />
+                      </SelectPopup>
+                    </SelectPositioner>
+                  </SelectPortal>
+                </Select>
                 <small>Built-in membaca koordinat dari teks/link maps yang ditempel. Google Places membutuhkan billing/API key.</small>
               </label>
               <label className="settings-field">
@@ -881,27 +946,69 @@ export function OperationalSettingsPage() {
               </label>
               <label className="settings-field">
                 <span>Provider</span>
-                <select
+                <Select
+                  items={faceProviderOptions}
                   value={settings.faceIntegration.provider}
-                  onChange={(e) => patchFaceIntegration('provider', e.target.value as GeneralSettings['faceIntegration']['provider'])}
+                  onValueChange={(nextValue) => patchFaceIntegration('provider', nextValue as GeneralSettings['faceIntegration']['provider'])}
                 >
-                  <option value="mock">Mock / internal test</option>
-                  <option value="internal_python">Internal Python service</option>
-                  <option value="custom_http">Custom HTTP</option>
-                  <option value="aws_rekognition">AWS Rekognition</option>
-                  <option value="azure_face">Azure Face</option>
-                  <option value="google_vertex">Google Vertex</option>
-                </select>
+                  <SelectTrigger className="admin-select">
+                    <SelectValue />
+                    <SelectIcon>
+                      <SelectChevronUpDownIcon />
+                    </SelectIcon>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectPositioner sideOffset={8}>
+                      <SelectPopup>
+                        <SelectScrollUpArrow />
+                        <SelectList>
+                          {faceProviderOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <SelectItemIndicator>
+                                <SelectCheckIcon />
+                              </SelectItemIndicator>
+                              <SelectItemText>{option.label}</SelectItemText>
+                            </SelectItem>
+                          ))}
+                        </SelectList>
+                        <SelectScrollDownArrow />
+                      </SelectPopup>
+                    </SelectPositioner>
+                  </SelectPortal>
+                </Select>
               </label>
               <label className="settings-field">
                 <span>Mode</span>
-                <select
+                <Select
+                  items={faceModeOptions}
                   value={settings.faceIntegration.mode}
-                  onChange={(e) => patchFaceIntegration('mode', e.target.value as GeneralSettings['faceIntegration']['mode'])}
+                  onValueChange={(nextValue) => patchFaceIntegration('mode', nextValue as GeneralSettings['faceIntegration']['mode'])}
                 >
-                  <option value="verify">Verify</option>
-                  <option value="detect_and_verify">Detect and verify</option>
-                </select>
+                  <SelectTrigger className="admin-select">
+                    <SelectValue />
+                    <SelectIcon>
+                      <SelectChevronUpDownIcon />
+                    </SelectIcon>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectPositioner sideOffset={8}>
+                      <SelectPopup>
+                        <SelectScrollUpArrow />
+                        <SelectList>
+                          {faceModeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <SelectItemIndicator>
+                                <SelectCheckIcon />
+                              </SelectItemIndicator>
+                              <SelectItemText>{option.label}</SelectItemText>
+                            </SelectItem>
+                          ))}
+                        </SelectList>
+                        <SelectScrollDownArrow />
+                      </SelectPopup>
+                    </SelectPositioner>
+                  </SelectPortal>
+                </Select>
               </label>
               <label className="settings-field wide">
                 <span>Base URL</span>
@@ -947,10 +1054,36 @@ export function OperationalSettingsPage() {
               </label>
               <label className="settings-field">
                 <span>Provider</span>
-                <select value={storageForm.provider} onChange={(e) => patchStorage('provider', e.target.value as StorageForm['provider'])}>
-                  <option value="cloudflare_r2">Cloudflare R2</option>
-                  <option value="s3">S3 compatible</option>
-                </select>
+                <Select
+                  items={storageProviderOptions}
+                  value={storageForm.provider}
+                  onValueChange={(nextValue) => patchStorage('provider', nextValue as StorageForm['provider'])}
+                >
+                  <SelectTrigger className="admin-select">
+                    <SelectValue />
+                    <SelectIcon>
+                      <SelectChevronUpDownIcon />
+                    </SelectIcon>
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectPositioner sideOffset={8}>
+                      <SelectPopup>
+                        <SelectScrollUpArrow />
+                        <SelectList>
+                          {storageProviderOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <SelectItemIndicator>
+                                <SelectCheckIcon />
+                              </SelectItemIndicator>
+                              <SelectItemText>{option.label}</SelectItemText>
+                            </SelectItem>
+                          ))}
+                        </SelectList>
+                        <SelectScrollDownArrow />
+                      </SelectPopup>
+                    </SelectPositioner>
+                  </SelectPortal>
+                </Select>
               </label>
               <label className="settings-field">
                 <span>Nama integrasi</span>

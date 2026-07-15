@@ -15,6 +15,24 @@ import {
 } from '@/lib/api/tenant';
 import { OutletMapPicker } from './outlet-map-picker';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 type OutletForm = {
   code: string;
   name: string;
@@ -102,6 +120,15 @@ export function OutletsPage() {
   const [resolvingAddress, setResolvingAddress] = useState(false);
   const reverseRequestId = useRef(0);
   const canApproveOutlet = Boolean(user?.isSuperAdmin || ['ADMINISTRATOR', 'OWNER', 'OPERATIONAL_MANAGER'].includes(user?.roleCode ?? ''));
+
+  const statusFilterOptions = [
+    { value: '', label: 'Semua status' },
+    { value: 'pending_verification', label: 'Menunggu Verifikasi' },
+    { value: 'active', label: 'Aktif' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'rejected', label: 'Ditolak' },
+    { value: 'inactive', label: 'Nonaktif' },
+  ];
 
   async function load() {
     if (!accessToken) return;
@@ -335,14 +362,36 @@ export function OutletsPage() {
               </button>
             ) : null}
           </div>
-          <select className="admin-select w-full h-[42px]" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            <option value="">Semua status</option>
-            <option value="pending_verification">Menunggu Verifikasi</option>
-            <option value="active">Aktif</option>
-            <option value="draft">Draft</option>
-            <option value="rejected">Ditolak</option>
-            <option value="inactive">Nonaktif</option>
-          </select>
+          <Select
+            items={statusFilterOptions}
+            value={statusFilter}
+            onValueChange={(nextValue) => setStatusFilter(String(nextValue))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {statusFilterOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
           <button className="admin-btn-ghost justify-center h-[42px]" type="button" onClick={() => { setSearch(''); setStatusFilter(''); }}>
             Reset Filter
           </button>

@@ -36,6 +36,24 @@ import {
 import { EmptyState } from '@/components/ui';
 import { FaceCaptureField } from '../shared/face-capture-field';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 type SalesAccount = TenantUser;
 
 const statusIcon = {
@@ -164,6 +182,19 @@ export function SalesAccountsPage() {
   const activeFaceTemplateByUser = useMemo(() => {
     return new Map(faceTemplates.filter((template) => template.status === 'active').map((template) => [template.userId, template]));
   }, [faceTemplates]);
+
+  const salesCategoryOptions = [
+    { value: '', label: 'Semua Kategori' },
+    { value: 'motoris', label: 'Motoris' },
+    { value: 'dropping', label: 'Dropping' },
+  ];
+
+  const statusOptions = [
+    { value: '', label: 'Semua Status' },
+    { value: 'active', label: 'Aktif' },
+    { value: 'inactive', label: 'Nonaktif' },
+    { value: 'suspended', label: 'Suspended' },
+  ];
 
   async function load() {
     if (!accessToken) return;
@@ -470,17 +501,66 @@ export function SalesAccountsPage() {
             </button>
           ) : null}
         </div>
-        <select value={salesCategoryFilter} onChange={(event) => setSalesCategoryFilter(event.target.value)} className="admin-select w-full h-[42px]">
-          <option value="">Semua Kategori</option>
-          <option value="motoris">Motoris</option>
-          <option value="dropping">Dropping</option>
-        </select>
-        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="admin-select w-full h-[42px]">
-          <option value="">Semua Status</option>
-          <option value="active">Aktif</option>
-          <option value="inactive">Nonaktif</option>
-          <option value="suspended">Suspended</option>
-        </select>
+          <Select
+            items={salesCategoryOptions}
+            value={salesCategoryFilter}
+            onValueChange={(nextValue) => setSalesCategoryFilter(String(nextValue))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {salesCategoryOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
+          <Select
+            items={statusOptions}
+            value={statusFilter}
+            onValueChange={(nextValue) => setStatusFilter(String(nextValue))}
+          >
+            <SelectTrigger className="admin-select w-full h-[42px]">
+              <SelectValue />
+              <SelectIcon>
+                <SelectChevronUpDownIcon />
+              </SelectIcon>
+            </SelectTrigger>
+            <SelectPortal>
+              <SelectPositioner sideOffset={8}>
+                <SelectPopup>
+                  <SelectScrollUpArrow />
+                  <SelectList>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <SelectItemIndicator>
+                          <SelectCheckIcon />
+                        </SelectItemIndicator>
+                        <SelectItemText>{option.label}</SelectItemText>
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                  <SelectScrollDownArrow />
+                </SelectPopup>
+              </SelectPositioner>
+            </SelectPortal>
+          </Select>
       </div>
 
       <div className="admin-table-card">

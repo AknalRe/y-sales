@@ -5,6 +5,24 @@ import { useAuth } from '../../auth/auth-provider';
 import { getSalesTransactions, getTenantUsers, getReportSummary, type SalesTransaction, type TenantUser, type ReportSummary } from '@/lib/api/tenant';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectIcon,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectList,
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  SelectScrollUpArrow,
+  SelectScrollDownArrow,
+  SelectChevronUpDownIcon,
+  SelectCheckIcon,
+} from '@/components/ui-composed/module/select-field';
+
 const statusLabel: Record<string, string> = {
   draft: 'Draft', submitted: 'Submitted', pending_approval: 'Pending',
   approved: 'Approved', validated: 'Validated', rejected: 'Rejected',
@@ -103,6 +121,17 @@ export function ReportsPage() {
   const [salesFilter, setSalesFilter] = useState('');
   const [salesCategoryFilter, setSalesCategoryFilter] = useState<'all' | 'motoris' | 'dropping'>('all');
   const [kpiTab, setKpiTab] = useState<'penjualan' | 'kunjungan'>('penjualan');
+
+  const salesCategoryOptions = [
+    { value: 'all', label: 'Semua Kategori Sales' },
+    { value: 'motoris', label: 'Sales Motoris' },
+    { value: 'dropping', label: 'Sales Dropping' },
+  ];
+
+  const statusOptions = [
+    { value: '', label: 'Semua Status' },
+    ...Object.entries(statusLabel).map(([value, label]) => ({ value, label })),
+  ];
 
   async function load() {
     if (!accessToken) return;
@@ -343,19 +372,102 @@ export function ReportsPage() {
               <input type="date" value={to} onChange={e => setTo(e.target.value)} className="admin-input" />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <select value={salesCategoryFilter} onChange={e => { setSalesCategoryFilter(e.target.value as any); setSalesFilter(''); }} className="admin-select">
-                <option value="all">Semua Kategori Sales</option>
-                <option value="motoris">Sales Motoris</option>
-                <option value="dropping">Sales Dropping</option>
-              </select>
-              <select value={salesFilter} onChange={e => setSalesFilter(e.target.value)} className="admin-select">
-                <option value="">Semua Sales</option>
-                {users.filter(u => u.status === 'active' && (salesCategoryFilter === 'all' || u.salesCategory === salesCategoryFilter)).map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-              </select>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="admin-select">
-                <option value="">Semua Status</option>
-                {Object.entries(statusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
+              <Select
+                items={salesCategoryOptions}
+                value={salesCategoryFilter}
+                onValueChange={(nextValue) => { setSalesCategoryFilter(nextValue as 'all' | 'motoris' | 'dropping'); setSalesFilter(''); }}
+              >
+                <SelectTrigger className="admin-select">
+                  <SelectValue />
+                  <SelectIcon>
+                    <SelectChevronUpDownIcon />
+                  </SelectIcon>
+                </SelectTrigger>
+                <SelectPortal>
+                  <SelectPositioner sideOffset={8}>
+                    <SelectPopup>
+                      <SelectScrollUpArrow />
+                      <SelectList>
+                        {salesCategoryOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <SelectItemIndicator>
+                              <SelectCheckIcon />
+                            </SelectItemIndicator>
+                            <SelectItemText>{option.label}</SelectItemText>
+                          </SelectItem>
+                        ))}
+                      </SelectList>
+                      <SelectScrollDownArrow />
+                    </SelectPopup>
+                  </SelectPositioner>
+                </SelectPortal>
+              </Select>
+              <Select
+                items={[
+                  { value: '', label: 'Semua Sales' },
+                  ...users.filter(u => u.status === 'active' && (salesCategoryFilter === 'all' || u.salesCategory === salesCategoryFilter)).map(u => ({ value: u.id, label: u.name })),
+                ]}
+                value={salesFilter}
+                onValueChange={(nextValue) => setSalesFilter(String(nextValue))}
+              >
+                <SelectTrigger className="admin-select">
+                  <SelectValue />
+                  <SelectIcon>
+                    <SelectChevronUpDownIcon />
+                  </SelectIcon>
+                </SelectTrigger>
+                <SelectPortal>
+                  <SelectPositioner sideOffset={8}>
+                    <SelectPopup>
+                      <SelectScrollUpArrow />
+                      <SelectList>
+                        {[
+                          { value: '', label: 'Semua Sales' },
+                          ...users.filter(u => u.status === 'active' && (salesCategoryFilter === 'all' || u.salesCategory === salesCategoryFilter)).map(u => ({ value: u.id, label: u.name })),
+                        ].map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <SelectItemIndicator>
+                              <SelectCheckIcon />
+                            </SelectItemIndicator>
+                            <SelectItemText>{option.label}</SelectItemText>
+                          </SelectItem>
+                        ))}
+                      </SelectList>
+                      <SelectScrollDownArrow />
+                    </SelectPopup>
+                  </SelectPositioner>
+                </SelectPortal>
+              </Select>
+              <Select
+                items={statusOptions}
+                value={statusFilter}
+                onValueChange={(nextValue) => setStatusFilter(String(nextValue))}
+              >
+                <SelectTrigger className="admin-select">
+                  <SelectValue />
+                  <SelectIcon>
+                    <SelectChevronUpDownIcon />
+                  </SelectIcon>
+                </SelectTrigger>
+                <SelectPortal>
+                  <SelectPositioner sideOffset={8}>
+                    <SelectPopup>
+                      <SelectScrollUpArrow />
+                      <SelectList>
+                        {statusOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <SelectItemIndicator>
+                              <SelectCheckIcon />
+                            </SelectItemIndicator>
+                            <SelectItemText>{option.label}</SelectItemText>
+                          </SelectItem>
+                        ))}
+                      </SelectList>
+                      <SelectScrollDownArrow />
+                    </SelectPopup>
+                  </SelectPositioner>
+                </SelectPortal>
+              </Select>
               <span className="admin-count-badge">{filteredTransactions.length} transaksi</span>
             </div>
           </div>

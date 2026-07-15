@@ -1,188 +1,203 @@
-const lightColors = [
-    { label: 'Background', cssVar: '--admin-bg', tailwind: 'bg-admin-bg' },
-    { label: 'Surface', cssVar: '--admin-surface', tailwind: 'bg-admin-surface' },
-    { label: 'Card', cssVar: '--admin-bg-card', tailwind: 'bg-admin-bg-card' },
-    { label: 'Surface Hover', cssVar: '--admin-surface-hover', tailwind: 'bg-admin-surface-hover' },
-    { label: 'Border', cssVar: '--admin-border', tailwind: 'border-admin-border' },
-    { label: 'Border Strong', cssVar: '--admin-border-strong', tailwind: 'border-admin-border-strong' },
-    { label: 'Border Subtle', cssVar: '--admin-border-subtle', tailwind: 'border-admin-border-subtle' },
-    { label: 'Foreground', cssVar: '--admin-foreground', tailwind: 'text-admin-foreground' },
-    { label: 'Text', cssVar: '--admin-text', tailwind: 'text-admin-text' },
-    { label: 'Muted', cssVar: '--admin-muted', tailwind: 'text-admin-muted' },
-    { label: 'Muted Dim', cssVar: '--admin-muted-dim', tailwind: 'text-admin-muted-dim' },
-    { label: 'Subtle', cssVar: '--admin-subtle', tailwind: 'text-admin-subtle' },
-];
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Info } from 'lucide-react';
+import { type AdminToken, type ColorFormats, deriveFormats, extractColor } from '@/lib/color';
+import {
+    Tooltip,
+    TooltipProvider,
+    TooltipTrigger,
+    TooltipPortal,
+    TooltipPositioner,
+    TooltipPopup,
+} from '@/components/ui-composed/module/tooltip';
 
-const accentColors = [
-    { label: 'Accent', cssVar: '--admin-accent', twBg: 'bg-admin-accent', twText: 'text-admin-accent' },
-    { label: 'Accent Hover', cssVar: '--admin-accent-hover', twBg: 'bg-admin-accent-hover', twText: 'text-admin-accent-hover' },
-    { label: 'Accent Light', cssVar: '--admin-accent-light', twBg: 'bg-admin-accent-light', twText: 'text-admin-accent-light' },
-    { label: 'Accent Shadow', cssVar: '--admin-accent-shadow', twBg: 'bg-admin-accent-shadow', twText: 'text-admin-accent-shadow' },
-    { label: 'Teal', cssVar: '--admin-accent-teal', twBg: 'bg-admin-accent-teal', twText: 'text-admin-accent-teal' },
-    { label: 'Teal Light', cssVar: '--admin-accent-teal-light', twBg: 'bg-admin-accent-teal-light', twText: 'text-admin-accent-teal-light' },
-    { label: 'Teal BG', cssVar: '--admin-accent-teal-bg', twBg: 'bg-admin-accent-teal-bg', twText: 'text-admin-accent-teal' },
-    { label: 'Blue', cssVar: '--admin-accent-blue', twBg: 'bg-admin-accent-blue', twText: 'text-admin-accent-blue' },
-];
+const PREFIX = '--admin-';
 
-const statusColors = [
-    { label: 'Danger', cssVar: '--admin-danger', twBg: 'bg-admin-danger', twText: 'text-admin-danger' },
-    { label: 'Danger Light', cssVar: '--admin-danger-light', twBg: 'bg-admin-danger-light', twText: 'text-admin-danger-light' },
-    { label: 'Danger BG', cssVar: '--admin-danger-bg', twBg: 'bg-admin-danger-bg', twText: 'text-admin-danger' },
-    { label: 'Danger Soft', cssVar: '--admin-danger-soft', twBg: 'bg-admin-danger-soft', twText: 'text-admin-danger' },
-    { label: 'Success', cssVar: '--admin-success', twBg: 'bg-admin-success', twText: 'text-admin-success' },
-    { label: 'Success Soft', cssVar: '--admin-success-soft', twBg: 'bg-admin-success-soft', twText: 'text-admin-success' },
-];
+type TokenDecl = { name: string; value: string; section: string };
 
-const shadowTokens = [
-    { label: 'Shadow SM', tw: 'shadow-admin-shadow-sm' },
-    { label: 'Shadow LG', tw: 'shadow-admin-shadow-lg' },
-    { label: 'Shadow XL', tw: 'shadow-admin-shadow-xl' },
-    { label: 'Shadow 2XL', tw: 'shadow-admin-shadow-2xl' },
-    { label: 'Shadow Card', tw: 'shadow-admin-shadow-card' },
-    { label: 'Shadow Dropdown', tw: 'shadow-admin-shadow-dropdown' },
-];
+const rawModules = import.meta.glob('../../../assets/css/palete-color-admin.css', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+}) as Record<string, string>;
+const RAW = Object.values(rawModules)[0] ?? '';
 
-function Swatch({ bg, label, cssVar, tailwind, dark }: { bg?: string; label: string; cssVar: string; tailwind: string; dark?: boolean }) {
+function cleanSection(raw: string): string {
+    let s = raw.replace(/[─\s]+/g, ' ').trim();
+    s = s.replace(/\(.*?\)/g, '').trim();
+    s = s.replace(/\s*—\s*(light|dark)\s*mode.*$/i, '').trim();
+    return s || 'General';
+}
+
+function isShadowValue(value: string): boolean {
+    return /\d(px|rem|em|%|vh|vw)/.test(value);
+}
+
+function extractDecls(block: string): TokenDecl[] {
+    const result: TokenDecl[] = [];
+    let section = 'General';
+    const re = /\/\*([^*]+?)\*\/|--(admin-[\w-]+)\s*:\s*([^;]+);/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(block))) {
+        if (m[1] !== undefined) {
+            section = cleanSection(m[1]);
+        } else {
+            result.push({ name: '--' + m[2], value: m[3].trim(), section });
+        }
+    }
+    return result;
+}
+
+function buildTokens(raw: string): AdminToken[] {
+    const rootBlock = raw.match(/:root\s*\{([^}]*)\}/)?.[1] ?? '';
+    const darkBlock = raw.match(/\.dark\s*\{([^}]*)\}/)?.[1] ?? '';
+    const darkMap: Record<string, string> = {};
+    const dre = /--(admin-[\w-]+)\s*:\s*([^;]+);/g;
+    let dm: RegExpExecArray | null;
+    while ((dm = dre.exec(darkBlock))) darkMap['--' + dm[1]] = dm[2].trim();
+
+    return extractDecls(rootBlock).map((d) => {
+        const base = d.name.slice(PREFIX.length);
+        return {
+            ...d,
+            base,
+            kind: isShadowValue(d.value) ? 'shadow' : 'color',
+            darkValue: darkMap[d.name] ?? d.value,
+        };
+    });
+}
+
+function groupBySection(tokens: AdminToken[]): { title: string; items: AdminToken[] }[] {
+    const order: string[] = [];
+    const map: Record<string, AdminToken[]> = {};
+    for (const t of tokens) {
+        if (!map[t.section]) {
+            map[t.section] = [];
+            order.push(t.section);
+        }
+        map[t.section].push(t);
+    }
+    return order.map((title) => ({ title, items: map[title] }));
+}
+
+const GROUPS = RAW ? groupBySection(buildTokens(RAW)) : [];
+
+/** Mirror the global theme (navbar toggle) by observing the `.dark` class on <html>. */
+function useGlobalDark(): boolean {
+    const [isDark, setIsDark] = useState(
+        () => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
+    );
+    useEffect(() => {
+        const el = document.documentElement;
+        const observer = new MutationObserver(() => setIsDark(el.classList.contains('dark')));
+        observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+        return () => observer.disconnect();
+    }, []);
+    return isDark;
+}
+
+function Swatch({ token, dark }: { token: AdminToken; dark: boolean }) {
+    const utility = token.kind === 'shadow' ? `shadow-admin-${token.base}` : `bg-admin-${token.base}`;
+    // Box uses the token's CSS variable directly, so it auto-follows the global Light/Dark theme.
+    const boxClass = `h-10 w-10 shrink-0 rounded-xl ${token.kind === 'shadow' ? 'bg-white' : ''} ring-1 ring-black/10`;
+    const boxStyle =
+        token.kind === 'shadow'
+            ? { boxShadow: `var(${token.name})` }
+            : { background: `var(${token.name})` };
+
+    const boxRef = useRef<HTMLDivElement>(null);
+    const [formats, setFormats] = useState<ColorFormats>();
+
+    useEffect(() => {
+        const el = boxRef.current;
+        if (!el) return;
+        const cs = getComputedStyle(el);
+        const color = token.kind === 'shadow' ? extractColor(cs.boxShadow) || `var(${token.name})` : cs.backgroundColor;
+        setFormats(deriveFormats(color));
+    }, [dark, token]);
+
     return (
         <div className="flex items-center gap-3">
-            <div
-                className={`h-10 w-10 shrink-0 rounded-xl border border-admin-border ${bg ?? ''}`}
-                style={dark ? { background: `var(${cssVar})` } : undefined}
-            />
-            <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-admin-foreground">{label}</p>
-                <p className="truncate text-xs text-admin-muted">{cssVar}</p>
-                <p className="truncate font-mono text-[11px] text-admin-accent">{tailwind}</p>
+            <div ref={boxRef} className={boxClass} style={boxStyle} />
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                    <p className="truncate text-sm font-bold text-admin-foreground">{token.name}</p>
+                    {formats && (
+                        <Tooltip>
+                            <TooltipTrigger
+                                aria-label="Lihat format warna"
+                                className="shrink-0 rounded-md p-0.5 text-admin-muted hover:bg-admin-surface-hover hover:text-admin-foreground"
+                            >
+                                <Info className="h-3.5 w-3.5" />
+                            </TooltipTrigger>
+                            <TooltipPortal>
+                                <TooltipPositioner sideOffset={8}>
+                                    <TooltipPopup
+                                        className="font-mono text-xs"
+                                        style={{
+                                            backgroundColor: 'var(--admin-bg-card)',
+                                            color: 'var(--admin-foreground)',
+                                            border: '1px solid var(--admin-border-strong)',
+                                            boxShadow: '0 12px 24px -6px rgba(15, 23, 42, 0.28)',
+                                        }}
+                                    >
+                                        <p className="text-admin-muted">hex&nbsp;&nbsp;&nbsp;{formats.hex}</p>
+                                        <p className="text-admin-muted">rgb&nbsp;&nbsp;&nbsp;{formats.rgb}</p>
+                                        <p className="text-admin-muted">oklch&nbsp;{formats.oklch}</p>
+                                    </TooltipPopup>
+                                </TooltipPositioner>
+                            </TooltipPortal>
+                        </Tooltip>
+                    )}
+                </div>
+                <p className="truncate font-mono text-[11px] text-admin-accent">{utility}</p>
+                <p className="mt-0.5 truncate font-mono text-[10px] text-admin-muted">raw&nbsp;&nbsp;{token.value}</p>
             </div>
         </div>
     );
 }
 
 export default function SamplePage() {
+    const dark = useGlobalDark();
+    const groups = useMemo(() => GROUPS, []);
+
     return (
-        <div className="space-y-8 p-6">
-            <div>
-                <h1 className="text-2xl font-black text-admin-foreground">Admin Palette</h1>
-                <p className="mt-1 text-sm text-admin-muted">
-                    Semua warna admin tersedia sebagai Tailwind utility: <code className="rounded bg-admin-surface px-1.5 py-0.5 font-mono text-xs text-admin-accent">bg-admin-accent</code>,{' '}
-                    <code className="rounded bg-admin-surface px-1.5 py-0.5 font-mono text-xs text-admin-accent">text-admin-foreground</code>,{' '}
-                    <code className="rounded bg-admin-surface px-1.5 py-0.5 font-mono text-xs text-admin-accent">border-admin-border</code>, dll.
-                </p>
+        <TooltipProvider>
+            <div className="space-y-8 p-6">
+                <div>
+                    <h1 className="text-2xl font-black text-admin-foreground">Admin Palette</h1>
+                    <p className="mt-1 max-w-2xl text-sm text-admin-muted">
+                        Katalog token dibaca otomatis dari{' '}
+                        <code className="rounded bg-admin-surface px-1.5 py-0.5 font-mono text-xs text-admin-accent">
+                            palete-color-admin.css
+                        </code>{' '}
+                        via <code className="rounded bg-admin-surface px-1.5 py-0.5 font-mono text-xs text-admin-accent">import.meta.glob</code>.
+                        Tiap warna otomatis mengikuti tema Light/Dark global dari navbar (swatch memakai
+                        variabel CSS token, bukan nilai statis).
+                        Tambah/hapus <code className="rounded bg-admin-surface px-1.5 py-0.5 font-mono text-xs text-admin-accent">--admin-*</code> di
+                        palette, tampilan langsung sinkron (HMR / refresh).
+                    </p>
+                </div>
+
+                {groups.length === 0 ? (
+                    <div className="admin-card text-sm text-admin-muted">
+                        Palette source (<code className="font-mono text-admin-accent">palete-color-admin.css</code>) tidak
+                        terbaca — periksa import <code className="font-mono text-admin-accent">import.meta.glob</code>.
+                    </div>
+                ) : (
+                    <div className={dark ? 'dark space-y-8' : 'space-y-8'}>
+                        {groups.map((g) => (
+                            <section key={g.title} className="admin-card">
+                                <h2 className="mb-4 text-lg font-black text-admin-foreground">{g.title}</h2>
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {g.items.map((t) => (
+                                        <Swatch key={t.name} token={t} dark={dark} />
+                                    ))}
+                                </div>
+                            </section>
+                        ))}
+                    </div>
+                )}
             </div>
-
-            {/* Surface & Neutral */}
-            <section className="admin-card">
-                <h2 className="mb-4 text-lg font-black text-admin-foreground">Surface & Neutral</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {lightColors.map((c) => (
-                        <Swatch key={c.cssVar} label={c.label} cssVar={c.cssVar} tailwind={c.tailwind} />
-                    ))}
-                </div>
-            </section>
-
-            {/* Accent & Brand */}
-            <section className="admin-card">
-                <h2 className="mb-4 text-lg font-black text-admin-foreground">Accent & Brand</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {accentColors.map((c) => (
-                        <div key={c.cssVar} className="flex items-center gap-3">
-                            <div className={`h-10 w-10 shrink-0 rounded-xl ${c.twBg}`} />
-                            <div className="min-w-0">
-                                <p className="truncate text-sm font-bold text-admin-foreground">{c.label}</p>
-                                <p className="truncate text-xs text-admin-muted">{c.cssVar}</p>
-                                <p className="truncate font-mono text-[11px] text-admin-accent">{c.twBg}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Status */}
-            <section className="admin-card">
-                <h2 className="mb-4 text-lg font-black text-admin-foreground">Status</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {statusColors.map((c) => (
-                        <div key={c.cssVar} className="flex items-center gap-3">
-                            <div className={`h-10 w-10 shrink-0 rounded-xl ${c.twBg}`} />
-                            <div className="min-w-0">
-                                <p className="truncate text-sm font-bold text-admin-foreground">{c.label}</p>
-                                <p className="truncate text-xs text-admin-muted">{c.cssVar}</p>
-                                <p className="truncate font-mono text-[11px] text-admin-accent">{c.twBg}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Shadows */}
-            <section className="admin-card">
-                <h2 className="mb-4 text-lg font-black text-admin-foreground">Shadows</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {shadowTokens.map((s) => (
-                        <div key={s.tw} className="flex items-center gap-3">
-                            <div className={`h-14 w-14 shrink-0 rounded-xl bg-admin-surface ${s.tw}`} />
-                            <div className="min-w-0">
-                                <p className="truncate text-sm font-bold text-admin-foreground">{s.label}</p>
-                                <p className="truncate font-mono text-[11px] text-admin-accent">{s.tw}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Buttons */}
-            <section className="admin-card">
-                <h2 className="mb-4 text-lg font-black text-admin-foreground">Buttons (Tailwind)</h2>
-                <div className="flex flex-wrap gap-3">
-                    <button className="rounded-2xl bg-admin-accent px-5 py-2.5 text-sm font-bold text-white transition hover:bg-admin-accent-hover">
-                        Primary
-                    </button>
-                    <button className="rounded-2xl border border-admin-border bg-admin-surface px-5 py-2.5 text-sm font-bold text-admin-foreground transition hover:border-admin-border-strong hover:bg-admin-surface-hover">
-                        Secondary
-                    </button>
-                    <button className="rounded-2xl bg-admin-danger px-5 py-2.5 text-sm font-bold text-white transition hover:bg-admin-danger-light">
-                        Danger
-                    </button>
-                    <button className="rounded-2xl bg-admin-success/20 px-5 py-2.5 text-sm font-bold text-admin-success transition hover:bg-admin-success/30">
-                        Success Soft
-                    </button>
-                    <button className="rounded-2xl border border-admin-accent/30 bg-admin-accent-shadow px-5 py-2.5 text-sm font-bold text-admin-accent transition hover:border-admin-accent/50">
-                        Accent Soft
-                    </button>
-                </div>
-            </section>
-
-            {/* Cards */}
-            <section className="admin-card">
-                <h2 className="mb-4 text-lg font-black text-admin-foreground">Card Surfaces</h2>
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-admin-border bg-admin-bg-card p-4">
-                        <p className="text-sm font-bold text-admin-foreground">bg-admin-bg-card</p>
-                        <p className="text-xs text-admin-muted">border-admin-border</p>
-                    </div>
-                    <div className="rounded-2xl border border-admin-border bg-admin-surface p-4">
-                        <p className="text-sm font-bold text-admin-foreground">bg-admin-surface</p>
-                        <p className="text-xs text-admin-muted">Surface</p>
-                    </div>
-                    <div className="rounded-2xl border border-admin-border-subtle bg-admin-bg p-4">
-                        <p className="text-sm font-bold text-admin-foreground">bg-admin-bg</p>
-                        <p className="text-xs text-admin-muted">border-admin-border-subtle</p>
-                    </div>
-                </div>
-            </section>
-
-            {/* Typography */}
-            <section className="admin-card">
-                <h2 className="mb-4 text-lg font-black text-admin-foreground">Typography</h2>
-                <div className="space-y-2">
-                    <p className="text-lg font-black text-admin-foreground">text-admin-foreground — Headings</p>
-                    <p className="text-sm font-bold text-admin-text">text-admin-text — Body text</p>
-                    <p className="text-sm font-medium text-admin-muted">text-admin-muted — Secondary labels</p>
-                    <p className="text-sm text-admin-muted-dim">text-admin-muted-dim — Tertiary</p>
-                    <p className="text-sm text-admin-subtle">text-admin-subtle — Very subtle</p>
-                    <p className="font-mono text-sm text-admin-accent">text-admin-accent — Code & highlights</p>
-                </div>
-            </section>
-        </div>
+        </TooltipProvider>
     );
 }

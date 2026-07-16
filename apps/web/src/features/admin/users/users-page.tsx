@@ -487,7 +487,7 @@ export function UsersPage() {
       <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) setShowCreate(false); }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent>
+          <AdminDialogContent className="admin-page">
             <AdminDialogHeader>
               <AdminDialogTitle>Tambah User Baru</AdminDialogTitle>
               <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
@@ -579,7 +579,7 @@ export function UsersPage() {
                     />
                     <button
                       type="button"
-                      className="admin-btn-icon-sm absolute right-3 top-1/2 -translate-y-1/2"
+                      className="admin-btn-icon-sm"
                       title="Generate kode karyawan"
                       disabled={!form.roleId || generatingCode}
                       onClick={() => handleGenerateEmployeeCode('create')}
@@ -632,7 +632,7 @@ export function UsersPage() {
       <AdminDialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent>
+          <AdminDialogContent className="admin-page">
             <AdminDialogHeader>
               <div>
                 <AdminDialogTitle>Edit User</AdminDialogTitle>
@@ -724,7 +724,7 @@ export function UsersPage() {
                     />
                     <button
                       type="button"
-                      className="admin-btn-icon-sm absolute right-3 top-1/2 -translate-y-1/2"
+                      className="admin-btn-icon-sm"
                       title="Generate kode karyawan"
                       disabled={!editForm.roleId || generatingCode}
                       onClick={() => handleGenerateEmployeeCode('edit')}
@@ -797,7 +797,7 @@ export function UsersPage() {
       <AdminDialog open={!!resetTarget} onOpenChange={(open) => { if (!open) setResetTarget(null); }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="sm">
+          <AdminDialogContent size="sm" className="admin-page">
             <AdminDialogHeader>
               <AdminDialogTitle>Reset Password</AdminDialogTitle>
               <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
@@ -848,7 +848,7 @@ export function UsersPage() {
       <AdminDialog open={!!faceTarget} onOpenChange={(open) => { if (!open) setFaceTarget(null); }} disablePointerDismissal={faceSaving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="sm">
+          <AdminDialogContent size="sm" className="admin-page">
             <AdminDialogHeader>
               <div>
                 <AdminDialogTitle>Data Wajah User</AdminDialogTitle>

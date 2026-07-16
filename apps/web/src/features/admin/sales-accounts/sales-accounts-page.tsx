@@ -668,7 +668,7 @@ export function SalesAccountsPage() {
       <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) setShowCreate(false); }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent>
+          <AdminDialogContent className="admin-page">
             <AdminDialogHeader>
               <div>
                 <AdminDialogTitle>Tambah Sales</AdminDialogTitle>
@@ -746,7 +746,7 @@ export function SalesAccountsPage() {
       <AdminDialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent>
+          <AdminDialogContent className="admin-page">
             <AdminDialogHeader>
               <div>
                 <AdminDialogTitle>Edit Sales</AdminDialogTitle>
@@ -864,7 +864,7 @@ export function SalesAccountsPage() {
       <AdminDialog open={!!selectedSales} onOpenChange={(open) => { if (!open) setSelectedSales(null); }}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="sm">
+          <AdminDialogContent size="sm" className="admin-page">
             <AdminDialogHeader>
               <AdminDialogTitle>Detail Akun Sales</AdminDialogTitle>
               <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
@@ -907,7 +907,7 @@ export function SalesAccountsPage() {
       <AdminDialog open={!!faceTarget} onOpenChange={(open) => { if (!open) setFaceTarget(null); }} disablePointerDismissal={faceSaving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="sm">
+          <AdminDialogContent size="sm" className="admin-page">
             <AdminDialogHeader>
               <div>
                 <AdminDialogTitle>Data Wajah Sales</AdminDialogTitle>
@@ -950,7 +950,7 @@ export function SalesAccountsPage() {
       <AdminDialog open={!!resetTarget} onOpenChange={(open) => { if (!open) setResetTarget(null); }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="sm">
+          <AdminDialogContent size="sm" className="admin-page">
             <AdminDialogHeader>
               <AdminDialogTitle>Reset Password</AdminDialogTitle>
               <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
@@ -1081,7 +1081,7 @@ function EmployeeCodeField(props: {
         />
         <button
           type="button"
-          className="admin-btn-icon-sm absolute right-3 top-1/2 -translate-y-1/2"
+          className="admin-btn-icon-sm"
           title="Generate kode karyawan"
           disabled={!props.roleId || props.disabled}
           onClick={props.onGenerate}

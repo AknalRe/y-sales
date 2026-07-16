@@ -505,7 +505,7 @@ export function InvoiceReviewPage() {
       <AdminDialog open={!!rejectModal} onOpenChange={(open) => { if (!open) { setRejectModal(null); setRejectReason(''); } }} disablePointerDismissal={saving === rejectModal?.id}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="default">
+          <AdminDialogContent size="default" className="admin-page">
             <AdminDialogHeader>
               <AdminDialogTitle>Tolak Nota</AdminDialogTitle>
               <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
@@ -548,7 +548,7 @@ export function InvoiceReviewPage() {
       <AdminDialog open={!!viewPhoto} onOpenChange={(open) => { if (!open) setViewPhoto(null); }}>
         <AdminDialogPortal>
           <AdminDialogBackdrop style={{ backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.8)', zIndex: 1000 }} />
-          <AdminDialogContent size="default" style={{ background: 'transparent', boxShadow: 'none', maxWidth: '90vw', maxHeight: '90vh', padding: 0, border: 'none' }} className="relative !overflow-visible">
+          <AdminDialogContent size="default" style={{ background: 'transparent', boxShadow: 'none', maxWidth: '90vw', maxHeight: '90vh', padding: 0, border: 'none' }} className="admin-page relative !overflow-visible">
             <button
               onClick={() => setViewPhoto(null)}
               className="absolute bg-admin-surface border-none rounded-full flex items-center justify-center text-admin-foreground cursor-pointer"

@@ -500,7 +500,7 @@ export function SalesSchedulePage() {
       >
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent>
+          <AdminDialogContent className="admin-page">
             <AdminDialogHeader>
               <div>
                 <AdminDialogTitle>Buat Jadwal Sales</AdminDialogTitle>

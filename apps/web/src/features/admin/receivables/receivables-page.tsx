@@ -559,7 +559,7 @@ export function ReceivablesPage() {
       <AdminDialog open={!!payModal} onOpenChange={(open) => { if (!open) setPayModal(null); }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="default">
+          <AdminDialogContent size="default" className="admin-page">
             <AdminDialogHeader>
               <AdminDialogTitle>Rekam Pembayaran Piutang</AdminDialogTitle>
               <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>

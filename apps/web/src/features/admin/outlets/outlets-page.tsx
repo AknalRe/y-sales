@@ -512,7 +512,7 @@ export function OutletsPage() {
       <AdminDialog open={formOpen} onOpenChange={(open) => { if (!open) closeForm(); }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="lg">
+          <AdminDialogContent size="lg" className="admin-page">
             <AdminDialogHeader>
               <div>
                 <AdminDialogTitle>{editingOutlet ? 'Edit Outlet' : 'Tambah Outlet'}</AdminDialogTitle>
@@ -655,7 +655,7 @@ export function OutletsPage() {
       <AdminDialog open={!!rejectTarget} onOpenChange={(open) => { if (!open) { setRejectTarget(null); setRejectReason(''); } }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
-          <AdminDialogContent size="sm">
+          <AdminDialogContent size="sm" className="admin-page">
             <AdminDialogHeader>
               <div className="flex flex-col gap-1">
                 <AdminDialogTitle>Reject Outlet</AdminDialogTitle>

@@ -622,7 +622,7 @@ function AttendancePhotoModal({
     <AdminDialog open={!!row} onOpenChange={(open) => { if (!open) onClose(); }} disablePointerDismissal={saving}>
       <AdminDialogPortal>
         <AdminDialogBackdrop style={{ backdropFilter: 'blur-sm', background: 'rgba(0,0,0,0.45)', zIndex: 80 }} />
-        <AdminDialogContent size="lg" className="max-w-5xl">
+        <AdminDialogContent size="lg" className="admin-page max-w-5xl">
           <AdminDialogHeader>
             <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-admin-accent">Detail Absensi</p>

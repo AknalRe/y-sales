@@ -5,6 +5,18 @@ import { useAuth } from '@/features/auth/auth-provider';
 import { EmptyState } from '@/components/ui';
 
 import {
+  AdminDialog,
+  AdminDialogPortal,
+  AdminDialogBackdrop,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogTitle,
+  AdminDialogSubtitle,
+  AdminDialogClose,
+  AdminDialogBody,
+  AdminDialogFooter,
+} from '@/components/ui-composed/cva/dialog-admin';
+import {
   Select,
   SelectTrigger,
   SelectValue,
@@ -205,6 +217,11 @@ export function SalesSchedulePage() {
     setOutletSearch('');
     setError('');
     setShowModal(true);
+  }
+
+  function closeModal() {
+    if (saving) return;
+    setShowModal(false);
   }
 
   async function handleCreate(event?: React.FormEvent) {
@@ -476,19 +493,25 @@ export function SalesSchedulePage() {
       )}
 
       {/* ─── Create Modal ───────────────────────── */}
-      {showModal && (
-        <div className="admin-modal-overlay" onClick={() => { if (!saving) setShowModal(false); }}>
-          <div className="admin-modal" style={{ maxWidth: 640, maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header">
+      <AdminDialog
+        open={showModal}
+        onOpenChange={(open) => { if (!open) closeModal(); }}
+        disablePointerDismissal={saving}
+      >
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent>
+            <AdminDialogHeader>
               <div>
-                <h2>Buat Jadwal Sales</h2>
-                <p className="admin-modal-subtitle">Satu outlet akan menjadi satu schedule.</p>
+                <AdminDialogTitle>Buat Jadwal Sales</AdminDialogTitle>
+                <AdminDialogSubtitle>Satu outlet akan menjadi satu schedule.</AdminDialogSubtitle>
               </div>
-              <button onClick={() => setShowModal(false)} className="admin-modal-close" type="button" disabled={saving}>×</button>
-            </div>
+              <AdminDialogClose disabled={saving} aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
 
-            <form id="sales-schedule-create-form" onSubmit={handleCreate} className="admin-modal-body flex flex-col gap-4">
-              {error && <div className="admin-alert admin-alert-error mb-3"><AlertTriangle size={15} />{error}</div>}
+            <AdminDialogBody>
+              <form id="sales-schedule-create-form" onSubmit={handleCreate} className="flex flex-col gap-4">
+                {error && <div className="admin-alert admin-alert-error mb-3"><AlertTriangle size={15} />{error}</div>}
 
               <div className="admin-field">
                 <label>Sales *</label>
@@ -630,8 +653,9 @@ export function SalesSchedulePage() {
                 </p>
               </div>
             </form>
+            </AdminDialogBody>
 
-            <div className="admin-modal-footer">
+            <AdminDialogFooter>
               <button onClick={() => setShowModal(false)} className="admin-btn-ghost" type="button" disabled={saving}>Batal</button>
               <button
                 className="admin-btn-primary"
@@ -642,10 +666,10 @@ export function SalesSchedulePage() {
               >
                 {saving ? <RefreshCw size={15} className="animate-spin" /> : <Send size={15} />} Buat {selectedOutletIds.length} Jadwal
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
     </div>
   );
 }

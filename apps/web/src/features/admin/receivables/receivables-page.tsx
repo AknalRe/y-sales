@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
-import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, Download, TrendingDown, Banknote, XCircle, Package } from 'lucide-react';
+import { CreditCard, RefreshCw, AlertCircle, CheckCircle2, Clock, Download, TrendingDown, Banknote, XCircle, Package, X } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState } from '@/components/ui';
 
@@ -24,6 +24,17 @@ import {
 
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { apiRequest } from '@/lib/api/client';
+import {
+  AdminDialog,
+  AdminDialogPortal,
+  AdminDialogBackdrop,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogTitle,
+  AdminDialogClose,
+  AdminDialogBody,
+  AdminDialogFooter,
+} from '@/components/ui-composed/cva/dialog-admin';
 
 type Receivable = {
   id: string;
@@ -545,87 +556,92 @@ export function ReceivablesPage() {
       </div>
 
       {/* Payment Modal */}
-      {payModal && (
-        <div className="admin-modal-overlay" onClick={() => setPayModal(null)} style={{ backdropFilter: 'blur(4px)', background: 'rgba(15, 23, 42, 0.6)' }}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 24, padding: '1.5rem' }}>
-            <div className="admin-modal-header border-none p-0 mb-6">
-              <h2 className="text-lg font-extrabold text-admin-foreground">Rekam Pembayaran Piutang</h2>
-              <button onClick={() => setPayModal(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body p-0">
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                <div className="bg-admin-bg rounded-xl p-3 text-center">
-                  <span className="text-admin-subtle text-xs font-bold block mb-1">Pokok</span>
-                  <strong className="text-admin-foreground text-sm">{formatRp(payModal.principalAmount)}</strong>
-                </div>
-                <div className="bg-admin-bg rounded-xl p-3 text-center">
-                  <span className="text-admin-subtle text-xs font-bold block mb-1">Terbayar</span>
-                  <strong className="text-admin-success text-sm">{formatRp(payModal.paidAmount)}</strong>
-                </div>
-                <div className="bg-admin-danger-bg rounded-xl p-3 text-center">
-                  <span className="text-admin-subtle text-xs font-bold block mb-1">Outstanding</span>
-                  <strong className="text-admin-danger text-sm">{formatRp(payModal.outstandingAmount)}</strong>
-                </div>
-              </div>
+      <AdminDialog open={!!payModal} onOpenChange={(open) => { if (!open) setPayModal(null); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="default">
+            <AdminDialogHeader>
+              <AdminDialogTitle>Rekam Pembayaran Piutang</AdminDialogTitle>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              {payModal && (
+                <>
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="bg-admin-bg rounded-xl p-3 text-center">
+                      <span className="text-admin-subtle text-xs font-bold block mb-1">Pokok</span>
+                      <strong className="text-admin-foreground text-sm">{formatRp(payModal.principalAmount)}</strong>
+                    </div>
+                    <div className="bg-admin-bg rounded-xl p-3 text-center">
+                      <span className="text-admin-subtle text-xs font-bold block mb-1">Terbayar</span>
+                      <strong className="text-admin-success text-sm">{formatRp(payModal.paidAmount)}</strong>
+                    </div>
+                    <div className="bg-admin-danger-bg rounded-xl p-3 text-center">
+                      <span className="text-admin-subtle text-xs font-bold block mb-1">Outstanding</span>
+                      <strong className="text-admin-danger text-sm">{formatRp(payModal.outstandingAmount)}</strong>
+                    </div>
+                  </div>
 
-              <div style={{ display: 'grid', gap: '.65rem', marginTop: '1rem' }}>
-                <div>
-                  <label className="text-admin-muted-dim text-sm font-extrabold block mb-1">Jumlah Pembayaran (Rp)</label>
-                  <input
-                    type="number"
-                    value={payAmount}
-                    onChange={e => setPayAmount(e.target.value)}
-                    className="admin-input"
-                    style={{ width: '100%' }}
-                    min="0"
-                    max={payModal.outstandingAmount}
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <label className="text-admin-muted-dim text-sm font-extrabold block mb-1">Metode Pembayaran</label>
-                  <Select
-                    items={[
-                      { value: 'cash', label: 'Cash' },
-                      { value: 'qris', label: 'QRIS' },
-                      { value: 'credit', label: 'Transfer' },
-                    ]}
-                    value={payMethod}
-                    onValueChange={(nextValue) => setPayMethod(nextValue as 'cash' | 'qris' | 'credit')}
-                  >
-                    <SelectTrigger className="admin-select" style={{ width: '100%' }}>
-                      <SelectValue />
-                      <SelectIcon>
-                        <SelectChevronUpDownIcon />
-                      </SelectIcon>
-                    </SelectTrigger>
-                    <SelectPortal>
-                      <SelectPositioner sideOffset={8}>
-                        <SelectPopup>
-                          <SelectScrollUpArrow />
-                          <SelectList>
-                            {[
-                              { value: 'cash', label: 'Cash' },
-                              { value: 'qris', label: 'QRIS' },
-                              { value: 'credit', label: 'Transfer' },
-                            ].map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                <SelectItemIndicator>
-                                  <SelectCheckIcon />
-                                </SelectItemIndicator>
-                                <SelectItemText>{option.label}</SelectItemText>
-                              </SelectItem>
-                            ))}
-                          </SelectList>
-                          <SelectScrollDownArrow />
-                        </SelectPopup>
-                      </SelectPositioner>
-                    </SelectPortal>
-                  </Select>
-                </div>
-              </div>
-            </div>
-            <div className="admin-modal-footer border-none pt-6" style={{ gap: '1rem' }}>
+                  <div style={{ display: 'grid', gap: '.65rem' }}>
+                    <div>
+                      <label className="text-admin-muted-dim text-sm font-extrabold block mb-1">Jumlah Pembayaran (Rp)</label>
+                      <input
+                        type="number"
+                        value={payAmount}
+                        onChange={e => setPayAmount(e.target.value)}
+                        className="admin-input"
+                        style={{ width: '100%' }}
+                        min="0"
+                        max={payModal.outstandingAmount}
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-admin-muted-dim text-sm font-extrabold block mb-1">Metode Pembayaran</label>
+                      <Select
+                        items={[
+                          { value: 'cash', label: 'Cash' },
+                          { value: 'qris', label: 'QRIS' },
+                          { value: 'credit', label: 'Transfer' },
+                        ]}
+                        value={payMethod}
+                        onValueChange={(nextValue) => setPayMethod(nextValue as 'cash' | 'qris' | 'credit')}
+                      >
+                        <SelectTrigger className="admin-select" style={{ width: '100%' }}>
+                          <SelectValue />
+                          <SelectIcon>
+                            <SelectChevronUpDownIcon />
+                          </SelectIcon>
+                        </SelectTrigger>
+                        <SelectPortal>
+                          <SelectPositioner sideOffset={8}>
+                            <SelectPopup>
+                              <SelectScrollUpArrow />
+                              <SelectList>
+                                {[
+                                  { value: 'cash', label: 'Cash' },
+                                  { value: 'qris', label: 'QRIS' },
+                                  { value: 'credit', label: 'Transfer' },
+                                ].map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    <SelectItemIndicator>
+                                      <SelectCheckIcon />
+                                    </SelectItemIndicator>
+                                    <SelectItemText>{option.label}</SelectItemText>
+                                  </SelectItem>
+                                ))}
+                              </SelectList>
+                              <SelectScrollDownArrow />
+                            </SelectPopup>
+                          </SelectPositioner>
+                        </SelectPortal>
+                      </Select>
+                    </div>
+                  </div>
+                </>
+              )}
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setPayModal(null)} className="admin-btn admin-btn-ghost flex-1" style={{ borderRadius: 14 }} type="button">Batal</button>
               <button
                 onClick={handlePay}
@@ -636,10 +652,10 @@ export function ReceivablesPage() {
               >
                 {saving ? 'Menyimpan...' : <><Banknote size={15} /> Rekam Pembayaran</>}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
     </div>
   );
 }

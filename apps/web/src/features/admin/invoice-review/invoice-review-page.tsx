@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx-js-style';
-import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { ReceiptText, RefreshCw, AlertCircle, Eye, Calendar, User, ShoppingBag, ShoppingCart, ChevronDown, ChevronUp, Download, X } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { EmptyState } from '@/components/ui';
 
@@ -24,6 +24,17 @@ import {
 
 import { getSalesTransactions, approveSalesTransaction, rejectSalesTransaction, settleSalesTransaction, getTenantUsers, getSalesTransactionDetail, type SalesTransaction, type SalesTransactionDetail, type TenantUser } from '@/lib/api/tenant';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import {
+  AdminDialog,
+  AdminDialogPortal,
+  AdminDialogBackdrop,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogTitle,
+  AdminDialogClose,
+  AdminDialogBody,
+  AdminDialogFooter,
+} from '@/components/ui-composed/cva/dialog-admin';
 
 function formatRp(v: string | number) {
   return `Rp ${Number(v || 0).toLocaleString('id-ID')}`;
@@ -491,17 +502,18 @@ export function InvoiceReviewPage() {
       </div>
 
       {/* Reject Modal */}
-      {rejectModal && (
-        <div className="admin-modal-overlay" onClick={() => setRejectModal(null)} style={{ backdropFilter: 'blur(4px)', background: 'rgba(15, 23, 42, 0.6)' }}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 24, padding: '1.5rem' }}>
-            <div className="admin-modal-header border-none p-0 mb-6">
-              <h2 className="text-lg font-extrabold">Tolak Nota</h2>
-              <button onClick={() => setRejectModal(null)} className="admin-modal-close">×</button>
-            </div>
-            <div className="admin-modal-body p-0">
+      <AdminDialog open={!!rejectModal} onOpenChange={(open) => { if (!open) { setRejectModal(null); setRejectReason(''); } }} disablePointerDismissal={saving === rejectModal?.id}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="default">
+            <AdminDialogHeader>
+              <AdminDialogTitle>Tolak Nota</AdminDialogTitle>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="bg-admin-danger-bg border border-admin-border p-4 rounded-2xl mb-6">
                 <p className="text-admin-danger text-sm leading-relaxed">
-                  Anda akan menolak nota <strong>{rejectModal.transactionNo}</strong>. Status nota berubah menjadi rejected dan stok reserved dikembalikan.
+                  Anda akan menolak nota <strong>{rejectModal?.transactionNo}</strong>. Status nota berubah menjadi rejected dan stok reserved dikembalikan.
                 </p>
               </div>
 
@@ -515,42 +527,47 @@ export function InvoiceReviewPage() {
                 style={{ borderRadius: 16, padding: '1rem', fontSize: '.9rem' }}
                 placeholder="Tulis alasan jelas agar sales bisa memperbaikinya..."
               />
-            </div>
-            <div className="admin-modal-footer border-none pt-6 gap-4" style={{ padding: '1.5rem 0 0', gap: '1rem' }}>
-              <button onClick={() => setRejectModal(null)} className="admin-btn-ghost flex-1" style={{ borderRadius: 14 }}>Batal</button>
+            </AdminDialogBody>
+            <AdminDialogFooter>
+              <button onClick={() => { setRejectModal(null); setRejectReason(''); }} className="admin-btn-ghost flex-1" style={{ borderRadius: 14 }}>Batal</button>
               <button
                 onClick={handleReject}
-                disabled={!rejectReason.trim() || saving === rejectModal.id}
+                disabled={!rejectReason.trim() || saving === rejectModal?.id}
                 className="admin-btn-primary flex-1 bg-admin-danger border-admin-danger"
                 style={{ borderRadius: 14 }}
                 type="button"
               >
-                {saving === rejectModal.id ? 'Memproses...' : 'Konfirmasi Reject'}
+                {saving === rejectModal?.id ? 'Memproses...' : 'Konfirmasi Reject'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
       {/* Photo View Modal */}
-      {viewPhoto && (
-        <div className="admin-modal-overlay" onClick={() => setViewPhoto(null)} style={{ backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.8)', zIndex: 1000 }}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ background: 'transparent', boxShadow: 'none', maxWidth: '90vw', maxHeight: '90vh', padding: 0 }}>
+      <AdminDialog open={!!viewPhoto} onOpenChange={(open) => { if (!open) setViewPhoto(null); }}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop style={{ backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.8)', zIndex: 1000 }} />
+          <AdminDialogContent size="default" style={{ background: 'transparent', boxShadow: 'none', maxWidth: '90vw', maxHeight: '90vh', padding: 0, border: 'none' }} className="relative !overflow-visible">
             <button
               onClick={() => setViewPhoto(null)}
               className="absolute bg-admin-surface border-none rounded-full flex items-center justify-center text-admin-foreground cursor-pointer"
               style={{ top: -40, right: 0, width: 32, height: 32 }}
+              type="button"
             >
-              ×
+              <X size={18} />
             </button>
-            <img
-              src={viewPhoto}
-              alt="Bukti Nota"
-              style={{ maxWidth: '100%', maxHeight: '85vh', borderRadius: 12, display: 'block', margin: '0 auto' }}
-            />
-          </div>
-        </div>
-      )}
+            {viewPhoto && (
+              <img
+                src={viewPhoto}
+                alt="Bukti Nota"
+                className="max-w-full max-h-[85vh] rounded-xl"
+                style={{ maxHeight: '85vh', borderRadius: 12, display: 'block', margin: '0 auto' }}
+              />
+            )}
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
     </div>
   );
 }

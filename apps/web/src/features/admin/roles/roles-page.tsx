@@ -470,6 +470,7 @@ export function RolesPage() {
         </div>
       )}
 
+      {/* Permission Role Modal */}
       {permissionRole && (
         <div className="admin-modal-overlay" onClick={() => setPermissionRole(null)}>
           <div className="admin-modal admin-permission-modal" onClick={e => e.stopPropagation()}>

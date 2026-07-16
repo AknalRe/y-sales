@@ -14,6 +14,18 @@ import {
   type OutletPayload,
 } from '@/lib/api/tenant';
 import { OutletMapPicker } from './outlet-map-picker';
+import {
+  AdminDialog,
+  AdminDialogPortal,
+  AdminDialogBackdrop,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogTitle,
+  AdminDialogSubtitle,
+  AdminDialogClose,
+  AdminDialogBody,
+  AdminDialogFooter,
+} from '@/components/ui-composed/cva/dialog-admin';
 
 import {
   Select,
@@ -496,62 +508,31 @@ export function OutletsPage() {
         )}
       </section>
 
-      {formOpen && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-          <form onSubmit={handleSubmit} className="max-h-[92vh] w-full max-w-3xl overflow-auto rounded-[1.5rem] bg-admin-surface p-6 shadow-2xl">
-            <div className="mb-5 flex items-start justify-between gap-4">
+      {/* Form Tambah/Edit Outlet */}
+      <AdminDialog open={formOpen} onOpenChange={(open) => { if (!open) closeForm(); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="lg">
+            <AdminDialogHeader>
               <div>
-                <h2 className="text-xl font-black text-admin-foreground">{editingOutlet ? 'Edit Outlet' : 'Tambah Outlet'}</h2>
-                <p className="text-sm font-medium text-admin-muted">Pastikan koordinat outlet sesuai lokasi toko untuk validasi radius visit.</p>
+                <AdminDialogTitle>{editingOutlet ? 'Edit Outlet' : 'Tambah Outlet'}</AdminDialogTitle>
+                <AdminDialogSubtitle>Pastikan koordinat outlet sesuai lokasi toko untuk validasi radius visit.</AdminDialogSubtitle>
               </div>
-              <button onClick={closeForm} className="admin-btn-ghost" type="button">Tutup</button>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Kode Outlet">
-                <input className="admin-input" value={form.code} onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))} required />
-              </Field>
-              <Field label="Nama Outlet">
-                <input className="admin-input" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
-              </Field>
-              <Field label="Tipe Customer">
-                <Select
-                  items={customerTypeOptions}
-                  value={form.customerType}
-                  onValueChange={(nextValue) => setForm((current) => ({ ...current, customerType: nextValue as OutletForm['customerType'] }))}
-                >
-                  <SelectTrigger className="admin-select">
-                    <SelectValue />
-                    <SelectIcon>
-                      <SelectChevronUpDownIcon />
-                    </SelectIcon>
-                  </SelectTrigger>
-                  <SelectPortal>
-                    <SelectPositioner sideOffset={8}>
-                      <SelectPopup>
-                        <SelectScrollUpArrow />
-                        <SelectList>
-                          {customerTypeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              <SelectItemIndicator>
-                                <SelectCheckIcon />
-                              </SelectItemIndicator>
-                              <SelectItemText>{option.label}</SelectItemText>
-                            </SelectItem>
-                          ))}
-                        </SelectList>
-                        <SelectScrollDownArrow />
-                      </SelectPopup>
-                    </SelectPositioner>
-                  </SelectPortal>
-                </Select>
-              </Field>
-              {canApproveOutlet ? (
-                <Field label="Status">
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Kode Outlet">
+                  <input className="admin-input" value={form.code} onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))} required />
+                </Field>
+                <Field label="Nama Outlet">
+                  <input className="admin-input" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
+                </Field>
+                <Field label="Tipe Customer">
                   <Select
-                    items={statusModalOptions}
-                    value={form.status}
-                    onValueChange={(nextValue) => setForm((current) => ({ ...current, status: nextValue as OutletForm['status'] }))}
+                    items={customerTypeOptions}
+                    value={form.customerType}
+                    onValueChange={(nextValue) => setForm((current) => ({ ...current, customerType: nextValue as OutletForm['customerType'] }))}
                   >
                     <SelectTrigger className="admin-select">
                       <SelectValue />
@@ -564,7 +545,7 @@ export function OutletsPage() {
                         <SelectPopup>
                           <SelectScrollUpArrow />
                           <SelectList>
-                            {statusModalOptions.map((option) => (
+                            {customerTypeOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 <SelectItemIndicator>
                                   <SelectCheckIcon />
@@ -579,84 +560,126 @@ export function OutletsPage() {
                     </SelectPortal>
                   </Select>
                 </Field>
-              ) : (
-                <div className="rounded-2xl border border-admin-border bg-admin-bg px-4 py-3 text-sm font-semibold text-admin-muted">
-                  Outlet yang Anda buat akan masuk status <strong className="text-admin-foreground">Menunggu Verifikasi</strong> dan perlu approval Administrator, Owner, atau Operational Manager.
+                {canApproveOutlet ? (
+                  <Field label="Status">
+                    <Select
+                      items={statusModalOptions}
+                      value={form.status}
+                      onValueChange={(nextValue) => setForm((current) => ({ ...current, status: nextValue as OutletForm['status'] }))}
+                    >
+                      <SelectTrigger className="admin-select">
+                        <SelectValue />
+                        <SelectIcon>
+                          <SelectChevronUpDownIcon />
+                        </SelectIcon>
+                      </SelectTrigger>
+                      <SelectPortal>
+                        <SelectPositioner sideOffset={8}>
+                          <SelectPopup>
+                            <SelectScrollUpArrow />
+                            <SelectList>
+                              {statusModalOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  <SelectItemIndicator>
+                                    <SelectCheckIcon />
+                                  </SelectItemIndicator>
+                                  <SelectItemText>{option.label}</SelectItemText>
+                                </SelectItem>
+                              ))}
+                            </SelectList>
+                            <SelectScrollDownArrow />
+                          </SelectPopup>
+                        </SelectPositioner>
+                      </SelectPortal>
+                    </Select>
+                  </Field>
+                ) : (
+                  <div className="rounded-2xl border border-admin-border bg-admin-bg px-4 py-3 text-sm font-semibold text-admin-muted">
+                    Outlet yang Anda buat akan masuk status <strong className="text-admin-foreground">Menunggu Verifikasi</strong> dan perlu approval Administrator, Owner, atau Operational Manager.
+                  </div>
+                )}
+                <Field label="Nama PIC / Owner">
+                  <input className="admin-input" value={form.ownerName} onChange={(event) => setForm((current) => ({ ...current, ownerName: event.target.value }))} />
+                </Field>
+                <Field label="No. HP">
+                  <input className="admin-input" value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
+                </Field>
+                <div className="sm:col-span-2">
+                  <OutletMapPicker
+                    latitude={toOptionalCoordinate(form.latitude)}
+                    longitude={toOptionalCoordinate(form.longitude)}
+                    onChange={handleMapPositionChange}
+                    onSearch={accessToken ? (query) => searchMapAddress(accessToken, query).then((result) => result.results) : undefined}
+                    description="Klik peta atau geser marker untuk mengisi koordinat. Alamat akan disesuaikan dari titik maps."
+                  />
                 </div>
-              )}
-              <Field label="Nama PIC / Owner">
-                <input className="admin-input" value={form.ownerName} onChange={(event) => setForm((current) => ({ ...current, ownerName: event.target.value }))} />
-              </Field>
-              <Field label="No. HP">
-                <input className="admin-input" value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
-              </Field>
-              <div className="sm:col-span-2">
-                <OutletMapPicker
-                  latitude={toOptionalCoordinate(form.latitude)}
-                  longitude={toOptionalCoordinate(form.longitude)}
-                  onChange={handleMapPositionChange}
-                  onSearch={accessToken ? (query) => searchMapAddress(accessToken, query).then((result) => result.results) : undefined}
-                  description="Klik peta atau geser marker untuk mengisi koordinat. Alamat akan disesuaikan dari titik maps."
-                />
+                <Field label="Latitude">
+                  <input className="admin-input" type="number" step="any" value={form.latitude} onChange={(event) => setForm((current) => ({ ...current, latitude: event.target.value }))} required />
+                </Field>
+                <Field label="Longitude">
+                  <input className="admin-input" type="number" step="any" value={form.longitude} onChange={(event) => setForm((current) => ({ ...current, longitude: event.target.value }))} required />
+                </Field>
+                <Field label="Radius Geofence (meter)">
+                  <input className="admin-input" type="number" min={1} placeholder="Kosongkan untuk default sistem" value={form.geofenceRadiusM} onChange={(event) => setForm((current) => ({ ...current, geofenceRadiusM: event.target.value }))} />
+                </Field>
+                <label className="grid gap-2 text-sm font-bold text-admin-text sm:col-span-2">
+                  <span className="flex flex-wrap items-center justify-between gap-2">
+                    Alamat
+                    <button
+                      className="admin-btn-ghost px-2.5 py-1.5 text-xs"
+                      type="button"
+                      disabled={resolvingAddress || toOptionalCoordinate(form.latitude) === null || toOptionalCoordinate(form.longitude) === null}
+                      onClick={() => void syncAddressFromPoint(Number(form.latitude), Number(form.longitude), true)}
+                    >
+                      {resolvingAddress ? <RefreshCw size={13} className="animate-spin" /> : <MapPin size={13} />}
+                      Ambil alamat dari titik
+                    </button>
+                  </span>
+                  <textarea className="admin-input min-h-24 resize-none" value={form.address} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} required />
+                  <small className="font-semibold text-admin-muted">Alamat mengikuti titik maps saat marker dipilih. Tetap bisa diedit manual jika hasil maps belum presisi.</small>
+                </label>
               </div>
-              <Field label="Latitude">
-                <input className="admin-input" type="number" step="any" value={form.latitude} onChange={(event) => setForm((current) => ({ ...current, latitude: event.target.value }))} required />
-              </Field>
-              <Field label="Longitude">
-                <input className="admin-input" type="number" step="any" value={form.longitude} onChange={(event) => setForm((current) => ({ ...current, longitude: event.target.value }))} required />
-              </Field>
-              <Field label="Radius Geofence (meter)">
-                <input className="admin-input" type="number" min={1} placeholder="Kosongkan untuk default sistem" value={form.geofenceRadiusM} onChange={(event) => setForm((current) => ({ ...current, geofenceRadiusM: event.target.value }))} />
-              </Field>
-              <label className="grid gap-2 text-sm font-bold text-admin-text sm:col-span-2">
-                <span className="flex flex-wrap items-center justify-between gap-2">
-                  Alamat
-                  <button
-                    className="admin-btn-ghost px-2.5 py-1.5 text-xs"
-                    type="button"
-                    disabled={resolvingAddress || toOptionalCoordinate(form.latitude) === null || toOptionalCoordinate(form.longitude) === null}
-                    onClick={() => void syncAddressFromPoint(Number(form.latitude), Number(form.longitude), true)}
-                  >
-                    {resolvingAddress ? <RefreshCw size={13} className="animate-spin" /> : <MapPin size={13} />}
-                    Ambil alamat dari titik
-                  </button>
-                </span>
-                <textarea className="admin-input min-h-24 resize-none" value={form.address} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} required />
-                <small className="font-semibold text-admin-muted">Alamat mengikuti titik maps saat marker dipilih. Tetap bisa diedit manual jika hasil maps belum presisi.</small>
-              </label>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-2">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={closeForm} className="admin-btn-ghost" type="button">Batal</button>
-              <button className="admin-btn-primary" type="submit" disabled={saving}>
+              <button onClick={() => handleSubmit({ preventDefault: () => {} } as any)} className="admin-btn-primary" type="button" disabled={saving}>
                 {saving ? <RefreshCw size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
                 Simpan Outlet
               </button>
-            </div>
-          </form>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
-      {rejectTarget && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-[1.5rem] bg-admin-surface p-6 shadow-2xl">
-            <h2 className="text-xl font-black text-admin-foreground">Reject Outlet</h2>
-            <p className="mt-1 text-sm font-medium text-admin-muted">Tulis alasan agar data outlet bisa diperbaiki.</p>
-            <textarea
-              className="admin-input mt-4 min-h-28 resize-none"
-              value={rejectReason}
-              onChange={(event) => setRejectReason(event.target.value)}
-              placeholder="Contoh: koordinat belum sesuai lokasi toko."
-            />
-            <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setRejectTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+      {/* Reject Outlet */}
+      <AdminDialog open={!!rejectTarget} onOpenChange={(open) => { if (!open) { setRejectTarget(null); setRejectReason(''); } }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="sm">
+            <AdminDialogHeader>
+              <div className="flex flex-col gap-1">
+                <AdminDialogTitle>Reject Outlet</AdminDialogTitle>
+                <AdminDialogSubtitle>Tulis alasan agar data outlet bisa diperbaiki.</AdminDialogSubtitle>
+              </div>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              <textarea
+                className="admin-input min-h-28 resize-none"
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                placeholder="Contoh: koordinat belum sesuai lokasi toko."
+              />
+            </AdminDialogBody>
+            <AdminDialogFooter>
+              <button onClick={() => { setRejectTarget(null); setRejectReason(''); }} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleReject} className="admin-btn-primary" type="button" disabled={saving || rejectReason.trim().length < 3}>
                 Reject Outlet
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
     </div>
   );
 }

@@ -24,6 +24,19 @@ import { EmptyState } from '@/components/ui';
 import { FaceCaptureField } from '../shared/face-capture-field';
 
 import {
+  AdminDialog,
+  AdminDialogPortal,
+  AdminDialogBackdrop,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogTitle,
+  AdminDialogSubtitle,
+  AdminDialogClose,
+  AdminDialogBody,
+  AdminDialogFooter,
+} from '@/components/ui-composed/cva/dialog-admin';
+
+import {
   Select,
   SelectTrigger,
   SelectValue,
@@ -471,14 +484,15 @@ export function UsersPage() {
       </div>
 
       {/* Create User Modal */}
-      {showCreate && (
-        <div className="admin-modal-overlay" onClick={() => setShowCreate(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h2>Tambah User Baru</h2>
-              <button onClick={() => setShowCreate(false)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+      <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) setShowCreate(false); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent>
+            <AdminDialogHeader>
+              <AdminDialogTitle>Tambah User Baru</AdminDialogTitle>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="admin-form-grid">
                 <div className="admin-field admin-field-full">
                   <label htmlFor="user-role">Role *</label>
@@ -554,23 +568,23 @@ export function UsersPage() {
                 </div>
                 <div className="admin-field">
                   <label htmlFor="user-employee-code">Kode Karyawan</label>
-                  <div className="admin-input-action">
+                  <div className="admin-input-action relative">
                     <input
                       id="user-employee-code"
                       type="text"
                       value={form.employeeCode}
                       onChange={e => setForm(f => ({ ...f, employeeCode: e.target.value }))}
                       placeholder={form.roleId ? 'Klik generate kode' : 'Pilih role dulu'}
-                      className="admin-input"
+                      className="admin-input pr-10"
                     />
                     <button
                       type="button"
-                      className="admin-btn-icon-sm"
+                      className="admin-btn-icon-sm absolute right-3 top-1/2 -translate-y-1/2"
                       title="Generate kode karyawan"
                       disabled={!form.roleId || generatingCode}
                       onClick={() => handleGenerateEmployeeCode('create')}
                     >
-                      <RefreshCw size={14} />
+                      <RefreshCw size={14} className={generatingCode ? 'animate-spin' : ''} />
                     </button>
                   </div>
                   <small className="admin-field-hint">Format otomatis: KODE_COMPANY-urutan. Tetap bisa diisi manual.</small>
@@ -597,8 +611,8 @@ export function UsersPage() {
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setShowCreate(false)} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-submit-create"
@@ -609,23 +623,24 @@ export function UsersPage() {
               >
                 {saving ? 'Menyimpan...' : 'Buat User'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
       {/* Edit User Modal */}
-      {editTarget && (
-        <div className="admin-modal-overlay" onClick={() => setEditTarget(null)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()}>
-            <div className="admin-modal-header">
+      <AdminDialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent>
+            <AdminDialogHeader>
               <div>
-                <h2>Edit User</h2>
-                <p className="admin-modal-subtitle">{editTarget.name}</p>
+                <AdminDialogTitle>Edit User</AdminDialogTitle>
+                <AdminDialogSubtitle>{editTarget?.name}</AdminDialogSubtitle>
               </div>
-              <button onClick={() => setEditTarget(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="admin-form-grid">
                 <div className="admin-field admin-field-full">
                   <label htmlFor="edit-user-role">Role *</label>
@@ -698,23 +713,23 @@ export function UsersPage() {
                 </div>
                 <div className="admin-field">
                   <label htmlFor="edit-user-employee-code">Kode Karyawan</label>
-                  <div className="admin-input-action">
+                  <div className="admin-input-action relative">
                     <input
                       id="edit-user-employee-code"
                       type="text"
                       value={editForm.employeeCode}
                       onChange={e => setEditForm(f => ({ ...f, employeeCode: e.target.value }))}
                       placeholder={editForm.roleId ? 'Klik generate kode' : 'Pilih role dulu'}
-                      className="admin-input"
+                      className="admin-input pr-10"
                     />
                     <button
                       type="button"
-                      className="admin-btn-icon-sm"
+                      className="admin-btn-icon-sm absolute right-3 top-1/2 -translate-y-1/2"
                       title="Generate kode karyawan"
                       disabled={!editForm.roleId || generatingCode}
                       onClick={() => handleGenerateEmployeeCode('edit')}
                     >
-                      <RefreshCw size={14} />
+                      <RefreshCw size={14} className={generatingCode ? 'animate-spin' : ''} />
                     </button>
                   </div>
                   <small className="admin-field-hint">Klik generate bila ingin mengganti ke format KODE_COMPANY-urutan; input manual tetap diperbolehkan.</small>
@@ -761,8 +776,8 @@ export function UsersPage() {
                   </Select>
                 </div>
               </div>
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setEditTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-submit-edit"
@@ -773,22 +788,23 @@ export function UsersPage() {
               >
                 {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
       {/* Reset Password Modal */}
-      {resetTarget && (
-        <div className="admin-modal-overlay" onClick={() => setResetTarget(null)}>
-          <div className="admin-modal admin-modal-sm" onClick={e => e.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h2>Reset Password</h2>
-              <button onClick={() => setResetTarget(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+      <AdminDialog open={!!resetTarget} onOpenChange={(open) => { if (!open) setResetTarget(null); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="sm">
+            <AdminDialogHeader>
+              <AdminDialogTitle>Reset Password</AdminDialogTitle>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <p className="text-admin-muted mb-4">
-                Reset password untuk <strong>{resetTarget.name}</strong>.
+                Reset password untuk <strong>{resetTarget?.name}</strong>.
               </p>
               <div className="admin-field">
                 <label htmlFor="new-password">Password Baru *</label>
@@ -811,8 +827,8 @@ export function UsersPage() {
                   </button>
                 </div>
               </div>
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setResetTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-confirm-reset"
@@ -823,22 +839,24 @@ export function UsersPage() {
               >
                 {saving ? 'Mereset...' : 'Reset Password'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
-      {faceTarget && (
-        <div className="admin-modal-overlay" onClick={() => setFaceTarget(null)}>
-          <div className="admin-modal admin-modal-sm" onClick={e => e.stopPropagation()}>
-            <div className="admin-modal-header">
+      {/* Face Enrollment Modal */}
+      <AdminDialog open={!!faceTarget} onOpenChange={(open) => { if (!open) setFaceTarget(null); }} disablePointerDismissal={faceSaving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="sm">
+            <AdminDialogHeader>
               <div>
-                <h2>Data Wajah User</h2>
-                <p className="admin-modal-subtitle">{faceTarget.name}</p>
+                <AdminDialogTitle>Data Wajah User</AdminDialogTitle>
+                <AdminDialogSubtitle>{faceTarget?.name}</AdminDialogSubtitle>
               </div>
-              <button onClick={() => setFaceTarget(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="admin-alert admin-alert-info" style={{ marginBottom: '1rem' }}>
                 <Camera size={15} />
                 Foto ini menjadi template wajah aktif user. Template lama akan otomatis dinonaktifkan.
@@ -846,29 +864,29 @@ export function UsersPage() {
               <FaceCaptureField
                 id="user-face-file"
                 preview={facePreview}
-                targetName={faceTarget.name}
+                targetName={faceTarget?.name ?? ''}
                 onCapture={handleFaceFileChange}
               />
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="admin-detail-box">
                   <span>Status Template</span>
-                  <strong>{activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'}</strong>
+                  <strong>{faceTarget && activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'}</strong>
                 </div>
                 <div className="admin-detail-box">
                   <span>File Baru</span>
                   <strong>{faceFile ? `${Math.round(faceFile.size / 1024)} KB` : '-'}</strong>
                 </div>
               </div>
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setFaceTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleEnrollFace} className="admin-btn-primary" type="button" disabled={faceSaving || !facePreview}>
                 {faceSaving ? 'Menyimpan...' : 'Simpan Wajah'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
     </div>
   );
 }

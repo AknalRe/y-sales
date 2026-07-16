@@ -868,13 +868,13 @@ export function UsersPage() {
                 onCapture={handleFaceFileChange}
               />
               <div className="grid grid-cols-2 gap-3 mt-4">
-                <div className="admin-detail-box">
-                  <span>Status Template</span>
-                  <strong>{faceTarget && activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'}</strong>
+                <div className="admin-detail-box flex flex-col gap-1">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-admin-muted">Status Template</span>
+                  <strong className="text-sm font-black text-admin-foreground">{faceTarget && activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'}</strong>
                 </div>
-                <div className="admin-detail-box">
-                  <span>File Baru</span>
-                  <strong>{faceFile ? `${Math.round(faceFile.size / 1024)} KB` : '-'}</strong>
+                <div className="admin-detail-box flex flex-col gap-1">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-admin-muted">File Baru</span>
+                  <strong className="text-sm font-black text-admin-foreground">{faceFile ? `${Math.round(faceFile.size / 1024)} KB` : '-'}</strong>
                 </div>
               </div>
             </AdminDialogBody>

@@ -37,6 +37,19 @@ import { EmptyState } from '@/components/ui';
 import { FaceCaptureField } from '../shared/face-capture-field';
 
 import {
+  AdminDialog,
+  AdminDialogPortal,
+  AdminDialogBackdrop,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogTitle,
+  AdminDialogSubtitle,
+  AdminDialogClose,
+  AdminDialogBody,
+  AdminDialogFooter,
+} from '@/components/ui-composed/cva/dialog-admin';
+
+import {
   Select,
   SelectTrigger,
   SelectValue,
@@ -652,17 +665,18 @@ export function SalesAccountsPage() {
         )}
       </div>
 
-      {showCreate ? (
-        <div className="admin-modal-overlay" onClick={() => setShowCreate(false)}>
-          <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="admin-modal-header">
+      <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) setShowCreate(false); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent>
+            <AdminDialogHeader>
               <div>
-                <h2>Tambah Sales</h2>
-                <p className="admin-modal-subtitle">Akun sales otomatis masuk ke alur absensi, visit outlet, transaksi, dan nota.</p>
+                <AdminDialogTitle>Tambah Sales</AdminDialogTitle>
+                <AdminDialogSubtitle>Akun sales otomatis masuk ke alur absensi, visit outlet, transaksi, dan nota.</AdminDialogSubtitle>
               </div>
-              <button onClick={() => setShowCreate(false)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="admin-form-grid">
                 <SalesRoleField value={form.roleId} roles={salesRoles} onChange={(roleId) => setForm((current) => ({ ...current, roleId }))} id="sales-role" />
                 <TextField id="sales-name" label="Nama Sales *" value={form.name} onChange={(value) => setForm((current) => ({ ...current, name: value }))} className="admin-field-full" />
@@ -718,28 +732,29 @@ export function SalesAccountsPage() {
                 />
                 <PasswordField id="sales-password" label="Password *" value={form.password} onChange={(value) => setForm((current) => ({ ...current, password: value }))} />
               </div>
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setShowCreate(false)} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleCreate} className="admin-btn-primary" type="button" disabled={saving || !form.name || !form.password || !form.roleId}>
                 {saving ? 'Menyimpan...' : 'Buat Sales'}
               </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
-      {editTarget ? (
-        <div className="admin-modal-overlay" onClick={() => setEditTarget(null)}>
-          <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="admin-modal-header">
+      <AdminDialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent>
+            <AdminDialogHeader>
               <div>
-                <h2>Edit Sales</h2>
-                <p className="admin-modal-subtitle">{editTarget.name}</p>
+                <AdminDialogTitle>Edit Sales</AdminDialogTitle>
+                <AdminDialogSubtitle>{editTarget?.name}</AdminDialogSubtitle>
               </div>
-              <button onClick={() => setEditTarget(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="admin-form-grid">
                 <SalesRoleField value={editForm.roleId} roles={salesRoles} onChange={(roleId) => setEditForm((current) => ({ ...current, roleId }))} id="edit-sales-role" />
                 <TextField id="edit-sales-name" label="Nama Sales *" value={editForm.name} onChange={(value) => setEditForm((current) => ({ ...current, name: value }))} className="admin-field-full" />
@@ -835,70 +850,72 @@ export function SalesAccountsPage() {
                   </Select>
                 </div>
               </div>
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setEditTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleUpdate} className="admin-btn-primary" type="button" disabled={saving || !editForm.name || !editForm.roleId}>
                 {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
-      {selectedSales ? (
-        <div className="admin-modal-overlay" onClick={() => setSelectedSales(null)}>
-          <div className="admin-modal admin-modal-sm" onClick={(event) => event.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h2>Detail Akun Sales</h2>
-              <button onClick={() => setSelectedSales(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+      <AdminDialog open={!!selectedSales} onOpenChange={(open) => { if (!open) setSelectedSales(null); }}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="sm">
+            <AdminDialogHeader>
+              <AdminDialogTitle>Detail Akun Sales</AdminDialogTitle>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="flex items-center gap-4 mb-6 p-4 rounded-xl" style={{ background: 'var(--admin-bg)' }}>
-                <UserAvatar name={selectedSales.name} imageUrl={activeFaceTemplateByUser.get(selectedSales.id)?.fileUrl} size={56} />
+                <UserAvatar name={selectedSales?.name ?? ''} imageUrl={selectedSales && activeFaceTemplateByUser.get(selectedSales.id)?.fileUrl} size={56} />
                 <div className="flex-1">
-                  <div className="text-lg font-bold text-admin-foreground">{selectedSales.name}</div>
-                  <div className="text-sm text-admin-muted">{selectedSales.roleName ?? selectedSales.roleCode}</div>
+                  <div className="text-lg font-bold text-admin-foreground">{selectedSales?.name}</div>
+                  <div className="text-sm text-admin-muted">{selectedSales?.roleName ?? selectedSales?.roleCode}</div>
                   <div className="flex flex-wrap gap-3 mt-2 text-sm text-admin-muted">
-                    {selectedSales.email ? <span className="inline-flex items-center gap-1"><Mail size={12} />{selectedSales.email}</span> : null}
-                    {selectedSales.phone ? <span className="inline-flex items-center gap-1"><Phone size={12} />{selectedSales.phone}</span> : null}
+                    {selectedSales?.email ? <span className="inline-flex items-center gap-1"><Mail size={12} />{selectedSales.email}</span> : null}
+                    {selectedSales?.phone ? <span className="inline-flex items-center gap-1"><Phone size={12} />{selectedSales.phone}</span> : null}
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <DetailBox label="Kode Karyawan" value={selectedSales.employeeCode ?? '-'} />
-                <DetailBox label="Status" value={selectedSales.status} />
-                <DetailBox label="Role" value={selectedSales.roleName ?? selectedSales.roleCode} />
-                <DetailBox label="Template Wajah" value={activeFaceTemplateByUser.has(selectedSales.id) ? 'Aktif' : 'Belum diinput'} />
-                <DetailBox label="Login Terakhir" value={selectedSales.lastLoginAt ? new Date(selectedSales.lastLoginAt).toLocaleString('id-ID') : 'Belum pernah'} />
+                <DetailBox label="Kode Karyawan" value={selectedSales?.employeeCode ?? '-'} />
+                <DetailBox label="Status" value={selectedSales?.status ?? ''} />
+                <DetailBox label="Role" value={selectedSales?.roleName ?? selectedSales?.roleCode ?? ''} />
+                <DetailBox label="Template Wajah" value={selectedSales && activeFaceTemplateByUser.has(selectedSales.id) ? 'Aktif' : 'Belum diinput'} />
+                <DetailBox label="Login Terakhir" value={selectedSales?.lastLoginAt ? new Date(selectedSales.lastLoginAt).toLocaleString('id-ID') : 'Belum pernah'} />
               </div>
-            </div>
-            <div className="admin-modal-footer">
-              <button onClick={() => openFaceEnrollment(selectedSales)} className="admin-btn-ghost" type="button">
+            </AdminDialogBody>
+            <AdminDialogFooter>
+              <button onClick={() => openFaceEnrollment(selectedSales!)} className="admin-btn-ghost" type="button">
                 <Camera size={14} />
                 Data Wajah
               </button>
-              <button onClick={() => openEdit(selectedSales)} className="admin-btn-primary" type="button">
+              <button onClick={() => openEdit(selectedSales!)} className="admin-btn-primary" type="button">
                 <Pencil size={14} />
                 Edit
               </button>
               <button onClick={() => setSelectedSales(null)} className="admin-btn-ghost" type="button">Tutup</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
-      {faceTarget ? (
-        <div className="admin-modal-overlay" onClick={() => setFaceTarget(null)}>
-          <div className="admin-modal admin-modal-sm" onClick={(event) => event.stopPropagation()}>
-            <div className="admin-modal-header">
+      <AdminDialog open={!!faceTarget} onOpenChange={(open) => { if (!open) setFaceTarget(null); }} disablePointerDismissal={faceSaving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="sm">
+            <AdminDialogHeader>
               <div>
-                <h2>Data Wajah Sales</h2>
-                <p className="admin-modal-subtitle">{faceTarget.name}</p>
+                <AdminDialogTitle>Data Wajah Sales</AdminDialogTitle>
+                <AdminDialogSubtitle>{faceTarget?.name}</AdminDialogSubtitle>
               </div>
-              <button onClick={() => setFaceTarget(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="admin-alert admin-alert-info" style={{ marginBottom: '1rem' }}>
                 <Camera size={15} />
                 Foto ini menjadi template wajah aktif untuk validasi absensi dan visit. Template lama akan otomatis dinonaktifkan.
@@ -906,44 +923,51 @@ export function SalesAccountsPage() {
               <FaceCaptureField
                 id="sales-face-file"
                 preview={facePreview}
-                targetName={faceTarget.name}
+                targetName={faceTarget?.name ?? ''}
                 onCapture={handleFaceFileChange}
               />
               <div className="grid grid-cols-2 gap-3 mt-4">
-                <DetailBox label="Status Template" value={activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'} />
-                <DetailBox label="File Baru" value={faceFile ? `${Math.round(faceFile.size / 1024)} KB` : '-'} />
+                <div className="admin-detail-box flex flex-col gap-1">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-admin-muted">Status Template</span>
+                  <strong className="text-sm font-black text-admin-foreground">{faceTarget && activeFaceTemplateByUser.has(faceTarget.id) ? 'Sudah aktif' : 'Belum ada'}</strong>
+                </div>
+                <div className="admin-detail-box flex flex-col gap-1">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-admin-muted">File Baru</span>
+                  <strong className="text-sm font-black text-admin-foreground">{faceFile ? `${Math.round(faceFile.size / 1024)} KB` : '-'}</strong>
+                </div>
               </div>
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setFaceTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleEnrollFace} className="admin-btn-primary" type="button" disabled={faceSaving || !facePreview}>
                 {faceSaving ? 'Menyimpan...' : 'Simpan Wajah'}
               </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
-      {resetTarget ? (
-        <div className="admin-modal-overlay" onClick={() => setResetTarget(null)}>
-          <div className="admin-modal admin-modal-sm" onClick={(event) => event.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h2>Reset Password</h2>
-              <button onClick={() => setResetTarget(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
-              <p className="text-admin-muted mb-4">Reset password untuk <strong>{resetTarget.name}</strong>.</p>
+      <AdminDialog open={!!resetTarget} onOpenChange={(open) => { if (!open) setResetTarget(null); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="sm">
+            <AdminDialogHeader>
+              <AdminDialogTitle>Reset Password</AdminDialogTitle>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              <p className="text-admin-muted mb-4">Reset password untuk <strong>{resetTarget?.name}</strong>.</p>
               <PasswordField id="sales-reset-password" label="Password Baru *" value={newPassword} onChange={setNewPassword} />
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <button onClick={() => setResetTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleResetPassword} className="admin-btn-primary" type="button" disabled={saving || newPassword.length < 6}>
                 {saving ? 'Mereset...' : 'Reset Password'}
               </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
     </div>
   );
 }
@@ -1046,23 +1070,23 @@ function EmployeeCodeField(props: {
   return (
     <div className="admin-field">
       <label htmlFor={props.id}>Kode Karyawan</label>
-      <div className="admin-input-action">
+      <div className="admin-input-action relative">
         <input
           id={props.id}
           type="text"
           value={props.value}
           onChange={(event) => props.onChange(event.target.value)}
           placeholder={props.placeholder}
-          className="admin-input"
+          className="admin-input pr-10"
         />
         <button
           type="button"
-          className="admin-btn-icon-sm"
+          className="admin-btn-icon-sm absolute right-3 top-1/2 -translate-y-1/2"
           title="Generate kode karyawan"
           disabled={!props.roleId || props.disabled}
           onClick={props.onGenerate}
         >
-          <RefreshCw size={14} />
+          <RefreshCw size={14} className={props.disabled ? 'animate-spin' : ''} />
         </button>
       </div>
       <small className="admin-field-hint">Format otomatis dari backend: KODE_COMPANY-urutan. Tetap bisa diisi manual.</small>

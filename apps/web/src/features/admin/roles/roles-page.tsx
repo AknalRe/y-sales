@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2, Settings2, Search } from 'lucide-react';
+import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2, Settings2, Search, X } from 'lucide-react';
 
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -16,6 +16,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  AdminDialog,
+  AdminDialogPortal,
+  AdminDialogBackdrop,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogTitle,
+  AdminDialogSubtitle,
+  AdminDialogClose,
+  AdminDialogBody,
+  AdminDialogFooter,
+} from '@/components/ui-composed/cva/dialog-admin';
 
 const permissionModuleLabels: Record<string, string> = {
   access: 'Akses',
@@ -353,17 +365,19 @@ export function RolesPage() {
       </div>
 
       {/* Create Role Modal */}
-      {showCreate && (
-        <div className="admin-modal-overlay" onClick={() => setShowCreate(false)}>
-          <div className="admin-modal admin-role-create-modal" onClick={e => e.stopPropagation()}>
-            <div className="admin-modal-header">
+      <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) setShowCreate(false); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="lg" className="admin-page">
+            <AdminDialogHeader>
               <div>
-                <h2>Buat Role Baru</h2>
-                <p className="admin-modal-subtitle">Atur identitas role dan hak akses dalam satu langkah.</p>
+                <AdminDialogTitle>Buat Role Baru</AdminDialogTitle>
+                <AdminDialogSubtitle>Atur identitas role dan hak akses dalam satu langkah.</AdminDialogSubtitle>
               </div>
-              <button onClick={() => setShowCreate(false)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              <div className="space-y-4">
               <div className="admin-field">
                 <label htmlFor="role-code">Kode Role *</label>
                 <Input
@@ -412,7 +426,7 @@ export function RolesPage() {
                 {loadingPermissions ? (
                   <div className="admin-loading">Memuat hak akses...</div>
                 ) : (
-                  <div className="admin-permission-groups admin-permission-groups-compact">
+                  <div className="admin-permission-groups admin-permission-groups-compact" style={{ maxHeight: 'none', overflow: 'visible' }}>
                     {Object.entries(groupedPermissions).map(([module, rows]) => (
                       <section key={module} className="admin-permission-group">
                         <h3>{getPermissionModuleLabel(module)}</h3>
@@ -453,8 +467,9 @@ export function RolesPage() {
                   Hak akses tetap bisa diedit kembali dari tombol pengaturan di kartu role.
                 </small>
               </div>
-            </div>
-            <div className="admin-modal-footer">
+              </div>
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <Button onClick={() => setShowCreate(false)} variant="ghost" className="admin-btn-ghost" type="button">Batal</Button>
               <Button
                 id="roles-submit-create"
@@ -465,23 +480,26 @@ export function RolesPage() {
               >
                 {saving ? 'Menyimpan...' : 'Buat Role'}
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
 
       {/* Permission Role Modal */}
-      {permissionRole && (
-        <div className="admin-modal-overlay" onClick={() => setPermissionRole(null)}>
-          <div className="admin-modal admin-permission-modal" onClick={e => e.stopPropagation()}>
-            <div className="admin-modal-header">
+      <AdminDialog open={!!permissionRole} onOpenChange={(open) => { if (!open) setPermissionRole(null); }} disablePointerDismissal={saving}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="lg" className="admin-page">
+            <AdminDialogHeader>
               <div>
-                <h2>Hak Akses Role</h2>
-                <p className="admin-modal-subtitle">{permissionRole.name} · {permissionRole.code}</p>
+                <AdminDialogTitle>Hak Akses Role</AdminDialogTitle>
+                {permissionRole && (
+                  <AdminDialogSubtitle>{permissionRole.name} · {permissionRole.code}</AdminDialogSubtitle>
+                )}
               </div>
-              <button onClick={() => setPermissionRole(null)} className="admin-modal-close" type="button">×</button>
-            </div>
-            <div className="admin-modal-body">
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
               <div className="admin-permission-search">
                 <Search size={15} />
                 <input
@@ -494,7 +512,7 @@ export function RolesPage() {
               {loadingPermissions ? (
                 <div className="admin-loading">Memuat hak akses...</div>
               ) : (
-                <div className="admin-permission-groups">
+                <div className="admin-permission-groups" style={{ maxHeight: 'none', overflow: 'visible' }}>
                   {Object.entries(groupedPermissions).map(([module, rows]) => (
                     <section key={module} className="admin-permission-group">
                       <h3>{getPermissionModuleLabel(module)}</h3>
@@ -525,13 +543,13 @@ export function RolesPage() {
                   ) : null}
                 </div>
               )}
-            </div>
-            <div className="admin-modal-footer">
+            </AdminDialogBody>
+            <AdminDialogFooter>
               <Button onClick={() => setPermissionRole(null)} className="admin-btn-primary" type="button">Selesai</Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
     </div>
   );
 }

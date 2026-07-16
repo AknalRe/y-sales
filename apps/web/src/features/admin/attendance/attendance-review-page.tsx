@@ -34,6 +34,17 @@ import {
   type AttendanceReviewParams,
 } from '../../../lib/api/client';
 import { useAuth } from '../../auth/auth-provider';
+import {
+  AdminDialog,
+  AdminDialogPortal,
+  AdminDialogBackdrop,
+  AdminDialogContent,
+  AdminDialogHeader,
+  AdminDialogTitle,
+  AdminDialogSubtitle,
+  AdminDialogClose,
+  AdminDialogBody,
+} from '@/components/ui-composed/cva/dialog-admin';
 
 const validationLabels: Record<string, string> = {
   valid: 'Valid',
@@ -535,6 +546,7 @@ export function AttendanceReviewPage() {
         </div>
       )}
 
+      {/* Attendance Detail Modal */}
       {selectedRow && (
         <AttendancePhotoModal
           row={selectedRow}
@@ -607,80 +619,82 @@ function AttendancePhotoModal({
   const checkInMapsUrl = mapsUrl(row.checkInLatitude, row.checkInLongitude);
   const checkOutMapsUrl = mapsUrl(row.checkOutLatitude, row.checkOutLongitude);
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
-      <div className="max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-admin-border bg-admin-bg-card shadow-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-admin-border-subtle p-5">
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-admin-accent">Detail Absensi</p>
-            <h2 className="truncate text-xl font-black text-admin-foreground">{row.salesName}</h2>
-            <p className="text-xs font-semibold text-admin-muted">{row.employeeCode ?? '-'} · {row.salesEmail ?? 'Tanpa email'} · {row.workDate}</p>
-          </div>
-          <button className="admin-btn-ghost h-10 w-10 justify-center p-0" type="button" onClick={onClose} aria-label="Tutup detail absensi">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="grid max-h-[calc(92vh-92px)] overflow-y-auto md:grid-cols-[minmax(260px,0.85fr)_1fr]">
-          <div className="bg-admin-bg p-5">
-            <div className="aspect-[4/5] overflow-hidden rounded-[1.25rem] border border-admin-border-subtle bg-admin-bg-card shadow-inner">
-              {row.faceImageUrl ? (
-                <img src={row.faceImageUrl} alt={`Foto absensi ${row.salesName}`} className="h-full w-full object-cover" />
-              ) : (
-                <div className="grid h-full place-items-center text-admin-border">
-                  <Camera size={58} />
+    <AdminDialog open={!!row} onOpenChange={(open) => { if (!open) onClose(); }} disablePointerDismissal={saving}>
+      <AdminDialogPortal>
+        <AdminDialogBackdrop style={{ backdropFilter: 'blur-sm', background: 'rgba(0,0,0,0.45)', zIndex: 80 }} />
+        <AdminDialogContent size="lg" className="max-w-5xl">
+          <AdminDialogHeader>
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-admin-accent">Detail Absensi</p>
+              <AdminDialogTitle className="truncate">{row.salesName}</AdminDialogTitle>
+              <p className="text-xs font-semibold text-admin-muted">{row.employeeCode ?? '-'} · {row.salesEmail ?? 'Tanpa email'} · {row.workDate}</p>
+            </div>
+            <AdminDialogClose aria-label="Tutup detail absensi"><X size={18} /></AdminDialogClose>
+          </AdminDialogHeader>
+          <AdminDialogBody>
+            <div className="grid max-h-[calc(92vh-92px)] overflow-y-auto md:grid-cols-[minmax(260px,0.85fr)_1fr]">
+              <div className="bg-admin-bg p-5">
+                <div className="aspect-[4/5] overflow-hidden rounded-[1.25rem] border border-admin-border-subtle bg-admin-bg-card shadow-inner">
+                  {row.faceImageUrl ? (
+                    <img src={row.faceImageUrl} alt={`Foto absensi ${row.salesName}`} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="grid h-full place-items-center text-admin-border">
+                      <Camera size={58} />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <Badge text={statusLabels[row.status] ?? row.status} tone={row.status === 'flagged' ? 'danger' : row.status === 'closed' ? 'success' : 'info'} />
-              <Badge text={validationLabels[row.validationStatus] ?? row.validationStatus} tone={row.validationStatus === 'valid' ? 'success' : 'warning'} />
-            </div>
-          </div>
-
-          <div className="p-5">
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Metric icon={Clock} label="Durasi Absensi" value={formatDuration(row.workMinutes ?? 0)} />
-              <Metric icon={Camera} label="Face Match" value={row.faceDetected ? `Terdeteksi ${Math.round(Number(row.faceConfidence ?? 0) * 100)}%` : 'Tidak terdeteksi'} />
-              <Metric icon={MapPin} label="Jarak Kantor" value={`${row.checkInDistanceM ?? '-'}m`} />
-              <Metric icon={MapPin} label="Akurasi GPS" value={`${row.checkInAccuracyM ?? '-'}m`} />
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-admin-border-subtle p-4">
-              <p className="text-xs font-black uppercase tracking-wider text-admin-muted">Waktu Absensi</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <InfoLine label="Check-in" value={formatTime(row.checkInAt)} />
-                <InfoLine label="Check-out" value={formatTime(row.checkOutAt)} />
-                <InfoLine label="Latitude in" value={row.checkInLatitude ?? '-'} />
-                <InfoLine label="Longitude in" value={row.checkInLongitude ?? '-'} />
-                <InfoLine label="Latitude out" value={row.checkOutLatitude ?? '-'} />
-                <InfoLine label="Longitude out" value={row.checkOutLongitude ?? '-'} />
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <Badge text={statusLabels[row.status] ?? row.status} tone={row.status === 'flagged' ? 'danger' : row.status === 'closed' ? 'success' : 'info'} />
+                  <Badge text={validationLabels[row.validationStatus] ?? row.validationStatus} tone={row.validationStatus === 'valid' ? 'success' : 'warning'} />
+                </div>
               </div>
-              <div className="mt-4 flex flex-wrap gap-2 border-t border-admin-border-subtle pt-3">
-                <MapLink href={checkInMapsUrl} label="Buka Maps Check-in" />
-                <MapLink href={checkOutMapsUrl} label="Buka Maps Check-out" />
+
+              <div className="p-5">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Metric icon={Clock} label="Durasi Absensi" value={formatDuration(row.workMinutes ?? 0)} />
+                  <Metric icon={Camera} label="Face Match" value={row.faceDetected ? `Terdeteksi ${Math.round(Number(row.faceConfidence ?? 0) * 100)}%` : 'Tidak terdeteksi'} />
+                  <Metric icon={MapPin} label="Jarak Kantor" value={`${row.checkInDistanceM ?? '-'}m`} />
+                  <Metric icon={MapPin} label="Akurasi GPS" value={`${row.checkInAccuracyM ?? '-'}m`} />
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-admin-border-subtle p-4">
+                  <p className="text-xs font-black uppercase tracking-wider text-admin-muted">Waktu Absensi</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <InfoLine label="Check-in" value={formatTime(row.checkInAt)} />
+                    <InfoLine label="Check-out" value={formatTime(row.checkOutAt)} />
+                    <InfoLine label="Latitude in" value={row.checkInLatitude ?? '-'} />
+                    <InfoLine label="Longitude in" value={row.checkInLongitude ?? '-'} />
+                    <InfoLine label="Latitude out" value={row.checkOutLatitude ?? '-'} />
+                    <InfoLine label="Longitude out" value={row.checkOutLongitude ?? '-'} />
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-admin-border-subtle pt-3">
+                    <MapLink href={checkInMapsUrl} label="Buka Maps Check-in" />
+                    <MapLink href={checkOutMapsUrl} label="Buka Maps Check-out" />
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-admin-border-subtle pt-4">
+                  {!reviewed ? (
+                    <>
+                      <button className="admin-btn-ghost px-4 py-2 text-sm" type="button" disabled={saving} onClick={() => onAction(row, 'reject')}>
+                        <XCircle size={15} /> Tidak Setujui
+                      </button>
+                      <button className="admin-btn-primary px-4 py-2 text-sm" type="button" disabled={saving} onClick={() => onAction(row, 'approve')}>
+                        <CheckCircle2 size={15} /> Setujui Absensi
+                      </button>
+                    </>
+                  ) : (
+                    <button className="admin-btn-ghost px-4 py-2 text-sm" type="button" disabled={saving} onClick={() => onAction(row, 'reset')}>
+                      <RotateCcw size={15} /> Reset Review
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-
-            <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-admin-border-subtle pt-4">
-              {!reviewed ? (
-                <>
-                  <button className="admin-btn-ghost px-4 py-2 text-sm" type="button" disabled={saving} onClick={() => onAction(row, 'reject')}>
-                    <XCircle size={15} /> Tidak Setujui
-                  </button>
-                  <button className="admin-btn-primary px-4 py-2 text-sm" type="button" disabled={saving} onClick={() => onAction(row, 'approve')}>
-                    <CheckCircle2 size={15} /> Setujui Absensi
-                  </button>
-                </>
-              ) : (
-                <button className="admin-btn-ghost px-4 py-2 text-sm" type="button" disabled={saving} onClick={() => onAction(row, 'reset')}>
-                  <RotateCcw size={15} /> Reset Review
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </AdminDialogBody>
+        </AdminDialogContent>
+      </AdminDialogPortal>
+    </AdminDialog>
   );
 }
 

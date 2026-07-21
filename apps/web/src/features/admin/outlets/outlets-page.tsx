@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Edit3, MapPin, Plus, RefreshCw, Search, Store, Trash2, X, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Download, Edit3, FileSpreadsheet, FileUp, MapPin, Plus, RefreshCw, Search, Store, Trash2, Upload, X, XCircle } from 'lucide-react';
+import * as XLSX from 'xlsx-js-style';
 import { useAuth } from '@/features/auth/auth-provider';
 import {
   approveOutlet,
@@ -130,6 +131,10 @@ export function OutletsPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [form, setForm] = useState<OutletForm>(emptyForm);
   const [resolvingAddress, setResolvingAddress] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ ok: number; skipped: number; errors: string[] } | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const reverseRequestId = useRef(0);
   const canApproveOutlet = Boolean(user?.isSuperAdmin || ['ADMINISTRATOR', 'OWNER', 'OPERATIONAL_MANAGER'].includes(user?.roleCode ?? ''));
 
@@ -327,6 +332,222 @@ export function OutletsPage() {
     }
   }
 
+  /** Export data outlet ke file Excel */
+  function exportExcel() {
+    const dataRows = outlets.map((outlet) => ({
+      'Kode Outlet': outlet.code,
+      'Nama Outlet': outlet.name,
+      'Tipe Customer': outlet.customerType === 'agent' ? 'Agent' : outlet.customerType === 'user' ? 'User' : 'Toko',
+      'Nama PIC / Owner': outlet.ownerName ?? '',
+      'No. HP': outlet.phone ?? '',
+      Alamat: outlet.address,
+      Latitude: Number(outlet.latitude),
+      Longitude: Number(outlet.longitude),
+      'Radius Geofence (meter)': outlet.geofenceRadiusM ?? '',
+      Status: statusTone[outlet.status]?.label ?? outlet.status,
+    }));
+
+    const sheet = XLSX.utils.json_to_sheet(dataRows);
+    sheet['!cols'] = [
+      { wch: 16 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 22 },
+      { wch: 18 },
+      { wch: 45 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 22 },
+      { wch: 22 },
+    ];
+
+    const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:J1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+      if (cell) {
+        cell.s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: 'C75A18' } },
+          alignment: { horizontal: 'center' },
+        };
+      }
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Outlet');
+    XLSX.writeFile(workbook, `master-outlet-${new Date().toISOString().slice(0, 10)}.xlsx`, { compression: true });
+  }
+
+  /** Download format template Excel untuk import outlet */
+  function downloadImportTemplate() {
+    const templateRows = [
+      {
+        'Kode Outlet': 'OUT-001',
+        'Nama Outlet': 'Toko Mawar Jaya',
+        'Tipe Customer': 'store',
+        'Nama PIC / Owner': 'Pak Budi',
+        'No. HP': '081234567890',
+        Alamat: 'Jl. Pemuda No. 45, Jakarta Pusat',
+        Latitude: -6.175392,
+        Longitude: 106.827153,
+        'Radius Geofence (meter)': 50,
+        Status: 'active',
+      },
+      {
+        'Kode Outlet': 'OUT-002',
+        'Nama Outlet': 'Agen Sembako Abadi',
+        'Tipe Customer': 'agent',
+        'Nama PIC / Owner': 'Ibu Siti',
+        'No. HP': '085712345678',
+        Alamat: 'Jl. Merdeka No. 12, Bandung',
+        Latitude: -6.917464,
+        Longitude: 107.619123,
+        'Radius Geofence (meter)': 100,
+        Status: 'pending_verification',
+      },
+    ];
+
+    const sheet = XLSX.utils.json_to_sheet(templateRows);
+    sheet['!cols'] = [
+      { wch: 16 },
+      { wch: 30 },
+      { wch: 16 },
+      { wch: 22 },
+      { wch: 18 },
+      { wch: 45 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 24 },
+      { wch: 20 },
+    ];
+
+    const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:J1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+      if (cell) {
+        cell.s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: 'C75A18' } },
+          alignment: { horizontal: 'center' },
+        };
+      }
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Outlet');
+    XLSX.writeFile(workbook, 'template-import-outlet.xlsx');
+  }
+
+  /** Import outlet dari file Excel */
+  async function handleImportExcel(file: File) {
+    if (!accessToken) return;
+    setImporting(true);
+    setImportResult(null);
+    setError('');
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheetName = workbook.SheetNames.find((n) =>
+        ['outlet', 'outlets', 'toko'].some((k) => n.toLowerCase().includes(k))
+      ) ?? workbook.SheetNames[0];
+      if (!sheetName) throw new Error('Sheet tidak ditemukan di file Excel.');
+
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName]);
+      if (!rows.length) throw new Error('File Excel kosong atau tidak ada data outlet.');
+
+      let ok = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowNum = i + 2;
+
+        const name = String(row['Nama Outlet'] ?? row['Nama Toko'] ?? row['Nama'] ?? row['name'] ?? row['outlet_name'] ?? '').trim();
+        if (!name) {
+          skipped++;
+          continue;
+        }
+
+        let code = String(row['Kode Outlet'] ?? row['Kode'] ?? row['code'] ?? row['SKU'] ?? row['sku'] ?? '').trim();
+        if (!code) {
+          code = `OUT-${Date.now().toString().slice(-4)}${i + 1}`;
+        }
+
+        const customerTypeRaw = String(row['Tipe Customer'] ?? row['Tipe'] ?? row['customerType'] ?? row['customer_type'] ?? 'store').trim().toLowerCase();
+        let customerType: OutletPayload['customerType'] = 'store';
+        if (['agent', 'agen'].includes(customerTypeRaw)) customerType = 'agent';
+        else if (['user', 'pengguna'].includes(customerTypeRaw)) customerType = 'user';
+
+        const ownerName = String(row['Nama PIC / Owner'] ?? row['Nama PIC'] ?? row['PIC'] ?? row['Owner'] ?? row['ownerName'] ?? row['owner_name'] ?? '').trim();
+        const phone = String(row['No. HP'] ?? row['No HP'] ?? row['HP'] ?? row['Telepon'] ?? row['phone'] ?? '').trim();
+        const address = String(row['Alamat'] ?? row['address'] ?? row['Alamat Lengkap'] ?? '').trim();
+
+        const latRaw = row['Latitude'] ?? row['Lat'] ?? row['lat'] ?? row['latitude'];
+        const lngRaw = row['Longitude'] ?? row['Lng'] ?? row['Long'] ?? row['lng'] ?? row['longitude'];
+        const lat = Number(latRaw);
+        const lng = Number(lngRaw);
+
+        if (!address) {
+          errors.push(`Baris ${rowNum} (${name}): Alamat wajib diisi.`);
+          continue;
+        }
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          errors.push(`Baris ${rowNum} (${name}): Latitude (${latRaw}) atau Longitude (${lngRaw}) harus berupa angka valid.`);
+          continue;
+        }
+
+        const geofenceRaw = row['Radius Geofence (meter)'] ?? row['Radius Geofence (m)'] ?? row['Radius Geofence'] ?? row['Radius'] ?? row['geofenceRadiusM'] ?? row['radius'];
+        const geofenceRadiusM = geofenceRaw !== undefined && geofenceRaw !== null && geofenceRaw !== '' ? Number(geofenceRaw) : undefined;
+
+        const statusRaw = String(row['Status'] ?? row['status'] ?? '').trim().toLowerCase();
+        let status: OutletPayload['status'] = 'pending_verification';
+        if (['active', 'aktif'].includes(statusRaw)) status = 'active';
+        else if (['draft'].includes(statusRaw)) status = 'draft';
+        else if (['rejected', 'ditolak'].includes(statusRaw)) status = 'rejected';
+        else if (['inactive', 'nonaktif'].includes(statusRaw)) status = 'inactive';
+
+        const payload: OutletPayload = {
+          code,
+          name,
+          customerType,
+          ownerName: ownerName || undefined,
+          phone: phone || undefined,
+          address,
+          latitude: lat,
+          longitude: lng,
+          geofenceRadiusM: Number.isFinite(geofenceRadiusM) ? geofenceRadiusM : undefined,
+          status: canApproveOutlet ? status : 'pending_verification',
+        };
+
+        try {
+          const existing = outlets.find(
+            (o) => o.code.toUpperCase() === code.toUpperCase() || o.name.toLowerCase() === name.toLowerCase()
+          );
+          if (existing) {
+            await updateOutlet(accessToken, existing.id, payload);
+          } else {
+            await createOutlet(accessToken, payload);
+          }
+          ok++;
+        } catch (e: any) {
+          errors.push(`Baris ${rowNum} (${name}): ${e.message ?? 'Gagal menyimpan ke server'}`);
+        }
+      }
+
+      setImportResult({ ok, skipped, errors });
+      if (ok > 0) {
+        setSuccess(`Import selesai: ${ok} outlet berhasil diproses.`);
+        await load();
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal membaca file Excel.');
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -338,9 +559,29 @@ export function OutletsPage() {
           <p className="admin-page-subtitle">Kelola master outlet, titik GPS, radius kunjungan, dan status verifikasi toko.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading}>
+          {/* Hidden input for file upload */}
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void handleImportExcel(f);
+              e.currentTarget.value = '';
+            }}
+          />
+          <button onClick={load} className="admin-btn-ghost" type="button" disabled={loading} title="Refresh data outlet">
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             Refresh
+          </button>
+          <button onClick={exportExcel} className="admin-btn-ghost" type="button" disabled={loading || !outlets.length} title="Export data outlet ke Excel">
+            <Download size={15} />
+            Export Excel
+          </button>
+          <button onClick={() => { setImportResult(null); setImportOpen(true); }} className="admin-btn-ghost" type="button" disabled={importing} title="Import data outlet dari Excel">
+            <FileSpreadsheet size={15} />
+            Import Excel
           </button>
           <button onClick={openCreate} className="admin-btn-primary" type="button">
             <Plus size={15} />
@@ -675,6 +916,88 @@ export function OutletsPage() {
               <button onClick={() => { setRejectTarget(null); setRejectReason(''); }} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleReject} className="admin-btn-primary" type="button" disabled={saving || rejectReason.trim().length < 3}>
                 Reject Outlet
+              </button>
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
+
+      {/* Import Outlet Dialog */}
+      <AdminDialog open={importOpen} onOpenChange={(open) => { if (!open) { setImportOpen(false); setImportResult(null); } }}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="default" className="admin-page">
+            <AdminDialogHeader>
+              <div>
+                <AdminDialogTitle className="flex items-center gap-2">
+                  <FileSpreadsheet size={20} className="text-admin-accent" />
+                  Import Outlet dari Excel
+                </AdminDialogTitle>
+                <AdminDialogSubtitle>
+                  Tambah atau perbarui master outlet secara masal dengan mengunggah file Excel (.xlsx/.xls).
+                </AdminDialogSubtitle>
+              </div>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              <div className="space-y-4">
+                {/* Langkah 1: Download Template */}
+                <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+                  <p className="text-xs font-black text-admin-foreground mb-1">Langkah 1: Unduh Format Template</p>
+                  <p className="text-xs font-medium text-admin-muted mb-3">Gunakan template resmi agar susunan kolom sesuai dengan sistem.</p>
+                  <button onClick={downloadImportTemplate} className="admin-btn-ghost text-xs" type="button">
+                    <Download size={14} /> Download Template Excel
+                  </button>
+                </div>
+
+                {/* Langkah 2: Upload File */}
+                <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+                  <p className="text-xs font-black text-admin-foreground mb-1">Langkah 2: Unggah File Excel</p>
+                  <p className="text-xs font-medium text-admin-muted mb-3">Pilih file .xlsx atau .xls yang sudah diisi data outlet.</p>
+                  <button
+                    onClick={() => importInputRef.current?.click()}
+                    className="admin-btn-primary w-full justify-center py-3 text-xs"
+                    disabled={importing}
+                    type="button"
+                  >
+                    {importing ? <RefreshCw size={16} className="animate-spin" /> : <FileUp size={16} />}
+                    {importing ? 'Memproses File Excel...' : 'Pilih File Excel & Import'}
+                  </button>
+                </div>
+
+                {/* Status / Log Hasil Import */}
+                {importResult && (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2 text-xs font-bold">
+                      <span className="rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-700 border border-emerald-200">
+                        ✓ {importResult.ok} Berhasil
+                      </span>
+                      {importResult.skipped > 0 && (
+                        <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-amber-700 border border-amber-200">
+                          ! {importResult.skipped} Dilewati
+                        </span>
+                      )}
+                      {importResult.errors.length > 0 && (
+                        <span className="rounded-lg bg-rose-50 px-3 py-1.5 text-rose-700 border border-rose-200">
+                          ✕ {importResult.errors.length} Gagal
+                        </span>
+                      )}
+                    </div>
+                    {importResult.errors.length > 0 && (
+                      <div className="max-h-40 overflow-y-auto rounded-xl border border-rose-200 bg-rose-50/50 p-3 text-xs font-medium text-rose-700 space-y-1">
+                        <p className="font-bold text-rose-800 mb-1">Detail Baris Bermasalah:</p>
+                        {importResult.errors.map((err, idx) => (
+                          <p key={idx}>{err}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </AdminDialogBody>
+            <AdminDialogFooter>
+              <button onClick={() => { setImportOpen(false); setImportResult(null); }} className="admin-btn-ghost" type="button">
+                Selesai
               </button>
             </AdminDialogFooter>
           </AdminDialogContent>

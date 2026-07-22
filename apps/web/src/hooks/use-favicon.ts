@@ -4,7 +4,6 @@ import { generateFaviconFromUrl } from '@/lib/favicon';
 type StyleLike = {
     backgroundColor?: string;
     color?: string;
-    borderColor?: string;
 };
 
 function resolveColors(): StyleLike {
@@ -25,13 +24,7 @@ function resolveColors(): StyleLike {
         cs.color ||
         '#0f172a';
 
-    const ring =
-        cs.getPropertyValue('--admin-border-subtle').trim() ||
-        cs.getPropertyValue('--sales-border').trim() ||
-        cs.getPropertyValue('--platform-border').trim() ||
-        'rgba(255,255,255,0.25)';
-
-    return { backgroundColor: bg, color: fg, borderColor: ring };
+    return { backgroundColor: bg, color: fg };
 }
 
 function generateFaviconFromInitial(text: string): string {
@@ -47,9 +40,7 @@ function generateFaviconFromInitial(text: string): string {
     const colors = resolveColors();
     const bg = colors.backgroundColor ?? '#ffffff';
     const fg = colors.color ?? '#0f172a';
-    const ring = colors.borderColor ?? 'rgba(255,255,255,0.25)';
 
-    // rounded rect
     ctx.fillStyle = bg;
     ctx.beginPath();
     ctx.moveTo(radius, 0);
@@ -64,12 +55,12 @@ function generateFaviconFromInitial(text: string): string {
     ctx.closePath();
     ctx.fill();
 
-    // subtle ring
-    ctx.strokeStyle = ring;
+    ctx.strokeStyle = fg;
+    ctx.globalAlpha = 0.22;
     ctx.lineWidth = 2;
     ctx.stroke();
+    ctx.globalAlpha = 1;
 
-    // letter
     ctx.fillStyle = fg;
     ctx.font = 'bold 34px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';

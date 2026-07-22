@@ -20,6 +20,7 @@ import { AdminDesktopSidebar } from './admin-desktop-sidebar';
 import { AdminMobileSidebar } from './admin-mobile-sidebar';
 import PageMeta from '@/hooks/use-page-meta';
 import { NotificationsPopup } from '@/features/standalone/notifications-popup';
+import { useFavicon } from '@/hooks/use-favicon';
 
 
 // Helper to group routes by section
@@ -121,13 +122,14 @@ export function AdminShell() {
     return allRoutes.find(r => `/admin/${r.path}` === location.pathname || r.path === location.pathname)?.handle.label ?? 'Admin Command Center';
   }, [location.pathname]);
 
+  const faviconHref = useFavicon({ url: resolvedCompanyLogo, fallbackInitial: user?.company?.name ?? undefined, dark: isDark });
 
   return (
     <>
       <PageMeta
         title={`Dashboard | ${user?.company?.name}`}
         description="Dashboard Admin Pages"
-        favicon="/admin.ico"
+        favicon={faviconHref}
       />
       <div className="admin-command-shell">
 

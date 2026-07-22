@@ -1,9 +1,11 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Home, MapPin, ReceiptText, ShoppingCart, UserRound, Clock, CalendarDays } from 'lucide-react';
+import { Home, ReceiptText, ShoppingCart, Clock, CalendarDays } from 'lucide-react';
+import { useMemo } from 'react';
 import { useAuth } from '../../auth/auth-provider';
 import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-view-banner';
 import PageMeta from '@/hooks/use-page-meta';
 import { useThemeScope } from '@/hooks/use-theme-scope';
+import { useFavicon } from '@/hooks/use-favicon';
 
 const bottomNav = [
   { name: 'Beranda', href: '/sales', icon: Home },
@@ -18,12 +20,15 @@ export function SalesShell() {
   const { user } = useAuth();
   useThemeScope('sales');
 
+  const companyLogo = useMemo(() => user?.company?.logoUrl ?? null, [user]);
+  const faviconHref = useFavicon({ url: companyLogo, fallbackInitial: user?.company?.name ?? undefined });
+
   return (
     <>
       <PageMeta
         title={`Sales | ${user?.company?.name}`}
         description="Sales Pages"
-        favicon="/sales.ico"
+        favicon={faviconHref}
       />
       <div className="flex min-h-screen justify-center bg-sales-bg text-sales-foreground">
         <div className="mobile-shell relative flex flex-col overflow-hidden">

@@ -670,10 +670,10 @@ export function TransactionsPage() {
 
       {/* Target Preview Banner (Store vs End User) */}
       {transactionMode === 'store' && activeVisit ? (
-        <div className="flex flex-col rounded-2xl border border-sales-accent-bg bg-sales-surface p-3.5 mb-2 shadow-sm gap-2.5">
+        <div className="flex flex-col rounded-3xl border border-sales-accent-bg bg-sales-surface p-3 mb-2.5 shadow-sm gap-2.5">
           <div className="flex items-center gap-3 w-full" style={{ minWidth: 0 }}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sales-accent text-sales-surface shadow-sm">
-              <Store size={20} />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sales-accent text-sales-surface shadow-xs">
+              <Store size={22} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <span className="text-sales-accent font-extrabold text-[11px] block mb-0.5">
@@ -685,7 +685,7 @@ export function TransactionsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full pt-2 border-t border-sales-border">
+          <div className="w-full pt-1.5 border-t border-sales-border">
             <button
               type="button"
               onClick={() => {
@@ -697,29 +697,30 @@ export function TransactionsPage() {
                   setShowEndUserFormModal(true);
                 }
               }}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-sales-accent/30 bg-sales-accent-bg py-2 text-sales-accent text-xs font-extrabold shadow-sm hover:bg-sales-accent/20 transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-1.5 rounded-2xl border border-sales-accent/40 bg-sales-accent-bg py-2 px-3 text-sales-accent text-xs font-extrabold shadow-xs hover:bg-sales-accent/20 transition-all cursor-pointer"
             >
-              <UserCheck size={14} /> Switch ke End User
+              <UserCheck size={15} /> Switch ke End User
             </button>
           </div>
         </div>
       ) : transactionMode === 'end_user' && endUserInfo ? (
-        <div className="flex flex-col rounded-2xl border border-sales-emerald/40 bg-sales-emerald-bg/20 p-3.5 mb-2 shadow-sm gap-2.5">
+        <div className="flex flex-col rounded-3xl border border-sales-emerald/40 bg-sales-emerald-bg/20 p-3 mb-2.5 shadow-sm gap-2.5">
+          {/* Top Row: Buyer Avatar & Information */}
           <div className="flex items-center gap-3 w-full" style={{ minWidth: 0 }}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sales-emerald text-sales-surface shadow-sm">
-              <UserCheck size={20} />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sales-emerald text-sales-surface shadow-xs">
+              <UserCheck size={22} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                <span className="text-sales-emerald font-extrabold text-[11px]">
+              <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                <span className="text-sales-emerald font-extrabold text-[11px] leading-none">
                   Pengguna Langsung (End User)
                 </span>
                 {endUserInfo.latitude && endUserInfo.longitude ? (
-                  <span className="flex items-center gap-1 text-sales-emerald font-extrabold text-[10px] bg-sales-emerald-bg px-2 py-0.5 rounded-md border border-sales-emerald/30">
-                    <MapPin size={10} /> GPS: {endUserInfo.latitude.toFixed(3)}, {endUserInfo.longitude.toFixed(3)}
+                  <span className="inline-flex items-center gap-0.5 text-sales-emerald font-extrabold text-[9px] bg-sales-emerald-bg px-2 py-0.5 rounded-full border border-sales-emerald/30">
+                    <MapPin size={9} /> GPS: {endUserInfo.latitude.toFixed(3)}, {endUserInfo.longitude.toFixed(3)}
                   </span>
                 ) : (
-                  <span className="text-sales-amber-deep font-bold text-[10px] bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                  <span className="text-sales-amber-deep font-bold text-[9px] bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                     GPS Pending
                   </span>
                 )}
@@ -730,7 +731,8 @@ export function TransactionsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full pt-2 border-t border-sales-emerald/20">
+          {/* Bottom Row: Equal 2-Button Row (Ubah & Ke Outlet) */}
+          <div className="grid grid-cols-2 gap-2 w-full pt-1.5 border-t border-sales-emerald/20">
             <button
               type="button"
               onClick={() => {
@@ -738,9 +740,9 @@ export function TransactionsPage() {
                 setEndUserPhoneInput(endUserInfo.phone || '');
                 setShowEndUserFormModal(true);
               }}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-sales-emerald/30 bg-sales-surface py-2 text-sales-emerald text-xs font-extrabold shadow-sm hover:bg-sales-emerald-bg transition-all cursor-pointer"
+              className="flex items-center justify-center gap-1.5 rounded-2xl border border-sales-emerald/40 bg-sales-surface py-2 px-3 text-sales-emerald text-xs font-extrabold shadow-xs hover:bg-sales-emerald-bg transition-all cursor-pointer"
             >
-              <User size={14} /> Ubah
+              <User size={15} /> Ubah
             </button>
             <button
               type="button"
@@ -751,9 +753,9 @@ export function TransactionsPage() {
                   navigate('/sales/visit');
                 }
               }}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-sales-accent/30 bg-sales-accent-bg py-2 text-sales-accent text-xs font-extrabold shadow-sm hover:bg-sales-accent/20 transition-all cursor-pointer"
+              className="flex items-center justify-center gap-1.5 rounded-2xl border border-sales-accent/40 bg-sales-accent-bg py-2 px-3 text-sales-accent text-xs font-extrabold shadow-xs hover:bg-sales-accent/20 transition-all cursor-pointer"
             >
-              <Store size={14} /> Ke Outlet
+              <Store size={15} /> Ke Outlet
             </button>
           </div>
         </div>

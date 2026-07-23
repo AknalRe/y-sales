@@ -465,6 +465,17 @@ export function TransactionsPage() {
     setOfflineMessage('');
   }
 
+  if (loading) {
+    return (
+      <main className="sales-home" style={{ minHeight: '65vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '.75rem', padding: '2rem', textAlign: 'center' }}>
+          <Loader2 size={36} className="animate-spin text-sales-accent" />
+          <span style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--sales-muted)' }}>Memuat data transaksi...</span>
+        </div>
+      </main>
+    );
+  }
+
   if (success) {
     return (
       <main className="sales-home">
@@ -486,7 +497,7 @@ export function TransactionsPage() {
   }
 
   // Gate Choice Screen if no active visit AND no active End User session
-  if (!activeVisit && (!endUserInfo || transactionMode !== 'end_user') && !loading) {
+  if (!activeVisit && (!endUserInfo || transactionMode !== 'end_user')) {
     return (
       <main className="sales-home">
         <div className="sales-home-greeting">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Camera, CheckCircle2, ChevronDown, ChevronUp, Eye, ReceiptText } from 'lucide-react';
+import { Camera, CheckCircle2, ChevronDown, ChevronUp, Eye, ReceiptText, Loader2 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import { apiRequest, createMediaUpload, uploadToStorageUrl, finalizeMediaUpload } from '../../../lib/api/client';
 import { EmptyState, Spinner } from '../../../components/ui';
@@ -207,6 +207,17 @@ export function InvoicesPage() {
     } finally {
       setUploadingFor(null);
     }
+  }
+
+  if (loading) {
+    return (
+      <main className="sales-home" style={{ minHeight: '65vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '.75rem', padding: '2rem', textAlign: 'center' }}>
+          <Loader2 size={36} className="animate-spin text-sales-accent" />
+          <span style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--sales-muted)' }}>Memuat riwayat nota...</span>
+        </div>
+      </main>
+    );
   }
 
   return (

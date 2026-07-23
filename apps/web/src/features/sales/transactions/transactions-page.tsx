@@ -671,21 +671,30 @@ export function TransactionsPage() {
       {/* Target Preview Banner (Store vs End User) */}
       {transactionMode === 'store' && activeVisit ? (
         <div className="flex flex-col rounded-3xl border border-sales-accent-bg bg-sales-surface p-3 mb-2.5 shadow-sm gap-2.5">
+          {/* Top Row: Store Avatar & Store Name */}
           <div className="flex items-center gap-3 w-full" style={{ minWidth: 0 }}>
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sales-accent text-sales-surface shadow-xs">
               <Store size={22} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <span className="text-sales-accent font-extrabold text-[11px] block mb-0.5">
-                Outlet Kunjungan (Toko)
+              <span className="text-sales-accent font-extrabold text-[11px] block mb-0.5 leading-none">
+                Outlet Kunjungan (Toko / Agen)
               </span>
-              <h4 className="font-extrabold text-sales-text-heading text-sm truncate margin-0" style={{ margin: 0 }}>
+              <h4 className="font-extrabold text-sales-text-heading text-sm margin-0 truncate" style={{ margin: 0 }}>
                 {activeVisit.outletName || 'Outlet Kunjungan'}
               </h4>
             </div>
           </div>
 
-          <div className="w-full pt-1.5 border-t border-sales-border">
+          {/* Bottom Row: Equal 2-Button Row (Ubah Outlet & Ke End User) */}
+          <div className="grid grid-cols-2 gap-2 w-full pt-1.5 border-t border-sales-border">
+            <button
+              type="button"
+              onClick={() => navigate('/sales/visit')}
+              className="flex items-center justify-center gap-1.5 rounded-2xl border border-sales-accent/40 bg-sales-surface py-2 px-3 text-sales-accent text-xs font-extrabold shadow-xs hover:bg-sales-accent-bg transition-all cursor-pointer"
+            >
+              <Store size={15} /> Ubah Outlet
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -697,9 +706,9 @@ export function TransactionsPage() {
                   setShowEndUserFormModal(true);
                 }
               }}
-              className="w-full flex items-center justify-center gap-1.5 rounded-2xl border border-sales-accent/40 bg-sales-accent-bg py-2 px-3 text-sales-accent text-xs font-extrabold shadow-xs hover:bg-sales-accent/20 transition-all cursor-pointer"
+              className="flex items-center justify-center gap-1.5 rounded-2xl border border-sales-emerald/40 bg-sales-emerald-bg/20 py-2 px-3 text-sales-emerald text-xs font-extrabold shadow-xs hover:bg-sales-emerald-bg transition-all cursor-pointer"
             >
-              <UserCheck size={15} /> Switch ke End User
+              <UserCheck size={15} /> Ke End User
             </button>
           </div>
         </div>

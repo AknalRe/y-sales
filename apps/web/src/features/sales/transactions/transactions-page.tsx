@@ -670,69 +670,80 @@ export function TransactionsPage() {
 
       {/* Target Preview Banner (Store vs End User) */}
       {transactionMode === 'store' && activeVisit ? (
-        <div className="flex items-center justify-between rounded-2xl border border-sales-accent-bg bg-sales-bg p-3 mb-2">
-          <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sales-accent text-sales-surface">
+        <div className="flex flex-col rounded-2xl border border-sales-accent-bg bg-sales-surface p-3.5 mb-2 shadow-sm gap-2.5">
+          <div className="flex items-center gap-3 w-full" style={{ minWidth: 0 }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sales-accent text-sales-surface shadow-sm">
               <Store size={20} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p className="text-sales-muted" style={{ fontSize: '.65rem', margin: 0 }}>Outlet Kunjungan (Toko)</p>
-              <p className="font-extrabold text-sales-text-heading truncate" style={{ fontSize: '.85rem', margin: 0 }}>
+              <span className="text-sales-accent font-extrabold text-[11px] block mb-0.5">
+                Outlet Kunjungan (Toko)
+              </span>
+              <h4 className="font-extrabold text-sales-text-heading text-sm truncate margin-0" style={{ margin: 0 }}>
                 {activeVisit.outletName || 'Outlet Kunjungan'}
-              </p>
+              </h4>
             </div>
           </div>
-          <button
-            onClick={() => {
-              if (endUserInfo) {
-                setTransactionMode('end_user');
-              } else {
-                setEndUserNameInput('');
-                setEndUserPhoneInput('');
-                setShowEndUserFormModal(true);
-              }
-            }}
-            className="shrink-0 rounded-xl border border-sales-accent/30 bg-sales-accent-bg px-2.5 py-1 text-sales-accent text-xs font-bold"
-            style={{ cursor: 'pointer' }}
-          >
-            Switch End User
-          </button>
+
+          <div className="flex items-center gap-2 w-full pt-2 border-t border-sales-border">
+            <button
+              type="button"
+              onClick={() => {
+                if (endUserInfo) {
+                  setTransactionMode('end_user');
+                } else {
+                  setEndUserNameInput('');
+                  setEndUserPhoneInput('');
+                  setShowEndUserFormModal(true);
+                }
+              }}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-sales-accent/30 bg-sales-accent-bg py-2 text-sales-accent text-xs font-extrabold shadow-sm hover:bg-sales-accent/20 transition-all cursor-pointer"
+            >
+              <UserCheck size={14} /> Switch ke End User
+            </button>
+          </div>
         </div>
       ) : transactionMode === 'end_user' && endUserInfo ? (
-        <div className="flex items-center justify-between rounded-2xl border border-sales-emerald/40 bg-sales-emerald-bg/20 p-3 mb-2">
-          <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sales-emerald text-sales-surface">
+        <div className="flex flex-col rounded-2xl border border-sales-emerald/40 bg-sales-emerald-bg/20 p-3.5 mb-2 shadow-sm gap-2.5">
+          <div className="flex items-center gap-3 w-full" style={{ minWidth: 0 }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sales-emerald text-sales-surface shadow-sm">
               <UserCheck size={20} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="flex items-center gap-1.5">
-                <p className="text-sales-emerald font-bold" style={{ fontSize: '.65rem', margin: 0 }}>Pengguna Langsung (End User)</p>
+              <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                <span className="text-sales-emerald font-extrabold text-[11px]">
+                  Pengguna Langsung (End User)
+                </span>
                 {endUserInfo.latitude && endUserInfo.longitude ? (
-                  <span className="flex items-center gap-0.5 text-sales-emerald font-extrabold" style={{ fontSize: '.6rem' }}>
+                  <span className="flex items-center gap-1 text-sales-emerald font-extrabold text-[10px] bg-sales-emerald-bg px-2 py-0.5 rounded-md border border-sales-emerald/30">
                     <MapPin size={10} /> GPS: {endUserInfo.latitude.toFixed(3)}, {endUserInfo.longitude.toFixed(3)}
                   </span>
                 ) : (
-                  <span className="text-sales-amber-deep font-semibold" style={{ fontSize: '.6rem' }}>GPS Pending</span>
+                  <span className="text-sales-amber-deep font-bold text-[10px] bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                    GPS Pending
+                  </span>
                 )}
               </div>
-              <p className="font-extrabold text-sales-text-heading truncate" style={{ fontSize: '.85rem', margin: 0 }}>
+              <h4 className="font-extrabold text-sales-text-heading text-sm margin-0 truncate" style={{ margin: 0 }}>
                 {endUserInfo.name} {endUserInfo.phone ? `(${endUserInfo.phone})` : ''}
-              </p>
+              </h4>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
+
+          <div className="flex items-center gap-2 w-full pt-2 border-t border-sales-emerald/20">
             <button
+              type="button"
               onClick={() => {
                 setEndUserNameInput(endUserInfo.name);
                 setEndUserPhoneInput(endUserInfo.phone || '');
                 setShowEndUserFormModal(true);
               }}
-              className="rounded-xl border border-sales-emerald/30 bg-sales-emerald-bg px-2.5 py-1 text-sales-emerald text-xs font-bold"
-              style={{ cursor: 'pointer' }}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-sales-emerald/30 bg-sales-surface py-2 text-sales-emerald text-xs font-extrabold shadow-sm hover:bg-sales-emerald-bg transition-all cursor-pointer"
             >
-              Ubah
+              <User size={14} /> Ubah
             </button>
             <button
+              type="button"
               onClick={() => {
                 if (activeVisit) {
                   setTransactionMode('store');
@@ -740,10 +751,9 @@ export function TransactionsPage() {
                   navigate('/sales/visit');
                 }
               }}
-              className="rounded-xl border border-sales-accent/30 bg-sales-accent-bg px-2.5 py-1 text-sales-accent text-xs font-bold"
-              style={{ cursor: 'pointer' }}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-sales-accent/30 bg-sales-accent-bg py-2 text-sales-accent text-xs font-extrabold shadow-sm hover:bg-sales-accent/20 transition-all cursor-pointer"
             >
-              Ke Outlet
+              <Store size={14} /> Ke Outlet
             </button>
           </div>
         </div>

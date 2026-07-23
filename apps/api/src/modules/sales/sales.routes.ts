@@ -31,13 +31,13 @@ const itemSchema = z.object({
 });
 
 const orderSchema = z.object({
-  outletId: z.string().uuid().optional(),
-  visitSessionId: z.string().uuid().optional(),
+  outletId: z.string().uuid().nullish().transform(val => val || undefined),
+  visitSessionId: z.string().uuid().nullish().transform(val => val || undefined),
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
-  endUserName: z.string().optional(),
-  endUserPhone: z.string().optional(),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  endUserName: z.string().nullish().transform(val => val || undefined),
+  endUserPhone: z.string().nullish().transform(val => val || undefined),
+  latitude: z.number().nullish().transform(val => val ?? undefined),
+  longitude: z.number().nullish().transform(val => val ?? undefined),
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
   clientRequestId: z.string().uuid(),
   sourceWarehouseId: z.string().uuid().optional(),

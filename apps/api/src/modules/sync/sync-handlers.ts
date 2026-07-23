@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   attendanceSessions,
@@ -47,7 +47,7 @@ const attendanceCheckInPayload = z.object({
 
 const visitCheckInPayload = z.object({
   outletId: z.string().uuid(),
-  scheduleId: z.string().uuid().optional(),
+  scheduleId: z.string().uuid().nullish().transform(val => val || undefined),
   clientRequestId: z.string().uuid(),
   latitude: z.number(),
   longitude: z.number(),
@@ -81,13 +81,13 @@ const visitCheckOutPayload = z.object({
 
 const transactionCreatePayload = z.object({
   clientRequestId: z.string().uuid(),
-  outletId: z.string().uuid().optional(),
-  visitSessionId: z.string().uuid().optional(),
+  outletId: z.string().uuid().nullish().transform(val => val || undefined),
+  visitSessionId: z.string().uuid().nullish().transform(val => val || undefined),
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
-  endUserName: z.string().optional(),
-  endUserPhone: z.string().optional(),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  endUserName: z.string().nullish().transform(val => val || undefined),
+  endUserPhone: z.string().nullish().transform(val => val || undefined),
+  latitude: z.number().nullish().transform(val => val ?? undefined),
+  longitude: z.number().nullish().transform(val => val ?? undefined),
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
   items: z.array(z.object({
     productId: z.string().uuid(),
@@ -228,18 +228,23 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
 
     let schedule: typeof visitSchedules.$inferSelect | undefined;
     if (body.scheduleId) {
-      [schedule] = await db.select().from(visitSchedules).where(
+      const [found] = await db.select().from(visitSchedules).where(
         and(eq(visitSchedules.companyId, ctx.companyId), eq(visitSchedules.id, body.scheduleId), eq(visitSchedules.salesUserId, ctx.userId))
       );
-    } else {
-      [schedule] = await db.select().from(visitSchedules).where(and(
+      if (found && ['assigned', 'approved'].includes(found.status)) {
+        schedule = found;
+      }
+    }
+    if (!schedule) {
+      const [foundToday] = await db.select().from(visitSchedules).where(and(
         eq(visitSchedules.companyId, ctx.companyId),
         eq(visitSchedules.salesUserId, ctx.userId),
         eq(visitSchedules.outletId, body.outletId),
         eq(visitSchedules.scheduledDate, todayDate()),
+        inArray(visitSchedules.status, ['assigned', 'approved']),
       )).limit(1);
+      schedule = foundToday;
     }
-    if (schedule && !['assigned', 'approved'].includes(schedule.status)) return { success: false, error: 'Jadwal tidak bisa dimulai' };
 
     if (!schedule) {
       [schedule] = await db.insert(visitSchedules).values({

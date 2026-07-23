@@ -40,7 +40,7 @@ const schedulePatchSchema = scheduleSchema.partial();
 
 const checkInSchema = z.object({
   outletId: z.string().uuid(),
-  scheduleId: z.string().uuid().optional(),
+  scheduleId: z.string().uuid().nullish().transform(val => val || undefined),
   clientRequestId: z.string().uuid(),
   latitude: z.number(),
   longitude: z.number(),
@@ -423,20 +423,20 @@ export async function visitRoutes(app: FastifyInstance) {
 
     let schedule: typeof visitSchedules.$inferSelect | undefined;
     if (body.scheduleId) {
-      [schedule] = await db.select().from(visitSchedules).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.id, body.scheduleId), eq(visitSchedules.salesUserId, request.user!.id)));
-      if (!schedule) throw Object.assign(new Error('Jadwal tidak ditemukan untuk sales ini.'), { statusCode: 404 });
-      if (schedule.outletId && schedule.outletId !== body.outletId) throw Object.assign(new Error('Outlet check-in tidak sesuai jadwal.'), { statusCode: 400 });
-      if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Jadwal tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
-    } else {
-      [schedule] = await db.select().from(visitSchedules).where(and(
+      const [found] = await db.select().from(visitSchedules).where(and(eq(visitSchedules.companyId, companyId), eq(visitSchedules.id, body.scheduleId), eq(visitSchedules.salesUserId, request.user!.id)));
+      if (found && ['assigned', 'approved'].includes(found.status)) {
+        schedule = found;
+      }
+    }
+    if (!schedule) {
+      const [foundToday] = await db.select().from(visitSchedules).where(and(
         eq(visitSchedules.companyId, companyId),
         eq(visitSchedules.salesUserId, request.user!.id),
         eq(visitSchedules.outletId, body.outletId),
         eq(visitSchedules.scheduledDate, todayDate()),
+        inArray(visitSchedules.status, ['assigned', 'approved']),
       )).orderBy(visitSchedules.priority).limit(1);
-      if (schedule && !['assigned', 'approved'].includes(schedule.status)) {
-        throw Object.assign(new Error('Jadwal tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
-      }
+      schedule = foundToday;
     }
 
     if (!schedule) {

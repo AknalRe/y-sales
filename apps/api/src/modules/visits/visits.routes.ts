@@ -434,8 +434,21 @@ export async function visitRoutes(app: FastifyInstance) {
         eq(visitSchedules.outletId, body.outletId),
         eq(visitSchedules.scheduledDate, todayDate()),
       )).orderBy(visitSchedules.priority).limit(1);
-      if (!schedule) throw Object.assign(new Error('Outlet ini tidak ada di jadwal visit sales hari ini.'), { statusCode: 400 });
-      if (!['assigned', 'approved'].includes(schedule.status)) throw Object.assign(new Error('Jadwal tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
+      if (schedule && !['assigned', 'approved'].includes(schedule.status)) {
+        throw Object.assign(new Error('Jadwal tidak dalam status yang bisa dimulai.'), { statusCode: 400 });
+      }
+    }
+
+    if (!schedule) {
+      [schedule] = await db.insert(visitSchedules).values({
+        companyId,
+        salesUserId: request.user!.id,
+        outletId: body.outletId,
+        scheduledDate: todayDate(),
+        priority: 1,
+        assignedByUserId: request.user!.id,
+        status: 'assigned',
+      }).returning();
     }
 
     const settings = await getGeneralSettings(companyId);
@@ -490,7 +503,6 @@ export async function visitRoutes(app: FastifyInstance) {
       const identityValid = !settings.requireFaceIdentityMatchForVisit || identityResult.status === 'matched';
       const faceAccepted = hasValidFace || identityResult.status === 'matched';
       const validationStatus = !faceAccepted ? 'face_not_detected' : geofence.valid && identityValid ? 'valid' : 'manual_review';
-
       const [visitResult] = await tx.insert(visitSessions).values({
         companyId,
         salesUserId: request.user!.id,
@@ -508,7 +520,9 @@ export async function visitRoutes(app: FastifyInstance) {
         clientRequestId: body.clientRequestId,
       }).returning();
 
-      await tx.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, schedule.id));
+      if (schedule) {
+        await tx.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, schedule.id));
+      }
 
       return { visit: visitResult, face: faceResult, identity: identityResult };
     });
@@ -526,11 +540,9 @@ export async function visitRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     const body = checkOutSchema.parse(request.body);
     const [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
-    if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan.'), { statusCode: 404 });
     if (!visit.checkInAt || visit.checkOutAt || !['open', 'invalid_location'].includes(visit.status)) throw Object.assign(new Error('Sesi kunjungan tidak dalam status terbuka.'), { statusCode: 400 });
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, visit.outletId)));
     if (!outlet) throw Object.assign(new Error('Outlet visit tidak ditemukan.'), { statusCode: 404 });
-
     const settings = await getGeneralSettings(companyId);
     const radius = visit.geofenceRadiusMUsed ?? outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
     const geofence = validateGeofence({

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronUp, ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff, Store, X, XCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff, Store, X, XCircle, UserCheck, User, Phone, MapPin, Compass } from 'lucide-react';
 import { getProducts, createOrder } from '../../../lib/api/tenant';
 import { getActiveVisitSession } from '../../../lib/api/client';
 import { useAuth } from '../../auth/auth-provider';
@@ -12,6 +12,7 @@ import { SalesAlert, showSalesAlertToast } from '../ui/sales-alert';
 
 const activeVisitStorageKey = 'yuksales.sales.activeVisit';
 const transactionDraftStorageKey = 'yuksales.sales.transactionDraft';
+const endUserInfoStorageKey = 'yuksales.sales.endUserInfo';
 
 type CartItem = {
   product: any;
@@ -25,9 +26,17 @@ type ActiveVisit = {
   scheduleId?: string;
 };
 
+type EndUserInfo = {
+  name: string;
+  phone?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
+};
+
 type TransactionDraft = {
-  visitId: string;
-  outletId: string;
+  visitId?: string;
+  outletId?: string;
   paymentMethod: 'cash' | 'qris' | 'credit' | 'consignment';
   cart: CartItem[];
 };
@@ -63,6 +72,13 @@ export function TransactionsPage() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeVisit, setActiveVisit] = useState<ActiveVisit | null>(null);
+  const [transactionMode, setTransactionMode] = useState<'store' | 'end_user'>('store');
+  const [endUserInfo, setEndUserInfo] = useState<EndUserInfo | null>(null);
+  const [showChoiceModal, setShowChoiceModal] = useState(false);
+  const [showEndUserFormModal, setShowEndUserFormModal] = useState(false);
+  const [endUserNameInput, setEndUserNameInput] = useState('');
+  const [endUserPhoneInput, setEndUserPhoneInput] = useState('');
+  const [gettingLocation, setGettingLocation] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'qris' | 'credit' | 'consignment'>('cash');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -103,12 +119,26 @@ export function TransactionsPage() {
     let cancelled = false;
 
     async function syncActiveVisit() {
+      const rawEndUser = localStorage.getItem(endUserInfoStorageKey);
+      let parsedEndUser: EndUserInfo | null = null;
+      if (rawEndUser) {
+        try {
+          parsedEndUser = JSON.parse(rawEndUser) as EndUserInfo;
+          if (parsedEndUser?.name) {
+            setEndUserInfo(parsedEndUser);
+          }
+        } catch {
+          localStorage.removeItem(endUserInfoStorageKey);
+        }
+      }
+
       const raw = localStorage.getItem(activeVisitStorageKey);
       if (raw) {
         try {
           const visit = JSON.parse(raw) as ActiveVisit;
           if (!cancelled) {
             setActiveVisit(visit);
+            setTransactionMode('store');
             const draftRaw = localStorage.getItem(transactionDraftStorageKey);
             if (draftRaw) {
               const draft = JSON.parse(draftRaw) as TransactionDraft;
@@ -123,10 +153,12 @@ export function TransactionsPage() {
         } catch {
           localStorage.removeItem(activeVisitStorageKey);
           localStorage.removeItem(transactionDraftStorageKey);
-          if (!cancelled) setActiveVisit(null);
+          if (!cancelled) {
+            setActiveVisit(null);
+            if (parsedEndUser) setTransactionMode('end_user');
+          }
         }
       } else if (accessToken) {
-        // localStorage kosong — tanya server apakah ada visit aktif hari ini
         try {
           const res = await getActiveVisitSession(accessToken);
           if (!cancelled) {
@@ -139,17 +171,23 @@ export function TransactionsPage() {
               };
               localStorage.setItem(activeVisitStorageKey, JSON.stringify(visit));
               setActiveVisit(visit);
+              setTransactionMode('store');
             } else {
               setActiveVisit(null);
-              localStorage.removeItem(transactionDraftStorageKey);
+              if (parsedEndUser) setTransactionMode('end_user');
             }
           }
         } catch {
-          if (!cancelled) setActiveVisit(null);
+          if (!cancelled) {
+            setActiveVisit(null);
+            if (parsedEndUser) setTransactionMode('end_user');
+          }
         }
       } else {
-        if (!cancelled) setActiveVisit(null);
-        localStorage.removeItem(transactionDraftStorageKey);
+        if (!cancelled) {
+          setActiveVisit(null);
+          if (parsedEndUser) setTransactionMode('end_user');
+        }
       }
       if (!cancelled) setDraftReady(true);
     }
@@ -163,16 +201,27 @@ export function TransactionsPage() {
         .finally(() => setLoading(false));
     }
 
-    // Cross-tab sync: update state saat tab lain mengubah localStorage
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key !== activeVisitStorageKey) return;
-      if (e.newValue) {
-        try {
-          const visit = JSON.parse(e.newValue) as ActiveVisit;
-          setActiveVisit(visit);
-        } catch { /* invalid json */ }
-      } else {
-        setActiveVisit(null);
+      if (e.key === activeVisitStorageKey) {
+        if (e.newValue) {
+          try {
+            const visit = JSON.parse(e.newValue) as ActiveVisit;
+            setActiveVisit(visit);
+            setTransactionMode('store');
+          } catch { /* invalid json */ }
+        } else {
+          setActiveVisit(null);
+        }
+      }
+      if (e.key === endUserInfoStorageKey) {
+        if (e.newValue) {
+          try {
+            const info = JSON.parse(e.newValue) as EndUserInfo;
+            setEndUserInfo(info);
+          } catch { /* invalid json */ }
+        } else {
+          setEndUserInfo(null);
+        }
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -185,13 +234,13 @@ export function TransactionsPage() {
 
   useEffect(() => {
     if (!draftReady) return;
-    if (!activeVisit || cart.length === 0) {
+    if (cart.length === 0) {
       localStorage.removeItem(transactionDraftStorageKey);
       return;
     }
     const draft: TransactionDraft = {
-      visitId: activeVisit.id,
-      outletId: activeVisit.outletId,
+      visitId: activeVisit?.id,
+      outletId: activeVisit?.outletId,
       paymentMethod,
       cart,
     };
@@ -298,28 +347,94 @@ export function TransactionsPage() {
     }).filter(Boolean) as CartItem[]);
   }
 
+  function handleSaveEndUser(name: string, phone: string) {
+    if (!name.trim()) return;
+    setGettingLocation(true);
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
+
+    const saveAndClose = (latitude?: number, longitude?: number, accuracy?: number) => {
+      const info: EndUserInfo = {
+        name: trimmedName,
+        phone: trimmedPhone || undefined,
+        latitude,
+        longitude,
+        accuracy,
+      };
+      setEndUserInfo(info);
+      localStorage.setItem(endUserInfoStorageKey, JSON.stringify(info));
+      setTransactionMode('end_user');
+      setShowEndUserFormModal(false);
+      setShowChoiceModal(false);
+      setGettingLocation(false);
+    };
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => saveAndClose(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
+        (err) => {
+          console.warn('[EndUser] Geolocation position error:', err);
+          saveAndClose();
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    } else {
+      saveAndClose();
+    }
+  }
+
   async function handleSubmit() {
-    if (!accessToken || !activeVisit || cart.length === 0) return;
+    if (!accessToken || cart.length === 0) return;
+
+    if (transactionMode === 'store' && !activeVisit) {
+      setError('Sesi visit outlet belum aktif. Silakan check-in kunjungan toko terlebih dahulu.');
+      return;
+    }
+
+    if (transactionMode === 'end_user' && !endUserInfo) {
+      setError('Data konsumen (end user) belum diisi.');
+      return;
+    }
+
     setSubmitting(true);
     setError('');
 
-    const orderPayload = {
-      clientRequestId: crypto.randomUUID(),
-      outletId: activeVisit.outletId,
-      visitSessionId: activeVisit.id,
-      customerType: 'store' as const,
-      paymentMethod,
-      items: cart.map(i => ({
-        productId: i.product.id,
-        quantity: String(i.quantity),
-        unitPrice: String(i.product.priceDefault)
-      }))
-    };
+    const orderPayload = transactionMode === 'end_user'
+      ? {
+          clientRequestId: crypto.randomUUID(),
+          customerType: 'end_user' as const,
+          endUserName: endUserInfo!.name,
+          endUserPhone: endUserInfo!.phone || undefined,
+          latitude: endUserInfo!.latitude,
+          longitude: endUserInfo!.longitude,
+          paymentMethod,
+          items: cart.map(i => ({
+            productId: i.product.id,
+            quantity: String(i.quantity),
+            unitPrice: String(i.product.priceDefault)
+          }))
+        }
+      : {
+          clientRequestId: crypto.randomUUID(),
+          outletId: activeVisit!.outletId,
+          visitSessionId: activeVisit!.id,
+          customerType: 'store' as const,
+          paymentMethod,
+          items: cart.map(i => ({
+            productId: i.product.id,
+            quantity: String(i.quantity),
+            unitPrice: String(i.product.priceDefault)
+          }))
+        };
 
     try {
       if (!navigator.onLine) throw new Error('offline');
       await createOrder(accessToken, orderPayload);
       localStorage.removeItem(transactionDraftStorageKey);
+      if (transactionMode === 'end_user') {
+        localStorage.removeItem(endUserInfoStorageKey);
+        setEndUserInfo(null);
+      }
       setSuccess(true);
       setCart([]);
     } catch (e: any) {
@@ -327,6 +442,10 @@ export function TransactionsPage() {
         await enqueueTransaction({ type: 'create-order', accessToken, payload: orderPayload });
         await refreshQueueCount();
         localStorage.removeItem(transactionDraftStorageKey);
+        if (transactionMode === 'end_user') {
+          localStorage.removeItem(endUserInfoStorageKey);
+          setEndUserInfo(null);
+        }
         setSuccess(true);
         setCart([]);
         setOfflineMessage('Transaksi disimpan offline dan akan tersinkron saat online.');
@@ -366,38 +485,135 @@ export function TransactionsPage() {
     );
   }
 
-  // No active visit → show gate popup
-  if (!activeVisit) {
+  // Gate Choice Screen if no active visit AND no active End User session
+  if (!activeVisit && (!endUserInfo || transactionMode !== 'end_user') && !loading) {
     return (
       <main className="sales-home">
         <div className="sales-home-greeting">
           <div>
             <p className="sales-greeting-label">Buat Order</p>
-            <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Buat Transaksi</h1>
+            <h1 className="sales-greeting-name" style={{ fontSize: '1.25rem' }}>Pilih Jenis Transaksi</h1>
           </div>
           {!online && <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}><WifiOff size={14} /> Offline</span>}
         </div>
 
-        <div className="sales-step-card">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sales-amber-bg text-sales-amber-deep">
-              <XCircle size={20} />
+        <p className="text-sales-muted mb-4" style={{ fontSize: '.8rem', lineHeight: 1.4 }}>
+          Silakan pilih kategori transaksi penjualan yang ingin Anda proses saat ini:
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '.85rem' }}>
+          {/* Option 1: Transaksi Outlet (Store) */}
+          <div
+            onClick={() => navigate('/sales/visit')}
+            className="sales-card flex items-center gap-3.5 p-4 rounded-2xl border border-sales-accent-bg bg-sales-surface cursor-pointer hover:border-sales-accent transition-all shadow-sm"
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sales-accent text-sales-surface">
+              <Store size={24} />
             </div>
             <div style={{ flex: 1 }}>
-              <strong className="text-sales-text-heading" style={{ fontSize: '.85rem' }}>Belum Ada Visit Aktif</strong>
-              <p className="text-sales-muted" style={{ fontSize: '.75rem', marginTop: 2 }}>
-                Anda harus check-in visit outlet terlebih dahulu sebelum bisa membuat transaksi.
+              <h3 className="font-extrabold text-sales-text-heading" style={{ fontSize: '.95rem', margin: 0 }}>
+                1. Transaksi Outlet (Toko / Agen)
+              </h3>
+              <p className="text-sales-muted" style={{ fontSize: '.75rem', marginTop: 4, marginBottom: 0, lineHeight: 1.3 }}>
+                Wajib absen visit toko terlebih dahulu. Pilih dari jadwal atau buat toko baru.
               </p>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/sales/visit')}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-sales-accent text-sales-surface border-none"
-            style={{ marginTop: '.75rem', padding: '.7rem', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}
+
+          {/* Option 2: Transaksi End User */}
+          <div
+            onClick={() => {
+              setEndUserNameInput('');
+              setEndUserPhoneInput('');
+              setShowEndUserFormModal(true);
+            }}
+            className="sales-card flex items-center gap-3.5 p-4 rounded-2xl border border-sales-emerald/40 bg-sales-surface cursor-pointer hover:border-sales-emerald transition-all shadow-sm"
+            style={{ cursor: 'pointer' }}
           >
-            Buka Halaman Visit
-          </button>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sales-emerald-bg text-sales-emerald">
+              <UserCheck size={24} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 className="font-extrabold text-sales-text-heading" style={{ fontSize: '.95rem', margin: 0 }}>
+                2. Transaksi Pengguna Langsung (End User)
+              </h3>
+              <p className="text-sales-muted" style={{ fontSize: '.75rem', marginTop: 4, marginBottom: 0, lineHeight: 1.3 }}>
+                Penjualan langsung ke konsumen akhir tanpa melalui sesi visit outlet toko.
+              </p>
+            </div>
+          </div>
         </div>
+
+        {/* Modal Input Data End User */}
+        {showEndUserFormModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-3xl bg-sales-surface p-5 shadow-2xl border border-sales-accent-bg">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sales-emerald-bg text-sales-emerald">
+                    <UserCheck size={18} />
+                  </div>
+                  <h3 className="font-extrabold text-sales-text-heading" style={{ fontSize: '1rem', margin: 0 }}>Data Konsumen / End User</h3>
+                </div>
+                <button onClick={() => setShowEndUserFormModal(false)} className="text-sales-muted bg-transparent border-none p-1 cursor-pointer">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label className="block text-xs font-bold text-sales-muted mb-1">Nama Konsumen / Pembeli *</label>
+                  <div className="flex items-center gap-2 rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2.5">
+                    <User size={18} className="text-sales-brand-muted shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Masukkan nama konsumen..."
+                      value={endUserNameInput}
+                      onChange={(e) => setEndUserNameInput(e.target.value)}
+                      className="bg-transparent border-none text-sales-foreground outline-none w-full text-sm font-semibold"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-sales-muted mb-1">Nomor Telepon / WhatsApp (Opsional)</label>
+                  <div className="flex items-center gap-2 rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2.5">
+                    <Phone size={18} className="text-sales-brand-muted shrink-0" />
+                    <input
+                      type="tel"
+                      placeholder="Contoh: 081234567890"
+                      value={endUserPhoneInput}
+                      onChange={(e) => setEndUserPhoneInput(e.target.value)}
+                      className="bg-transparent border-none text-sales-foreground outline-none w-full text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-sales-accent-bg/40 p-3 text-xs text-sales-muted flex items-start gap-2">
+                  <MapPin size={16} className="text-sales-accent shrink-0 mt-0.5" />
+                  <span>Sistem akan otomatis mengabadikan koordinat lokasi GPS transaksi Anda untuk laporan admin.</span>
+                </div>
+
+                <button
+                  disabled={!endUserNameInput.trim() || gettingLocation}
+                  onClick={() => handleSaveEndUser(endUserNameInput, endUserPhoneInput)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-sales-accent text-sales-surface py-3 font-bold text-sm border-none cursor-pointer disabled:opacity-50"
+                  style={{ marginTop: '.5rem' }}
+                >
+                  {gettingLocation ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Mengambil Lokasi GPS...
+                    </>
+                  ) : (
+                    'Mulai Transaksi'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     );
   }
@@ -441,18 +657,156 @@ export function TransactionsPage() {
         {!online && <span className="flex items-center gap-1 text-sales-red" style={{ fontSize: '.75rem' }}><WifiOff size={14} /> Offline</span>}
       </div>
 
-      {/* Active Outlet Card */}
-      <div className="flex items-center gap-3 rounded-2xl border border-sales-accent-bg bg-sales-bg p-3 mb-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sales-accent text-sales-surface">
-          <Store size={20} />
+      {/* Target Preview Banner (Store vs End User) */}
+      {transactionMode === 'store' && activeVisit ? (
+        <div className="flex items-center justify-between rounded-2xl border border-sales-accent-bg bg-sales-bg p-3 mb-2">
+          <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sales-accent text-sales-surface">
+              <Store size={20} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p className="text-sales-muted" style={{ fontSize: '.65rem', margin: 0 }}>Outlet Kunjungan (Toko)</p>
+              <p className="font-extrabold text-sales-text-heading truncate" style={{ fontSize: '.85rem', margin: 0 }}>
+                {activeVisit.outletName || 'Outlet Kunjungan'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (endUserInfo) {
+                setTransactionMode('end_user');
+              } else {
+                setEndUserNameInput('');
+                setEndUserPhoneInput('');
+                setShowEndUserFormModal(true);
+              }
+            }}
+            className="shrink-0 rounded-xl border border-sales-accent/30 bg-sales-accent-bg px-2.5 py-1 text-sales-accent text-xs font-bold"
+            style={{ cursor: 'pointer' }}
+          >
+            Switch End User
+          </button>
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p className="text-sales-muted" style={{ fontSize: '.65rem', margin: 0 }}>Outlet Aktif</p>
-          <p className="font-extrabold text-sales-text-heading truncate" style={{ fontSize: '.85rem', margin: 0 }}>
-            {activeVisit.outletName || 'Outlet Kunjungan'}
-          </p>
+      ) : transactionMode === 'end_user' && endUserInfo ? (
+        <div className="flex items-center justify-between rounded-2xl border border-sales-emerald/40 bg-sales-emerald-bg/20 p-3 mb-2">
+          <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sales-emerald text-sales-surface">
+              <UserCheck size={20} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sales-emerald font-bold" style={{ fontSize: '.65rem', margin: 0 }}>Pengguna Langsung (End User)</p>
+                {endUserInfo.latitude && endUserInfo.longitude ? (
+                  <span className="flex items-center gap-0.5 text-sales-emerald font-extrabold" style={{ fontSize: '.6rem' }}>
+                    <MapPin size={10} /> GPS: {endUserInfo.latitude.toFixed(3)}, {endUserInfo.longitude.toFixed(3)}
+                  </span>
+                ) : (
+                  <span className="text-sales-amber-deep font-semibold" style={{ fontSize: '.6rem' }}>GPS Pending</span>
+                )}
+              </div>
+              <p className="font-extrabold text-sales-text-heading truncate" style={{ fontSize: '.85rem', margin: 0 }}>
+                {endUserInfo.name} {endUserInfo.phone ? `(${endUserInfo.phone})` : ''}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => {
+                setEndUserNameInput(endUserInfo.name);
+                setEndUserPhoneInput(endUserInfo.phone || '');
+                setShowEndUserFormModal(true);
+              }}
+              className="rounded-xl border border-sales-emerald/30 bg-sales-emerald-bg px-2.5 py-1 text-sales-emerald text-xs font-bold"
+              style={{ cursor: 'pointer' }}
+            >
+              Ubah
+            </button>
+            <button
+              onClick={() => {
+                if (activeVisit) {
+                  setTransactionMode('store');
+                } else {
+                  navigate('/sales/visit');
+                }
+              }}
+              className="rounded-xl border border-sales-accent/30 bg-sales-accent-bg px-2.5 py-1 text-sales-accent text-xs font-bold"
+              style={{ cursor: 'pointer' }}
+            >
+              Ke Outlet
+            </button>
+          </div>
         </div>
-      </div>
+      ) : null}
+
+      {/* End User Form Modal inside Transaction Page */}
+      {showEndUserFormModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-sales-surface p-5 shadow-2xl border border-sales-accent-bg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sales-emerald-bg text-sales-emerald">
+                  <UserCheck size={18} />
+                </div>
+                <h3 className="font-extrabold text-sales-text-heading" style={{ fontSize: '1rem', margin: 0 }}>Data Konsumen / End User</h3>
+              </div>
+              <button onClick={() => setShowEndUserFormModal(false)} className="text-sales-muted bg-transparent border-none p-1 cursor-pointer">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label className="block text-xs font-bold text-sales-muted mb-1">Nama Konsumen / Pembeli *</label>
+                <div className="flex items-center gap-2 rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2.5">
+                  <User size={18} className="text-sales-brand-muted shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Masukkan nama konsumen..."
+                    value={endUserNameInput}
+                    onChange={(e) => setEndUserNameInput(e.target.value)}
+                    className="bg-transparent border-none text-sales-foreground outline-none w-full text-sm font-semibold"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-sales-muted mb-1">Nomor Telepon / WhatsApp (Opsional)</label>
+                <div className="flex items-center gap-2 rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2.5">
+                  <Phone size={18} className="text-sales-brand-muted shrink-0" />
+                  <input
+                    type="tel"
+                    placeholder="Contoh: 081234567890"
+                    value={endUserPhoneInput}
+                    onChange={(e) => setEndUserPhoneInput(e.target.value)}
+                    className="bg-transparent border-none text-sales-foreground outline-none w-full text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-sales-accent-bg/40 p-3 text-xs text-sales-muted flex items-start gap-2">
+                <MapPin size={16} className="text-sales-accent shrink-0 mt-0.5" />
+                <span>Sistem akan otomatis merekam lokasi GPS transaksi Anda untuk pelaporan admin.</span>
+              </div>
+
+              <button
+                disabled={!endUserNameInput.trim() || gettingLocation}
+                onClick={() => handleSaveEndUser(endUserNameInput, endUserPhoneInput)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-sales-accent text-sales-surface py-3 font-bold text-sm border-none cursor-pointer disabled:opacity-50"
+                style={{ marginTop: '.5rem' }}
+              >
+                {gettingLocation ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" /> Mengambil Lokasi GPS...
+                  </>
+                ) : (
+                  'Simpan & Lanjutkan'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {queueCount > 0 && (
         <div className="flex items-center justify-between rounded-xl border border-sales-accent-bg bg-sales-bg px-3 py-2 mb-2">

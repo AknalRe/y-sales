@@ -730,9 +730,13 @@ export function updateCompanyIntegration(token: string, id: string, payload: Par
 
 export type CreateOrderPayload = {
   clientRequestId: string;
-  outletId: string;
-  visitSessionId: string;
+  outletId?: string;
+  visitSessionId?: string;
   customerType: 'store' | 'agent' | 'end_user';
+  endUserName?: string;
+  endUserPhone?: string;
+  latitude?: number;
+  longitude?: number;
   paymentMethod: 'cash' | 'qris' | 'credit' | 'consignment';
   items: Array<{ productId: string; quantity: string; unitPrice: string }>;
 };

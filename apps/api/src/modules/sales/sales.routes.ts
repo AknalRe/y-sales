@@ -32,8 +32,12 @@ const itemSchema = z.object({
 
 const orderSchema = z.object({
   outletId: z.string().uuid().optional(),
-  visitSessionId: z.string().uuid(),
+  visitSessionId: z.string().uuid().optional(),
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
+  endUserName: z.string().optional(),
+  endUserPhone: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
   clientRequestId: z.string().uuid(),
   sourceWarehouseId: z.string().uuid().optional(),
@@ -285,10 +289,20 @@ export async function salesRoutes(app: FastifyInstance) {
     const [existing] = await db.select().from(salesTransactions).where(and(eq(salesTransactions.companyId, companyId), eq(salesTransactions.clientRequestId, body.clientRequestId)));
     if (existing) return { order: existing, idempotent: true };
 
-    const [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
-    if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan untuk sales ini.'), { statusCode: 404 });
-    if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada kunjungan yang masih terbuka.'), { statusCode: 400 });
-    if (body.outletId && visit.outletId !== body.outletId) throw Object.assign(new Error('Outlet order harus sama dengan outlet visit.'), { statusCode: 400 });
+    let visit: typeof visitSessions.$inferSelect | undefined;
+    if (body.customerType === 'end_user') {
+      if (body.visitSessionId) {
+        [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
+        if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan untuk sales ini.'), { statusCode: 404 });
+        if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada kunjungan yang masih terbuka.'), { statusCode: 400 });
+      }
+    } else {
+      if (!body.visitSessionId) throw Object.assign(new Error('Transaksi outlet memerlukan sesi kunjungan (absen visit) yang sedang berlangsung.'), { statusCode: 400 });
+      [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
+      if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan untuk sales ini.'), { statusCode: 404 });
+      if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada kunjungan yang masih terbuka.'), { statusCode: 400 });
+      if (body.outletId && visit.outletId !== body.outletId) throw Object.assign(new Error('Outlet order harus sama dengan outlet visit.'), { statusCode: 400 });
+    }
 
     const [stockWarehouse] = body.sourceWarehouseId
       ? await db.select().from(warehouses).where(and(eq(warehouses.companyId, companyId), eq(warehouses.id, body.sourceWarehouseId), eq(warehouses.type, 'sales_van'), eq(warehouses.ownerUserId, request.user!.id)))
@@ -300,10 +314,14 @@ export async function salesRoutes(app: FastifyInstance) {
         companyId,
         transactionNo: `SO-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
         salesUserId: request.user!.id,
-        outletId: visit.outletId,
-        visitSessionId: body.visitSessionId,
+        outletId: body.outletId ?? visit?.outletId ?? null,
+        visitSessionId: body.visitSessionId ?? visit?.id ?? null,
         sourceWarehouseId: stockWarehouse.id,
         customerType: body.customerType,
+        endUserName: body.endUserName ?? null,
+        endUserPhone: body.endUserPhone ?? null,
+        latitude: body.latitude != null ? String(body.latitude) : null,
+        longitude: body.longitude != null ? String(body.longitude) : null,
         paymentMethod: body.paymentMethod,
         subtotalAmount: total,
         totalAmount: total,

@@ -4,9 +4,13 @@ type QueueStatus = 'pending' | 'syncing' | 'failed';
 
 export type TransactionOrderPayload = {
   clientRequestId: string;
-  outletId: string;
-  visitSessionId: string;
+  outletId?: string;
+  visitSessionId?: string;
   customerType: 'store' | 'agent' | 'end_user';
+  endUserName?: string;
+  endUserPhone?: string;
+  latitude?: number;
+  longitude?: number;
   paymentMethod: 'cash' | 'qris' | 'credit' | 'consignment';
   items: Array<{
     productId: string;

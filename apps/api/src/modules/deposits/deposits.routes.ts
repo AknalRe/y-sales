@@ -119,11 +119,13 @@ export async function depositRoutes(app: FastifyInstance) {
     const expectedCash = Number(body.expectedCashAmount);
     const declaredCash = Number(body.declaredCashAmount);
     const discrepancy = declaredCash - expectedCash;
+    const canReconcile = request.user!.isSuperAdmin || request.user!.roleCode === 'ADMINISTRATOR' || request.user!.permissions.includes('deposits.reconcile');
+    const targetSalesUserId = canReconcile && body.salesUserId ? body.salesUserId : request.user!.id;
 
     const deposit = await db.transaction(async (tx) => {
       const [dep] = await tx.insert(cashDeposits).values({
         companyId,
-        salesUserId: body.salesUserId,
+        salesUserId: targetSalesUserId,
         workDate: body.workDate,
         attendanceSessionId: body.attendanceSessionId,
         expectedCashAmount: body.expectedCashAmount,

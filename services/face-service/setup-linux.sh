@@ -1,13 +1,19 @@
 #!/usr/bin/env sh
 set -eu
 
-python3 -m venv .venv-face
-. .venv-face/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-if [ ! -f services/face-service/config.json ]; then
-  cp services/face-service/config.example.json services/face-service/config.json
+echo "Creating virtual environment at $SCRIPT_DIR/.venv-face..."
+python3 -m venv "$SCRIPT_DIR/.venv-face"
+
+echo "Upgrading pip..."
+"$SCRIPT_DIR/.venv-face/bin/pip" install --upgrade pip
+
+echo "Installing requirements..."
+"$SCRIPT_DIR/.venv-face/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
+
+if [ ! -f "$SCRIPT_DIR/config.json" ]; then
+  cp "$SCRIPT_DIR/config.example.json" "$SCRIPT_DIR/config.json"
 fi
 
 echo "Face service venv siap. Edit services/face-service/config.json sebelum menjalankan PM2."

@@ -81,9 +81,13 @@ const visitCheckOutPayload = z.object({
 
 const transactionCreatePayload = z.object({
   clientRequestId: z.string().uuid(),
-  outletId: z.string().uuid(),
-  visitSessionId: z.string().uuid(),
+  outletId: z.string().uuid().optional(),
+  visitSessionId: z.string().uuid().optional(),
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
+  endUserName: z.string().optional(),
+  endUserPhone: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
   items: z.array(z.object({
     productId: z.string().uuid(),
@@ -235,8 +239,19 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
         eq(visitSchedules.scheduledDate, todayDate()),
       )).limit(1);
     }
-    if (!schedule) return { success: false, error: 'Jadwal tidak ditemukan' };
-    if (!['assigned', 'approved'].includes(schedule.status)) return { success: false, error: 'Jadwal tidak bisa dimulai' };
+    if (schedule && !['assigned', 'approved'].includes(schedule.status)) return { success: false, error: 'Jadwal tidak bisa dimulai' };
+
+    if (!schedule) {
+      [schedule] = await db.insert(visitSchedules).values({
+        companyId: ctx.companyId,
+        salesUserId: ctx.userId,
+        outletId: body.outletId,
+        scheduledDate: todayDate(),
+        priority: 1,
+        assignedByUserId: ctx.userId,
+        status: 'assigned',
+      }).returning();
+    }
 
     const settings = await getGeneralSettings(ctx.companyId);
     const radius = outlet.geofenceRadiusM ?? settings.defaultGeofenceRadiusM;
@@ -293,7 +308,9 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
       clientRequestId: body.clientRequestId,
     }).returning();
 
-    await db.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, schedule.id));
+    if (schedule) {
+      await db.update(visitSchedules).set({ status: 'in_progress', updatedAt: new Date() }).where(eq(visitSchedules.id, schedule.id));
+    }
     try { await writeAuditLog({ request: ctx.request, action: 'sync.visit.check_in', entityType: 'visit_session', entityId: visit.id, newValues: visit }); } catch (auditErr) { console.error('[AuditLog] sync.visit.check_in failed:', auditErr); }
     return { success: true, entityId: visit.id };
   } catch (error: any) {
@@ -380,11 +397,23 @@ async function handleTransactionCreate(payload: unknown, ctx: SyncContext): Prom
     );
     if (existing) return { success: true, entityId: existing.id };
 
-    const [visit] = await db.select().from(visitSessions).where(
-      and(eq(visitSessions.companyId, ctx.companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, ctx.userId))
-    );
-    if (!visit) return { success: false, error: 'Sesi kunjungan tidak ditemukan' };
-    if (visit.status !== 'open') return { success: false, error: 'Visit tidak open' };
+    let visit: typeof visitSessions.$inferSelect | undefined;
+    if (body.customerType === 'end_user') {
+      if (body.visitSessionId) {
+        [visit] = await db.select().from(visitSessions).where(
+          and(eq(visitSessions.companyId, ctx.companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, ctx.userId))
+        );
+        if (!visit) return { success: false, error: 'Sesi kunjungan tidak ditemukan' };
+        if (visit.status !== 'open') return { success: false, error: 'Visit tidak open' };
+      }
+    } else {
+      if (!body.visitSessionId) return { success: false, error: 'Transaksi outlet memerlukan sesi kunjungan (absen visit)' };
+      [visit] = await db.select().from(visitSessions).where(
+        and(eq(visitSessions.companyId, ctx.companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, ctx.userId))
+      );
+      if (!visit) return { success: false, error: 'Sesi kunjungan tidak ditemukan' };
+      if (visit.status !== 'open') return { success: false, error: 'Visit tidak open' };
+    }
 
     const [stockWarehouse] = await db.select().from(warehouses).where(
       and(eq(warehouses.companyId, ctx.companyId), eq(warehouses.type, 'sales_van'), eq(warehouses.ownerUserId, ctx.userId), eq(warehouses.status, 'active'))
@@ -398,10 +427,14 @@ async function handleTransactionCreate(payload: unknown, ctx: SyncContext): Prom
         companyId: ctx.companyId,
         transactionNo: `SO-${Date.now()}`,
         salesUserId: ctx.userId,
-        outletId: visit.outletId,
-        visitSessionId: body.visitSessionId,
+        outletId: body.outletId ?? visit?.outletId ?? null,
+        visitSessionId: body.visitSessionId ?? visit?.id ?? null,
         sourceWarehouseId: stockWarehouse.id,
         customerType: body.customerType,
+        endUserName: body.endUserName ?? null,
+        endUserPhone: body.endUserPhone ?? null,
+        latitude: body.latitude != null ? String(body.latitude) : null,
+        longitude: body.longitude != null ? String(body.longitude) : null,
         paymentMethod: body.paymentMethod,
         subtotalAmount: total,
         totalAmount: total,

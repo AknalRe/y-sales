@@ -23,6 +23,8 @@ export const salesTransactions = pgTable('sales_transactions', {
   customerType: transactionCustomerTypeEnum('customer_type').notNull(),
   endUserName: varchar('end_user_name', { length: 160 }),
   endUserPhone: varchar('end_user_phone', { length: 40 }),
+  latitude: numeric('latitude', { precision: 10, scale: 7 }),
+  longitude: numeric('longitude', { precision: 10, scale: 7 }),
   paymentMethod: paymentMethodEnum('payment_method').notNull(),
   subtotalAmount: numeric('subtotal_amount', { precision: 14, scale: 2 }).default('0').notNull(),
   discountAmount: numeric('discount_amount', { precision: 14, scale: 2 }).default('0').notNull(),

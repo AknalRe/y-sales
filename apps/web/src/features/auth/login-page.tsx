@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { getHomePathForRole } from '@yuksales/shared';
 import { getCompanyBySlug } from '@/lib/api/client';
 import PageMeta from '@/hooks/use-page-meta';
+import { useFavicon } from '@/hooks/use-favicon';
 
 type CompanyInfo = { name: string; slug: string; logoUrl?: string | null };
 
@@ -22,6 +23,7 @@ export function LoginPage() {
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [companyLoading, setCompanyLoading] = useState(!!company);
   const [companyError, setCompanyError] = useState('');
+  const faviconHref = useFavicon({ url: companyInfo?.logoUrl ?? null, fallbackInitial: companyInfo?.name ?? undefined, dark: isDark });
 
   useEffect(() => {
     if (!company) { setCompanyInfo(null); setCompanyError(''); return; }
@@ -84,7 +86,7 @@ export function LoginPage() {
       <PageMeta
         title={`Login ${companyInfo ? companyInfo.name : ""}`}
         description="Login Page"
-        favicon="/login.ico"
+        favicon={faviconHref}
       />
       <main className="relative grid min-h-screen place-items-center overflow-hidden bg-brand-primary px-5 py-10 text-white">
         <button onClick={toggleTheme} className="absolute right-4 top-4 z-20 rounded-full bg-white/15 p-2.5 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/25" type="button" title={isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}>

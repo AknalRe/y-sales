@@ -6,6 +6,7 @@ import { PlatformCompanyViewBanner } from '@/features/platform/utility/company-v
 import PageMeta from '@/hooks/use-page-meta';
 import { useThemeScope } from '@/hooks/use-theme-scope';
 import { useFavicon } from '@/hooks/use-favicon';
+import { PwaUpdateListener } from '@/components/pwa-update-listener';
 
 const bottomNav = [
   { name: 'Beranda', href: '/sales', icon: Home },
@@ -25,6 +26,7 @@ export function SalesShell() {
 
   return (
     <>
+      <PwaUpdateListener />
       <PageMeta
         title={`Sales | ${user?.company?.name}`}
         description="Sales Pages"

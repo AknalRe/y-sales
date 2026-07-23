@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Camera,
   CheckCircle2,
+  Download,
   Eye,
   EyeOff,
+  FileSpreadsheet,
+  FileUp,
   KeyRound,
   Mail,
   Pencil,
@@ -17,6 +20,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import * as XLSX from 'xlsx-js-style';
 
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -418,6 +422,245 @@ export function SalesAccountsPage() {
     }
   }
 
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    ok: number;
+    skipped: number;
+    errors: string[];
+  } | null>(null);
+
+  /** Export data akun sales ke file Excel */
+  function exportExcel() {
+    if (!filtered.length) return;
+
+    const exportRows = filtered.map((sales) => ({
+      'Kode Karyawan': sales.employeeCode || '-',
+      'Nama Sales': sales.name,
+      Email: sales.email || '-',
+      'No. HP': sales.phone || '-',
+      'Role / Jabatan': sales.roleName || '-',
+      'Kategori Sales': sales.salesCategory === 'motoris' ? 'Motoris' : sales.salesCategory === 'dropping' ? 'Dropping' : '-',
+      Status: sales.status === 'active' ? 'Aktif' : sales.status === 'suspended' ? 'Disuspen' : 'Nonaktif',
+      'Terakhir Login': sales.lastLoginAt ? new Date(sales.lastLoginAt).toLocaleString('id-ID') : '-',
+      'Tanggal Dibuat': sales.createdAt ? new Date(sales.createdAt).toLocaleDateString('id-ID') : '-',
+    }));
+
+    const sheet = XLSX.utils.json_to_sheet(exportRows);
+    sheet['!cols'] = [
+      { wch: 18 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 16 },
+      { wch: 14 },
+      { wch: 22 },
+      { wch: 16 },
+    ];
+
+    const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:I1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+      if (cell) {
+        cell.s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: 'C75A18' } },
+          alignment: { horizontal: 'center' },
+        };
+      }
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Akun Sales');
+    XLSX.writeFile(workbook, `master-akun-sales-${new Date().toISOString().slice(0, 10)}.xlsx`, { compression: true });
+  }
+
+  /** Unduh format template Excel untuk import akun sales */
+  function downloadImportTemplate() {
+    const defaultRoleName = salesRoles[0]?.name || 'Sales Lapangan';
+    const templateRows = [
+      {
+        'Kode Karyawan': 'SALES-001',
+        'Nama Lengkap': 'Budi Santoso',
+        Email: 'budi.sales@company.com',
+        'No. HP': '081234567890',
+        Password: 'SalesPassword123',
+        Role: defaultRoleName,
+        'Kategori Sales': 'motoris',
+        Status: 'active',
+      },
+      {
+        'Kode Karyawan': 'SALES-002',
+        'Nama Lengkap': 'Siti Rahma',
+        Email: 'siti.sales@company.com',
+        'No. HP': '085712345678',
+        Password: 'SalesPassword123',
+        Role: defaultRoleName,
+        'Kategori Sales': 'dropping',
+        Status: 'active',
+      },
+    ];
+
+    const sheet = XLSX.utils.json_to_sheet(templateRows);
+    sheet['!cols'] = [
+      { wch: 18 },
+      { wch: 25 },
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 22 },
+      { wch: 16 },
+      { wch: 14 },
+    ];
+
+    const range = XLSX.utils.decode_range(sheet['!ref'] ?? 'A1:H1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: 0, c: col })];
+      if (cell) {
+        cell.s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: 'C75A18' } },
+          alignment: { horizontal: 'center' },
+        };
+      }
+    }
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Template Akun Sales');
+    XLSX.writeFile(workbook, 'template-import-akun-sales.xlsx');
+  }
+
+  /** Import akun sales dari file Excel */
+  async function handleImportExcel(file: File) {
+    if (!accessToken) return;
+    setImporting(true);
+    setImportResult(null);
+    setError('');
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheetName = workbook.SheetNames.find((n) =>
+        ['sales', 'akun', 'user', 'karyawan', 'template'].some((k) => n.toLowerCase().includes(k))
+      ) ?? workbook.SheetNames[0];
+      if (!sheetName) throw new Error('Sheet tidak ditemukan di file Excel.');
+
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName]);
+      if (!rows.length) throw new Error('File Excel kosong atau tidak ada data akun sales.');
+
+      let ok = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+
+      const defaultRole = salesRoles[0];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const rowNum = i + 2;
+
+        const name = String(
+          row['Nama Lengkap'] ?? row['Nama Sales'] ?? row['Nama'] ?? row['name'] ?? ''
+        ).trim();
+        if (!name) {
+          skipped++;
+          continue;
+        }
+
+        const emailRaw = String(row['Email'] ?? row['email'] ?? '').trim();
+        const email = emailRaw ? emailRaw : undefined;
+
+        const phoneRaw = String(row['No. HP'] ?? row['No HP'] ?? row['HP'] ?? row['Telepon'] ?? row['phone'] ?? '').trim();
+        const phone = phoneRaw ? phoneRaw : undefined;
+
+        const employeeCodeRaw = String(row['Kode Karyawan'] ?? row['Kode Sales'] ?? row['Kode'] ?? row['employeeCode'] ?? '').trim();
+        const employeeCode = employeeCodeRaw ? employeeCodeRaw : undefined;
+
+        const passwordRaw = String(row['Password'] ?? row['Kata Sandi'] ?? row['password'] ?? '').trim();
+
+        const roleInput = String(row['Role'] ?? row['Jabatan'] ?? row['role'] ?? '').trim().toLowerCase();
+        let roleId = defaultRole?.id;
+        if (roleInput) {
+          const foundRole = salesRoles.find(
+            (r) => r.name.toLowerCase() === roleInput || r.code.toLowerCase() === roleInput
+          ) || roles.find(
+            (r) => r.name.toLowerCase() === roleInput || r.code.toLowerCase() === roleInput
+          );
+          if (foundRole) {
+            roleId = foundRole.id;
+          }
+        }
+
+        if (!roleId) {
+          errors.push(`Baris ${rowNum} (${name}): Role sales tidak ditemukan.`);
+          continue;
+        }
+
+        const catInput = String(row['Kategori Sales'] ?? row['Kategori'] ?? row['salesCategory'] ?? '').trim().toLowerCase();
+        let salesCategory: 'motoris' | 'dropping' = 'motoris';
+        if (['dropping', 'drop'].includes(catInput)) salesCategory = 'dropping';
+        else if (['motoris', 'motor'].includes(catInput)) salesCategory = 'motoris';
+
+        const statusInput = String(row['Status'] ?? row['status'] ?? '').trim().toLowerCase();
+        let status: TenantUser['status'] = 'active';
+        if (['inactive', 'nonaktif'].includes(statusInput)) status = 'inactive';
+        else if (['suspended', 'suspen', 'disuspen'].includes(statusInput)) status = 'suspended';
+
+        const existing = salesAccounts.find((u) => {
+          if (employeeCode && u.employeeCode && u.employeeCode.toUpperCase() === employeeCode.toUpperCase()) return true;
+          if (email && u.email && u.email.toLowerCase() === email.toLowerCase()) return true;
+          if (phone && u.phone && u.phone === phone) return true;
+          if (u.name.toLowerCase() === name.toLowerCase()) return true;
+          return false;
+        });
+
+        try {
+          if (existing) {
+            await updateUser(accessToken, existing.id, {
+              name,
+              email: email || null,
+              phone: phone || null,
+              employeeCode: employeeCode || null,
+              roleId,
+              status,
+              salesCategory,
+            });
+            ok++;
+          } else {
+            const password = passwordRaw || 'Sales123!';
+            if (password.length < 6) {
+              errors.push(`Baris ${rowNum} (${name}): Password minimal 6 karakter.`);
+              continue;
+            }
+            await createUser(accessToken, {
+              roleId,
+              name,
+              email,
+              phone,
+              employeeCode,
+              password,
+              salesCategory,
+            });
+            ok++;
+          }
+        } catch (e: any) {
+          errors.push(`Baris ${rowNum} (${name}): ${e.message ?? 'Gagal menyimpan ke server'}`);
+        }
+      }
+
+      setImportResult({ ok, skipped, errors });
+      if (ok > 0) {
+        setSuccess(`Import selesai: ${ok} akun sales berhasil diproses.`);
+        await load();
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Gagal membaca file Excel.');
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -428,9 +671,29 @@ export function SalesAccountsPage() {
           </h1>
           <p className="admin-page-subtitle">Kelola akun sales lapangan untuk absensi, visit outlet, transaksi, dan nota.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void handleImportExcel(f);
+              e.currentTarget.value = '';
+            }}
+          />
           <button onClick={load} className="admin-btn-ghost" disabled={loading} type="button" title="Refresh data">
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+          <button onClick={exportExcel} className="admin-btn-ghost" type="button" disabled={loading || !salesAccounts.length} title="Export data akun sales ke Excel">
+            <Download size={15} />
+            Export Excel
+          </button>
+          <button onClick={() => { setImportResult(null); setImportOpen(true); }} className="admin-btn-ghost" type="button" disabled={importing || !salesRoles.length} title="Import data akun sales dari Excel">
+            <FileSpreadsheet size={15} />
+            Import Excel
           </button>
           <button onClick={openCreate} className="admin-btn-primary" type="button" disabled={!salesRoles.length}>
             <Plus size={15} />
@@ -963,6 +1226,88 @@ export function SalesAccountsPage() {
               <button onClick={() => setResetTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleResetPassword} className="admin-btn-primary" type="button" disabled={saving || newPassword.length < 6}>
                 {saving ? 'Mereset...' : 'Reset Password'}
+              </button>
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
+
+      {/* Dialog Import Excel Akun Sales */}
+      <AdminDialog open={importOpen} onOpenChange={(open) => { if (!open) { setImportOpen(false); setImportResult(null); } }}>
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="default" className="admin-page">
+            <AdminDialogHeader>
+              <div>
+                <AdminDialogTitle className="flex items-center gap-2">
+                  <FileSpreadsheet size={20} className="text-admin-accent" />
+                  Import Akun Sales dari Excel
+                </AdminDialogTitle>
+                <AdminDialogSubtitle>
+                  Tambah atau perbarui akun sales secara masal dengan mengunggah file Excel (.xlsx/.xls).
+                </AdminDialogSubtitle>
+              </div>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              <div className="space-y-4">
+                {/* Langkah 1: Download Template */}
+                <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+                  <p className="text-xs font-black text-admin-foreground mb-1">Langkah 1: Unduh Format Template</p>
+                  <p className="text-xs font-medium text-admin-muted mb-3">Gunakan template resmi agar susunan kolom sesuai dengan sistem.</p>
+                  <button onClick={downloadImportTemplate} className="admin-btn-ghost text-xs" type="button">
+                    <Download size={14} /> Download Template Excel
+                  </button>
+                </div>
+
+                {/* Langkah 2: Upload File */}
+                <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+                  <p className="text-xs font-black text-admin-foreground mb-1">Langkah 2: Unggah File Excel</p>
+                  <p className="text-xs font-medium text-admin-muted mb-3">Pilih file .xlsx atau .xls yang sudah diisi data akun sales.</p>
+                  <button
+                    onClick={() => importInputRef.current?.click()}
+                    className="admin-btn-primary w-full justify-center py-3 text-xs"
+                    disabled={importing}
+                    type="button"
+                  >
+                    {importing ? <RefreshCw size={16} className="animate-spin" /> : <FileUp size={16} />}
+                    {importing ? 'Memproses File Excel...' : 'Pilih File Excel & Import'}
+                  </button>
+                </div>
+
+                {/* Status / Log Hasil Import */}
+                {importResult && (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2 text-xs font-bold">
+                      <span className="rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-700 border border-emerald-200">
+                        ✓ {importResult.ok} Berhasil
+                      </span>
+                      {importResult.skipped > 0 && (
+                        <span className="rounded-lg bg-amber-50 px-3 py-1.5 text-amber-700 border border-amber-200">
+                          ! {importResult.skipped} Dilewati
+                        </span>
+                      )}
+                      {importResult.errors.length > 0 && (
+                        <span className="rounded-lg bg-rose-50 px-3 py-1.5 text-rose-700 border border-rose-200">
+                          ✕ {importResult.errors.length} Gagal
+                        </span>
+                      )}
+                    </div>
+                    {importResult.errors.length > 0 && (
+                      <div className="max-h-40 overflow-y-auto rounded-xl border border-rose-200 bg-rose-50/50 p-3 text-xs font-medium text-rose-700 space-y-1">
+                        <p className="font-bold text-rose-800 mb-1">Detail Baris Bermasalah:</p>
+                        {importResult.errors.map((err, idx) => (
+                          <p key={idx}>{err}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </AdminDialogBody>
+            <AdminDialogFooter>
+              <button onClick={() => { setImportOpen(false); setImportResult(null); }} className="admin-btn-ghost" type="button">
+                Selesai
               </button>
             </AdminDialogFooter>
           </AdminDialogContent>

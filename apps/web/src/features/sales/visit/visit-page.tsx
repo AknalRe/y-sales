@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone, Search } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone, Search, Plus, User, Phone, X } from 'lucide-react';
 import { apiRequest, checkInVisit, checkOutVisit, getMobileRuntimeSettings, getActiveVisitSession, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
-import { getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, getOutlets, type Consignment, type TodayVisitSchedule, type Outlet } from '../../../lib/api/tenant';
+import { createOutlet, getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, getOutlets, type Consignment, type TodayVisitSchedule, type Outlet, type OutletPayload } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../../lib/geo/location';
 import { useAuth } from '../../auth/auth-provider';
@@ -46,6 +46,14 @@ export function VisitPage() {
   const [lookupTypeFilter, setLookupTypeFilter] = useState<'all' | 'store' | 'agent' | 'user'>('all');
   const [lookupSortBy, setLookupSortBy] = useState<'name' | 'phone' | 'ownerName'>('name');
 
+  const [showCreateOutletModal, setShowCreateOutletModal] = useState(false);
+  const [newOutletName, setNewOutletName] = useState('');
+  const [newOutletType, setNewOutletType] = useState<'store' | 'agent' | 'user'>('store');
+  const [newOutletOwner, setNewOutletOwner] = useState('');
+  const [newOutletPhone, setNewOutletPhone] = useState('');
+  const [newOutletAddress, setNewOutletAddress] = useState('');
+  const [createOutletSubmitting, setCreateOutletSubmitting] = useState(false);
+
   useEffect(() => {
     if (showLookup && accessToken) {
       setLookupLoading(true);
@@ -79,6 +87,45 @@ export function VisitPage() {
       }
     });
   }, [lookupOutlets, lookupSearch, lookupTypeFilter, lookupSortBy]);
+
+  async function handleCreateOutletSubmit() {
+    if (!accessToken || !newOutletName.trim() || !newOutletAddress.trim()) return;
+    setCreateOutletSubmitting(true);
+    try {
+      const code = `OTK-${Date.now().toString().slice(-6)}`;
+      const lat = location?.latitude ?? -6.200000;
+      const lng = location?.longitude ?? 106.816666;
+      const payload: OutletPayload = {
+        code,
+        name: newOutletName.trim(),
+        customerType: newOutletType,
+        ownerName: newOutletOwner.trim() || undefined,
+        phone: newOutletPhone.trim() || undefined,
+        address: newOutletAddress.trim(),
+        latitude: lat,
+        longitude: lng,
+        status: 'active',
+      };
+      const res = await createOutlet(accessToken, payload);
+      if (res.outlet) {
+        setLookupOutlets(prev => [res.outlet, ...prev]);
+        setSelectedOutlet(res.outlet.id);
+        setSelectedScheduleId('');
+        setShowCreateOutletModal(false);
+        setShowLookup(false);
+        setNewOutletName('');
+        setNewOutletOwner('');
+        setNewOutletPhone('');
+        setNewOutletAddress('');
+        showSalesAlertToast('Outlet baru berhasil dibuat dan dipilih!');
+      }
+    } catch (e: any) {
+      setMessage(e.message || 'Gagal membuat outlet baru.');
+    } finally {
+      setCreateOutletSubmitting(false);
+    }
+  }
+
   const [consignmentForm, setConsignmentForm] = useState({ consignmentId: '', productId: '', actionType: 'report_sold' as 'report_sold' | 'withdraw', quantity: '', amount: '', notes: '' });
 
   const [outcome, setOutcome] = useState<'closed_order' | 'no_order' | 'follow_up' | 'outlet_closed' | 'rejected' | 'invalid_location'>('closed_order');
@@ -772,9 +819,9 @@ export function VisitPage() {
 
       {/* Lookup Outlet Modal */}
       {showLookup && (
-        <div className="fixed inset-0 z-[65] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'var(--sales-overlay-dark)' }} onClick={() => setShowLookup(false)}>
+        <div className="fixed inset-x-0 top-0 bottom-16 z-[45] flex items-end sm:items-center justify-center p-0 sm:p-4" style={{ background: 'var(--sales-overlay-dark)' }} onClick={() => setShowLookup(false)}>
           <div 
-            className="w-full max-w-[480px] bg-sales-surface rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden" 
+            className="w-full max-w-[480px] bg-sales-surface rounded-t-3xl sm:rounded-3xl flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden shadow-2xl" 
             style={{ boxShadow: '0 -10px 25px rgba(0,0,0,0.15), 0 20px 25px rgba(0,0,0,0.1)' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -784,13 +831,22 @@ export function VisitPage() {
                 <strong style={{ fontSize: '1.05rem', color: 'var(--sales-text-heading)', fontWeight: 800 }}>Lookup Outlet</strong>
                 <p style={{ margin: 0, fontSize: '.7rem', color: '#94a3b8' }}>Cari Toko, Agent, atau User</p>
               </div>
-              <button 
-                type="button" 
-                onClick={() => setShowLookup(false)} 
-                style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '1.25rem', fontWeight: 600, cursor: 'pointer', padding: '.25rem' }}
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateOutletModal(true)}
+                  className="flex items-center gap-1 text-xs font-extrabold text-sales-surface bg-sales-accent px-3 py-1.5 rounded-xl border-none cursor-pointer shadow-sm"
+                >
+                  <Plus size={14} /> Tambah Outlet
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setShowLookup(false)} 
+                  style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '1.25rem', fontWeight: 600, cursor: 'pointer', padding: '.25rem' }}
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Filters & Search */}
@@ -895,11 +951,127 @@ export function VisitPage() {
                   })}
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '3rem 0', color: '#94a3b8' }}>
+                <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8' }}>
                   <Store size={36} style={{ marginBottom: '.5rem', opacity: 0.5 }} />
-                  <p style={{ margin: 0, fontSize: '.8rem' }}>Outlet tidak ditemukan</p>
+                  <p style={{ margin: 0, fontSize: '.85rem', fontWeight: 700, color: 'var(--sales-text-heading)' }}>Outlet tidak ditemukan</p>
+                  <p style={{ margin: '4px 0 1rem', fontSize: '.75rem' }}>Belum ada toko yang cocok dengan pencarian Anda.</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateOutletModal(true)}
+                    className="inline-flex items-center gap-1.5 text-xs font-extrabold text-sales-surface bg-sales-accent px-4 py-2 rounded-xl border-none cursor-pointer shadow-sm"
+                  >
+                    <Plus size={16} /> Buat Outlet Baru
+                  </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create New Outlet Form Modal */}
+      {showCreateOutletModal && (
+        <div 
+          className="fixed inset-x-0 top-0 bottom-16 z-[50] flex items-center justify-center p-4" 
+          style={{ background: 'var(--sales-overlay-dark)' }}
+          onClick={() => setShowCreateOutletModal(false)}
+        >
+          <div 
+            className="w-full max-w-md bg-sales-surface rounded-3xl p-5 flex flex-col max-h-[85vh] overflow-y-auto shadow-2xl border border-sales-accent-bg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-sales-border">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sales-accent-bg text-sales-accent">
+                  <Plus size={18} />
+                </div>
+                <strong className="text-sales-text-heading text-base font-extrabold">Tambah Outlet Baru</strong>
+              </div>
+              <button onClick={() => setShowCreateOutletModal(false)} className="text-sales-muted bg-transparent border-none p-1 cursor-pointer">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label className="block text-xs font-bold text-sales-muted mb-1">Nama Outlet / Toko *</label>
+                <div className="flex items-center gap-2 rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2.5">
+                  <Store size={18} className="text-sales-brand-muted shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Masukkan nama outlet..."
+                    value={newOutletName}
+                    onChange={(e) => setNewOutletName(e.target.value)}
+                    className="bg-transparent border-none text-sales-foreground outline-none w-full text-sm font-semibold"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-sales-muted mb-1">Tipe Customer</label>
+                <select
+                  value={newOutletType}
+                  onChange={(e) => setNewOutletType(e.target.value as any)}
+                  className="w-full rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2.5 text-sm font-semibold text-sales-foreground outline-none"
+                >
+                  <option value="store">Toko Retail</option>
+                  <option value="agent">Agent / Agen</option>
+                  <option value="user">User / Pengguna</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-sales-muted mb-1">Nama Owner / Pemilik (Opsional)</label>
+                <div className="flex items-center gap-2 rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2.5">
+                  <User size={18} className="text-sales-brand-muted shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Nama pemilik toko..."
+                    value={newOutletOwner}
+                    onChange={(e) => setNewOutletOwner(e.target.value)}
+                    className="bg-transparent border-none text-sales-foreground outline-none w-full text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-sales-muted mb-1">Nomor Telepon / WhatsApp (Opsional)</label>
+                <div className="flex items-center gap-2 rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2.5">
+                  <Phone size={18} className="text-sales-brand-muted shrink-0" />
+                  <input
+                    type="tel"
+                    placeholder="Contoh: 081234567890"
+                    value={newOutletPhone}
+                    onChange={(e) => setNewOutletPhone(e.target.value)}
+                    className="bg-transparent border-none text-sales-foreground outline-none w-full text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-sales-muted mb-1">Alamat Lengkap *</label>
+                <textarea
+                  rows={3}
+                  placeholder="Masukkan alamat lengkap toko..."
+                  value={newOutletAddress}
+                  onChange={(e) => setNewOutletAddress(e.target.value)}
+                  className="w-full rounded-xl border border-sales-border-brand bg-sales-surface-input px-3 py-2 text-sm text-sales-foreground outline-none resize-none font-medium"
+                />
+              </div>
+
+              <div className="rounded-xl bg-sales-accent-bg/40 p-2.5 text-xs text-sales-muted flex items-center gap-2">
+                <MapPin size={16} className="text-sales-accent shrink-0" />
+                <span>Lokasi GPS saat ini akan otomatis didaftarkan sebagai koordinat lokasi toko.</span>
+              </div>
+
+              <button
+                disabled={!newOutletName.trim() || !newOutletAddress.trim() || createOutletSubmitting}
+                onClick={handleCreateOutletSubmit}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-sales-accent text-sales-surface py-3 font-bold text-sm border-none cursor-pointer disabled:opacity-50 mt-2"
+              >
+                {createOutletSubmitting ? <Loader2 size={16} className="animate-spin" /> : 'Simpan & Pilih Outlet'}
+              </button>
             </div>
           </div>
         </div>

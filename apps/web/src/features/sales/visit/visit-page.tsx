@@ -64,6 +64,17 @@ export function VisitPage() {
     }
   }, [showLookup, accessToken]);
 
+  useEffect(() => {
+    if (showLookup || showCreateOutletModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showLookup, showCreateOutletModal]);
+
   const sortedLookupOutlets = useMemo(() => {
     const filtered = lookupOutlets.filter(o => {
       const matchesSearch = !lookupSearch || 
@@ -896,17 +907,18 @@ export function VisitPage() {
             </div>
 
             {/* List */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '.5rem 1.25rem 1.5rem' }}>
+            <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', touchAction: 'pan-y', padding: '.65rem 1.25rem 1.5rem' }}>
               {lookupLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 0', gap: '.5rem', color: '#94a3b8' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3.5rem 0', gap: '.5rem', color: '#94a3b8' }}>
                   <Loader2 size={24} className="animate-spin text-sales-accent" />
-                  <span style={{ fontSize: '.8rem' }}>Memuat list outlet...</span>
+                  <span style={{ fontSize: '.8rem', fontWeight: 600 }}>Memuat list outlet...</span>
                 </div>
               ) : sortedLookupOutlets.length ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
                   {sortedLookupOutlets.map((outlet: Outlet) => {
+                    const isSelected = selectedOutlet === outlet.id;
                     const typeLabel = outlet.customerType === 'agent' ? 'Agent' : outlet.customerType === 'user' ? 'User' : 'Toko';
-                    const typeBg = outlet.customerType === 'agent' ? 'rgba(99, 102, 241, 0.1)' : outlet.customerType === 'user' ? 'rgba(236, 72, 153, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+                    const typeBg = outlet.customerType === 'agent' ? 'rgba(99, 102, 241, 0.12)' : outlet.customerType === 'user' ? 'rgba(236, 72, 153, 0.12)' : 'rgba(16, 185, 129, 0.12)';
                     const typeColor = outlet.customerType === 'agent' ? 'var(--sales-accent)' : outlet.customerType === 'user' ? '#ec4899' : '#10b981';
 
                     return (
@@ -918,47 +930,76 @@ export function VisitPage() {
                           setShowLookup(false);
                         }}
                         style={{ 
-                          padding: '.75rem', 
-                          borderRadius: '1rem', 
-                          border: '1px solid var(--sales-border)', 
-                          background: selectedOutlet === outlet.id ? 'rgba(99, 102, 241, 0.04)' : 'var(--sales-surface)',
-                          borderColor: selectedOutlet === outlet.id ? 'var(--sales-accent)' : 'var(--sales-border)',
+                          padding: '.8rem .85rem', 
+                          borderRadius: '1.15rem', 
+                          border: isSelected ? '1.5px solid var(--sales-accent)' : '1px solid var(--sales-border)', 
+                          background: isSelected ? 'rgba(99, 102, 241, 0.05)' : 'var(--sales-surface)',
                           cursor: 'pointer',
                           display: 'flex',
-                          flexDirection: 'column',
-                          gap: '.25rem'
+                          alignItems: 'center',
+                          gap: '.75rem',
+                          transition: 'all 0.15s ease-in-out'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <span style={{ fontSize: '.7rem', fontWeight: 700, color: 'var(--sales-accent)', background: 'rgba(99, 102, 241, 0.1)', padding: '.1rem .35rem', borderRadius: '.35rem' }}>
-                            {outlet.code}
-                          </span>
-                          <span style={{ fontSize: '.65rem', fontWeight: 800, color: typeColor, background: typeBg, padding: '.1rem .4rem', borderRadius: '.35rem' }}>
-                            {typeLabel}
-                          </span>
+                        {/* Avatar Icon */}
+                        <div style={{ 
+                          width: 44, 
+                          height: 44, 
+                          borderRadius: '1rem', 
+                          background: typeBg, 
+                          color: typeColor, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          flexShrink: 0 
+                        }}>
+                          <Store size={22} />
                         </div>
-                        <strong style={{ fontSize: '.85rem', color: 'var(--sales-text-heading)' }}>
-                          {outlet.name}
-                        </strong>
-                        <p style={{ margin: 0, fontSize: '.7rem', color: '#64748b' }}>
-                          Owner: <strong>{outlet.ownerName || '—'}</strong> | HP: <strong>{outlet.phone || '—'}</strong>
-                        </p>
-                        <p style={{ margin: 0, fontSize: '.65rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {outlet.address}
-                        </p>
+
+                        {/* Details */}
+                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '.15rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.5rem' }}>
+                            <span style={{ fontSize: '.68rem', fontWeight: 800, color: 'var(--sales-accent)', background: 'rgba(99, 102, 241, 0.1)', padding: '.12rem .4rem', borderRadius: '.4rem', letterSpacing: '.03em', textTransform: 'uppercase' }}>
+                              {outlet.code}
+                            </span>
+                            <span style={{ fontSize: '.65rem', fontWeight: 800, color: typeColor, background: typeBg, padding: '.12rem .45rem', borderRadius: '.4rem' }}>
+                              {typeLabel}
+                            </span>
+                          </div>
+
+                          <strong style={{ fontSize: '.9rem', color: 'var(--sales-text-heading)', fontWeight: 800, lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {outlet.name}
+                          </strong>
+
+                          <p style={{ margin: 0, fontSize: '.72rem', color: '#64748b', lineHeight: 1.2 }}>
+                            Owner: <strong style={{ color: 'var(--sales-foreground)' }}>{outlet.ownerName || '—'}</strong> | HP: <strong style={{ color: 'var(--sales-foreground)' }}>{outlet.phone || '—'}</strong>
+                          </p>
+
+                          <p style={{ margin: 0, fontSize: '.68rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                            {outlet.address}
+                          </p>
+                        </div>
+
+                        {isSelected && (
+                          <div style={{ color: 'var(--sales-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <CheckCircle2 size={22} />
+                          </div>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8' }}>
-                  <Store size={36} style={{ marginBottom: '.5rem', opacity: 0.5 }} />
-                  <p style={{ margin: 0, fontSize: '.85rem', fontWeight: 700, color: 'var(--sales-text-heading)' }}>Outlet tidak ditemukan</p>
-                  <p style={{ margin: '4px 0 1rem', fontSize: '.75rem' }}>Belum ada toko yang cocok dengan pencarian Anda.</p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--sales-bg)', display: 'grid', placeItems: 'center', marginBottom: '.75rem' }}>
+                    <Store size={28} style={{ opacity: 0.5 }} />
+                  </div>
+                  <p style={{ margin: 0, fontSize: '.9rem', fontWeight: 800, color: 'var(--sales-text-heading)' }}>Outlet tidak ditemukan</p>
+                  <p style={{ margin: '4px 0 1.25rem', fontSize: '.75rem', color: '#94a3b8' }}>Belum ada toko yang cocok dengan pencarian Anda.</p>
                   <button
                     type="button"
                     onClick={() => setShowCreateOutletModal(true)}
-                    className="inline-flex items-center gap-1.5 text-xs font-extrabold text-sales-surface bg-sales-accent px-4 py-2 rounded-xl border-none cursor-pointer shadow-sm"
+                    className="inline-flex items-center gap-1.5 text-xs font-extrabold text-sales-surface bg-sales-accent px-4 py-2.5 rounded-xl border-none cursor-pointer shadow-sm hover:opacity-90 transition-all"
                   >
                     <Plus size={16} /> Buat Outlet Baru
                   </button>

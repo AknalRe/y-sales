@@ -83,15 +83,32 @@ export function SalesSchedulesPage() {
           ))}
         </div>
       ) : schedules.length === 0 ? (
-        <div className="sales-empty-state">
-          <div className="sales-empty-icon"><CalendarDays size={34} /></div>
-          <p>Belum ada jadwal kunjungan hari ini</p>
-          <button
-            onClick={() => navigate('/sales')}
-            className="sales-empty-btn"
-          >
-            Kembali ke Beranda
-          </button>
+        <div className="sales-empty-state" style={{ padding: '2.5rem 1.5rem', textAlign: 'center' }}>
+          <div className="sales-empty-icon" style={{ margin: '0 auto 1rem', display: 'grid', placeItems: 'center', width: 64, height: 64, borderRadius: '50%', background: 'var(--sales-accent-bg)', color: 'var(--sales-accent)' }}>
+            <CalendarDays size={32} />
+          </div>
+          <h3 className="font-extrabold text-sales-text-heading text-base mb-1" style={{ margin: '0 0 6px', fontSize: '1rem' }}>
+            Belum Ada Jadwal Kunjungan Hari Ini
+          </h3>
+          <p className="text-sales-muted text-xs mb-6" style={{ maxWidth: 280, margin: '0 auto 1.25rem', fontSize: '.78rem', lineHeight: 1.4 }}>
+            Anda tetap dapat melakukan visit dengan memilih toko dari master outlet atau mendaftarkan toko baru.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem', maxWidth: 260, margin: '0 auto', width: '100%' }}>
+            <button
+              onClick={() => navigate('/sales/visit')}
+              className="sales-btn sales-btn-primary"
+              style={{ width: '100%', justifyContent: 'center', padding: '.8rem 1rem', fontWeight: 800, fontSize: '.85rem', display: 'flex', alignItems: 'center', gap: '.5rem', borderRadius: '1rem' }}
+            >
+              <Store size={18} /> Pilih / Buat Outlet Visit
+            </button>
+            <button
+              onClick={() => navigate('/sales')}
+              className="sales-empty-btn"
+              style={{ width: '100%', justifyContent: 'center', padding: '.65rem 1rem', fontSize: '.8rem', borderRadius: '1rem' }}
+            >
+              Kembali ke Beranda
+            </button>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>

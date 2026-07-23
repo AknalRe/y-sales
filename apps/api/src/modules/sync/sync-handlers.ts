@@ -81,11 +81,11 @@ const visitCheckOutPayload = z.object({
 
 const transactionCreatePayload = z.object({
   clientRequestId: z.string().uuid(),
-  outletId: z.string().uuid().nullish().transform(val => val || undefined),
-  visitSessionId: z.string().uuid().nullish().transform(val => val || undefined),
+  outletId: z.string().uuid().or(z.literal('')).nullish().transform(val => (val ? val : undefined)),
+  visitSessionId: z.string().uuid().or(z.literal('')).nullish().transform(val => (val ? val : undefined)),
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
-  endUserName: z.string().nullish().transform(val => val || undefined),
-  endUserPhone: z.string().nullish().transform(val => val || undefined),
+  endUserName: z.string().nullish().transform(val => (val ? val : undefined)),
+  endUserPhone: z.string().nullish().transform(val => (val ? val : undefined)),
   latitude: z.number().nullish().transform(val => val ?? undefined),
   longitude: z.number().nullish().transform(val => val ?? undefined),
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),

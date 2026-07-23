@@ -139,20 +139,9 @@ export function TransactionsPage() {
           if (!cancelled) {
             setActiveVisit(visit);
             setTransactionMode('store');
-            const draftRaw = localStorage.getItem(transactionDraftStorageKey);
-            if (draftRaw) {
-              const draft = JSON.parse(draftRaw) as TransactionDraft;
-              if (draft.visitId === visit.id && draft.outletId === visit.outletId) {
-                setCart(draft.cart ?? []);
-                setPaymentMethod(draft.paymentMethod ?? 'cash');
-              } else {
-                localStorage.removeItem(transactionDraftStorageKey);
-              }
-            }
           }
         } catch {
           localStorage.removeItem(activeVisitStorageKey);
-          localStorage.removeItem(transactionDraftStorageKey);
           if (!cancelled) {
             setActiveVisit(null);
             if (parsedEndUser) setTransactionMode('end_user');
@@ -189,6 +178,23 @@ export function TransactionsPage() {
           if (parsedEndUser) setTransactionMode('end_user');
         }
       }
+
+      // Unconditionally restore draft cart & payment method if present
+      const draftRaw = localStorage.getItem(transactionDraftStorageKey);
+      if (draftRaw) {
+        try {
+          const draft = JSON.parse(draftRaw) as TransactionDraft;
+          if (Array.isArray(draft.cart) && draft.cart.length > 0 && !cancelled) {
+            setCart(draft.cart);
+          }
+          if (draft.paymentMethod && !cancelled) {
+            setPaymentMethod(draft.paymentMethod);
+          }
+        } catch {
+          localStorage.removeItem(transactionDraftStorageKey);
+        }
+      }
+
       if (!cancelled) setDraftReady(true);
     }
 

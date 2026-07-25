@@ -10,7 +10,6 @@ export const backdrop = cva(
     "flex items-center justify-center",
     "p-4",
     "bg-[var(--admin-modal-overlay)]",
-    "backdrop-blur-[2px]",
     "transition-opacity duration-150 ease-[cubic-bezier(0.45,1.005,0,1.005)]",
 
     // animation states (Base UI dialog)

@@ -1076,6 +1076,15 @@ function SalesTransferSection({
   const selectedSourceAvailable = selectedSourceBalance ? Number(selectedSourceBalance.quantity) - Number(selectedSourceBalance.reservedQuantity) : 0;
   const selectedTargetBalance = selectedWHBalances.find((b) => b.productId === transferForm.productId);
   const selectedTargetAvailable = selectedTargetBalance ? Number(selectedTargetBalance.quantity) - Number(selectedTargetBalance.reservedQuantity) : 0;
+  const transferQuantity = Number(transferForm.quantity || 0);
+  const stockedSalesCount = salesWithWarehouses.filter(({ stockItems }) => stockItems.some((item) => Number(item.quantity) - Number(item.reservedQuantity) > 0)).length;
+  const canSubmitTransfer = Boolean(
+    transferForm.salesUserId
+    && transferForm.productId
+    && selectedSourceWarehouse
+    && transferQuantity > 0
+    && selectedSourceAvailable >= transferQuantity
+  );
 
   const salesUserOptions = [
     { value: '', label: 'Pilih sales' },
@@ -1095,7 +1104,11 @@ function SalesTransferSection({
 
   const transferProductOptions = [
     { value: '', label: 'Pilih produk' },
-    ...products.map((p) => ({ value: p.id, label: `${p.name} (${p.sku})` })),
+    ...products.map((p) => {
+      const balance = sourceWarehouseBalances.find((b) => b.productId === p.id);
+      const available = balance ? Number(balance.quantity) - Number(balance.reservedQuantity) : 0;
+      return { value: p.id, label: `${p.name} (${p.sku}) - tersedia ${formatQty(available)}` };
+    }),
   ];
 
   return (
@@ -1264,8 +1277,9 @@ function SalesTransferSection({
           <button
             className="admin-btn-primary"
             type="button"
-            disabled={saving || !selectedSourceWarehouse}
+            disabled={saving || !canSubmitTransfer}
             onClick={onSubmit}
+            title={!canSubmitTransfer ? 'Pilih sales, produk, dan jumlah sesuai stok gudang sumber.' : undefined}
           >
             {saving ? 'Mengirim...' : <><Send size={15} /> Kirim ke Gudang Sales</>}
           </button>
@@ -1278,7 +1292,7 @@ function SalesTransferSection({
           <span><UserCircle size={18} /></span>
           <div>
             <h3>Daftar Sales</h3>
-            <p>Gudang sales dan status siap distribusi.</p>
+            <p>{stockedSalesCount} dari {salesWithWarehouses.length} sales memiliki stok tersedia.</p>
           </div>
         </div>
         {salesWithWarehouses.length === 0 ? (

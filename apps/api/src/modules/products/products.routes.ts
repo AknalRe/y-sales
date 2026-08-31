@@ -22,6 +22,10 @@ const productUpdateSchema = productSchema.omit({ initialStock: true }).partial()
   status: z.enum(['active', 'inactive']).optional(),
 });
 
+const productListQuerySchema = z.object({
+  status: z.enum(['active', 'inactive']).optional(),
+});
+
 function codeSegment(value: string) {
   const words = value
     .normalize('NFKD')
@@ -61,6 +65,10 @@ export async function productRoutes(app: FastifyInstance) {
       || ['sales.view', 'products.manage', 'inventory.manage'].some((permission) => user.permissions.includes(permission));
     if (!allowed) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'sales.view' });
 
+    const query = productListQuerySchema.parse(request.query ?? {});
+    const conditions = [eq(products.companyId, companyId)];
+    if (query.status) conditions.push(eq(products.status, query.status));
+
     const salesStock = db
       .select({
         productId: inventoryBalances.productId,
@@ -98,7 +106,7 @@ export async function productRoutes(app: FastifyInstance) {
       })
       .from(products)
       .leftJoin(salesStock, eq(products.id, salesStock.productId))
-      .where(eq(products.companyId, companyId))
+      .where(and(...conditions))
       .orderBy(asc(products.name));
     return { products: rows };
   });

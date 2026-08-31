@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronUp, ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff, Store, X, XCircle, UserCheck, User, Phone, MapPin, Compass } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, ShoppingCart, Package, Plus, Search, Send, CheckCircle2, Trash2, RefreshCw, Loader2, WifiOff, Store, X, XCircle, UserCheck, User, Phone, MapPin, Compass } from 'lucide-react';
 import { getProducts, createOrder } from '../../../lib/api/tenant';
 import { getActiveVisitSession } from '../../../lib/api/client';
 import { useAuth } from '../../auth/auth-provider';
@@ -201,8 +201,8 @@ export function TransactionsPage() {
     syncActiveVisit();
 
     if (accessToken) {
-      getProducts(accessToken)
-        .then(res => setProducts(res.products))
+      getProducts(accessToken, { status: 'active' })
+        .then(res => setProducts(res.products ?? []))
         .catch(e => setError(e.message || 'Gagal memuat produk.'))
         .finally(() => setLoading(false));
     }
@@ -303,6 +303,11 @@ export function TransactionsPage() {
   function getSalesAvailableStock(product: any) {
     return Number(product.salesAvailableQuantity ?? product.salesStockQuantity ?? 0);
   }
+
+  const hasAnySalesStock = useMemo(
+    () => products.some((product) => Number(product.salesAvailableQuantity ?? product.salesStockQuantity ?? 0) > 0),
+    [products]
+  );
 
   const productGridStyle = cart.length > 0
     ? {
@@ -856,6 +861,13 @@ export function TransactionsPage() {
       )}
 
       <SalesAlert message={offlineMessage} onClose={() => setOfflineMessage('')} />
+
+      {!loading && products.length > 0 && !hasAnySalesStock && (
+        <div className="flex items-start gap-2 rounded-2xl border border-sales-red/20 bg-sales-red/10 px-3 py-2.5 text-sales-red" style={{ fontSize: '.75rem', fontWeight: 700, lineHeight: 1.35 }}>
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <span>Stok sales kosong. Minta admin distribusikan stok dari gudang utama ke gudang sales Anda.</span>
+        </div>
+      )}
 
       {/* Search + Category Filter — single wrapper to avoid stacking context issues */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '.5rem' }}>

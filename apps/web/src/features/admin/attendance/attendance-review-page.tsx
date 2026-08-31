@@ -582,12 +582,12 @@ function Badge({ text, tone }: { text: string; tone: 'success' | 'warning' | 'da
 
 function Metric({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-admin-border-subtle bg-admin-bg/50 p-3">
-      <div className="mb-1 flex items-center gap-2 text-admin-accent">
-        <Icon size={13} strokeWidth={3} />
-        <span className="text-[10px] font-black uppercase tracking-widest text-admin-subtle">{label}</span>
+    <div className="rounded-2xl border border-admin-border-subtle bg-admin-bg/50 p-4">
+      <div className="mb-2 flex items-center gap-2 text-admin-accent">
+        <Icon size={14} className="shrink-0" strokeWidth={3} />
+        <span className="text-[10px] font-black uppercase tracking-wider text-admin-subtle">{label}</span>
       </div>
-      <p className="text-sm font-bold leading-tight text-admin-foreground">{value}</p>
+      <p className="text-base font-black leading-tight text-admin-foreground">{value}</p>
     </div>
   );
 }
@@ -622,8 +622,8 @@ function AttendancePhotoModal({
     <AdminDialog open={!!row} onOpenChange={(open) => { if (!open) onClose(); }} disablePointerDismissal={saving}>
       <AdminDialogPortal>
         <AdminDialogBackdrop style={{ backdropFilter: 'blur-sm', background: 'rgba(0,0,0,0.45)', zIndex: 80 }} />
-        <AdminDialogContent size="lg" className="admin-page max-w-5xl">
-          <AdminDialogHeader>
+        <AdminDialogContent size="lg" className="admin-page w-[min(1180px,calc(100vw-32px))] max-w-none overflow-hidden">
+          <AdminDialogHeader className="border-b border-admin-border-subtle px-6 py-4">
             <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-admin-accent">Detail Absensi</p>
               <AdminDialogTitle className="truncate">{row.salesName}</AdminDialogTitle>
@@ -631,10 +631,10 @@ function AttendancePhotoModal({
             </div>
             <AdminDialogClose aria-label="Tutup detail absensi"><X size={18} /></AdminDialogClose>
           </AdminDialogHeader>
-          <AdminDialogBody>
-            <div className="grid max-h-[calc(92vh-92px)] overflow-y-auto md:grid-cols-[minmax(260px,0.85fr)_1fr]">
-              <div className="bg-admin-bg p-5">
-                <div className="aspect-[4/5] overflow-hidden rounded-[1.25rem] border border-admin-border-subtle bg-admin-bg-card shadow-inner">
+          <AdminDialogBody className="p-0">
+            <div className="grid max-h-[calc(92vh-86px)] overflow-y-auto lg:grid-cols-[minmax(340px,0.9fr)_1.25fr]">
+              <div className="bg-admin-bg px-5 py-5 sm:px-6">
+                <div className="mx-auto aspect-[4/5] max-h-[560px] w-full max-w-[440px] overflow-hidden rounded-2xl border border-admin-border-subtle bg-admin-bg-card shadow-inner">
                   {row.faceImageUrl ? (
                     <img src={row.faceImageUrl} alt={`Foto absensi ${row.salesName}`} className="h-full w-full object-cover" />
                   ) : (
@@ -643,23 +643,26 @@ function AttendancePhotoModal({
                     </div>
                   )}
                 </div>
-                <div className="mt-3 flex flex-wrap gap-1.5">
+                <div className="mx-auto mt-3 flex max-w-[440px] flex-wrap gap-1.5">
                   <Badge text={statusLabels[row.status] ?? row.status} tone={row.status === 'flagged' ? 'danger' : row.status === 'closed' ? 'success' : 'info'} />
                   <Badge text={validationLabels[row.validationStatus] ?? row.validationStatus} tone={row.validationStatus === 'valid' ? 'success' : 'warning'} />
                 </div>
               </div>
 
-              <div className="p-5">
-                <div className="grid gap-2 sm:grid-cols-2">
+              <div className="space-y-4 p-5 sm:p-6">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <Metric icon={Clock} label="Durasi Absensi" value={formatDuration(row.workMinutes ?? 0)} />
                   <Metric icon={Camera} label="Face Match" value={row.faceDetected ? `Terdeteksi ${Math.round(Number(row.faceConfidence ?? 0) * 100)}%` : 'Tidak terdeteksi'} />
                   <Metric icon={MapPin} label="Jarak Kantor" value={`${row.checkInDistanceM ?? '-'}m`} />
                   <Metric icon={MapPin} label="Akurasi GPS" value={`${row.checkInAccuracyM ?? '-'}m`} />
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-admin-border-subtle p-4">
-                  <p className="text-xs font-black uppercase tracking-wider text-admin-muted">Waktu Absensi</p>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-admin-border-subtle bg-admin-bg/35 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-black uppercase tracking-wider text-admin-muted">Waktu Absensi</p>
+                    <span className="rounded-full border border-admin-border-subtle px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-admin-subtle">{row.workDate}</span>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <InfoLine label="Check-in" value={formatTime(row.checkInAt)} />
                     <InfoLine label="Check-out" value={formatTime(row.checkOutAt)} />
                     <InfoLine label="Latitude in" value={row.checkInLatitude ?? '-'} />
@@ -667,13 +670,13 @@ function AttendancePhotoModal({
                     <InfoLine label="Latitude out" value={row.checkOutLatitude ?? '-'} />
                     <InfoLine label="Longitude out" value={row.checkOutLongitude ?? '-'} />
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2 border-t border-admin-border-subtle pt-3">
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-admin-border-subtle pt-4">
                     <MapLink href={checkInMapsUrl} label="Buka Maps Check-in" />
                     <MapLink href={checkOutMapsUrl} label="Buka Maps Check-out" />
                   </div>
                 </div>
 
-                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-admin-border-subtle pt-4">
+                <div className="flex flex-wrap justify-end gap-2 border-t border-admin-border-subtle pt-4">
                   {!reviewed ? (
                     <>
                       <button className="admin-btn-ghost px-4 py-2 text-sm" type="button" disabled={saving} onClick={() => onAction(row, 'reject')}>
@@ -700,9 +703,9 @@ function AttendancePhotoModal({
 
 function InfoLine({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0 rounded-xl border border-admin-border-subtle bg-admin-bg-card/60 px-3 py-2.5">
       <p className="text-[10px] font-black uppercase tracking-wider text-admin-subtle">{label}</p>
-      <p className="mt-1 text-sm font-bold text-admin-foreground">{value}</p>
+      <p className="mt-1 break-words text-sm font-black text-admin-foreground">{value}</p>
     </div>
   );
 }

@@ -189,7 +189,7 @@ export function StockPage() {
   }, [balances, searchProduct]);
 
   const stats = useMemo(() => ({
-    products: products.length,
+    products: products.filter((p) => p.status === 'active').length,
     warehouses: warehouses.filter((w) => w.status === 'active').length,
     lowStock: balances.filter((b) => Number(b.quantity) < 10 && Number(b.quantity) > 0).length,
     outOfStock: balances.filter((b) => Number(b.quantity) === 0).length,

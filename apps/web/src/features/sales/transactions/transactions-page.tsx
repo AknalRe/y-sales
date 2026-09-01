@@ -74,7 +74,6 @@ export function TransactionsPage() {
   const [activeVisit, setActiveVisit] = useState<ActiveVisit | null>(null);
   const [transactionMode, setTransactionMode] = useState<'store' | 'end_user'>('store');
   const [endUserInfo, setEndUserInfo] = useState<EndUserInfo | null>(null);
-  const [showChoiceModal, setShowChoiceModal] = useState(false);
   const [showEndUserFormModal, setShowEndUserFormModal] = useState(false);
   const [endUserNameInput, setEndUserNameInput] = useState('');
   const [endUserPhoneInput, setEndUserPhoneInput] = useState('');
@@ -91,6 +90,7 @@ export function TransactionsPage() {
   const [cartSheetHeight, setCartSheetHeight] = useState(0);
   const [productGridMaxHeight, setProductGridMaxHeight] = useState<number | null>(null);
   const [draftReady, setDraftReady] = useState(false);
+  const [restoringVisit, setRestoringVisit] = useState(true);
 
   useEffect(() => {
     refreshQueueCount();
@@ -119,6 +119,7 @@ export function TransactionsPage() {
     let cancelled = false;
 
     async function syncActiveVisit() {
+      setRestoringVisit(true);
       const rawEndUser = localStorage.getItem(endUserInfoStorageKey);
       let parsedEndUser: EndUserInfo | null = null;
       if (rawEndUser) {
@@ -132,50 +133,58 @@ export function TransactionsPage() {
         }
       }
 
-      const raw = localStorage.getItem(activeVisitStorageKey);
-      if (raw) {
-        try {
-          const visit = JSON.parse(raw) as ActiveVisit;
-          if (!cancelled) {
-            setActiveVisit(visit);
-            setTransactionMode('store');
-          }
-        } catch {
-          localStorage.removeItem(activeVisitStorageKey);
-          if (!cancelled) {
-            setActiveVisit(null);
-            if (parsedEndUser) setTransactionMode('end_user');
-          }
+      const applyNoActiveVisit = () => {
+        if (cancelled) return;
+        setActiveVisit(null);
+        if (parsedEndUser) setTransactionMode('end_user');
+      };
+
+      const navigationVisit = (location.state as { activeVisit?: ActiveVisit } | null)?.activeVisit;
+      if (navigationVisit?.id && navigationVisit.outletId) {
+        localStorage.setItem(activeVisitStorageKey, JSON.stringify(navigationVisit));
+        if (!cancelled) {
+          setActiveVisit(navigationVisit);
+          setTransactionMode('store');
         }
-      } else if (accessToken) {
-        try {
-          const res = await getActiveVisitSession(accessToken);
-          if (!cancelled) {
-            if (res.activeVisit) {
-              const visit: ActiveVisit = {
-                id: res.activeVisit.id,
-                outletId: res.activeVisit.outletId,
-                outletName: res.activeVisit.outletName ?? undefined,
-                scheduleId: res.activeVisit.scheduleId ?? undefined,
-              };
-              localStorage.setItem(activeVisitStorageKey, JSON.stringify(visit));
+      } else {
+        const raw = localStorage.getItem(activeVisitStorageKey);
+        if (raw) {
+          try {
+            const visit = JSON.parse(raw) as ActiveVisit;
+            if (visit?.id && visit.outletId && !cancelled) {
               setActiveVisit(visit);
               setTransactionMode('store');
             } else {
-              setActiveVisit(null);
-              if (parsedEndUser) setTransactionMode('end_user');
+              localStorage.removeItem(activeVisitStorageKey);
+              applyNoActiveVisit();
             }
+          } catch {
+            localStorage.removeItem(activeVisitStorageKey);
+            applyNoActiveVisit();
           }
-        } catch {
-          if (!cancelled) {
-            setActiveVisit(null);
-            if (parsedEndUser) setTransactionMode('end_user');
+        } else if (accessToken) {
+          try {
+            const res = await getActiveVisitSession(accessToken);
+            if (!cancelled) {
+              if (res.activeVisit) {
+                const visit: ActiveVisit = {
+                  id: res.activeVisit.id,
+                  outletId: res.activeVisit.outletId,
+                  outletName: res.activeVisit.outletName ?? undefined,
+                  scheduleId: res.activeVisit.scheduleId ?? undefined,
+                };
+                localStorage.setItem(activeVisitStorageKey, JSON.stringify(visit));
+                setActiveVisit(visit);
+                setTransactionMode('store');
+              } else {
+                applyNoActiveVisit();
+              }
+            }
+          } catch {
+            applyNoActiveVisit();
           }
-        }
-      } else {
-        if (!cancelled) {
-          setActiveVisit(null);
-          if (parsedEndUser) setTransactionMode('end_user');
+        } else {
+          applyNoActiveVisit();
         }
       }
 
@@ -195,7 +204,10 @@ export function TransactionsPage() {
         }
       }
 
-      if (!cancelled) setDraftReady(true);
+      if (!cancelled) {
+        setDraftReady(true);
+        setRestoringVisit(false);
+      }
     }
 
     syncActiveVisit();
@@ -234,9 +246,10 @@ export function TransactionsPage() {
 
     return () => {
       cancelled = true;
+      setRestoringVisit(false);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [accessToken, location.pathname]);
+  }, [accessToken, location.pathname, location.state]);
 
   useEffect(() => {
     if (!draftReady) return;
@@ -376,7 +389,6 @@ export function TransactionsPage() {
       localStorage.setItem(endUserInfoStorageKey, JSON.stringify(info));
       setTransactionMode('end_user');
       setShowEndUserFormModal(false);
-      setShowChoiceModal(false);
       setGettingLocation(false);
     };
 
@@ -476,7 +488,7 @@ export function TransactionsPage() {
     setOfflineMessage('');
   }
 
-  if (loading) {
+  if (loading || restoringVisit) {
     return (
       <main className="sales-home" style={{ minHeight: '65vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '.75rem', padding: '2rem', textAlign: 'center' }}>

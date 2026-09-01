@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone, Search, Plus, User, Phone, X } from 'lucide-react';
+import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone, Search, Plus, User, Phone, X, ShoppingCart } from 'lucide-react';
 import { apiRequest, checkInVisit, checkOutVisit, getMobileRuntimeSettings, getActiveVisitSession, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
 import { createOutlet, getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, getOutlets, type Consignment, type TodayVisitSchedule, type Outlet, type OutletPayload } from '../../../lib/api/tenant';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../../lib/camera/capture';
@@ -368,18 +368,20 @@ export function VisitPage() {
     try {
       if (!navigator.onLine) throw new Error('offline');
       const result = await checkInVisit(accessToken, payload);
-      setMessage(`Check-in berhasil!`);
-      setActiveVisitId(result.visit.id);
       const outletName = selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet';
-      setActiveOutletName(outletName);
-      localStorage.setItem(activeVisitStorageKey, JSON.stringify({
+      const visitData = {
         id: result.visit.id,
         outletId: result.visit.outletId,
         scheduleId: selectedScheduleId || undefined,
-        outletName: outletName,
-      }));
+        outletName,
+      };
+      setMessage(`Check-in berhasil!`);
+      setActiveVisitId(visitData.id);
+      setActiveOutletName(outletName);
+      localStorage.setItem(activeVisitStorageKey, JSON.stringify(visitData));
       setPreview(false);
       setImage(null);
+      navigate('/sales/transactions', { replace: true, state: { activeVisit: visitData } });
     } catch (error: any) {
       if (!navigator.onLine || error.message === 'offline') {
         await enqueueVisit({ type: 'check-in', accessToken, payload });
@@ -633,6 +635,23 @@ export function VisitPage() {
                 )}
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => navigate('/sales/transactions', {
+                state: {
+                  activeVisit: {
+                    id: activeVisitId,
+                    outletId: selectedOutlet,
+                    scheduleId: selectedScheduleId || undefined,
+                    outletName: activeOutletName || selectedSchedule?.outlet.name || 'Outlet Aktif',
+                  },
+                },
+              })}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-sales-accent text-sales-surface border-none"
+              style={{ padding: '.85rem', fontSize: '.9rem', fontWeight: 800, cursor: 'pointer' }}
+            >
+              <ShoppingCart size={18} /> Buat Transaksi Outlet
+            </button>
           </div>
 
           {/* Step 2: Hasil Kunjungan */}

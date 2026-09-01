@@ -79,16 +79,30 @@ const visitCheckOutPayload = z.object({
   }),
 });
 
+const optionalUuid = z.preprocess(
+  (val) => (val === '' || val === null ? undefined : val),
+  z.string().uuid().optional(),
+);
+const optionalText = z.preprocess(
+  (val) => (val === '' || val === null ? undefined : val),
+  z.string().optional(),
+);
+const optionalNumber = z.preprocess(
+  (val) => (val === '' || val === null ? undefined : val),
+  z.number().optional(),
+);
+
 const transactionCreatePayload = z.object({
   clientRequestId: z.string().uuid(),
-  outletId: z.union([z.string().uuid(), z.literal(''), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
-  visitSessionId: z.union([z.string().uuid(), z.literal(''), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
+  outletId: optionalUuid,
+  visitSessionId: optionalUuid,
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
-  endUserName: z.union([z.string(), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
-  endUserPhone: z.union([z.string(), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
-  latitude: z.union([z.number(), z.null(), z.undefined()]).transform(val => val ?? undefined),
-  longitude: z.union([z.number(), z.null(), z.undefined()]).transform(val => val ?? undefined),
+  endUserName: optionalText,
+  endUserPhone: optionalText,
+  latitude: optionalNumber,
+  longitude: optionalNumber,
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
+  sourceWarehouseId: optionalUuid,
   items: z.array(z.object({
     productId: z.string().uuid(),
     quantity: z.string().or(z.number()).transform(String),
@@ -125,13 +139,13 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
   try {
     const body = attendanceCheckInPayload.parse(payload);
     const [existing] = await db.select().from(attendanceSessions).where(
-      eq(attendanceSessions.clientRequestId, body.clientRequestId)
+      and(eq(attendanceSessions.companyId, ctx.companyId), eq(attendanceSessions.clientRequestId, body.clientRequestId), eq(attendanceSessions.userId, ctx.userId))
     );
     if (existing) return { success: true, entityId: existing.id };
 
     const settings = await getGeneralSettings(ctx.companyId);
     const todaySessions = await db.select().from(attendanceSessions).where(
-      and(eq(attendanceSessions.userId, ctx.userId), eq(attendanceSessions.workDate, todayDate()))
+      and(eq(attendanceSessions.companyId, ctx.companyId), eq(attendanceSessions.userId, ctx.userId), eq(attendanceSessions.workDate, todayDate()))
     );
     const openTodaySession = todaySessions.find((session) => session.status === 'open');
 

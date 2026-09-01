@@ -538,8 +538,10 @@ export async function visitRoutes(app: FastifyInstance) {
 
   app.post('/visits/check-out', { preHandler: requirePermission('visits.execute') }, async (request) => {
     const companyId = requireTenantId(request);
+    await requireFeature(request, 'visits');
     const body = checkOutSchema.parse(request.body);
     const [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
+    if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan.'), { statusCode: 404 });
     if (!visit.checkInAt || visit.checkOutAt || !['open', 'invalid_location'].includes(visit.status)) throw Object.assign(new Error('Sesi kunjungan tidak dalam status terbuka.'), { statusCode: 400 });
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, visit.outletId)));
     if (!outlet) throw Object.assign(new Error('Outlet visit tidak ditemukan.'), { statusCode: 404 });

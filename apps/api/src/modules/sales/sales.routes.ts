@@ -30,17 +30,30 @@ const itemSchema = z.object({
   unitPrice: z.string().or(z.number()).transform(String),
 });
 
+const optionalUuid = z.preprocess(
+  (val) => (val === '' || val === null ? undefined : val),
+  z.string().uuid().optional(),
+);
+const optionalText = z.preprocess(
+  (val) => (val === '' || val === null ? undefined : val),
+  z.string().optional(),
+);
+const optionalNumber = z.preprocess(
+  (val) => (val === '' || val === null ? undefined : val),
+  z.number().optional(),
+);
+
 const orderSchema = z.object({
-  outletId: z.union([z.string().uuid(), z.literal(''), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
-  visitSessionId: z.union([z.string().uuid(), z.literal(''), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
+  outletId: optionalUuid,
+  visitSessionId: optionalUuid,
   customerType: z.enum(['store', 'agent', 'end_user']).default('store'),
-  endUserName: z.union([z.string(), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
-  endUserPhone: z.union([z.string(), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
-  latitude: z.union([z.number(), z.null(), z.undefined()]).transform(val => val ?? undefined),
-  longitude: z.union([z.number(), z.null(), z.undefined()]).transform(val => val ?? undefined),
+  endUserName: optionalText,
+  endUserPhone: optionalText,
+  latitude: optionalNumber,
+  longitude: optionalNumber,
   paymentMethod: z.enum(['cash', 'qris', 'credit', 'consignment']).default('cash'),
   clientRequestId: z.string().uuid(),
-  sourceWarehouseId: z.union([z.string().uuid(), z.literal(''), z.null(), z.undefined()]).transform(val => (val ? val : undefined)),
+  sourceWarehouseId: optionalUuid,
   dueDate: z.string().date().optional(),
   items: z.array(itemSchema).min(1),
 });

@@ -198,7 +198,7 @@ export type WarehousePayload = {
   address?: string;
   type: Warehouse['type'];
   ownerUserId?: string;
-  outletId?: string;
+  outletId?: string | null;
 };
 
 export type ConsignmentItem = {
@@ -730,14 +730,15 @@ export function updateCompanyIntegration(token: string, id: string, payload: Par
 
 export type CreateOrderPayload = {
   clientRequestId: string;
-  outletId?: string;
-  visitSessionId?: string;
+  outletId?: string | null;
+  visitSessionId?: string | null;
   customerType: 'store' | 'agent' | 'end_user';
-  endUserName?: string;
-  endUserPhone?: string;
-  latitude?: number;
-  longitude?: number;
+  endUserName?: string | null;
+  endUserPhone?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   paymentMethod: 'cash' | 'qris' | 'credit' | 'consignment';
+  sourceWarehouseId?: string | null;
   items: Array<{ productId: string; quantity: string; unitPrice: string }>;
 };
 

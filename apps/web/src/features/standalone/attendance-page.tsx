@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, useCallback, type RefObject } from 'react';
+import { useEffect, useRef, useState, useCallback, type RefObject } from 'react';
 import { checkInAttendance, checkOutAttendance, type AttendancePayload } from '../../lib/api/client';
 import { captureFromVideo, startFrontCamera, stopCamera, type CapturedImage } from '../../lib/camera/capture';
 import { getCurrentLocation, type BrowserLocation } from '../../lib/geo/location';
@@ -171,8 +171,10 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
 
     try {
       if (!navigator.onLine) throw new Error('offline');
-      const result = await checkInAttendance(accessToken, payload);
+      await checkInAttendance(accessToken, payload);
       setMessage('Absensi berhasil terkirim!');
+      setPreview(false);
+      setReloadKey(k => k + 1);
       setPreview(false);
       setReloadKey(k => k + 1);
     } catch (error) {
@@ -272,8 +274,10 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
 
     try {
       if (!navigator.onLine) throw new Error('offline');
-      const result = await checkInAttendance(accessToken, payload);
+      await checkInAttendance(accessToken, payload);
       setMessage('Absensi berhasil terkirim!');
+      setPreview(false);
+      setReloadKey(k => k + 1);
     } catch (error) {
       const isNetworkError = !navigator.onLine || (error instanceof Error && error.message.includes('Failed to fetch'));
       if (isNetworkError) {

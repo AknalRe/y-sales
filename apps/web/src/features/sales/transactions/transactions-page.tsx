@@ -425,11 +425,14 @@ export function TransactionsPage() {
     const orderPayload = transactionMode === 'end_user'
       ? {
           clientRequestId: crypto.randomUUID(),
+          outletId: null,
+          visitSessionId: null,
           customerType: 'end_user' as const,
           endUserName: endUserInfo!.name,
-          endUserPhone: endUserInfo!.phone || undefined,
-          latitude: endUserInfo!.latitude,
-          longitude: endUserInfo!.longitude,
+          endUserPhone: endUserInfo!.phone || null,
+          latitude: endUserInfo!.latitude ?? null,
+          longitude: endUserInfo!.longitude ?? null,
+          sourceWarehouseId: null,
           paymentMethod,
           items: cart.map(i => ({
             productId: i.product.id,
@@ -442,6 +445,11 @@ export function TransactionsPage() {
           outletId: activeVisit!.outletId,
           visitSessionId: activeVisit!.id,
           customerType: 'store' as const,
+          endUserName: null,
+          endUserPhone: null,
+          latitude: null,
+          longitude: null,
+          sourceWarehouseId: null,
           paymentMethod,
           items: cart.map(i => ({
             productId: i.product.id,

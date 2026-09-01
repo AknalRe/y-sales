@@ -129,7 +129,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
     const sessions = await db
       .select()
       .from(attendanceSessions)
-      .where(and(eq(attendanceSessions.userId, authUser.id), eq(attendanceSessions.workDate, todayDateString())))
+      .where(and(eq(attendanceSessions.companyId, companyId), eq(attendanceSessions.userId, authUser.id), eq(attendanceSessions.workDate, todayDateString())))
       .orderBy(desc(attendanceSessions.createdAt));
     const openSession = sessions.find((session) => session.status === 'open') ?? null;
     const latestSession = sessions[0] ?? null;
@@ -175,7 +175,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
     const [existingRequest] = await db
       .select()
       .from(attendanceSessions)
-      .where(and(eq(attendanceSessions.clientRequestId, body.clientRequestId), eq(attendanceSessions.userId, authUser.id)))
+      .where(and(eq(attendanceSessions.companyId, companyId), eq(attendanceSessions.clientRequestId, body.clientRequestId), eq(attendanceSessions.userId, authUser.id)))
       .limit(1);
 
     if (existingRequest) {
@@ -185,7 +185,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
     const todaySessions = await db
       .select()
       .from(attendanceSessions)
-      .where(and(eq(attendanceSessions.userId, authUser.id), eq(attendanceSessions.workDate, todayDateString())))
+      .where(and(eq(attendanceSessions.companyId, companyId), eq(attendanceSessions.userId, authUser.id), eq(attendanceSessions.workDate, todayDateString())))
       .orderBy(desc(attendanceSessions.createdAt));
     const openTodaySession = todaySessions.find((session) => session.status === 'open');
 
@@ -316,6 +316,10 @@ export async function attendanceRoutes(app: FastifyInstance) {
 
     if (existingSession.status === 'closed') {
       return { session: existingSession };
+    }
+
+    if (existingSession.status !== 'open') {
+      return reply.status(400).send({ message: 'Sesi absensi tidak dalam status terbuka.' });
     }
 
     let attendanceTarget;

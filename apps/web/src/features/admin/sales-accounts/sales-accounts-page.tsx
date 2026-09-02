@@ -38,6 +38,7 @@ import {
   type TenantUser,
 } from '@/lib/api/platform';
 import { EmptyState } from '@/components/ui';
+import { showAppToast } from '@/components/ui/app-toast';
 import { FaceCaptureField } from '../shared/face-capture-field';
 
 import {
@@ -272,7 +273,9 @@ export function SalesAccountsPage() {
       if (mode === 'create') setForm((current) => ({ ...current, employeeCode: data.employeeCode }));
       else setEditForm((current) => ({ ...current, employeeCode: data.employeeCode }));
     } catch (e: any) {
-      setError(e.message ?? 'Gagal generate kode karyawan.');
+      const message = e.message ?? 'Gagal generate kode karyawan.';
+      setError(message);
+      showAppToast({ title: 'Gagal Generate Kode Karyawan', message, tone: 'error', duration: 5000 });
     } finally {
       setGeneratingCode(false);
     }
@@ -777,66 +780,66 @@ export function SalesAccountsPage() {
             </button>
           ) : null}
         </div>
-          <Select
-            items={salesCategoryOptions}
-            value={salesCategoryFilter}
-            onValueChange={(nextValue) => setSalesCategoryFilter(String(nextValue))}
-          >
-            <SelectTrigger className="admin-select w-full h-[42px]">
-              <SelectValue />
-              <SelectIcon>
-                <SelectChevronUpDownIcon />
-              </SelectIcon>
-            </SelectTrigger>
-            <SelectPortal>
-              <SelectPositioner sideOffset={8}>
-                <SelectPopup>
-                  <SelectScrollUpArrow />
-                  <SelectList>
-                    {salesCategoryOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <SelectItemIndicator>
-                          <SelectCheckIcon />
-                        </SelectItemIndicator>
-                        <SelectItemText>{option.label}</SelectItemText>
-                      </SelectItem>
-                    ))}
-                  </SelectList>
-                  <SelectScrollDownArrow />
-                </SelectPopup>
-              </SelectPositioner>
-            </SelectPortal>
-          </Select>
-          <Select
-            items={statusOptions}
-            value={statusFilter}
-            onValueChange={(nextValue) => setStatusFilter(String(nextValue))}
-          >
-            <SelectTrigger className="admin-select w-full h-[42px]">
-              <SelectValue />
-              <SelectIcon>
-                <SelectChevronUpDownIcon />
-              </SelectIcon>
-            </SelectTrigger>
-            <SelectPortal>
-              <SelectPositioner sideOffset={8}>
-                <SelectPopup>
-                  <SelectScrollUpArrow />
-                  <SelectList>
-                    {statusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <SelectItemIndicator>
-                          <SelectCheckIcon />
-                        </SelectItemIndicator>
-                        <SelectItemText>{option.label}</SelectItemText>
-                      </SelectItem>
-                    ))}
-                  </SelectList>
-                  <SelectScrollDownArrow />
-                </SelectPopup>
-              </SelectPositioner>
-            </SelectPortal>
-          </Select>
+        <Select
+          items={salesCategoryOptions}
+          value={salesCategoryFilter}
+          onValueChange={(nextValue) => setSalesCategoryFilter(String(nextValue))}
+        >
+          <SelectTrigger className="admin-select w-full h-[42px]">
+            <SelectValue />
+            <SelectIcon>
+              <SelectChevronUpDownIcon />
+            </SelectIcon>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner sideOffset={8}>
+              <SelectPopup>
+                <SelectScrollUpArrow />
+                <SelectList>
+                  {salesCategoryOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <SelectItemIndicator>
+                        <SelectCheckIcon />
+                      </SelectItemIndicator>
+                      <SelectItemText>{option.label}</SelectItemText>
+                    </SelectItem>
+                  ))}
+                </SelectList>
+                <SelectScrollDownArrow />
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </Select>
+        <Select
+          items={statusOptions}
+          value={statusFilter}
+          onValueChange={(nextValue) => setStatusFilter(String(nextValue))}
+        >
+          <SelectTrigger className="admin-select w-full h-[42px]">
+            <SelectValue />
+            <SelectIcon>
+              <SelectChevronUpDownIcon />
+            </SelectIcon>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner sideOffset={8}>
+              <SelectPopup>
+                <SelectScrollUpArrow />
+                <SelectList>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <SelectItemIndicator>
+                        <SelectCheckIcon />
+                      </SelectItemIndicator>
+                      <SelectItemText>{option.label}</SelectItemText>
+                    </SelectItem>
+                  ))}
+                </SelectList>
+                <SelectScrollDownArrow />
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </Select>
       </div>
 
       <div className="admin-table-card">

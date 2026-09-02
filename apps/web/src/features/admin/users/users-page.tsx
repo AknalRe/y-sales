@@ -21,6 +21,7 @@ import {
 } from '@/lib/api/platform';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui';
+import { showAppToast } from '@/components/ui/app-toast';
 import { FaceCaptureField } from '../shared/face-capture-field';
 
 import {
@@ -143,7 +144,9 @@ export function UsersPage() {
         setEditForm((current) => ({ ...current, employeeCode: data.employeeCode }));
       }
     } catch (e: any) {
-      setError(e.message ?? 'Gagal generate kode karyawan.');
+      const message = e.message ?? 'Gagal generate kode karyawan.';
+      setError(message);
+      showAppToast({ title: 'Gagal Generate Kode Karyawan', message, tone: 'error', duration: 5000 });
     } finally {
       setGeneratingCode(false);
     }

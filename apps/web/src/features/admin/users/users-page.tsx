@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { usePhoneInput } from '@/hooks/use-phone-input';
 import {
   Users, Plus, Search, Trash2, RefreshCw,
   KeyRound, AlertTriangle, CheckCircle2, UserX, Pencil, Eye, EyeOff, Camera,
@@ -112,6 +113,8 @@ export function UsersPage() {
   const [generatingCode, setGeneratingCode] = useState(false);
   const [createPasswordVisible, setCreatePasswordVisible] = useState(false);
   const [resetPasswordVisible, setResetPasswordVisible] = useState(false);
+
+  const phoneInput = usePhoneInput();
 
   const createUserSchema = z.object({
     name: z.string().min(1, 'Nama lengkap wajib diisi.'),
@@ -660,13 +663,14 @@ export function UsersPage() {
                   <label htmlFor="user-phone">Nomor HP</label>
                   <input
                     id="user-phone"
-                    type="text"
+                    type="tel"
                     {...registerCreate('phone')}
                     placeholder="08xxxxxxxxx"
                     className="admin-input"
                     autoComplete="off"
                     aria-invalid={!!createErrors.phone}
                     aria-describedby={createErrors.phone ? 'user-phone-error' : undefined}
+                    {...phoneInput}
                   />
                   {createErrors.phone && (
                     <small id="user-phone-error" className="text-admin-danger text-xs">{createErrors.phone.message}</small>
@@ -829,11 +833,12 @@ export function UsersPage() {
                   <label htmlFor="edit-user-phone">Nomor HP</label>
                   <input
                     id="edit-user-phone"
-                    type="text"
+                    type="tel"
                     {...registerEdit('phone')}
                     className="admin-input"
                     aria-invalid={!!editErrors.phone}
                     aria-describedby={editErrors.phone ? 'edit-user-phone-error' : undefined}
+                    {...phoneInput}
                   />
                   {editErrors.phone && (
                     <small id="edit-user-phone-error" className="text-admin-danger text-xs">{editErrors.phone.message}</small>

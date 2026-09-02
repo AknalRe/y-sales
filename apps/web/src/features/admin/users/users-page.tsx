@@ -115,7 +115,7 @@ export function UsersPage() {
 
   const createUserSchema = z.object({
     name: z.string().min(1, 'Nama lengkap wajib diisi.'),
-    email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    email: z.string().min(1, 'Email wajib diisi.').refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
       message: 'Format email tidak valid.',
     }),
     phone: z.string().optional().refine((val) => !val || /^[0-9+\-\s()]+$/.test(val), {
@@ -149,7 +149,7 @@ export function UsersPage() {
 
   const updateUserSchema = z.object({
     name: z.string().min(1, 'Nama lengkap wajib diisi.'),
-    email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    email: z.string().min(1, 'Email wajib diisi.').refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
       message: 'Format email tidak valid.',
     }),
     phone: z.string().optional().refine((val) => !val || /^[0-9+\-\s()]+$/.test(val), {
@@ -528,7 +528,7 @@ export function UsersPage() {
                       </button>
                       <button
                         id={`users-reset-pass-${user.id}`}
-                        onClick={() => setResetTarget(user)}
+                        onClick={() => { resetPasswordForm(); setResetTarget(user); }}
                         className="admin-btn-icon-sm"
                         title="Reset Password"
                         type="button"
@@ -566,7 +566,7 @@ export function UsersPage() {
       </div>
 
       {/* Create User Modal */}
-      <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) { setShowCreate(false); } else { resetCreateForm(); } }} disablePointerDismissal={saving}>
+      <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) { setShowCreate(false); resetCreateForm(); } else { resetCreateForm(); } }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
           <AdminDialogContent className="admin-page">
@@ -636,7 +636,7 @@ export function UsersPage() {
                   )}
                 </div>
                 <div className="admin-field">
-                  <label htmlFor="user-email">Email</label>
+                  <label htmlFor="user-email">Email <span className="text-admin-danger">*</span></label>
                   <input
                     id="user-email"
                     type="email"
@@ -731,7 +731,7 @@ export function UsersPage() {
       </AdminDialog>
 
       {/* Edit User Modal */}
-      <AdminDialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }} disablePointerDismissal={saving}>
+      <AdminDialog open={!!editTarget} onOpenChange={(open) => { if (!open) { setEditTarget(null); resetEditForm(); } }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
           <AdminDialogContent className="admin-page">
@@ -801,7 +801,7 @@ export function UsersPage() {
                   )}
                 </div>
                 <div className="admin-field">
-                  <label htmlFor="edit-user-email">Email</label>
+                  <label htmlFor="edit-user-email">Email <span className="text-admin-danger">*</span></label>
                   <input
                     id="edit-user-email"
                     type="email"
@@ -908,7 +908,7 @@ export function UsersPage() {
       </AdminDialog>
 
       {/* Reset Password Modal */}
-      <AdminDialog open={!!resetTarget} onOpenChange={(open) => { if (!open) setResetTarget(null); }} disablePointerDismissal={saving}>
+      <AdminDialog open={!!resetTarget} onOpenChange={(open) => { if (!open) { setResetTarget(null); resetPasswordForm(); } }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
           <AdminDialogContent size="sm" className="admin-page">

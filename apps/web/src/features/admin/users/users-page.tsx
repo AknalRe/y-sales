@@ -137,6 +137,7 @@ export function UsersPage() {
     watch: watchCreate,
   } = useForm<CreateUserForm>({
     resolver: zodResolver(createUserSchema),
+    mode: 'onBlur',
     defaultValues: {
       name: '',
       email: '',
@@ -171,6 +172,7 @@ export function UsersPage() {
     watch: watchEdit,
   } = useForm<UpdateUserForm>({
     resolver: zodResolver(updateUserSchema),
+    mode: 'onBlur',
     defaultValues: {
       name: '',
       email: '',
@@ -195,6 +197,7 @@ export function UsersPage() {
     watch: watchResetPassword,
   } = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
+    mode: 'onBlur',
     defaultValues: {
       password: '',
     },
@@ -630,9 +633,11 @@ export function UsersPage() {
                     className="admin-input"
                     autoComplete="off"
                     required
+                    aria-invalid={!!createErrors.name}
+                    aria-describedby={createErrors.name ? 'user-name-error' : undefined}
                   />
                   {createErrors.name && (
-                    <small className="text-admin-danger text-xs">{createErrors.name.message}</small>
+                    <small id="user-name-error" className="text-admin-danger text-xs">{createErrors.name.message}</small>
                   )}
                 </div>
                 <div className="admin-field">
@@ -644,9 +649,11 @@ export function UsersPage() {
                     placeholder="budi@company.com"
                     className="admin-input"
                     autoComplete="off"
+                    aria-invalid={!!createErrors.email}
+                    aria-describedby={createErrors.email ? 'user-email-error' : undefined}
                   />
                   {createErrors.email && (
-                    <small className="text-admin-danger text-xs">{createErrors.email.message}</small>
+                    <small id="user-email-error" className="text-admin-danger text-xs">{createErrors.email.message}</small>
                   )}
                 </div>
                 <div className="admin-field">
@@ -658,9 +665,11 @@ export function UsersPage() {
                     placeholder="08xxxxxxxxx"
                     className="admin-input"
                     autoComplete="off"
+                    aria-invalid={!!createErrors.phone}
+                    aria-describedby={createErrors.phone ? 'user-phone-error' : undefined}
                   />
                   {createErrors.phone && (
-                    <small className="text-admin-danger text-xs">{createErrors.phone.message}</small>
+                    <small id="user-phone-error" className="text-admin-danger text-xs">{createErrors.phone.message}</small>
                   )}
                 </div>
                 <div className="admin-field">
@@ -715,7 +724,7 @@ export function UsersPage() {
               </div>
             </AdminDialogBody>
             <AdminDialogFooter>
-              <button onClick={() => setShowCreate(false)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={() => { setShowCreate(false); resetCreateForm(); }} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-submit-create"
                 onClick={handleSubmitCreate(handleCreate)}
@@ -795,9 +804,11 @@ export function UsersPage() {
                     type="text"
                     {...registerEdit('name')}
                     className="admin-input"
+                    aria-invalid={!!editErrors.name}
+                    aria-describedby={editErrors.name ? 'edit-user-name-error' : undefined}
                   />
                   {editErrors.name && (
-                    <small className="text-admin-danger text-xs">{editErrors.name.message}</small>
+                    <small id="edit-user-name-error" className="text-admin-danger text-xs">{editErrors.name.message}</small>
                   )}
                 </div>
                 <div className="admin-field">
@@ -807,9 +818,11 @@ export function UsersPage() {
                     type="email"
                     {...registerEdit('email')}
                     className="admin-input"
+                    aria-invalid={!!editErrors.email}
+                    aria-describedby={editErrors.email ? 'edit-user-email-error' : undefined}
                   />
                   {editErrors.email && (
-                    <small className="text-admin-danger text-xs">{editErrors.email.message}</small>
+                    <small id="edit-user-email-error" className="text-admin-danger text-xs">{editErrors.email.message}</small>
                   )}
                 </div>
                 <div className="admin-field">
@@ -819,9 +832,11 @@ export function UsersPage() {
                     type="text"
                     {...registerEdit('phone')}
                     className="admin-input"
+                    aria-invalid={!!editErrors.phone}
+                    aria-describedby={editErrors.phone ? 'edit-user-phone-error' : undefined}
                   />
                   {editErrors.phone && (
-                    <small className="text-admin-danger text-xs">{editErrors.phone.message}</small>
+                    <small id="edit-user-phone-error" className="text-admin-danger text-xs">{editErrors.phone.message}</small>
                   )}
                 </div>
                 <div className="admin-field">
@@ -892,7 +907,7 @@ export function UsersPage() {
               </div>
             </AdminDialogBody>
             <AdminDialogFooter>
-              <button onClick={() => setEditTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={() => { setEditTarget(null); resetEditForm(); }} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-submit-edit"
                 onClick={handleSubmitEdit(handleUpdate)}
@@ -929,6 +944,8 @@ export function UsersPage() {
                     {...registerReset('password')}
                     placeholder="Minimal 6 karakter"
                     className="admin-input"
+                    aria-invalid={!!resetPasswordErrors.password}
+                    aria-describedby={resetPasswordErrors.password ? 'new-password-error' : undefined}
                   />
                   <button
                     type="button"
@@ -940,12 +957,12 @@ export function UsersPage() {
                   </button>
                 </div>
                 {resetPasswordErrors.password && (
-                  <small className="text-admin-danger text-xs">{resetPasswordErrors.password.message}</small>
+                  <small id="new-password-error" className="text-admin-danger text-xs">{resetPasswordErrors.password.message}</small>
                 )}
               </div>
             </AdminDialogBody>
             <AdminDialogFooter>
-              <button onClick={() => setResetTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={() => { setResetTarget(null); resetPasswordForm(); }} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-confirm-reset"
                 onClick={handleSubmitReset(handleResetPassword)}
@@ -961,7 +978,7 @@ export function UsersPage() {
       </AdminDialog>
 
       {/* Face Enrollment Modal */}
-      <AdminDialog open={!!faceTarget} onOpenChange={(open) => { if (!open) setFaceTarget(null); }} disablePointerDismissal={faceSaving}>
+      <AdminDialog open={!!faceTarget} onOpenChange={(open) => { if (!open) { setFaceTarget(null); setFaceFile(null); setFacePreview(''); } }} disablePointerDismissal={faceSaving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
           <AdminDialogContent size="sm" className="admin-page">
@@ -995,7 +1012,7 @@ export function UsersPage() {
               </div>
             </AdminDialogBody>
             <AdminDialogFooter>
-              <button onClick={() => setFaceTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={() => { setFaceTarget(null); setFaceFile(null); setFacePreview(''); }} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleEnrollFace} className="admin-btn-primary" type="button" disabled={faceSaving || !facePreview}>
                 {faceSaving ? 'Menyimpan...' : 'Simpan Wajah'}
               </button>

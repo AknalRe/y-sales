@@ -69,4 +69,8 @@ export const sessions = pgTable('sessions', {
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('sessions_user_idx').on(table.userId),
+  index('sessions_token_hash_idx').on(table.refreshTokenHash),
+  index('sessions_expires_revoked_idx').on(table.expiresAt, table.revokedAt),
+]);

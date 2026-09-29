@@ -1,7 +1,8 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { eq } from 'drizzle-orm';
+import { and, eq, gt, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { companies, permissions, rolePermissions, roles, sessions, users } from '@yuksales/db/schema';
 import { env } from '../../config/env.js';
@@ -147,10 +148,14 @@ export function requirePermission(permissionCode: string) {
   };
 }
 
+export function hashRefreshToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 export async function createSession(userId: string, companyId: string | null, roleCode: string, deviceId?: string) {
   const isSuperAdmin = roleCode === 'SUPER_ADMIN';
   const refreshToken = signRefreshToken({ sub: userId, companyId, roleCode, isSuperAdmin });
-  const refreshTokenHash = await bcrypt.hash(refreshToken, 12);
+  const refreshTokenHash = hashRefreshToken(refreshToken);
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   await db.insert(sessions).values({ companyId, userId, refreshTokenHash, deviceId, expiresAt });
@@ -160,20 +165,30 @@ export async function createSession(userId: string, companyId: string | null, ro
 
 export async function revokeRefreshToken(refreshToken: string) {
   try {
-    // Decode payload first to get userId — avoids full table scan
     const payload = verifyRefreshToken(refreshToken);
-    const rows = await db.select().from(sessions).where(eq(sessions.userId, payload.sub));
+    const hash = hashRefreshToken(refreshToken);
 
+    // O(1) direct update via SHA-256 hash
+    const updated = await db
+      .update(sessions)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(sessions.userId, payload.sub), eq(sessions.refreshTokenHash, hash), isNull(sessions.revokedAt)))
+      .returning({ id: sessions.id });
+
+    if (updated.length > 0) return true;
+
+    // Fallback backward-compatibility untuk token lama berformat bcrypt ($2a$ / $2b$)
+    const rows = await db.select().from(sessions).where(and(eq(sessions.userId, payload.sub), isNull(sessions.revokedAt)));
     for (const session of rows) {
-      if (session.revokedAt) continue;
-      const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
-      if (match) {
-        await db.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.id, session.id));
-        return true;
+      if (session.refreshTokenHash.startsWith('$2')) {
+        const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
+        if (match) {
+          await db.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.id, session.id));
+          return true;
+        }
       }
     }
   } catch {
-    // Token already invalid — treat as already revoked
     return false;
   }
 
@@ -181,17 +196,43 @@ export async function revokeRefreshToken(refreshToken: string) {
 }
 
 export async function findValidRefreshSession(refreshToken: string) {
-  const payload = verifyRefreshToken(refreshToken);
-  const rows = await db
-    .select()
-    .from(sessions)
-    .where(eq(sessions.userId, payload.sub));
+  try {
+    const payload = verifyRefreshToken(refreshToken);
+    const hash = hashRefreshToken(refreshToken);
+    const now = new Date();
 
-  for (const session of rows) {
-    if (session.revokedAt) continue;
-    if (session.expiresAt < new Date()) continue;
-    const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
-    if (match) return { session, payload };
+    // 1. Direct O(1) lookup via indexed SHA-256 hash
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(and(
+        eq(sessions.userId, payload.sub),
+        eq(sessions.refreshTokenHash, hash),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, now),
+      ))
+      .limit(1);
+
+    if (session) return { session, payload };
+
+    // 2. Fallback backward-compatibility untuk sesi lama yang memakai bcrypt
+    const legacySessions = await db
+      .select()
+      .from(sessions)
+      .where(and(
+        eq(sessions.userId, payload.sub),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, now),
+      ));
+
+    for (const legSession of legacySessions) {
+      if (legSession.refreshTokenHash.startsWith('$2')) {
+        const match = await bcrypt.compare(refreshToken, legSession.refreshTokenHash);
+        if (match) return { session: legSession, payload };
+      }
+    }
+  } catch {
+    return null;
   }
 
   return null;

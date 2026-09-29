@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { mediaFiles, salesTransactions, transactionNotePhotos, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -46,7 +46,13 @@ async function getTenantMedia(companyId: string, mediaId: string) {
     .select({ media: mediaFiles })
     .from(mediaFiles)
     .leftJoin(users, eq(mediaFiles.uploadedByUserId, users.id))
-    .where(and(eq(mediaFiles.id, mediaId), eq(users.companyId, companyId)))
+    .where(and(
+      eq(mediaFiles.id, mediaId),
+      or(
+        eq(mediaFiles.companyId, companyId),
+        eq(users.companyId, companyId)
+      )
+    ))
     .limit(1);
 
   return row?.media ?? null;
@@ -144,6 +150,7 @@ export async function mediaRoutes(app: FastifyInstance) {
 
     const media = await db.transaction(async (tx) => {
       const [med] = await tx.insert(mediaFiles).values({
+        companyId,
         ownerType: body.ownerType,
         ownerId: body.ownerId,
         fileUrl: body.fileUrl ?? getPublicUrl(body.objectKey, await getStorageConfig(companyId)),

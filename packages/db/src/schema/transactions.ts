@@ -61,7 +61,11 @@ export const salesTransactionItems = pgTable('sales_transaction_items', {
   discountAmount: numeric('discount_amount', { precision: 14, scale: 2 }).default('0').notNull(),
   lineTotal: numeric('line_total', { precision: 14, scale: 2 }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('sales_trx_items_trx_idx').on(table.transactionId),
+  index('sales_trx_items_product_idx').on(table.productId),
+  index('sales_trx_items_company_idx').on(table.companyId),
+]);
 
 export const transactionNotePhotos = pgTable('transaction_note_photos', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -77,6 +81,9 @@ export const transactionNotePhotos = pgTable('transaction_note_photos', {
   verificationStatus: verificationStatusEnum('verification_status').default('pending').notNull(),
   rejectionReason: text('rejection_reason'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index('trx_note_photos_trx_idx').on(table.transactionId),
+  index('trx_note_photos_company_idx').on(table.companyId),
+]);
 
 

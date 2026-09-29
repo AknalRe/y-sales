@@ -339,7 +339,7 @@ export function TransactionsPage() {
   async function handleSyncQueue() {
     setSyncing(true);
     try {
-      const result = await syncTransactionQueue();
+      const result = await syncTransactionQueue(accessToken);
       await refreshQueueCount();
       if (result.synced || result.failed) {
         setOfflineMessage(`Sync transaksi selesai. Berhasil: ${result.synced}, gagal: ${result.failed}`);

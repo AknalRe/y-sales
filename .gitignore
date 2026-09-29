@@ -66,3 +66,11 @@ services/face-service/config.json
 .venv-face/
 __pycache__/
 *.pyc
+docs/trash/
+
+# Office temporary lock files and scratch scripts
+~$*
+scratch_*.py
+mahasura_images/
+mahasura_v2/
+manual_images/

@@ -350,16 +350,24 @@ export async function salesRoutes(app: FastifyInstance) {
           eq(inventoryBalances.companyId, companyId),
           eq(inventoryBalances.warehouseId, stockWarehouse.id),
           eq(inventoryBalances.productId, item.productId),
-        ));
+        )).for('update');
         const availableQuantity = Number(balance?.quantity ?? 0) - Number(balance?.reservedQuantity ?? 0);
         if (!balance || availableQuantity < Number(item.quantity)) {
           const [product] = await tx.select().from(products).where(and(eq(products.companyId, companyId), eq(products.id, item.productId)));
           throw Object.assign(new Error(`Stok sales tidak cukup untuk ${product?.name ?? item.productId}`), { statusCode: 400 });
         }
-        await tx.update(inventoryBalances).set({
+        const updatedBalance = await tx.update(inventoryBalances).set({
           reservedQuantity: sql`${inventoryBalances.reservedQuantity} + ${item.quantity}`,
           updatedAt: new Date(),
-        }).where(eq(inventoryBalances.id, balance.id));
+        }).where(and(
+          eq(inventoryBalances.id, balance.id),
+          sql`(${inventoryBalances.quantity} - ${inventoryBalances.reservedQuantity}) >= ${item.quantity}`
+        )).returning({ id: inventoryBalances.id });
+
+        if (updatedBalance.length === 0) {
+          const [product] = await tx.select().from(products).where(and(eq(products.companyId, companyId), eq(products.id, item.productId)));
+          throw Object.assign(new Error(`Stok sales tidak cukup untuk ${product?.name ?? item.productId}`), { statusCode: 400 });
+        }
         await tx.insert(salesTransactionItems).values({
           companyId,
           transactionId: created.id,

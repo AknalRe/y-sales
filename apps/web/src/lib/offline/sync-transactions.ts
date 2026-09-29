@@ -1,7 +1,7 @@
 import { createOrder } from '../api/tenant';
 import { deleteTransactionQueueItem, getPendingTransactionQueue, markTransactionQueueItemFailed, markTransactionQueueItemSyncing } from './transaction-queue';
 
-export async function syncTransactionQueue() {
+export async function syncTransactionQueue(activeToken?: string) {
   if (!navigator.onLine) return { synced: 0, failed: 0 };
 
   const items = await getPendingTransactionQueue();
@@ -11,8 +11,9 @@ export async function syncTransactionQueue() {
   for (const item of items) {
     try {
       await markTransactionQueueItemSyncing(item.id);
+      const token = activeToken || item.accessToken;
       if (item.type === 'create-order') {
-        await createOrder(item.accessToken, item.payload);
+        await createOrder(token, item.payload);
       }
       await deleteTransactionQueueItem(item.id);
       synced += 1;

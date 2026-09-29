@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq, isNull, or } from 'drizzle-orm';
+import { and, desc, eq, isNull, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { companies, roles, tenantSubscriptions, users } from '@yuksales/db/schema';
+import { companies, roles, sessions, tenantSubscriptions, users } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
 import { authenticate, hashPassword, requirePermission } from '../auth/auth.service.js';
 import { requireTenantId, requireLimit } from '../tenant.js';
@@ -151,10 +151,10 @@ export async function usersRoutes(app: FastifyInstance) {
     }
 
 
-    // Check user limit from subscription plan
-    const currentUserCount = await db.select({ id: users.id }).from(users)
+    // Check user limit from subscription plan using SQL count
+    const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(users)
       .where(and(eq(users.companyId, companyId), isNull(users.deletedAt)));
-    await requireLimit(request, 'users', currentUserCount.length);
+    await requireLimit(request, 'users', countResult?.count ?? 0);
 
     const passwordHash = await hashPassword(body.password);
     const [user] = await db.insert(users).values({
@@ -245,6 +245,7 @@ export async function usersRoutes(app: FastifyInstance) {
     if (!existing) return reply.status(404).send({ message: 'User tidak ditemukan.' });
 
     await db.update(users).set({ status: 'inactive', deletedAt: new Date(), updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId)));
+    await db.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.userId, params.id));
     try {
       await writeAuditLog({ request, action: 'user.deleted', entityType: 'user', entityId: params.id, oldValues: { name: existing.name } });
     } catch (err) {
@@ -264,6 +265,7 @@ export async function usersRoutes(app: FastifyInstance) {
 
     const passwordHash = await hashPassword(body.newPassword);
     await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(and(eq(users.id, params.id), eq(users.companyId, companyId)));
+    await db.update(sessions).set({ revokedAt: new Date() }).where(eq(sessions.userId, params.id));
     try {
       await writeAuditLog({ request, action: 'user.password_reset', entityType: 'user', entityId: params.id });
     } catch (err) {

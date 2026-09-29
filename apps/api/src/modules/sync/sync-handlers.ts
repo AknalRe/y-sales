@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
@@ -47,7 +48,7 @@ const attendanceCheckInPayload = z.object({
 
 const visitCheckInPayload = z.object({
   outletId: z.string().uuid(),
-  scheduleId: z.string().uuid().nullish().transform(val => val || undefined),
+  scheduleId: z.string().uuid().nullish().transform((val: string | null | undefined) => val || undefined),
   clientRequestId: z.string().uuid(),
   latitude: z.number(),
   longitude: z.number(),
@@ -80,15 +81,15 @@ const visitCheckOutPayload = z.object({
 });
 
 const optionalUuid = z.preprocess(
-  (val) => (val === '' || val === null ? undefined : val),
+  (val: unknown) => (val === '' || val === null ? undefined : val),
   z.string().uuid().optional(),
 );
 const optionalText = z.preprocess(
-  (val) => (val === '' || val === null ? undefined : val),
+  (val: unknown) => (val === '' || val === null ? undefined : val),
   z.string().optional(),
 );
 const optionalNumber = z.preprocess(
-  (val) => (val === '' || val === null ? undefined : val),
+  (val: unknown) => (val === '' || val === null ? undefined : val),
   z.number().optional(),
 );
 
@@ -147,7 +148,7 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
     const todaySessions = await db.select().from(attendanceSessions).where(
       and(eq(attendanceSessions.companyId, ctx.companyId), eq(attendanceSessions.userId, ctx.userId), eq(attendanceSessions.workDate, todayDate()))
     );
-    const openTodaySession = todaySessions.find((session) => session.status === 'open');
+    const openTodaySession = todaySessions.find((session: typeof attendanceSessions.$inferSelect) => session.status === 'open');
 
     if (openTodaySession) {
       return { success: false, error: 'Selesaikan sesi absensi aktif sebelum absen masuk lagi.' };
@@ -178,6 +179,7 @@ async function handleAttendanceCheckIn(payload: unknown, ctx: SyncContext): Prom
     if (attendanceGeofenceError) return { success: false, error: attendanceGeofenceError };
 
     const [media] = await db.insert(mediaFiles).values({
+      companyId: ctx.companyId,
       ownerType: 'attendance',
       fileUrl: body.faceCapture.dataUrl,
       mimeType: body.faceCapture.mimeType,
@@ -286,6 +288,7 @@ async function handleVisitCheckIn(payload: unknown, ctx: SyncContext): Promise<H
     if (visitGeofenceError) return { success: false, error: visitGeofenceError };
 
     const [media] = await db.insert(mediaFiles).values({
+      companyId: ctx.companyId,
       ownerType: 'visit',
       fileUrl: body.faceCapture.dataUrl,
       mimeType: body.faceCapture.mimeType,
@@ -364,6 +367,7 @@ async function handleVisitCheckOut(payload: unknown, ctx: SyncContext): Promise<
     if (visitGeofenceError) return { success: false, error: visitGeofenceError };
 
     const [media] = await db.insert(mediaFiles).values({
+      companyId: ctx.companyId,
       ownerType: 'visit',
       fileUrl: body.faceCapture.dataUrl,
       mimeType: body.faceCapture.mimeType,
@@ -439,12 +443,12 @@ async function handleTransactionCreate(payload: unknown, ctx: SyncContext): Prom
     );
     if (!stockWarehouse) return { success: false, error: 'Stok sales belum tersedia' };
 
-    const total = body.items.reduce((sum, item) => sum + Number(item.quantity) * Number(item.unitPrice), 0).toFixed(2);
+    const total = body.items.reduce((sum: number, item: { quantity: string; unitPrice: string }) => sum + Number(item.quantity) * Number(item.unitPrice), 0).toFixed(2);
 
-    const order = await db.transaction(async (tx) => {
+    const order = await db.transaction(async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
       const [created] = await tx.insert(salesTransactions).values({
         companyId: ctx.companyId,
-        transactionNo: `SO-${Date.now()}`,
+        transactionNo: `SO-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
         salesUserId: ctx.userId,
         outletId: body.outletId ?? visit?.outletId ?? null,
         visitSessionId: body.visitSessionId ?? visit?.id ?? null,
@@ -469,16 +473,24 @@ async function handleTransactionCreate(payload: unknown, ctx: SyncContext): Prom
           eq(inventoryBalances.companyId, ctx.companyId),
           eq(inventoryBalances.warehouseId, stockWarehouse.id),
           eq(inventoryBalances.productId, item.productId),
-        ));
+        )).for('update');
         const availableQuantity = Number(balance?.quantity ?? 0) - Number(balance?.reservedQuantity ?? 0);
         if (!balance || availableQuantity < Number(item.quantity)) {
           const [product] = await tx.select().from(products).where(and(eq(products.companyId, ctx.companyId), eq(products.id, item.productId)));
           throw new Error(`Stok sales tidak cukup untuk ${product?.name ?? item.productId}`);
         }
-        await tx.update(inventoryBalances).set({
+        const updatedBalance = await tx.update(inventoryBalances).set({
           reservedQuantity: sql`${inventoryBalances.reservedQuantity} + ${item.quantity}`,
           updatedAt: new Date(),
-        }).where(eq(inventoryBalances.id, balance.id));
+        }).where(and(
+          eq(inventoryBalances.id, balance.id),
+          sql`(${inventoryBalances.quantity} - ${inventoryBalances.reservedQuantity}) >= ${item.quantity}`
+        )).returning({ id: inventoryBalances.id });
+
+        if (updatedBalance.length === 0) {
+          const [product] = await tx.select().from(products).where(and(eq(products.companyId, ctx.companyId), eq(products.id, item.productId)));
+          throw new Error(`Stok sales tidak cukup untuk ${product?.name ?? item.productId}`);
+        }
         await tx.insert(salesTransactionItems).values({
           companyId: ctx.companyId,
           transactionId: created.id,

@@ -226,6 +226,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
 
     const { session, face, identity } = await db.transaction(async (tx) => {
       const [media] = await tx.insert(mediaFiles).values({
+        companyId,
         ownerType: 'attendance',
         fileUrl: body.faceCapture.dataUrl,
         mimeType: body.faceCapture.mimeType,
@@ -359,6 +360,7 @@ export async function attendanceRoutes(app: FastifyInstance) {
 
     const { session, face, identity } = await db.transaction(async (tx) => {
       const [media] = await tx.insert(mediaFiles).values({
+        companyId,
         ownerType: 'attendance',
         fileUrl: body.faceCapture.dataUrl,
         mimeType: body.faceCapture.mimeType,

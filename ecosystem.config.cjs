@@ -27,6 +27,17 @@ function loadFaceServiceEnv() {
   }
 }
 
+function getPythonInterpreter() {
+  const isWindows = process.platform === "win32";
+  const venvPath = isWindows
+    ? path.join(cwd, "services", "face-service", ".venv-face", "Scripts", "python.exe")
+    : path.join(cwd, "services", "face-service", ".venv-face", "bin", "python");
+  if (fs.existsSync(venvPath)) {
+    return venvPath;
+  }
+  return isWindows ? "python" : "python3";
+}
+
 module.exports = {
   apps: [
     {
@@ -42,9 +53,9 @@ module.exports = {
       name: "yuksales-face-service",
       cwd,
       // Use PM2 native Python interpreter — the correct way to run .py scripts.
-      // "interpreter: python3" tells PM2 to spawn: python3 <script>
+      // Auto-detects .venv-face virtual environment if present.
       script: "services/face-service/app.py",
-      interpreter: "python3",
+      interpreter: getPythonInterpreter(),
       env: {
         PYTHONUNBUFFERED: "1",
         ...loadFaceServiceEnv(),

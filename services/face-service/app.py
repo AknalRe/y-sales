@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
+import ipaddress
 import json
 import os
 import sys
@@ -12,6 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 try:
     from PIL import Image
@@ -157,7 +160,31 @@ def require_auth(handler: BaseHTTPRequestHandler) -> bool:
     if not API_KEY:
         return True
     expected = f"Bearer {API_KEY}"
-    return handler.headers.get("authorization", "") == expected
+    auth_header = handler.headers.get("authorization", "")
+    return hmac.compare_digest(auth_header, expected)
+
+
+def is_safe_url(url_str: str) -> bool:
+    """Validate URL to prevent Server-Side Request Forgery (SSRF)."""
+    try:
+        parsed = urlparse(url_str)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        lower_host = hostname.lower()
+        if lower_host in ("localhost", "127.0.0.1", "::1", "metadata.google.internal", "169.254.169.254"):
+            return False
+        try:
+            ip = ipaddress.ip_address(hostname)
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+                return False
+        except ValueError:
+            pass
+        return True
+    except Exception:
+        return False
 
 
 def load_image_bytes(value: str) -> bytes:
@@ -167,7 +194,10 @@ def load_image_bytes(value: str) -> bytes:
         _, encoded = value.split(",", 1)
         data = base64.b64decode(encoded, validate=True)
     elif value.startswith("http://") or value.startswith("https://"):
-        with urllib.request.urlopen(value, timeout=10) as response:
+        if not is_safe_url(value):
+            raise ValueError("BLOCKED_DISALLOWED_IMAGE_URL")
+        req = urllib.request.Request(value, headers={"User-Agent": "YukSales-FaceService/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as response:
             data = response.read(MAX_IMAGE_BYTES + 1)
     else:
         raise ValueError("UNSUPPORTED_IMAGE_SOURCE")

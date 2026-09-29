@@ -93,13 +93,13 @@ const createSalesSchema = z.object({
   email: z
     .string()
     .optional()
-    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    .refine((val?: string) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
       message: 'Format email tidak valid.',
     }),
   phone: z
     .string()
     .optional()
-    .refine((val) => !val || /^[0-9+\-\s()]+$/.test(val), {
+    .refine((val?: string) => !val || /^[0-9+\-\s()]+$/.test(val), {
       message: 'Nomor HP hanya boleh angka.',
     }),
   employeeCode: z.string().optional(),
@@ -115,13 +115,13 @@ const editSalesSchema = z.object({
   email: z
     .string()
     .optional()
-    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    .refine((val?: string) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
       message: 'Format email tidak valid.',
     }),
   phone: z
     .string()
     .optional()
-    .refine((val) => !val || /^[0-9+\-\s()]+$/.test(val), {
+    .refine((val?: string) => !val || /^[0-9+\-\s()]+$/.test(val), {
       message: 'Nomor HP hanya boleh angka.',
     }),
   employeeCode: z.string().optional(),

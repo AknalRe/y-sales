@@ -118,10 +118,10 @@ export function UsersPage() {
 
   const createUserSchema = z.object({
     name: z.string().min(1, 'Nama lengkap wajib diisi.'),
-    email: z.string().min(1, 'Email wajib diisi.').refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    email: z.string().min(1, 'Email wajib diisi.').refine((val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
       message: 'Format email tidak valid.',
     }),
-    phone: z.string().optional().refine((val) => !val || /^[0-9+\-\s()]+$/.test(val), {
+    phone: z.string().optional().refine((val?: string) => !val || /^[0-9+\-\s()]+$/.test(val), {
       message: 'Nomor HP hanya boleh angka.',
     }),
     employeeCode: z.string().optional(),
@@ -153,10 +153,10 @@ export function UsersPage() {
 
   const updateUserSchema = z.object({
     name: z.string().min(1, 'Nama lengkap wajib diisi.'),
-    email: z.string().min(1, 'Email wajib diisi.').refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    email: z.string().min(1, 'Email wajib diisi.').refine((val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
       message: 'Format email tidak valid.',
     }),
-    phone: z.string().optional().refine((val) => !val || /^[0-9+\-\s()]+$/.test(val), {
+    phone: z.string().optional().refine((val?: string) => !val || /^[0-9+\-\s()]+$/.test(val), {
       message: 'Nomor HP hanya boleh angka.',
     }),
     employeeCode: z.string().optional(),
@@ -266,8 +266,8 @@ export function UsersPage() {
         roleId: data.roleId,
         name: data.name.trim(),
         email: data.email.trim() || undefined,
-        phone: data.phone.trim() || undefined,
-        employeeCode: data.employeeCode.trim() || undefined,
+        phone: data.phone?.trim() || undefined,
+        employeeCode: data.employeeCode?.trim() || undefined,
         password: data.password,
       });
       setShowCreate(false);
@@ -302,8 +302,8 @@ export function UsersPage() {
         roleId: data.roleId,
         name: data.name.trim(),
         email: data.email.trim() || null,
-        phone: data.phone.trim() || null,
-        employeeCode: data.employeeCode.trim() || null,
+        phone: data.phone?.trim() || null,
+        employeeCode: data.employeeCode?.trim() || null,
         status: data.status,
       });
       setEditTarget(null);

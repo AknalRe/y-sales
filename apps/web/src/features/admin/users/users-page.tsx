@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { usePhoneInput } from '@/hooks/use-phone-input';
 import {
   Users, Plus, Search, Trash2, RefreshCw,
   KeyRound, AlertTriangle, CheckCircle2, UserX, Pencil, Eye, EyeOff, Camera,
@@ -21,6 +25,7 @@ import {
 } from '@/lib/api/platform';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui';
+import { showAppToast } from '@/components/ui/app-toast';
 import { FaceCaptureField } from '../shared/face-capture-field';
 
 import {
@@ -102,7 +107,6 @@ export function UsersPage() {
   const [faceFile, setFaceFile] = useState<File | null>(null);
   const [facePreview, setFacePreview] = useState('');
   const [faceSaving, setFaceSaving] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
@@ -110,13 +114,96 @@ export function UsersPage() {
   const [createPasswordVisible, setCreatePasswordVisible] = useState(false);
   const [resetPasswordVisible, setResetPasswordVisible] = useState(false);
 
-  const [form, setForm] = useState({
-    name: '', email: '', phone: '', employeeCode: '',
-    password: '', roleId: '',
+  const phoneInput = usePhoneInput();
+
+  const createUserSchema = z.object({
+    name: z.string().min(1, 'Nama lengkap wajib diisi.'),
+    email: z.string().min(1, 'Email wajib diisi.').refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: 'Format email tidak valid.',
+    }),
+    phone: z.string().optional().refine((val) => !val || /^[0-9+\-\s()]+$/.test(val), {
+      message: 'Nomor HP hanya boleh angka.',
+    }),
+    employeeCode: z.string().optional(),
+    password: z.string().min(1, 'Password wajib diisi.').min(6, 'Password minimal 6 karakter.'),
+    roleId: z.string().min(1, 'Role wajib dipilih.'),
   });
-  const [editForm, setEditForm] = useState({
-    name: '', email: '', phone: '', employeeCode: '',
-    roleId: '', status: 'active' as TenantUser['status'],
+
+  type CreateUserForm = z.infer<typeof createUserSchema>;
+
+  const {
+    register: registerCreate,
+    handleSubmit: handleSubmitCreate,
+    formState: { errors: createErrors },
+    reset: resetCreateForm,
+    setValue: setCreateValue,
+    watch: watchCreate,
+  } = useForm<CreateUserForm>({
+    resolver: zodResolver(createUserSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      employeeCode: '',
+      password: '',
+      roleId: '',
+    },
+  });
+
+  const updateUserSchema = z.object({
+    name: z.string().min(1, 'Nama lengkap wajib diisi.'),
+    email: z.string().min(1, 'Email wajib diisi.').refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: 'Format email tidak valid.',
+    }),
+    phone: z.string().optional().refine((val) => !val || /^[0-9+\-\s()]+$/.test(val), {
+      message: 'Nomor HP hanya boleh angka.',
+    }),
+    employeeCode: z.string().optional(),
+    roleId: z.string().min(1, 'Role wajib dipilih.'),
+    status: z.enum(['active', 'inactive', 'suspended']),
+  });
+
+  type UpdateUserForm = z.infer<typeof updateUserSchema>;
+
+  const {
+    register: registerEdit,
+    handleSubmit: handleSubmitEdit,
+    formState: { errors: editErrors },
+    reset: resetEditForm,
+    setValue: setEditValue,
+    watch: watchEdit,
+  } = useForm<UpdateUserForm>({
+    resolver: zodResolver(updateUserSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      employeeCode: '',
+      roleId: '',
+      status: 'active',
+    },
+  });
+
+  const resetPasswordSchema = z.object({
+    password: z.string().min(6, 'Password minimal 6 karakter.'),
+  });
+
+  type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+
+  const {
+    register: registerReset,
+    handleSubmit: handleSubmitReset,
+    formState: { errors: resetPasswordErrors },
+    reset: resetPasswordForm,
+    watch: watchResetPassword,
+  } = useForm<ResetPasswordForm>({
+    resolver: zodResolver(resetPasswordSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      password: '',
+    },
   });
 
   const filtered = users.filter(u =>
@@ -129,7 +216,7 @@ export function UsersPage() {
 
   async function handleGenerateEmployeeCode(mode: 'create' | 'edit') {
     if (!accessToken) return;
-    const roleId = mode === 'create' ? form.roleId : editForm.roleId;
+    const roleId = mode === 'create' ? watchCreate('roleId') : watchEdit('roleId');
     const excludeUserId = mode === 'edit' ? editTarget?.id : undefined;
     if (!roleId) return;
 
@@ -138,12 +225,14 @@ export function UsersPage() {
     try {
       const data = await suggestEmployeeCode(accessToken, roleId, excludeUserId);
       if (mode === 'create') {
-        setForm((current) => ({ ...current, employeeCode: data.employeeCode }));
+        setCreateValue('employeeCode', data.employeeCode);
       } else {
-        setEditForm((current) => ({ ...current, employeeCode: data.employeeCode }));
+        setEditValue('employeeCode', data.employeeCode);
       }
     } catch (e: any) {
-      setError(e.message ?? 'Gagal generate kode karyawan.');
+      const message = e.message ?? 'Gagal generate kode karyawan.';
+      setError(message);
+      showAppToast({ title: 'Gagal Generate Kode Karyawan', message, tone: 'error', duration: 5000 });
     } finally {
       setGeneratingCode(false);
     }
@@ -168,21 +257,21 @@ export function UsersPage() {
 
   useEffect(() => { load(); }, [accessToken]);
 
-  async function handleCreate() {
+  async function handleCreate(data: CreateUserForm) {
     if (!accessToken) return;
     setSaving(true);
     setError('');
     try {
       await createUser(accessToken, {
-        roleId: form.roleId,
-        name: form.name.trim(),
-        email: form.email.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-        employeeCode: form.employeeCode.trim() || undefined,
-        password: form.password,
+        roleId: data.roleId,
+        name: data.name.trim(),
+        email: data.email.trim() || undefined,
+        phone: data.phone.trim() || undefined,
+        employeeCode: data.employeeCode.trim() || undefined,
+        password: data.password,
       });
       setShowCreate(false);
-      setForm({ name: '', email: '', phone: '', employeeCode: '', password: '', roleId: '' });
+      resetCreateForm();
       setSuccess('User berhasil dibuat.');
       await load();
     } catch (e: any) {
@@ -194,7 +283,7 @@ export function UsersPage() {
 
   function openEdit(user: TenantUser) {
     setEditTarget(user);
-    setEditForm({
+    resetEditForm({
       name: user.name,
       email: user.email ?? '',
       phone: user.phone ?? '',
@@ -204,21 +293,21 @@ export function UsersPage() {
     });
   }
 
-  async function handleUpdate() {
+  async function handleUpdate(data: UpdateUserForm) {
     if (!accessToken || !editTarget) return;
     setSaving(true);
     setError('');
     try {
       await updateUser(accessToken, editTarget.id, {
-        roleId: editForm.roleId,
-        name: editForm.name.trim(),
-        email: editForm.email.trim() || null,
-        phone: editForm.phone.trim() || null,
-        employeeCode: editForm.employeeCode.trim() || null,
-        status: editForm.status,
+        roleId: data.roleId,
+        name: data.name.trim(),
+        email: data.email.trim() || null,
+        phone: data.phone.trim() || null,
+        employeeCode: data.employeeCode.trim() || null,
+        status: data.status,
       });
       setEditTarget(null);
-      setSuccess(`User ${editForm.name} berhasil diperbarui.`);
+      setSuccess(`User ${data.name} berhasil diperbarui.`);
       await load();
     } catch (e: any) {
       setError(e.message);
@@ -238,15 +327,14 @@ export function UsersPage() {
     }
   }
 
-  async function handleResetPassword() {
+  async function handleResetPassword(data: ResetPasswordForm) {
     if (!accessToken || !resetTarget) return;
-    if (newPassword.length < 6) { setError('Password minimal 6 karakter.'); return; }
     setSaving(true);
     setError('');
     try {
-      await resetPassword(accessToken, resetTarget.id, newPassword);
+      await resetPassword(accessToken, resetTarget.id, data.password);
       setResetTarget(null);
-      setNewPassword('');
+      resetPasswordForm();
       setSuccess('Password berhasil direset.');
     } catch (e: any) {
       setError(e.message);
@@ -446,7 +534,7 @@ export function UsersPage() {
                       </button>
                       <button
                         id={`users-reset-pass-${user.id}`}
-                        onClick={() => setResetTarget(user)}
+                        onClick={() => { resetPasswordForm(); setResetTarget(user); }}
                         className="admin-btn-icon-sm"
                         title="Reset Password"
                         type="button"
@@ -484,7 +572,7 @@ export function UsersPage() {
       </div>
 
       {/* Create User Modal */}
-      <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) setShowCreate(false); }} disablePointerDismissal={saving}>
+      <AdminDialog open={showCreate} onOpenChange={(open) => { if (!open) { setShowCreate(false); resetCreateForm(); } else { resetCreateForm(); } }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
           <AdminDialogContent className="admin-page">
@@ -495,16 +583,18 @@ export function UsersPage() {
             <AdminDialogBody>
               <div className="admin-form-grid">
                 <div className="admin-field admin-field-full">
-                  <label htmlFor="user-role">Role *</label>
+                  <label htmlFor="user-role">Role <span className="text-admin-danger">*</span></label>
                   <Select
                     items={[
                       { value: '', label: '— Pilih Role —' },
                       ...roles.map(r => ({ value: r.id, label: `${r.name} (${r.code})` })),
                     ]}
-                    value={form.roleId}
-                    onValueChange={(nextValue) => setForm(f => ({ ...f, roleId: String(nextValue) }))}
+                    value={watchCreate('roleId')}
+                    onValueChange={(nextValue) => {
+                      setCreateValue('roleId', String(nextValue));
+                    }}
                   >
-                    <SelectTrigger className="admin-select" id="user-role">
+                    <SelectTrigger className={`admin-select ${createErrors.roleId ? 'aria-invalid:border-destructive' : ''}`} id="user-role" aria-invalid={!!createErrors.roleId}>
                       <SelectValue />
                       <SelectIcon>
                         <SelectChevronUpDownIcon />
@@ -532,39 +622,59 @@ export function UsersPage() {
                       </SelectPositioner>
                     </SelectPortal>
                   </Select>
+                  {createErrors.roleId && (
+                    <small className="text-admin-danger text-xs">{createErrors.roleId.message}</small>
+                  )}
                 </div>
                 <div className="admin-field admin-field-full">
-                  <label htmlFor="user-name">Nama Lengkap *</label>
+                  <label htmlFor="user-name">Nama Lengkap <span className="text-admin-danger">*</span></label>
                   <input
                     id="user-name"
                     type="text"
-                    value={form.name}
-                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    {...registerCreate('name')}
                     placeholder="Budi Santoso"
                     className="admin-input"
+                    autoComplete="off"
+                    required
+                    aria-invalid={!!createErrors.name}
+                    aria-describedby={createErrors.name ? 'user-name-error' : undefined}
                   />
+                  {createErrors.name && (
+                    <small id="user-name-error" className="text-admin-danger text-xs">{createErrors.name.message}</small>
+                  )}
                 </div>
                 <div className="admin-field">
-                  <label htmlFor="user-email">Email</label>
+                  <label htmlFor="user-email">Email <span className="text-admin-danger">*</span></label>
                   <input
                     id="user-email"
                     type="email"
-                    value={form.email}
-                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                    {...registerCreate('email')}
                     placeholder="budi@company.com"
                     className="admin-input"
+                    autoComplete="off"
+                    aria-invalid={!!createErrors.email}
+                    aria-describedby={createErrors.email ? 'user-email-error' : undefined}
                   />
+                  {createErrors.email && (
+                    <small id="user-email-error" className="text-admin-danger text-xs">{createErrors.email.message}</small>
+                  )}
                 </div>
                 <div className="admin-field">
                   <label htmlFor="user-phone">Nomor HP</label>
                   <input
                     id="user-phone"
-                    type="text"
-                    value={form.phone}
-                    onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                    type="tel"
+                    {...registerCreate('phone')}
                     placeholder="08xxxxxxxxx"
                     className="admin-input"
+                    autoComplete="off"
+                    aria-invalid={!!createErrors.phone}
+                    aria-describedby={createErrors.phone ? 'user-phone-error' : undefined}
+                    {...phoneInput}
                   />
+                  {createErrors.phone && (
+                    <small id="user-phone-error" className="text-admin-danger text-xs">{createErrors.phone.message}</small>
+                  )}
                 </div>
                 <div className="admin-field">
                   <label htmlFor="user-employee-code">Kode Karyawan</label>
@@ -572,16 +682,16 @@ export function UsersPage() {
                     <input
                       id="user-employee-code"
                       type="text"
-                      value={form.employeeCode}
-                      onChange={e => setForm(f => ({ ...f, employeeCode: e.target.value }))}
-                      placeholder={form.roleId ? 'Klik generate kode' : 'Pilih role dulu'}
+                      {...registerCreate('employeeCode')}
+                      placeholder={watchCreate('roleId') ? 'Klik generate kode' : 'Pilih role dulu'}
                       className="admin-input pr-10"
+                      autoComplete="off"
                     />
                     <button
                       type="button"
                       className="admin-btn-icon-sm"
                       title="Generate kode karyawan"
-                      disabled={!form.roleId || generatingCode}
+                      disabled={!watchCreate('roleId') || generatingCode}
                       onClick={() => handleGenerateEmployeeCode('create')}
                     >
                       <RefreshCw size={14} className={generatingCode ? 'animate-spin' : ''} />
@@ -590,36 +700,41 @@ export function UsersPage() {
                   <small className="admin-field-hint">Format otomatis: KODE_COMPANY-urutan. Tetap bisa diisi manual.</small>
                 </div>
                 <div className="admin-field">
-                  <label htmlFor="user-password">Password *</label>
+                  <label htmlFor="user-password">Password <span className="text-admin-danger">*</span></label>
                   <div className="admin-password-field">
                     <input
                       id="user-password"
                       type={createPasswordVisible ? 'text' : 'password'}
-                      value={form.password}
-                      onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                      {...registerCreate('password')}
                       placeholder="Minimal 6 karakter"
                       className="admin-input"
-                    />
-                    <button
-                      type="button"
-                      className="admin-password-toggle"
-                      onClick={() => setCreatePasswordVisible((current) => !current)}
-                      title={createPasswordVisible ? 'Sembunyikan password' : 'Tampilkan password'}
-                    >
-                      {createPasswordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </div>
-                </div>
+                      autoComplete="new-password"
+                      required
+                      minLength={6}
+                     />
+                     <button
+                       type="button"
+                       className="admin-password-toggle"
+                       onClick={() => setCreatePasswordVisible((current) => !current)}
+                       title={createPasswordVisible ? 'Sembunyikan password' : 'Tampilkan password'}
+                     >
+                       {createPasswordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+                     </button>
+                   </div>
+                   {createErrors.password && (
+                     <small className="text-admin-danger text-xs">{createErrors.password.message}</small>
+                   )}
+                 </div>
               </div>
             </AdminDialogBody>
             <AdminDialogFooter>
-              <button onClick={() => setShowCreate(false)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={() => { setShowCreate(false); resetCreateForm(); }} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-submit-create"
-                onClick={handleCreate}
+                onClick={handleSubmitCreate(handleCreate)}
                 className="admin-btn-primary"
                 type="button"
-                disabled={saving || !form.name || !form.password || !form.roleId}
+                disabled={saving}
               >
                 {saving ? 'Menyimpan...' : 'Buat User'}
               </button>
@@ -629,7 +744,7 @@ export function UsersPage() {
       </AdminDialog>
 
       {/* Edit User Modal */}
-      <AdminDialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }} disablePointerDismissal={saving}>
+      <AdminDialog open={!!editTarget} onOpenChange={(open) => { if (!open) { setEditTarget(null); resetEditForm(); } }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
           <AdminDialogContent className="admin-page">
@@ -643,16 +758,18 @@ export function UsersPage() {
             <AdminDialogBody>
               <div className="admin-form-grid">
                 <div className="admin-field admin-field-full">
-                  <label htmlFor="edit-user-role">Role *</label>
+                  <label htmlFor="edit-user-role">Role <span className="text-admin-danger">*</span></label>
                   <Select
                     items={[
                       { value: '', label: '— Pilih Role —' },
                       ...roles.map(r => ({ value: r.id, label: `${r.name} (${r.code})` })),
                     ]}
-                    value={editForm.roleId}
-                    onValueChange={(nextValue) => setEditForm(f => ({ ...f, roleId: String(nextValue) }))}
+                    value={watchEdit('roleId')}
+                    onValueChange={(nextValue) => {
+                      setEditValue('roleId', String(nextValue));
+                    }}
                   >
-                    <SelectTrigger className="admin-select" id="edit-user-role">
+                    <SelectTrigger className={`admin-select ${editErrors.roleId ? 'aria-invalid:border-destructive' : ''}`} id="edit-user-role" aria-invalid={!!editErrors.roleId}>
                       <SelectValue />
                       <SelectIcon>
                         <SelectChevronUpDownIcon />
@@ -680,36 +797,52 @@ export function UsersPage() {
                       </SelectPositioner>
                     </SelectPortal>
                   </Select>
+                  {editErrors.roleId && (
+                    <small className="text-admin-danger text-xs">{editErrors.roleId.message}</small>
+                  )}
                 </div>
                 <div className="admin-field admin-field-full">
-                  <label htmlFor="edit-user-name">Nama Lengkap *</label>
+                  <label htmlFor="edit-user-name">Nama Lengkap <span className="text-admin-danger">*</span></label>
                   <input
                     id="edit-user-name"
                     type="text"
-                    value={editForm.name}
-                    onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    {...registerEdit('name')}
                     className="admin-input"
+                    aria-invalid={!!editErrors.name}
+                    aria-describedby={editErrors.name ? 'edit-user-name-error' : undefined}
                   />
+                  {editErrors.name && (
+                    <small id="edit-user-name-error" className="text-admin-danger text-xs">{editErrors.name.message}</small>
+                  )}
                 </div>
                 <div className="admin-field">
-                  <label htmlFor="edit-user-email">Email</label>
+                  <label htmlFor="edit-user-email">Email <span className="text-admin-danger">*</span></label>
                   <input
                     id="edit-user-email"
                     type="email"
-                    value={editForm.email}
-                    onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                    {...registerEdit('email')}
                     className="admin-input"
+                    aria-invalid={!!editErrors.email}
+                    aria-describedby={editErrors.email ? 'edit-user-email-error' : undefined}
                   />
+                  {editErrors.email && (
+                    <small id="edit-user-email-error" className="text-admin-danger text-xs">{editErrors.email.message}</small>
+                  )}
                 </div>
                 <div className="admin-field">
                   <label htmlFor="edit-user-phone">Nomor HP</label>
                   <input
                     id="edit-user-phone"
-                    type="text"
-                    value={editForm.phone}
-                    onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                    type="tel"
+                    {...registerEdit('phone')}
                     className="admin-input"
+                    aria-invalid={!!editErrors.phone}
+                    aria-describedby={editErrors.phone ? 'edit-user-phone-error' : undefined}
+                    {...phoneInput}
                   />
+                  {editErrors.phone && (
+                    <small id="edit-user-phone-error" className="text-admin-danger text-xs">{editErrors.phone.message}</small>
+                  )}
                 </div>
                 <div className="admin-field">
                   <label htmlFor="edit-user-employee-code">Kode Karyawan</label>
@@ -717,16 +850,15 @@ export function UsersPage() {
                     <input
                       id="edit-user-employee-code"
                       type="text"
-                      value={editForm.employeeCode}
-                      onChange={e => setEditForm(f => ({ ...f, employeeCode: e.target.value }))}
-                      placeholder={editForm.roleId ? 'Klik generate kode' : 'Pilih role dulu'}
+                      {...registerEdit('employeeCode')}
+                      placeholder={watchEdit('roleId') ? 'Klik generate kode' : 'Pilih role dulu'}
                       className="admin-input pr-10"
                     />
                     <button
                       type="button"
                       className="admin-btn-icon-sm"
                       title="Generate kode karyawan"
-                      disabled={!editForm.roleId || generatingCode}
+                      disabled={!watchEdit('roleId') || generatingCode}
                       onClick={() => handleGenerateEmployeeCode('edit')}
                     >
                       <RefreshCw size={14} className={generatingCode ? 'animate-spin' : ''} />
@@ -742,8 +874,10 @@ export function UsersPage() {
                       { value: 'inactive', label: 'Nonaktif' },
                       { value: 'suspended', label: 'Suspended' },
                     ]}
-                    value={editForm.status}
-                    onValueChange={(nextValue) => setEditForm(f => ({ ...f, status: nextValue as TenantUser['status'] }))}
+                    value={watchEdit('status')}
+                    onValueChange={(nextValue) => {
+                      setEditValue('status', nextValue as 'active' | 'inactive' | 'suspended');
+                    }}
                   >
                     <SelectTrigger className="admin-select" id="edit-user-status">
                       <SelectValue />
@@ -778,13 +912,13 @@ export function UsersPage() {
               </div>
             </AdminDialogBody>
             <AdminDialogFooter>
-              <button onClick={() => setEditTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={() => { setEditTarget(null); resetEditForm(); }} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-submit-edit"
-                onClick={handleUpdate}
+                onClick={handleSubmitEdit(handleUpdate)}
                 className="admin-btn-primary"
                 type="button"
-                disabled={saving || !editForm.name || !editForm.roleId}
+                disabled={saving}
               >
                 {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>
@@ -794,7 +928,7 @@ export function UsersPage() {
       </AdminDialog>
 
       {/* Reset Password Modal */}
-      <AdminDialog open={!!resetTarget} onOpenChange={(open) => { if (!open) setResetTarget(null); }} disablePointerDismissal={saving}>
+      <AdminDialog open={!!resetTarget} onOpenChange={(open) => { if (!open) { setResetTarget(null); resetPasswordForm(); } }} disablePointerDismissal={saving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
           <AdminDialogContent size="sm" className="admin-page">
@@ -807,15 +941,16 @@ export function UsersPage() {
                 Reset password untuk <strong>{resetTarget?.name}</strong>.
               </p>
               <div className="admin-field">
-                <label htmlFor="new-password">Password Baru *</label>
+                <label htmlFor="new-password">Password Baru <span className="text-admin-danger">*</span></label>
                 <div className="admin-password-field">
                   <input
                     id="new-password"
                     type={resetPasswordVisible ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
+                    {...registerReset('password')}
                     placeholder="Minimal 6 karakter"
                     className="admin-input"
+                    aria-invalid={!!resetPasswordErrors.password}
+                    aria-describedby={resetPasswordErrors.password ? 'new-password-error' : undefined}
                   />
                   <button
                     type="button"
@@ -826,16 +961,19 @@ export function UsersPage() {
                     {resetPasswordVisible ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
+                {resetPasswordErrors.password && (
+                  <small id="new-password-error" className="text-admin-danger text-xs">{resetPasswordErrors.password.message}</small>
+                )}
               </div>
             </AdminDialogBody>
             <AdminDialogFooter>
-              <button onClick={() => setResetTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={() => { setResetTarget(null); resetPasswordForm(); }} className="admin-btn-ghost" type="button">Batal</button>
               <button
                 id="users-confirm-reset"
-                onClick={handleResetPassword}
+                onClick={handleSubmitReset(handleResetPassword)}
                 className="admin-btn-primary"
                 type="button"
-                disabled={saving || newPassword.length < 6}
+                disabled={saving}
               >
                 {saving ? 'Mereset...' : 'Reset Password'}
               </button>
@@ -845,7 +983,7 @@ export function UsersPage() {
       </AdminDialog>
 
       {/* Face Enrollment Modal */}
-      <AdminDialog open={!!faceTarget} onOpenChange={(open) => { if (!open) setFaceTarget(null); }} disablePointerDismissal={faceSaving}>
+      <AdminDialog open={!!faceTarget} onOpenChange={(open) => { if (!open) { setFaceTarget(null); setFaceFile(null); setFacePreview(''); } }} disablePointerDismissal={faceSaving}>
         <AdminDialogPortal>
           <AdminDialogBackdrop />
           <AdminDialogContent size="sm" className="admin-page">
@@ -879,7 +1017,7 @@ export function UsersPage() {
               </div>
             </AdminDialogBody>
             <AdminDialogFooter>
-              <button onClick={() => setFaceTarget(null)} className="admin-btn-ghost" type="button">Batal</button>
+              <button onClick={() => { setFaceTarget(null); setFaceFile(null); setFacePreview(''); }} className="admin-btn-ghost" type="button">Batal</button>
               <button onClick={handleEnrollFace} className="admin-btn-primary" type="button" disabled={faceSaving || !facePreview}>
                 {faceSaving ? 'Menyimpan...' : 'Simpan Wajah'}
               </button>

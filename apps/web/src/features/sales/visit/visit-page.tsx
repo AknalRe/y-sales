@@ -31,6 +31,9 @@ export function VisitPage() {
   const [online, setOnline] = useState(navigator.onLine);
   const [preview, setPreview] = useState(false);
   const [showPermissionPopup, setShowPermissionPopup] = useState(!localStorage.getItem(permissionStorageKey));
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsError, setGpsError] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const [schedules, setSchedules] = useState<TodayVisitSchedule[]>([]);
   const [schedulesLoading, setSchedulesLoading] = useState(true);
@@ -123,6 +126,7 @@ export function VisitPage() {
         setLookupOutlets(prev => [res.outlet, ...prev]);
         setSelectedOutlet(res.outlet.id);
         setSelectedScheduleId('');
+        setActiveOutletName(res.outlet.name);
         setShowCreateOutletModal(false);
         setShowLookup(false);
         setNewOutletName('');
@@ -145,21 +149,41 @@ export function VisitPage() {
   const [attendanceOpen, setAttendanceOpen] = useState<boolean | null>(null);
   const [liveFaceDetectionEnabled, setLiveFaceDetectionEnabled] = useState(true);
 
+  const startCamera = async () => {
+    setCameraError(null);
+    try {
+      if (videoRef.current) {
+        const nextStream = await startFrontCamera(videoRef.current);
+        setStream(nextStream);
+      }
+    } catch (err: any) {
+      setCameraError(err.message || 'Kamera tidak dapat diakses. Pastikan izin kamera telah diberikan di browser.');
+    }
+  };
+
+  const fetchLocation = async (fresh = false) => {
+    setGpsLoading(true);
+    setGpsError(null);
+    try {
+      const current = await getCurrentLocation({ fresh });
+      setLocation(current);
+      return current;
+    } catch (err: any) {
+      const msg = err.message || 'Lokasi GPS tidak dapat diakses. Pastikan izin lokasi aktif di perangkat/browser.';
+      setGpsError(msg);
+      return null;
+    } finally {
+      setGpsLoading(false);
+    }
+  };
+
   useEffect(() => () => stopCamera(stream), [stream]);
 
   useEffect(() => {
     if (showPermissionPopup) return;
-    const timer = setTimeout(async () => {
-      try {
-        if (videoRef.current) {
-          const nextStream = await startFrontCamera(videoRef.current);
-          setStream(nextStream);
-        }
-      } catch { /* camera permission denied */ }
-      try {
-        const current = await getCurrentLocation();
-        setLocation(current);
-      } catch { /* geolocation denied */ }
+    const timer = setTimeout(() => {
+      void startCamera();
+      void fetchLocation(false);
     }, 100);
     return () => clearTimeout(timer);
   }, [showPermissionPopup]);
@@ -265,12 +289,21 @@ export function VisitPage() {
     showSalesAlertToast(message);
   }, [message]);
 
-  const availableSchedules = schedules.filter((schedule) => ['assigned', 'approved'].includes(schedule.status));
+  const availableSchedules = useMemo(() => {
+    const filtered = schedules.filter((schedule) => ['assigned', 'approved'].includes(schedule.status));
+    if (selectedScheduleId && !filtered.some((s) => s.id === selectedScheduleId)) {
+      const extra = schedules.find((s) => s.id === selectedScheduleId);
+      if (extra) return [extra, ...filtered];
+    }
+    return filtered;
+  }, [schedules, selectedScheduleId]);
   const selectedSchedule = schedules.find((schedule) => schedule.id === selectedScheduleId);
 
   function handleAllowPermissions() {
     localStorage.setItem(permissionStorageKey, '1');
     setShowPermissionPopup(false);
+    void startCamera();
+    void fetchLocation(false);
   }
 
   async function refreshQueueCount() {
@@ -292,10 +325,18 @@ export function VisitPage() {
   }
 
   async function handleCaptureAndPreview() {
+    if (!activeVisitId && !selectedOutlet) {
+      showSalesAlertToast('Silakan pilih outlet tujuan pada Langkah 1 terlebih dahulu.', 'warning');
+      return;
+    }
     if (!videoRef.current) return;
-    const captured = await captureFromVideo(videoRef.current);
-    setImage(captured);
-    setPreview(true);
+    try {
+      const captured = await captureFromVideo(videoRef.current);
+      setImage(captured);
+      setPreview(true);
+    } catch (err: any) {
+      setMessage(`Gagal mengambil foto verifikasi: ${err.message || 'Kamera belum siap.'}`);
+    }
   }
 
   function handleRetake() {
@@ -376,7 +417,7 @@ export function VisitPage() {
     try {
       if (!navigator.onLine) throw new Error('offline');
       const result = await checkInVisit(accessToken, payload);
-      const outletName = selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet';
+      const outletName = activeOutletName || selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet';
       const visitData = {
         id: result.visit.id,
         outletId: result.visit.outletId,
@@ -395,7 +436,7 @@ export function VisitPage() {
         await enqueueVisit({ type: 'check-in', accessToken, payload });
         await refreshQueueCount();
         // Simpan state lokal agar halaman lain (Transaksi) tahu ada kunjungan aktif
-        const outletName = selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet';
+        const outletName = activeOutletName || selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet';
         const tempVisitData = { id: `offline-${payload.clientRequestId}`, outletId: payload.outletId, scheduleId: selectedScheduleId || undefined, outletName };
         localStorage.setItem(activeVisitStorageKey, JSON.stringify(tempVisitData));
         setActiveVisitId(tempVisitData.id);
@@ -556,6 +597,7 @@ export function VisitPage() {
                   const schedule = schedules.find((item) => item.id === e.target.value);
                   setSelectedScheduleId(e.target.value);
                   setSelectedOutlet(schedule?.outletId ?? '');
+                  setActiveOutletName(schedule?.outlet.name ?? '');
                 }}
                 className="sales-select"
                 style={{ width: '100%' }}
@@ -572,11 +614,11 @@ export function VisitPage() {
               <div style={{ marginTop: '.75rem', padding: '.75rem', borderRadius: '.75rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                 <p style={{ margin: 0, fontSize: '.75rem', color: '#94a3b8', fontWeight: 600 }}>Outlet Ad-Hoc Terpilih:</p>
                 <strong style={{ fontSize: '.85rem', color: 'var(--sales-foreground)' }}>
-                  {lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet Lain'}
+                  {activeOutletName || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet Terpilih'}
                 </strong>
                 <button
                   type="button"
-                  onClick={() => { setSelectedOutlet(''); setSelectedScheduleId(''); }}
+                  onClick={() => { setSelectedOutlet(''); setSelectedScheduleId(''); setActiveOutletName(''); }}
                   style={{ marginLeft: '.5rem', background: 'none', border: 'none', color: '#ef4444', fontSize: '.75rem', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
                 >
                   Batal
@@ -596,29 +638,78 @@ export function VisitPage() {
             <div className="relative">
               <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
               {liveFaceDetectionEnabled && <LiveFaceOverlay videoRef={videoRef} stream={stream} />}
+              {cameraError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 rounded-2xl p-4 text-center text-white z-10">
+                  <Camera size={32} className="text-sales-amber mb-2" />
+                  <strong className="text-sm">Kamera Belum Aktif</strong>
+                  <p className="text-xs text-zinc-300 mt-1 mb-3">{cameraError}</p>
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="px-3 py-1.5 rounded-xl bg-sales-accent text-white text-xs font-bold border-none cursor-pointer flex items-center gap-1.5"
+                  >
+                    <RefreshCw size={13} /> Coba Aktifkan Kamera
+                  </button>
+                </div>
+              )}
               {location && (
                 <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
                   <MapPin size={13} className="shrink-0 text-sales-emerald" />
                   <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
                   <span className="ml-auto text-sales-emerald">±{Math.round(location.accuracyM ?? 0)}m</span>
+                  <button
+                    type="button"
+                    onClick={() => void fetchLocation(true)}
+                    title="Perbarui GPS"
+                    className="ml-1 text-zinc-300 hover:text-white bg-transparent border-none p-0 cursor-pointer flex items-center"
+                  >
+                    <RefreshCw size={12} className={gpsLoading ? 'animate-spin' : ''} />
+                  </button>
                 </div>
               )}
-              {!location && (
+              {!location && gpsError && (
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-sales-amber backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.72rem' }}>
+                  <div className="flex items-center gap-1.5 min-w-0 truncate">
+                    <MapPin size={13} className="shrink-0 text-rose-400" />
+                    <span className="truncate">{gpsError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void fetchLocation(true)}
+                    className="shrink-0 px-2 py-0.5 rounded-lg bg-sales-accent text-white text-[11px] font-bold border-none cursor-pointer flex items-center gap-1"
+                  >
+                    <RefreshCw size={10} className={gpsLoading ? 'animate-spin' : ''} /> Ulang
+                  </button>
+                </div>
+              )}
+              {!location && !gpsError && (
                 <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sales-amber backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
-                  <MapPin size={13} />
-                  <span>Mengambil lokasi GPS...</span>
+                  <MapPin size={13} className={gpsLoading ? 'animate-spin text-sales-accent' : ''} />
+                  <span>{gpsLoading ? 'Membaca koordinat GPS...' : 'Mengambil lokasi GPS...'}</span>
                 </div>
               )}
             </div>
             <div className="mt-3">
               <button
                 onClick={handleCaptureAndPreview}
-                disabled={!stream}
+                disabled={!stream || !selectedOutlet}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sales-accent text-sales-surface border-none"
-                style={{ padding: '.85rem', fontSize: '.95rem', fontWeight: 800, cursor: stream ? 'pointer' : 'not-allowed', opacity: stream ? 1 : 0.5, transition: 'all .2s' }}
+                style={{
+                  padding: '.85rem',
+                  fontSize: '.95rem',
+                  fontWeight: 800,
+                  cursor: (!stream || !selectedOutlet) ? 'not-allowed' : 'pointer',
+                  opacity: (!stream || !selectedOutlet) ? 0.5 : 1,
+                  transition: 'all .2s',
+                }}
               >
                 <Camera size={20} /> Jepret & Check-In
               </button>
+              {!selectedOutlet && (
+                <p className="text-center text-xs text-sales-muted mt-2" style={{ margin: '.5rem 0 0', fontSize: '.75rem' }}>
+                  * Silakan pilih outlet tujuan pada Langkah 1 terlebih dahulu
+                </p>
+              )}
             </div>
           </div>
         </>
@@ -725,17 +816,54 @@ export function VisitPage() {
             <div className="relative">
               <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
               {liveFaceDetectionEnabled && <LiveFaceOverlay videoRef={videoRef} stream={stream} />}
+              {cameraError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 rounded-2xl p-4 text-center text-white z-10">
+                  <Camera size={32} className="text-sales-amber mb-2" />
+                  <strong className="text-sm">Kamera Belum Aktif</strong>
+                  <p className="text-xs text-zinc-300 mt-1 mb-3">{cameraError}</p>
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="px-3 py-1.5 rounded-xl bg-sales-accent text-white text-xs font-bold border-none cursor-pointer flex items-center gap-1.5"
+                  >
+                    <RefreshCw size={13} /> Coba Aktifkan Kamera
+                  </button>
+                </div>
+              )}
               {location && (
                 <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
                   <MapPin size={13} className="shrink-0 text-sales-emerald" />
                   <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
                   <span className="ml-auto text-sales-emerald">±{Math.round(location.accuracyM ?? 0)}m</span>
+                  <button
+                    type="button"
+                    onClick={() => void fetchLocation(true)}
+                    title="Perbarui GPS"
+                    className="ml-1 text-zinc-300 hover:text-white bg-transparent border-none p-0 cursor-pointer flex items-center"
+                  >
+                    <RefreshCw size={12} className={gpsLoading ? 'animate-spin' : ''} />
+                  </button>
                 </div>
               )}
-              {!location && (
+              {!location && gpsError && (
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-sales-amber backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.72rem' }}>
+                  <div className="flex items-center gap-1.5 min-w-0 truncate">
+                    <MapPin size={13} className="shrink-0 text-rose-400" />
+                    <span className="truncate">{gpsError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void fetchLocation(true)}
+                    className="shrink-0 px-2 py-0.5 rounded-lg bg-sales-accent text-white text-[11px] font-bold border-none cursor-pointer flex items-center gap-1"
+                  >
+                    <RefreshCw size={10} className={gpsLoading ? 'animate-spin' : ''} /> Ulang
+                  </button>
+                </div>
+              )}
+              {!location && !gpsError && (
                 <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sales-amber backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
-                  <MapPin size={13} />
-                  <span>Mengambil lokasi GPS...</span>
+                  <MapPin size={13} className={gpsLoading ? 'animate-spin text-sales-accent' : ''} />
+                  <span>{gpsLoading ? 'Membaca koordinat GPS...' : 'Mengambil lokasi GPS...'}</span>
                 </div>
               )}
             </div>
@@ -758,35 +886,79 @@ export function VisitPage() {
       {/* Preview Modal */}
       {preview && image && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center backdrop-blur-sm p-6" style={{ background: 'var(--sales-overlay-dark)' }}>
-          <div className="w-full max-w-[360px] bg-sales-surface rounded-3xl p-5" style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
-            <p className="text-center text-sales-text-heading font-extrabold mb-3" style={{ fontSize: '.9rem' }}>
-              Preview {activeVisitId ? 'Check-Out' : 'Check-In'}
-            </p>
+          <div className="w-full max-w-[360px] bg-sales-surface rounded-3xl p-5 relative" style={{ boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sales-text-heading font-extrabold m-0" style={{ fontSize: '.9rem' }}>
+                Preview {activeVisitId ? 'Check-Out' : 'Check-In'}
+              </p>
+              <button
+                type="button"
+                onClick={handleRetake}
+                disabled={loading}
+                className="text-sales-muted bg-transparent border-none p-1 cursor-pointer hover:text-sales-text-heading flex items-center"
+                aria-label="Tutup preview"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
             {/* Outlet Info Card */}
-            {(selectedSchedule || activeOutletName) && (
+            {(selectedSchedule || activeOutletName || selectedOutlet) && (
               <div className="flex items-center gap-3 rounded-2xl border border-sales-accent-bg bg-sales-bg p-3 mb-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sales-accent text-sales-surface">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sales-accent text-sales-surface shrink-0">
                   <Store size={20} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p className="font-extrabold text-sales-text-heading truncate" style={{ fontSize: '.85rem' }}>
-                    {selectedSchedule?.outlet.name || activeOutletName}
+                    {activeOutletName || selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet Terpilih'}
                   </p>
-                  {selectedSchedule?.outlet.code && (
-                    <p className="text-sales-muted truncate" style={{ fontSize: '.7rem' }}>{selectedSchedule.outlet.code}</p>
+                  {(selectedSchedule?.outlet.code || lookupOutlets.find(o => o.id === selectedOutlet)?.code) && (
+                    <p className="text-sales-muted truncate" style={{ fontSize: '.7rem' }}>
+                      {selectedSchedule?.outlet.code || lookupOutlets.find(o => o.id === selectedOutlet)?.code}
+                    </p>
                   )}
                 </div>
               </div>
             )}
 
             <img src={image.dataUrl} alt="Preview" className="w-full rounded-2xl object-cover" style={{ aspectRatio: '3/4' }} />
-            {location && (
-              <div className="flex items-center gap-1.5 mt-2 text-sales-muted" style={{ fontSize: '.7rem' }}>
-                <MapPin size={12} className="text-sales-emerald-dark" />
-                <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)} · ±{Math.round(location.accuracyM ?? 0)}m</span>
+            {location ? (
+              <div className="flex items-center justify-between gap-1.5 mt-2 text-sales-muted px-1" style={{ fontSize: '.7rem' }}>
+                <span className="flex items-center gap-1">
+                  <MapPin size={12} className="text-sales-emerald-dark" />
+                  {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)} · ±{Math.round(location.accuracyM ?? 0)}m
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void fetchLocation(true)}
+                  disabled={gpsLoading || loading}
+                  className="text-sales-accent bg-transparent border-none p-0 cursor-pointer text-[11px] font-bold"
+                >
+                  {gpsLoading ? 'GPS...' : 'Perbarui'}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-1.5 mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 text-xs font-semibold">
+                <span className="flex items-center gap-1.5"><MapPin size={13} /> GPS belum terdeteksi</span>
+                <button
+                  type="button"
+                  onClick={() => void fetchLocation(true)}
+                  disabled={gpsLoading || loading}
+                  className="text-sales-accent underline font-bold bg-transparent border-none cursor-pointer"
+                >
+                  {gpsLoading ? 'Mencari...' : 'Ambil GPS'}
+                </button>
               </div>
             )}
+
+            {/* In-Modal Alert if error occurs during check-in/out */}
+            {message && (
+              <div className="mt-2.5 p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs flex items-start gap-1.5">
+                <XCircle size={15} className="shrink-0 mt-0.5" />
+                <span className="flex-1">{message}</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-2 mt-3">
               <button
                 onClick={handleRetake}
@@ -796,15 +968,26 @@ export function VisitPage() {
               >
                 <RotateCcw size={15} /> Ulangi
               </button>
-              <button
-                onClick={activeVisitId ? handleCheckOut : handleCheckIn}
-                disabled={loading || (!activeVisitId ? !canCheckIn : !canCheckOut)}
-                className="flex items-center justify-center gap-1.5 rounded-2xl bg-sales-accent text-sales-surface border-none"
-                style={{ padding: '.7rem', fontSize: '.8rem', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
-              >
-                {loading ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />}
-                {loading ? 'Mengirim...' : activeVisitId ? 'Check-Out' : 'Check-In Visit'}
-              </button>
+              {(() => {
+                const isActionDisabled = loading || (!activeVisitId ? !canCheckIn : !canCheckOut);
+                return (
+                  <button
+                    onClick={activeVisitId ? handleCheckOut : handleCheckIn}
+                    disabled={isActionDisabled}
+                    className="flex items-center justify-center gap-1.5 rounded-2xl bg-sales-accent text-sales-surface border-none"
+                    style={{
+                      padding: '.7rem',
+                      fontSize: '.8rem',
+                      fontWeight: 700,
+                      cursor: isActionDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isActionDisabled ? 0.5 : 1,
+                    }}
+                  >
+                    {loading ? <Loader2 className="animate-spin" size={15} /> : <Send size={15} />}
+                    {loading ? 'Mengirim...' : activeVisitId ? 'Check-Out' : 'Check-In Visit'}
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -954,6 +1137,7 @@ export function VisitPage() {
                         onClick={() => {
                           setSelectedOutlet(outlet.id);
                           setSelectedScheduleId('');
+                          setActiveOutletName(outlet.name);
                           setShowLookup(false);
                         }}
                         style={{ 

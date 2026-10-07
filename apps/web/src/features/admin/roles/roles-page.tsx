@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2, Settings2, Search, X } from 'lucide-react';
+import { Shield, Plus, Trash2, Lock, AlertTriangle, CheckCircle2, Settings2, Search, RefreshCw, X } from 'lucide-react';
 
 import { useAuth } from '../../auth/auth-provider';
 import {
@@ -107,6 +107,7 @@ export function RolesPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [permissionRole, setPermissionRole] = useState<Role | null>(null);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<string>>(new Set());
@@ -174,12 +175,16 @@ export function RolesPage() {
 
   async function handleDelete(role: Role) {
     if (!accessToken || !confirm(`Hapus role "${role.name}"? Pastikan tidak ada user yang menggunakan role ini.`)) return;
+    setDeletingId(role.id);
+    setError('');
     try {
       await deleteRole(accessToken, role.id);
       setSuccess(`Role "${role.name}" berhasil dihapus.`);
       await load();
     } catch (e: any) {
       setError(e.message);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -342,8 +347,9 @@ export function RolesPage() {
                     className="admin-btn-icon-sm admin-btn-danger-sm"
                     title="Hapus Role"
                     type="button"
+                    disabled={deletingId === role.id}
                   >
-                    <Trash2 size={13} />
+                    {deletingId === role.id ? <RefreshCw size={13} className="animate-spin" /> : <Trash2 size={13} />}
                   </Button>
                 )}
               </div>

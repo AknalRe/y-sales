@@ -151,6 +151,8 @@ export function InvoicesPage() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setDetails((prev) => ({ ...prev, [orderId]: res.order }));
+    } catch (err: any) {
+      showSalesAlertToast(err.message || 'Gagal memuat detail nota.', 'error');
     } finally {
       setLoadingDetailFor(null);
     }

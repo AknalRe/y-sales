@@ -30,6 +30,7 @@ export function PlatformCompaniesPage() {
   const [suspendDialog, setSuspendDialog] = useState<{ company: Company; reason: string } | null>(null);
   const [editDialog, setEditDialog] = useState<{ company: Company } | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [savingCreate, setSavingCreate] = useState(false);
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({
@@ -72,6 +73,7 @@ export function PlatformCompaniesPage() {
   async function handleCreate() {
     if (!accessToken) return;
     setError('');
+    setSavingCreate(true);
     try {
       await platformCreateCompany(accessToken, {
         ...form,
@@ -83,6 +85,8 @@ export function PlatformCompaniesPage() {
       await load();
     } catch (e: any) {
       setError(e.message);
+    } finally {
+      setSavingCreate(false);
     }
   }
 
@@ -447,9 +451,9 @@ export function PlatformCompaniesPage() {
                 onClick={handleCreate}
                 className="platform-btn platform-btn-primary"
                 type="button"
-                disabled={!form.name}
+                disabled={!form.name || savingCreate}
               >
-                Buat Perusahaan
+                {savingCreate ? 'Membuat...' : 'Buat Perusahaan'}
               </button>
             </div>
           </div>

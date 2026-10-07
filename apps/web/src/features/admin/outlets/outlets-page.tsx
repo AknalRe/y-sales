@@ -249,6 +249,19 @@ export function OutletsPage() {
     event.preventDefault();
     if (!accessToken) return;
 
+    if (!form.name.trim()) {
+      setError('Nama outlet wajib diisi.');
+      return;
+    }
+    if (!form.code.trim()) {
+      setError('Kode outlet wajib diisi.');
+      return;
+    }
+    if (!form.address.trim()) {
+      setError('Alamat outlet wajib diisi.');
+      return;
+    }
+
     const payload = toPayload(form);
     if (!canApproveOutlet) {
       if (editingOutlet) delete payload.status;
@@ -883,7 +896,7 @@ export function OutletsPage() {
             </AdminDialogBody>
             <AdminDialogFooter>
               <button onClick={closeForm} className="admin-btn-ghost" type="button">Batal</button>
-              <button onClick={() => handleSubmit({ preventDefault: () => {} } as any)} className="admin-btn-primary" type="button" disabled={saving}>
+              <button onClick={() => handleSubmit({ preventDefault: () => {} } as any)} className="admin-btn-primary" type="button" disabled={saving || !form.name.trim() || !form.code.trim() || !form.address.trim()}>
                 {saving ? <RefreshCw size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
                 Simpan Outlet
               </button>

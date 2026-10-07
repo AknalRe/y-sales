@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Edit2, Layers3, Plus, Trash2 } from 'lucide-react';
+import { Edit2, Layers3, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useAuth } from '../../auth/auth-provider';
 import {
   platformCreateFeature,
@@ -33,6 +33,7 @@ export function PlatformFeaturesPage() {
   const [form, setForm] = useState<FeatureForm>(defaultForm);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function load() {
     if (!accessToken) return;
@@ -85,9 +86,24 @@ export function PlatformFeaturesPage() {
   async function handleDelete(feature: SubscriptionFeature) {
     if (!accessToken) return;
     if (!confirm(`Nonaktifkan fitur "${feature.label}"?`)) return;
-    await platformDeleteFeature(accessToken, feature.id);
-    await load();
+    setDeletingId(feature.id);
+    setError('');
+    try {
+      await platformDeleteFeature(accessToken, feature.id);
+      await load();
+    } catch (e: any) {
+      setError(e.message || 'Gagal menonaktifkan fitur.');
+    } finally {
+      setDeletingId(null);
+    }
+
   }
+
+
+
+
+
+
 
   const grouped = features.reduce<Record<string, SubscriptionFeature[]>>((acc, feature) => {
     acc[feature.category] = [...(acc[feature.category] ?? []), feature];
@@ -127,8 +143,8 @@ export function PlatformFeaturesPage() {
                       <button id={`platform-edit-feature-${feature.id}`} onClick={() => openEdit(feature)} className="platform-btn-sm platform-btn-ghost" type="button">
                         <Edit2 size={13} /> Edit
                       </button>
-                      <button id={`platform-delete-feature-${feature.id}`} onClick={() => handleDelete(feature)} className="platform-btn-sm platform-btn-danger" type="button">
-                        <Trash2 size={13} /> Nonaktifkan
+                      <button id={`platform-delete-feature-${feature.id}`} onClick={() => handleDelete(feature)} className="platform-btn-sm platform-btn-danger" type="button" disabled={deletingId === feature.id} style={{ opacity: deletingId === feature.id ? 0.6 : 1 }}>
+                        {deletingId === feature.id ? <RefreshCw size={13} className="animate-spin" /> : <Trash2 size={13} />} Nonaktifkan
                       </button>
                     </div>
                   </article>

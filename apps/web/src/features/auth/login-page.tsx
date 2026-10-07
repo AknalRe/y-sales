@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Camera, Loader2, LockKeyhole, MapPin, Moon, Sun } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Camera, Info, Loader2, LockKeyhole, MapPin, Moon, Sun, X } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import { useTheme } from '@/hooks/use-theme';
 import { getHomePathForRole } from '@yuksales/shared';
@@ -20,6 +20,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [companyLoading, setCompanyLoading] = useState(!!company);
   const [companyError, setCompanyError] = useState('');
@@ -74,7 +75,7 @@ export function LoginPage() {
           <div className="brand-glass rounded-3xl p-8 text-center">
             <h1 className="text-2xl font-black mb-4">Perusahaan Tidak Ditemukan</h1>
             <p className="text-white/70 mb-6">{companyError}</p>
-            <a href="/login" className="brand-button inline-block rounded-2xl px-6 py-3 font-bold">Kembali ke Login</a>
+            <Link to="/login" className="brand-button inline-block rounded-2xl px-6 py-3 font-bold">Kembali ke Login</Link>
           </div>
         </section>
       </main>
@@ -137,7 +138,14 @@ export function LoginPage() {
               </label>
 
               <div className="flex items-center justify-end text-sm">
-                <button id="login-forgot-button" type="button" className="text-brand-accent transition hover:text-white">Lupa sandi?</button>
+                <button
+                  id="login-forgot-button"
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-brand-accent transition hover:text-white"
+                >
+                  Lupa sandi?
+                </button>
               </div>
 
               {error && <p className="rounded-2xl border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</p>}
@@ -150,6 +158,36 @@ export function LoginPage() {
           </div>
           <p className="mt-8 text-center text-xs text-white/50">© {new Date().getFullYear()} {displayName}. Operasional sales, outlet, stok, dan approval.</p>
         </section>
+
+        {showForgotModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-float-in">
+            <div className="w-full max-w-sm rounded-3xl bg-slate-900 p-6 text-white shadow-2xl ring-1 ring-white/10">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-brand-accent font-bold">
+                  <Info size={20} />
+                  <span>Bantuan Lupa Sandi</span>
+                </div>
+                <button
+                  onClick={() => setShowForgotModal(false)}
+                  className="rounded-full p-1.5 text-white/60 hover:bg-white/10 hover:text-white transition"
+                  type="button"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <p className="text-sm text-white/80 leading-relaxed mb-6">
+                Untuk keamanan akun Anda, pengaturan ulang kata sandi dilakukan secara terpusat oleh tim administrator. Silakan hubungi <strong>Administrator Perusahaan</strong> atau supervisor Anda untuk mereset kata sandi akun Anda.
+              </p>
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="brand-button w-full rounded-2xl py-3 font-bold text-center"
+                type="button"
+              >
+                Mengerti
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </>
 

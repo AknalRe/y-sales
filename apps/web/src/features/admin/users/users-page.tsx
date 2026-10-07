@@ -110,6 +110,7 @@ export function UsersPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [generatingCode, setGeneratingCode] = useState(false);
   const [createPasswordVisible, setCreatePasswordVisible] = useState(false);
   const [resetPasswordVisible, setResetPasswordVisible] = useState(false);
@@ -318,12 +319,15 @@ export function UsersPage() {
 
   async function handleDelete(user: TenantUser) {
     if (!accessToken || !confirm(`Hapus user ${user.name}?`)) return;
+    setActionLoadingId(user.id);
     try {
       await deleteUser(accessToken, user.id);
       setSuccess(`User ${user.name} berhasil dihapus.`);
       await load();
     } catch (e: any) {
       setError(e.message);
+    } finally {
+      setActionLoadingId(null);
     }
   }
 
@@ -394,11 +398,14 @@ export function UsersPage() {
   async function toggleStatus(user: TenantUser) {
     if (!accessToken) return;
     const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    setActionLoadingId(user.id);
     try {
       await updateUser(accessToken, user.id, { status: newStatus });
       await load();
     } catch (e: any) {
       setError(e.message);
+    } finally {
+      setActionLoadingId(null);
     }
   }
 
@@ -511,8 +518,10 @@ export function UsersPage() {
                       onClick={() => toggleStatus(user)}
                       className={`admin-status-pill admin-status-pill-${user.status}`}
                       type="button"
+                      disabled={actionLoadingId === user.id}
+                      style={{ opacity: actionLoadingId === user.id ? 0.6 : 1, cursor: actionLoadingId === user.id ? 'not-allowed' : 'pointer' }}
                     >
-                      {statusIcon[user.status as keyof typeof statusIcon]}
+                      {actionLoadingId === user.id ? <RefreshCw size={12} className="animate-spin" /> : statusIcon[user.status as keyof typeof statusIcon]}
                       {user.status}
                     </button>
                   </TableCell>
@@ -556,8 +565,10 @@ export function UsersPage() {
                         className="admin-btn-icon-sm admin-btn-danger-sm"
                         title="Hapus User"
                         type="button"
+                        disabled={actionLoadingId === user.id}
+                        style={{ opacity: actionLoadingId === user.id ? 0.5 : 1, cursor: actionLoadingId === user.id ? 'not-allowed' : 'pointer' }}
                       >
-                        <Trash2 size={14} />
+                        {actionLoadingId === user.id ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
                       </button>
                     </div>
                   </TableCell>

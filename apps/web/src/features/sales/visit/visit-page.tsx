@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Camera, CheckCircle2, Loader2, MapPin, Store, XCircle, RefreshCw, RotateCcw, Send, WifiOff, PackageCheck, ShieldCheck, Smartphone, Search, Plus, User, Phone, X, ShoppingCart } from 'lucide-react';
 import { apiRequest, checkInVisit, checkOutVisit, getMobileRuntimeSettings, getActiveVisitSession, type VisitPayload, type VisitCheckOutPayload } from '../../../lib/api/client';
 import { createOutlet, getSalesConsignments, getTodayVisitPlan, submitSalesConsignmentAction, getOutlets, type Consignment, type TodayVisitSchedule, type Outlet, type OutletPayload } from '../../../lib/api/tenant';
@@ -18,6 +18,7 @@ const permissionStorageKey = 'yuksales.permission.visit';
 export function VisitPage() {
   useScrollToTop();
   const navigate = useNavigate();
+  const locationState = useLocation().state as { outletId?: string; scheduleId?: string; outletName?: string } | null;
   const { accessToken } = useAuth();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -228,6 +229,13 @@ export function VisitPage() {
         .finally(() => setSchedulesLoading(false));
     }
   }, [accessToken]);
+  useEffect(() => {
+    if (locationState?.outletId && !activeVisitId) {
+      setSelectedOutlet(locationState.outletId);
+      if (locationState.scheduleId) setSelectedScheduleId(locationState.scheduleId);
+      if (locationState.outletName) setActiveOutletName(locationState.outletName);
+    }
+  }, [locationState, activeVisitId]);
 
   useEffect(() => {
     if (!accessToken) return;

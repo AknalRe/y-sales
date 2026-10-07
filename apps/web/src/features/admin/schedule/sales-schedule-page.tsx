@@ -100,6 +100,8 @@ export function SalesSchedulePage() {
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [selectedDate, setSelectedDate] = useState(todayStr());
@@ -259,13 +261,13 @@ export function SalesSchedulePage() {
 
   async function runScheduleAction(id: string, action: 'approve' | 'cancel') {
     if (!accessToken) return;
-    setError(''); setSuccess(''); setSaving(true);
+    setError(''); setSuccess(''); setActionLoadingId(id);
     try {
       if (action === 'approve') { await approveVisitSchedule(accessToken, id); setSuccess('Jadwal berhasil disetujui.'); }
       else { await cancelVisitSchedule(accessToken, id); setSuccess('Jadwal berhasil dibatalkan.'); }
       await load();
     } catch (err) { setError(err instanceof Error ? err.message : 'Aksi jadwal gagal'); }
-    finally { setSaving(false); }
+    finally { setActionLoadingId(null); }
   }
 
   function getStatusStyle(status: string) {
@@ -471,8 +473,8 @@ export function SalesSchedulePage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="rounded-xl px-3 py-1 text-xs font-black" style={statusStyle}>{scheduleStatusLabel[s.status] ?? s.status}</span>
-                          {canApprove && <button className="admin-btn-ghost" type="button" disabled={saving} onClick={() => runScheduleAction(s.id, 'approve')}><CheckCircle2 size={14} /> Approve</button>}
-                          {canCancel && <button className="admin-btn-ghost" type="button" disabled={saving} onClick={() => runScheduleAction(s.id, 'cancel')}><XCircle size={14} /> Batalkan</button>}
+                          {canApprove && <button className="admin-btn-ghost" type="button" disabled={actionLoadingId === s.id} onClick={() => runScheduleAction(s.id, 'approve')}><CheckCircle2 size={14} /> {actionLoadingId === s.id ? 'Memproses...' : 'Approve'}</button>}
+                          {canCancel && <button className="admin-btn-ghost" type="button" disabled={actionLoadingId === s.id} onClick={() => setCancelConfirmId(s.id)}><XCircle size={14} /> Batalkan</button>}
                         </div>
                       </div>
                     );
@@ -665,6 +667,55 @@ export function SalesSchedulePage() {
                 title={getCreateBlocker() || 'Simpan jadwal sales'}
               >
                 {saving ? <RefreshCw size={15} className="animate-spin" /> : <Send size={15} />} Buat {selectedOutletIds.length} Jadwal
+              </button>
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
+
+      {/* Confirmation Modal for Cancel Schedule */}
+      <AdminDialog
+        open={Boolean(cancelConfirmId)}
+        onOpenChange={(open) => { if (!open) setCancelConfirmId(null); }}
+        disablePointerDismissal={Boolean(actionLoadingId)}
+      >
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="sm" className="admin-page">
+            <AdminDialogHeader>
+              <div>
+                <AdminDialogTitle>Batalkan Jadwal Kunjungan</AdminDialogTitle>
+                <AdminDialogSubtitle>Konfirmasi pembatalan jadwal sales untuk outlet ini.</AdminDialogSubtitle>
+              </div>
+              <AdminDialogClose disabled={Boolean(actionLoadingId)} aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              <p className="text-sm text-admin-foreground leading-relaxed">
+                Apakah Anda yakin ingin membatalkan jadwal kunjungan ini? Sales tidak akan dapat melakukan check-in untuk jadwal ini lagi.
+              </p>
+            </AdminDialogBody>
+            <AdminDialogFooter>
+              <button
+                type="button"
+                className="admin-btn-ghost"
+                disabled={Boolean(actionLoadingId)}
+                onClick={() => setCancelConfirmId(null)}
+              >
+                Kembali
+              </button>
+              <button
+                type="button"
+                className="admin-btn-primary admin-btn-danger"
+                disabled={Boolean(actionLoadingId)}
+                onClick={async () => {
+                  if (cancelConfirmId) {
+                    const id = cancelConfirmId;
+                    setCancelConfirmId(null);
+                    await runScheduleAction(id, 'cancel');
+                  }
+                }}
+              >
+                {actionLoadingId ? 'Membatalkan...' : 'Ya, Batalkan Jadwal'}
               </button>
             </AdminDialogFooter>
           </AdminDialogContent>

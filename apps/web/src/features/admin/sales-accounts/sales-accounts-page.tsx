@@ -189,7 +189,8 @@ export function SalesAccountsPage() {
   const [users, setUsers] = useState<TenantUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
-const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [generatingCode, setGeneratingCode] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -407,22 +408,28 @@ const [saving, setSaving] = useState(false);
   async function toggleStatus(sales: SalesAccount) {
     if (!accessToken) return;
     const status = sales.status === 'active' ? 'inactive' : 'active';
+    setActionLoadingId(sales.id);
     try {
       await updateUser(accessToken, sales.id, { status });
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Gagal mengubah status sales.');
+    } finally {
+      setActionLoadingId(null);
     }
   }
 
   async function handleDelete(sales: SalesAccount) {
     if (!accessToken || !confirm(`Hapus/nonaktifkan akun sales "${sales.name}"?`)) return;
+    setActionLoadingId(sales.id);
     try {
       await deleteUser(accessToken, sales.id);
       setSuccess(`Akun sales ${sales.name} berhasil dihapus.`);
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Gagal menghapus akun sales.');
+    } finally {
+      setActionLoadingId(null);
     }
   }
 
@@ -731,8 +738,15 @@ const [saving, setSaving] = useState(false);
                     </td>
                     <td><code className="admin-role-badge">{sales.employeeCode ?? '-'}</code></td>
                     <td>
-                      <button className={`admin-status-pill admin-status-pill-${sales.status}`} onClick={() => toggleStatus(sales)} type="button">
-                        {statusIcon[sales.status]}{sales.status}
+                      <button
+                        className={`admin-status-pill admin-status-pill-${sales.status}`}
+                        onClick={() => toggleStatus(sales)}
+                        type="button"
+                        disabled={actionLoadingId === sales.id}
+                        style={{ opacity: actionLoadingId === sales.id ? 0.6 : 1, cursor: actionLoadingId === sales.id ? 'not-allowed' : 'pointer' }}
+                      >
+                        {actionLoadingId === sales.id ? <RefreshCw size={12} className="animate-spin" /> : statusIcon[sales.status]}
+                        {sales.status}
                       </button>
                     </td>
                     <td className="text-admin-muted">{sales.lastLoginAt ? new Date(sales.lastLoginAt).toLocaleDateString('id-ID') : 'Belum pernah'}</td>
@@ -742,7 +756,16 @@ const [saving, setSaving] = useState(false);
                         <button onClick={() => openEdit(sales)} className="admin-btn-icon-sm" title="Edit Sales" type="button"><Pencil size={14} /></button>
                         <button onClick={() => { resetPasswordForm(); setResetTarget(sales); }} className="admin-btn-icon-sm" title="Reset Password" type="button"><KeyRound size={14} /></button>
                         <button onClick={() => openFaceEnrollment(sales)} className="admin-btn-icon-sm" title="Data Wajah" type="button"><Camera size={14} /></button>
-                        <button onClick={() => handleDelete(sales)} className="admin-btn-icon-sm admin-btn-danger-sm" title="Hapus Sales" type="button"><Trash2 size={14} /></button>
+                        <button
+                          onClick={() => handleDelete(sales)}
+                          className="admin-btn-icon-sm admin-btn-danger-sm"
+                          title="Hapus Sales"
+                          type="button"
+                          disabled={actionLoadingId === sales.id}
+                          style={{ opacity: actionLoadingId === sales.id ? 0.5 : 1, cursor: actionLoadingId === sales.id ? 'not-allowed' : 'pointer' }}
+                        >
+                          {actionLoadingId === sales.id ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                        </button>
                       </div>
                     </td>
                   </tr>

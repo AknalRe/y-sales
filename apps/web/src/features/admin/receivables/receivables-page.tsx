@@ -154,6 +154,8 @@ export function ReceivablesPage() {
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState<'cash' | 'qris' | 'credit'>('cash');
   const [saving, setSaving] = useState(false);
+  const [rejectActionTarget, setRejectActionTarget] = useState<ConsignmentAction | null>(null);
+  const [rejectActionReason, setRejectActionReason] = useState('');
 
   const receivableStatusOptions = [
     { value: '', label: 'Semua Status' },
@@ -248,17 +250,21 @@ export function ReceivablesPage() {
     }
   }
 
-  async function handleRejectConsignmentAction(action: ConsignmentAction) {
-    if (!accessToken) return;
-    const reason = window.prompt('Alasan reject action konsinyasi?');
-    if (!reason) return;
+  async function submitRejectConsignmentAction() {
+    if (!accessToken || !rejectActionTarget) return;
+    if (!rejectActionReason.trim()) {
+      setError('Alasan penolakan wajib diisi.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
-      await apiReq(`/consignment-actions/${action.id}/reject`, accessToken, {
+      await apiReq(`/consignment-actions/${rejectActionTarget.id}/reject`, accessToken, {
         method: 'POST',
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason: rejectActionReason.trim() }),
       });
+      setRejectActionTarget(null);
+      setRejectActionReason('');
       await load();
     } catch (e: any) {
       setError(e.message ?? 'Gagal reject action konsinyasi.');
@@ -494,7 +500,7 @@ export function ReceivablesPage() {
                         <button className="admin-btn-sm admin-btn-success" type="button" disabled={saving} onClick={() => handleApproveConsignmentAction(action)}>
                           <CheckCircle2 size={13} /> Approve
                         </button>
-                        <button className="admin-btn-sm admin-btn-danger" type="button" disabled={saving} onClick={() => handleRejectConsignmentAction(action)}>
+                        <button className="admin-btn-sm admin-btn-danger" type="button" disabled={saving} onClick={() => { setRejectActionTarget(action); setRejectActionReason(''); }}>
                           <XCircle size={13} /> Reject
                         </button>
                       </div>
@@ -651,6 +657,57 @@ export function ReceivablesPage() {
                 type="button"
               >
                 {saving ? 'Menyimpan...' : <><Banknote size={15} /> Rekam Pembayaran</>}
+              </button>
+            </AdminDialogFooter>
+          </AdminDialogContent>
+        </AdminDialogPortal>
+      </AdminDialog>
+
+      {/* Reject Consignment Action Modal */}
+      <AdminDialog
+        open={Boolean(rejectActionTarget)}
+        onOpenChange={(open) => { if (!open) setRejectActionTarget(null); }}
+        disablePointerDismissal={saving}
+      >
+        <AdminDialogPortal>
+          <AdminDialogBackdrop />
+          <AdminDialogContent size="sm" className="admin-page">
+            <AdminDialogHeader>
+              <div>
+                <AdminDialogTitle>Tolak Update Konsinyasi</AdminDialogTitle>
+              </div>
+              <AdminDialogClose aria-label="Tutup"><X size={18} /></AdminDialogClose>
+            </AdminDialogHeader>
+            <AdminDialogBody>
+              <p className="text-xs text-admin-muted mb-3">
+                Tuliskan alasan penolakan untuk action <strong>{rejectActionTarget?.actionType.replace(/_/g, ' ')}</strong>:
+              </p>
+              <textarea
+                className="admin-input w-full min-h-24 resize-none"
+                placeholder="Contoh: Jumlah barang fisik tidak sesuai laporan..."
+                value={rejectActionReason}
+                onChange={(e) => setRejectActionReason(e.target.value)}
+                required
+              />
+            </AdminDialogBody>
+            <AdminDialogFooter>
+              <button
+                type="button"
+                className="admin-btn admin-btn-ghost flex-1"
+                style={{ borderRadius: 14 }}
+                disabled={saving}
+                onClick={() => setRejectActionTarget(null)}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn-primary flex-1 bg-admin-danger border-admin-danger"
+                style={{ borderRadius: 14 }}
+                disabled={!rejectActionReason.trim() || saving}
+                onClick={submitRejectConsignmentAction}
+              >
+                {saving ? 'Menolak...' : 'Tolak Konsinyasi'}
               </button>
             </AdminDialogFooter>
           </AdminDialogContent>

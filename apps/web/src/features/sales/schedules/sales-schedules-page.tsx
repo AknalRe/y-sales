@@ -238,7 +238,7 @@ export function SalesSchedulesPage() {
                   {/* Tombol Check-In (hanya jika belum dalam kunjungan) */}
                   {!isDone && !isCancelled && !isInProgress && (
                     <button
-                      onClick={() => navigate('/sales/visit')}
+                      onClick={() => navigate('/sales/visit', { state: { outletId: schedule.outletId, scheduleId: schedule.id, outletName: schedule.outlet.name } })}
                       className="flex items-center justify-center gap-1.5 rounded-xl border-none"
                       style={{
                         flex: 1,
@@ -258,7 +258,7 @@ export function SalesSchedulesPage() {
                   {/* Tombol Lanjut Check-Out (saat sedang dikunjungi) */}
                   {isInProgress && (
                     <button
-                      onClick={() => navigate('/sales/visit')}
+                      onClick={() => navigate('/sales/visit', { state: { outletId: schedule.outletId, scheduleId: schedule.id, outletName: schedule.outlet.name } })}
                       className="flex items-center justify-center gap-1.5 rounded-xl border-none"
                       style={{
                         flex: 1,

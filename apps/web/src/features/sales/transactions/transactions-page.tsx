@@ -91,6 +91,7 @@ export function TransactionsPage() {
   const [productGridMaxHeight, setProductGridMaxHeight] = useState<number | null>(null);
   const [draftReady, setDraftReady] = useState(false);
   const [restoringVisit, setRestoringVisit] = useState(true);
+  const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
 
   useEffect(() => {
     refreshQueueCount();
@@ -489,11 +490,20 @@ export function TransactionsPage() {
   }
 
   function handleBatal() {
+    if (cart.length > 0) {
+      setShowCancelConfirmModal(true);
+      return;
+    }
+    executeBatal();
+  }
+
+  function executeBatal() {
     localStorage.removeItem(transactionDraftStorageKey);
     setCart([]);
     setPaymentMethod('cash');
     setError('');
     setOfflineMessage('');
+    setShowCancelConfirmModal(false);
   }
 
   if (loading || restoringVisit) {
@@ -1073,6 +1083,33 @@ export function TransactionsPage() {
               <button onClick={handleSubmit} disabled={submitting} className="flex items-center justify-center gap-1.5 rounded-xl bg-sales-accent text-sales-surface border-none" style={{ padding: '.7rem', fontSize: '.85rem', fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.5 : 1 }}>
                 {submitting ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
                 {submitting ? 'Mengirim...' : 'Kirim Order'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCancelConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-float-in">
+          <div className="w-full max-w-sm rounded-2xl bg-sales-surface p-5 text-sales-text-heading shadow-2xl border border-sales-border-brand">
+            <h3 className="text-base font-bold mb-2">Kosongkan Keranjang?</h3>
+            <p className="text-xs text-sales-muted mb-5 leading-relaxed">
+              Semua {cart.reduce((s, i) => s + i.quantity, 0)} produk yang telah dipilih akan dihapus dari pesanan ini.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCancelConfirmModal(false)}
+                className="rounded-xl border border-gray-200 bg-sales-surface py-2.5 text-xs font-bold text-sales-text-label"
+              >
+                Kembali
+              </button>
+              <button
+                type="button"
+                onClick={executeBatal}
+                className="rounded-xl bg-red-600 py-2.5 text-xs font-bold text-white border-none"
+              >
+                Ya, Kosongkan
               </button>
             </div>
           </div>

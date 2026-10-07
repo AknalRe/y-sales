@@ -272,6 +272,26 @@ export function StockPage() {
 
   async function submitStockAction() {
     if (!accessToken) return;
+    if (!stockAction.warehouseId) {
+      setError('Pilih gudang terlebih dahulu.');
+      return;
+    }
+    if (!stockAction.productId) {
+      setError('Pilih produk terlebih dahulu.');
+      return;
+    }
+    if (!stockAction.quantity || isNaN(Number(stockAction.quantity))) {
+      setError('Masukkan kuantitas yang valid.');
+      return;
+    }
+    if (stockAction.mode === 'transfer' && !stockAction.toWarehouseId) {
+      setError('Pilih gudang tujuan transfer.');
+      return;
+    }
+    if (stockAction.mode === 'reset') {
+      const confirmReset = window.confirm('Peringatan: Reset kuantitas akan mengubah saldo stok gudang secara langsung. Lanjutkan?');
+      if (!confirmReset) return;
+    }
     setSaving(true); setError(''); setMessage('');
     try {
       if (stockAction.mode === 'adjustment') await adjustInventory(accessToken, { warehouseId: stockAction.warehouseId, productId: stockAction.productId, quantityDelta: stockAction.quantity, notes: stockAction.notes });
@@ -1010,7 +1030,7 @@ function StockActionCard({ action, saving, warehouses, products, onChange, onSub
         <Field label={action.mode === 'reset' ? 'Target Qty' : 'Qty'}><input type="number" className="admin-input w-full" value={action.quantity} onChange={(e) => onChange({ ...action, quantity: e.target.value })} /></Field>
         <Field label="Catatan"><textarea className="admin-input w-full" value={action.notes} onChange={(e) => onChange({ ...action, notes: e.target.value })} /></Field>
         <button className="admin-btn-primary" type="button" disabled={saving || !action.warehouseId || !action.productId || !action.quantity || (action.mode === 'transfer' && !action.toWarehouseId)} onClick={onSubmit}>
-          {action.mode === 'reset' ? <RotateCcw size={15} /> : <ArrowRightLeft size={15} />} Proses
+          {saving ? <RefreshCw size={15} className="animate-spin" /> : action.mode === 'reset' ? <RotateCcw size={15} /> : <ArrowRightLeft size={15} />} {saving ? 'Memproses...' : 'Proses'}
         </button>
       </div>
     </div>

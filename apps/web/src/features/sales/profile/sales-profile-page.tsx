@@ -164,7 +164,7 @@ export function SalesProfilePage() {
         ) : !todayAttendance ? (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
             <p className="text-sales-muted" style={{ fontSize: '.85rem', margin: 0 }}>Belum absen hari ini.</p>
-            <button onClick={() => navigate('/attendance')} className="sales-profile-btn-primary" style={{ marginTop: '.75rem' }}>
+            <button onClick={() => navigate('/sales/attendance')} className="sales-profile-btn-primary" style={{ marginTop: '.75rem' }}>
               Check-In Sekarang
             </button>
           </div>

@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/hooks/use-theme';
 import { useThemeScope } from '@/hooks/use-theme-scope';
@@ -10,7 +10,7 @@ import {
   Sun,
   UserCircle,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../auth/auth-provider';
 
 import { mainRoutes, playgroundRoutes } from '@/router/index';
@@ -54,6 +54,7 @@ const getNavSections = (permissions: string[], user: any, isSuperAdmin: boolean)
 
 export function AdminShell() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, permissions, isSuperAdmin, signOut, accessToken } = useAuth();
   const isMobile = useIsMobile(820);
 
@@ -62,6 +63,21 @@ export function AdminShell() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    if (profileOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profileOpen]);
 
   async function loadUnreadCount() {
     if (!accessToken) return;
@@ -163,7 +179,7 @@ export function AdminShell() {
                 <Bell size={18} />
                 {unreadCount > 0 && <span />}
               </button>
-              <div className="admin-profile-trigger" onClick={() => setProfileOpen(!profileOpen)}>
+              <div ref={profileMenuRef} className="admin-profile-trigger" onClick={() => setProfileOpen(!profileOpen)}>
                 <div className="admin-avatar">
                   {(user?.name ?? 'AU').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
                 </div>
@@ -174,11 +190,19 @@ export function AdminShell() {
 
                 {profileOpen && (
                   <div className="admin-profile-dropdown animate-float-in">
-                    <button className="admin-dropdown-item">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProfileOpen(false);
+                        navigate('/admin/settings');
+                      }}
+                      className="admin-dropdown-item"
+                      type="button"
+                    >
                       <UserCircle size={16} />
                       <span>Pengaturan Akun</span>
                     </button>
-                    <button onClick={signOut} className="admin-dropdown-item admin-text-danger">
+                    <button onClick={signOut} className="admin-dropdown-item admin-text-danger" type="button">
                       <LogOut size={16} />
                       <span>Keluar dari Sesi</span>
                     </button>

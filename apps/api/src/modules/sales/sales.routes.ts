@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   consignments,
@@ -305,15 +305,23 @@ export async function salesRoutes(app: FastifyInstance) {
     let visit: typeof visitSessions.$inferSelect | undefined;
     if (body.customerType === 'end_user') {
       if (body.visitSessionId) {
-        [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
+        [visit] = await db.select().from(visitSessions).where(and(
+          eq(visitSessions.companyId, companyId),
+          or(eq(visitSessions.id, body.visitSessionId), eq(visitSessions.clientRequestId, body.visitSessionId)),
+          eq(visitSessions.salesUserId, request.user!.id),
+        ));
         if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan untuk sales ini.'), { statusCode: 404 });
-        if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada kunjungan yang masih terbuka.'), { statusCode: 400 });
+        if (!['open', 'completed'].includes(visit.status)) throw Object.assign(new Error('Order hanya bisa dibuat pada sesi kunjungan yang valid.'), { statusCode: 400 });
       }
     } else {
       if (!body.visitSessionId) throw Object.assign(new Error('Transaksi outlet memerlukan sesi kunjungan (absen visit) yang sedang berlangsung.'), { statusCode: 400 });
-      [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
+      [visit] = await db.select().from(visitSessions).where(and(
+        eq(visitSessions.companyId, companyId),
+        or(eq(visitSessions.id, body.visitSessionId), eq(visitSessions.clientRequestId, body.visitSessionId)),
+        eq(visitSessions.salesUserId, request.user!.id),
+      ));
       if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan untuk sales ini.'), { statusCode: 404 });
-      if (visit.status !== 'open') throw Object.assign(new Error('Order hanya bisa dibuat pada kunjungan yang masih terbuka.'), { statusCode: 400 });
+      if (!['open', 'completed'].includes(visit.status)) throw Object.assign(new Error('Order hanya bisa dibuat pada sesi kunjungan yang valid.'), { statusCode: 400 });
       if (body.outletId && visit.outletId !== body.outletId) throw Object.assign(new Error('Outlet order harus sama dengan outlet visit.'), { statusCode: 400 });
     }
 

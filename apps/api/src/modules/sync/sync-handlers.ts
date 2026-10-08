@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {
   attendanceSessions,
@@ -344,7 +344,11 @@ async function handleVisitCheckOut(payload: unknown, ctx: SyncContext): Promise<
   try {
     const body = visitCheckOutPayload.parse(payload);
     const [visit] = await db.select().from(visitSessions).where(
-      and(eq(visitSessions.companyId, ctx.companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, ctx.userId))
+      and(
+        eq(visitSessions.companyId, ctx.companyId),
+        or(eq(visitSessions.id, body.visitSessionId), eq(visitSessions.clientRequestId, body.visitSessionId)),
+        eq(visitSessions.salesUserId, ctx.userId)
+      )
     );
     if (!visit) return { success: false, error: 'Sesi kunjungan tidak ditemukan' };
     if (visit.checkOutAt) return { success: true, entityId: visit.id };
@@ -424,18 +428,26 @@ async function handleTransactionCreate(payload: unknown, ctx: SyncContext): Prom
     if (body.customerType === 'end_user') {
       if (body.visitSessionId) {
         [visit] = await db.select().from(visitSessions).where(
-          and(eq(visitSessions.companyId, ctx.companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, ctx.userId))
+          and(
+            eq(visitSessions.companyId, ctx.companyId),
+            or(eq(visitSessions.id, body.visitSessionId), eq(visitSessions.clientRequestId, body.visitSessionId)),
+            eq(visitSessions.salesUserId, ctx.userId)
+          )
         );
         if (!visit) return { success: false, error: 'Sesi kunjungan tidak ditemukan' };
-        if (visit.status !== 'open') return { success: false, error: 'Visit tidak open' };
+        if (!['open', 'completed'].includes(visit.status)) return { success: false, error: 'Visit tidak valid' };
       }
     } else {
       if (!body.visitSessionId) return { success: false, error: 'Transaksi outlet memerlukan sesi kunjungan (absen visit)' };
       [visit] = await db.select().from(visitSessions).where(
-        and(eq(visitSessions.companyId, ctx.companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, ctx.userId))
+        and(
+          eq(visitSessions.companyId, ctx.companyId),
+          or(eq(visitSessions.id, body.visitSessionId), eq(visitSessions.clientRequestId, body.visitSessionId)),
+          eq(visitSessions.salesUserId, ctx.userId)
+        )
       );
       if (!visit) return { success: false, error: 'Sesi kunjungan tidak ditemukan' };
-      if (visit.status !== 'open') return { success: false, error: 'Visit tidak open' };
+      if (!['open', 'completed'].includes(visit.status)) return { success: false, error: 'Visit tidak valid' };
     }
 
     const [stockWarehouse] = await db.select().from(warehouses).where(

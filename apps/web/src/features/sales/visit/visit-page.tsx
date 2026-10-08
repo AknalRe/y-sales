@@ -266,8 +266,19 @@ export function VisitPage() {
     apiRequest<{ session: { status: string } | null }>('/attendance/today', {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
-      .then(res => setAttendanceOpen(res.session?.status === 'open'))
-      .catch(() => setAttendanceOpen(false));
+      .then(res => {
+        const isOpen = res.session?.status === 'open';
+        setAttendanceOpen(isOpen);
+        try { localStorage.setItem('yuksales.sales.attendanceOpen', isOpen ? '1' : '0'); } catch {}
+      })
+      .catch(() => {
+        if (!navigator.onLine) {
+          const cached = localStorage.getItem('yuksales.sales.attendanceOpen');
+          setAttendanceOpen(cached === null ? true : cached === '1');
+        } else {
+          setAttendanceOpen(false);
+        }
+      });
   }, [accessToken]);
 
   useEffect(() => {
@@ -437,7 +448,7 @@ export function VisitPage() {
         await refreshQueueCount();
         // Simpan state lokal agar halaman lain (Transaksi) tahu ada kunjungan aktif
         const outletName = activeOutletName || selectedSchedule?.outlet.name || lookupOutlets.find(o => o.id === selectedOutlet)?.name || 'Outlet';
-        const tempVisitData = { id: `offline-${payload.clientRequestId}`, outletId: payload.outletId, scheduleId: selectedScheduleId || undefined, outletName };
+        const tempVisitData = { id: payload.clientRequestId, outletId: payload.outletId, scheduleId: selectedScheduleId || undefined, outletName };
         localStorage.setItem(activeVisitStorageKey, JSON.stringify(tempVisitData));
         setActiveVisitId(tempVisitData.id);
         setActiveOutletName(outletName);

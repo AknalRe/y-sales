@@ -337,7 +337,7 @@ export async function outletRoutes(app: FastifyInstance) {
     const conditions = [eq(outlets.companyId, companyId), isNull(outlets.deletedAt)];
     
     if (isSales) {
-      conditions.push(eq(outlets.status, 'active'));
+      conditions.push(or(eq(outlets.status, 'active'), and(eq(outlets.status, 'pending_verification'), eq(outlets.registeredByUserId, user.id)))!);
     } else if (query.status) {
       conditions.push(eq(outlets.status, query.status));
     }
@@ -410,7 +410,10 @@ export async function outletRoutes(app: FastifyInstance) {
     }
   });
 
-  app.post('/outlets', { preHandler: requirePermission('outlets.manage') }, async (request, reply) => {
+  app.post('/outlets', { preHandler: authenticate }, async (request, reply) => {
+    const user = request.user!;
+    const isAllowed = user.isSuperAdmin || user.roleCode === 'ADMINISTRATOR' || user.permissions.includes('outlets.manage') || user.permissions.includes('visits.execute');
+    if (!isAllowed) return reply.status(403).send({ message: 'Akses ditolak.', permission: 'outlets.manage' });
     const companyId = requireTenantId(request);
     const body = outletSchema.parse(request.body);
     const canSetStatus = canApproveOutletRole(request.user!);

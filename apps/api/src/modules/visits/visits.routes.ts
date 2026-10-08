@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { attendanceSessions, faceCaptures, mediaFiles, outlets, salesTransactions, users, visitSchedules, visitSessions } from '@yuksales/db/schema';
 import { db } from '../../plugins/db.js';
@@ -419,7 +419,8 @@ export async function visitRoutes(app: FastifyInstance) {
 
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, body.outletId)));
     if (!outlet) throw Object.assign(new Error('Outlet tidak ditemukan.'), { statusCode: 404 });
-    if (outlet.status !== 'active') throw Object.assign(new Error('Outlet belum aktif dan tidak bisa dikunjungi.'), { statusCode: 400 });
+    const canVisitPendingOutlet = outlet.status === 'pending_verification' && outlet.registeredByUserId === request.user!.id;
+    if (outlet.status !== 'active' && !canVisitPendingOutlet) throw Object.assign(new Error('Outlet belum aktif dan tidak bisa dikunjungi.'), { statusCode: 400 });
 
     let schedule: typeof visitSchedules.$inferSelect | undefined;
     if (body.scheduleId) {
@@ -540,7 +541,11 @@ export async function visitRoutes(app: FastifyInstance) {
     const companyId = requireTenantId(request);
     await requireFeature(request, 'visits');
     const body = checkOutSchema.parse(request.body);
-    const [visit] = await db.select().from(visitSessions).where(and(eq(visitSessions.companyId, companyId), eq(visitSessions.id, body.visitSessionId), eq(visitSessions.salesUserId, request.user!.id)));
+    const [visit] = await db.select().from(visitSessions).where(and(
+      eq(visitSessions.companyId, companyId),
+      or(eq(visitSessions.id, body.visitSessionId), eq(visitSessions.clientRequestId, body.visitSessionId)),
+      eq(visitSessions.salesUserId, request.user!.id)
+    ));
     if (!visit) throw Object.assign(new Error('Sesi kunjungan tidak ditemukan.'), { statusCode: 404 });
     if (!visit.checkInAt || visit.checkOutAt || !['open', 'invalid_location'].includes(visit.status)) throw Object.assign(new Error('Sesi kunjungan tidak dalam status terbuka.'), { statusCode: 400 });
     const [outlet] = await db.select().from(outlets).where(and(eq(outlets.companyId, companyId), eq(outlets.id, visit.outletId)));

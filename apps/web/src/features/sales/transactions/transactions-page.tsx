@@ -389,6 +389,7 @@ export function TransactionsPage() {
       setEndUserInfo(info);
       localStorage.setItem(endUserInfoStorageKey, JSON.stringify(info));
       setTransactionMode('end_user');
+      if (paymentMethod === 'consignment') setPaymentMethod('cash');
       setShowEndUserFormModal(false);
       setGettingLocation(false);
     };
@@ -417,6 +418,11 @@ export function TransactionsPage() {
 
     if (transactionMode === 'end_user' && !endUserInfo) {
       setError('Data konsumen (end user) belum diisi.');
+      return;
+    }
+
+    if (transactionMode === 'end_user' && paymentMethod === 'consignment') {
+      setError('Metode titip jual (konsinyasi) hanya tersedia untuk transaksi outlet toko.');
       return;
     }
 
@@ -1063,16 +1069,21 @@ export function TransactionsPage() {
           )}
 
           {/* Cart Footer */}
-          <div style={{ padding: cartExpanded ? '.75rem 1rem 1rem' : '0 1rem 1rem' }}>
+          <div style={{ padding: '0.5rem 1rem 1rem' }}>
             {/* Payment Method */}
-            {cartExpanded && (
-              <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} className="sales-select" style={{ width: '100%', fontSize: '.85rem', marginBottom: '.75rem' }}>
+            <div style={{ marginBottom: '.65rem' }}>
+              <select
+                value={paymentMethod}
+                onChange={e => setPaymentMethod(e.target.value as any)}
+                className="sales-select"
+                style={{ width: '100%', fontSize: '.82rem', padding: '.45rem .65rem' }}
+              >
                 <option value="cash">Tunai (Cash)</option>
                 <option value="qris">QRIS</option>
                 <option value="credit">Tempo (Kredit)</option>
-                <option value="consignment">Titip Jual (Konsinyasi)</option>
+                {transactionMode === 'store' && <option value="consignment">Titip Jual (Konsinyasi)</option>}
               </select>
-            )}
+            </div>
 
             {error && <div className="sales-alert sales-alert-error" style={{ marginBottom: '.75rem', padding: '.5rem', fontSize: '.8rem' }}>{error}</div>}
 

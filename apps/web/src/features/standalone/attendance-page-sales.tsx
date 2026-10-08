@@ -35,7 +35,7 @@ export function AttendancePageSales(props: AttendanceState) {
   useScrollToTop();
   const { accessToken } = useAuth();
   const { videoRef, location, loading, message, online, preview, image, stream, reloadKey,
-    showPermissionPopup, handleAllowPermissions,
+    showPermissionPopup, handleAllowPermissions, handleLocation,
     handleCaptureAndPreview, handleRetake, handleConfirmSend, handleConfirmCheckOut, clearMessage } = props;
 
   const [todaySession, setTodaySession] = useState<TodaySession | null>(null);
@@ -66,6 +66,7 @@ export function AttendancePageSales(props: AttendanceState) {
         setCanCheckIn(todayRes.value.canCheckIn);
         setCheckInBlockedReason(todayRes.value.checkInBlockedReason ?? null);
         setAllowMultipleSessions(todayRes.value.allowMultipleAttendanceSessionsPerDay);
+        try { localStorage.setItem('yuksales.sales.attendanceOpen', session?.status === 'open' ? '1' : '0'); } catch {}
         if (session?.status === 'open') {
           setMode('check-out');
         } else if (!todayRes.value.canCheckIn) {
@@ -187,16 +188,37 @@ export function AttendancePageSales(props: AttendanceState) {
         <video ref={videoRef} className="w-full rounded-2xl bg-black object-cover" style={{ aspectRatio: '3/4' }} playsInline muted />
         {liveFaceDetectionEnabled && <LiveFaceOverlay videoRef={videoRef} stream={stream} />}
         {location && (
-          <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
-            <MapPin size={13} className="shrink-0 text-sales-emerald" />
-            <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
-            <span className="ml-auto text-sales-emerald">±{Math.round(location.accuracyM ?? 0)}m</span>
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-white backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
+            <span className="flex items-center gap-1.5 truncate">
+              <MapPin size={13} className="shrink-0 text-sales-emerald" />
+              <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</span>
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-sales-emerald">±{Math.round(location.accuracyM ?? 0)}m</span>
+              <button
+                type="button"
+                onClick={() => void handleLocation()}
+                title="Perbarui GPS"
+                className="text-zinc-300 hover:text-white bg-transparent border-none p-0 cursor-pointer flex items-center"
+              >
+                <RotateCcw size={11} />
+              </button>
+            </div>
           </div>
         )}
         {!location && (
-          <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl px-3 py-1.5 text-sales-amber backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
-            <MapPin size={13} />
-            <span>Mengambil lokasi GPS...</span>
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-sales-amber backdrop-blur-md" style={{ background: 'var(--sales-overlay-dark)', fontSize: '.75rem' }}>
+            <span className="flex items-center gap-1.5 truncate">
+              <MapPin size={13} className="shrink-0" />
+              <span>Mengambil lokasi GPS...</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => void handleLocation()}
+              className="shrink-0 px-2 py-0.5 rounded-lg bg-sales-accent text-white text-[11px] font-bold border-none cursor-pointer flex items-center gap-1"
+            >
+              <RotateCcw size={10} /> Ambil GPS
+            </button>
           </div>
         )}
       </div>
@@ -237,7 +259,7 @@ export function AttendancePageSales(props: AttendanceState) {
           </div>
         )}
         {/* Sales Alert */}
-        {/* <SalesAlert message={message} onClose={clearMessage} className="mt-2" /> */}
+        <SalesAlert message={message} onClose={clearMessage} className="mt-2" />
       </div>
 
       {/* List Absensi */}
@@ -290,10 +312,30 @@ export function AttendancePageSales(props: AttendanceState) {
               Preview {todaySession?.status === 'open' ? 'Keluar' : 'Masuk'}
             </p>
             <img src={image.dataUrl} alt="Preview" className="w-full rounded-2xl object-cover" style={{ aspectRatio: '3/4' }} />
-            {location && (
-              <div className="flex items-center gap-1.5 mt-2 text-sales-muted" style={{ fontSize: '.7rem' }}>
-                <MapPin size={12} className="text-sales-emerald-dark" />
-                <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)} · ±{Math.round(location.accuracyM ?? 0)}m</span>
+            {location ? (
+              <div className="flex items-center justify-between gap-1.5 mt-2 text-sales-muted px-1" style={{ fontSize: '.7rem' }}>
+                <span className="flex items-center gap-1">
+                  <MapPin size={12} className="text-sales-emerald-dark" />
+                  <span>{location.latitude.toFixed(5)}, {location.longitude.toFixed(5)} · ±{Math.round(location.accuracyM ?? 0)}m</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void handleLocation()}
+                  className="text-sales-accent bg-transparent border-none p-0 cursor-pointer text-[11px] font-bold"
+                >
+                  Perbarui
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-1.5 mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-700 text-xs font-semibold">
+                <span className="flex items-center gap-1.5"><MapPin size={13} /> GPS belum terdeteksi</span>
+                <button
+                  type="button"
+                  onClick={() => void handleLocation()}
+                  className="text-sales-accent underline font-bold bg-transparent border-none cursor-pointer"
+                >
+                  Ambil GPS
+                </button>
               </div>
             )}
             <div className="grid grid-cols-2 gap-2 mt-3">

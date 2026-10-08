@@ -125,8 +125,12 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
   }
 
   async function handleLocation() {
-    const current = await getCurrentLocation();
-    setLocation(current);
+    try {
+      const current = await getCurrentLocation({ fresh: true });
+      setLocation(current);
+    } catch (err: any) {
+      setMessage(err?.message || 'Gagal mengambil lokasi GPS. Pastikan izin lokasi aktif.');
+    }
   }
 
   async function handleCaptureAndPreview() {
@@ -172,15 +176,15 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
     try {
       if (!navigator.onLine) throw new Error('offline');
       await checkInAttendance(accessToken, payload);
+      try { localStorage.setItem('yuksales.sales.attendanceOpen', '1'); } catch {}
       setMessage('Absensi berhasil terkirim!');
-      setPreview(false);
-      setReloadKey(k => k + 1);
       setPreview(false);
       setReloadKey(k => k + 1);
     } catch (error) {
       const isNetworkError = !navigator.onLine || (error instanceof Error && error.message.includes('Failed to fetch'));
       if (isNetworkError) {
         await enqueueAttendance({ type: 'check-in', accessToken, payload });
+        try { localStorage.setItem('yuksales.sales.attendanceOpen', '1'); } catch {}
         await refreshQueueCount();
         setMessage('Absensi disimpan offline dan akan tersinkron saat online.');
       } else {
@@ -225,6 +229,7 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
     try {
       if (!navigator.onLine) throw new Error('offline');
       await checkOutAttendance(accessToken, payload);
+      try { localStorage.setItem('yuksales.sales.attendanceOpen', '0'); } catch {}
       setMessage('Absensi keluar terkirim.');
       setPreview(false);
       setReloadKey(k => k + 1);
@@ -232,6 +237,7 @@ export function AttendancePage({ mode = 'admin' }: { mode?: AttendanceMode }) {
       const isNetworkError = !navigator.onLine || (error instanceof Error && error.message.includes('Failed to fetch'));
       if (isNetworkError) {
         await enqueueAttendance({ type: 'check-out', accessToken, payload });
+        try { localStorage.setItem('yuksales.sales.attendanceOpen', '0'); } catch {}
         await refreshQueueCount();
         setMessage('Absensi keluar disimpan offline dan akan tersinkron saat online.');
       } else {
